@@ -1,6 +1,9 @@
 package org.infinispan.persistence.jdbc.binary;
 
 import org.infinispan.configuration.cache.ConfigurationBuilder;
+import org.infinispan.container.entries.InternalCacheEntry;
+import org.infinispan.container.entries.MortalCacheEntry;
+import org.infinispan.marshall.core.MarshalledEntry;
 import org.infinispan.persistence.BaseStoreTest;
 import org.infinispan.persistence.jdbc.TableManipulation;
 import org.infinispan.persistence.jdbc.configuration.JdbcBinaryStoreConfigurationBuilder;
@@ -11,6 +14,8 @@ import org.infinispan.metadata.impl.InternalMetadataImpl;
 import org.infinispan.test.fwk.TestCacheManagerFactory;
 import org.infinispan.test.fwk.UnitTestDatabaseManager;
 import org.infinispan.util.concurrent.WithinThreadExecutor;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertTrue;
 import org.testng.annotations.Test;
 
 import java.io.Serializable;
@@ -96,6 +101,36 @@ public class JdbcBinaryStoreTest extends BaseStoreTest {
       assertContains(k1, true);
       assertContains(k2, false);
       UnitTestDatabaseManager.verifyConnectionLeaks(((JdbcBinaryStore) cl).getConnectionFactory());
+   }
+
+   public void testCacheSize() {
+      long lifespan = 3000;
+      for (int i = 0; i < 120; i++) {
+         cl.write(marshalledEntry(internalCacheEntry("mortal" + i, "v1", lifespan)));
+         cl.write(marshalledEntry(internalCacheEntry("immortal" + i, "v1", -1)));
+      }
+
+      compareSizeImplemenations();
+      timeService.advance(lifespan + 1);
+      compareSizeImplemenations();
+   }
+
+   public void compareSizeImplemenations() {
+      JdbcBinaryStore bs = (JdbcBinaryStore) cl;
+      long st = System.nanoTime();
+      int oldSize = bs.size();
+      long oldMethodLatency = System.nanoTime() - st;
+
+      st = System.nanoTime();
+      int newSize = bs.newSize();
+      long newMethodLatency = System.nanoTime() - st;
+
+      log.error("newSize := " + newSize + " | oldSize := " + oldSize +
+              "\n oldLatency := " + oldMethodLatency + " | newLatency := " + newMethodLatency +
+              " | winner := " + (oldMethodLatency < newMethodLatency ? "old" : "new"));
+
+      assertEquals(oldSize, newSize);
+      assertTrue("size() duration > newSize()", oldMethodLatency > newMethodLatency);
    }
 
    private static final class FixedHashKey implements Serializable {

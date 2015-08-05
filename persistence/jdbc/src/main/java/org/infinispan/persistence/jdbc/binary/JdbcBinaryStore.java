@@ -257,6 +257,38 @@ public class JdbcBinaryStore implements AdvancedLoadWriteStore {
       return PersistenceUtil.count(this, null);
    }
 
+   public int newSize() {
+      int count = 0;
+      Connection conn = null;
+      PreparedStatement ps = null;
+      ResultSet rs = null;
+      try {
+         String sql = tableManipulation.getLoadNonExpiredAllRowsSql();
+         conn = connectionFactory.getConnection();
+         ps = conn.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+         ps.setLong(1, ctx.getTimeService().wallClockTime());
+         ps.setFetchSize(tableManipulation.getFetchSize());
+         rs = ps.executeQuery();
+         // Iterate over non expired buckets, adding the bucket size to count. If a bucket is returned from the db,
+         // then we know that all of its entries are valid as the bucket's timestamp is the timestamp of the first entry to expire
+         // No need to do more with each bucket as previously filter in process(...) was set to null.
+         // No executor used as no iteration within buckets required anymore
+         while (rs.next()) {
+            InputStream binaryStream = rs.getBinaryStream(1);
+            Bucket bucket = unmarshallBucket(binaryStream);
+            count += bucket.getStoredEntries().size();
+         }
+         return count;
+      } catch (SQLException e) {
+         log.sqlFailureFetchingAllStoredEntries(e);
+         throw new PersistenceException("SQL error while fetching all Non Expired Entries", e);
+      } finally {
+         JdbcUtil.safeClose(rs);
+         JdbcUtil.safeClose(ps);
+         connectionFactory.releaseConnection(conn);
+      }
+   }
+
    @Override
    public void purge(Executor threadPool, PurgeListener task) {
       Connection conn = null;
