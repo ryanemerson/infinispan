@@ -239,7 +239,7 @@ public class ConfigurationTest {
       verifyTableManipulation(mixedStoreConfiguration.stringTable());
    }
 
-   private void verifyTableManipulation(TableManipulationConfiguration table) {
+   private void verifyTableManipulation(TableManagerConfiguration table) {
       assertFalse(table.createOnStart());
       assertTrue(table.dropOnExit());
    }

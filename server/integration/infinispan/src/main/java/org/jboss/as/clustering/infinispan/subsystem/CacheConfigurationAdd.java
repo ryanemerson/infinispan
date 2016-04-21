@@ -70,7 +70,7 @@ import org.infinispan.persistence.jdbc.configuration.AbstractJdbcStoreConfigurat
 import org.infinispan.persistence.jdbc.configuration.JdbcBinaryStoreConfigurationBuilder;
 import org.infinispan.persistence.jdbc.configuration.JdbcMixedStoreConfigurationBuilder;
 import org.infinispan.persistence.jdbc.configuration.JdbcStringBasedStoreConfigurationBuilder;
-import org.infinispan.persistence.jdbc.configuration.TableManipulationConfigurationBuilder;
+import org.infinispan.persistence.jdbc.configuration.TableManagerConfigurationBuilder;
 import org.infinispan.persistence.leveldb.configuration.CompressionType;
 import org.infinispan.persistence.leveldb.configuration.LevelDBStoreConfiguration;
 import org.infinispan.persistence.leveldb.configuration.LevelDBStoreConfigurationBuilder;
@@ -951,15 +951,15 @@ public abstract class CacheConfigurationAdd extends AbstractAddStepHandler imple
         return builder;
     }
 
-    private void buildBinaryKeyedTable(TableManipulationConfigurationBuilder<?, ?> builder, OperationContext context, ModelNode table) throws OperationFailedException {
+    private void buildBinaryKeyedTable(TableManagerConfigurationBuilder<?, ?> builder, OperationContext context, ModelNode table) throws OperationFailedException {
         this.buildTable(builder, context, table, "ispn_bucket");
     }
 
-    private void buildStringKeyedTable(TableManipulationConfigurationBuilder<?, ?> builder, OperationContext context, ModelNode table) throws OperationFailedException {
+    private void buildStringKeyedTable(TableManagerConfigurationBuilder<?, ?> builder, OperationContext context, ModelNode table) throws OperationFailedException {
         this.buildTable(builder, context, table, "ispn_entry");
     }
 
-    private void buildTable(TableManipulationConfigurationBuilder<?, ?> builder, OperationContext context, ModelNode table, String defaultTableNamePrefix) throws OperationFailedException {
+    private void buildTable(TableManagerConfigurationBuilder<?, ?> builder, OperationContext context, ModelNode table, String defaultTableNamePrefix) throws OperationFailedException {
         ModelNode tableNamePrefix = BaseJDBCStoreConfigurationResource.PREFIX.resolveModelAttribute(context, table);
         builder.batchSize(BaseJDBCStoreConfigurationResource.BATCH_SIZE.resolveModelAttribute(context, table).asInt())
                 .fetchSize(BaseJDBCStoreConfigurationResource.FETCH_SIZE.resolveModelAttribute(context, table).asInt())

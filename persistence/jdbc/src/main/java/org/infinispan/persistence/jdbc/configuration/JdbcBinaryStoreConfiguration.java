@@ -21,16 +21,16 @@ public class JdbcBinaryStoreConfiguration extends AbstractJdbcStoreConfiguration
 
    private final Attribute<Integer> concurrencyLevel;
    private final Attribute<Long> lockAcquisitionTimeout;
-   private final TableManipulationConfiguration table;
+   private final TableManagerConfiguration table;
 
-   public JdbcBinaryStoreConfiguration(AttributeSet attributes, AsyncStoreConfiguration async, SingletonStoreConfiguration singletonStore, ConnectionFactoryConfiguration connectionFactory, TableManipulationConfiguration table) {
+   public JdbcBinaryStoreConfiguration(AttributeSet attributes, AsyncStoreConfiguration async, SingletonStoreConfiguration singletonStore, ConnectionFactoryConfiguration connectionFactory, TableManagerConfiguration table) {
       super(attributes, async, singletonStore, connectionFactory);
       this.table = table;
       concurrencyLevel = attributes.attribute(CONCURRENCY_LEVEL);
       lockAcquisitionTimeout = attributes.attribute(LOCK_ACQUISITION_TIMEOUT);
    }
 
-   public TableManipulationConfiguration table() {
+   public TableManagerConfiguration table() {
       return table;
    }
 

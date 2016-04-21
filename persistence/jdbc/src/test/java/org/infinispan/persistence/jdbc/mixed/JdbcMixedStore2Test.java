@@ -19,8 +19,8 @@ public class JdbcMixedStore2Test extends BaseStoreTest {
             .addStore(JdbcMixedStoreConfigurationBuilder.class);
       UnitTestDatabaseManager.configureUniqueConnectionFactory(storeBuilder);
       UnitTestDatabaseManager.setDialect(storeBuilder);
-      UnitTestDatabaseManager.buildTableManipulation(storeBuilder.stringTable(), false);
-      UnitTestDatabaseManager.buildTableManipulation(storeBuilder.binaryTable(), true);
+      UnitTestDatabaseManager.buildTableManagerConfig(storeBuilder.stringTable(), false);
+      UnitTestDatabaseManager.buildTableManagerConfig(storeBuilder.binaryTable(), true);
 
       JdbcMixedStore jdbcMixed = new JdbcMixedStore();
       jdbcMixed.init(createContext(builder.build()));

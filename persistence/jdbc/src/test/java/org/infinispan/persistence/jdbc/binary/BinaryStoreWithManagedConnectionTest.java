@@ -31,7 +31,7 @@ public class BinaryStoreWithManagedConnectionTest extends ManagedConnectionFacto
             .persistence()
                .addStore(JdbcBinaryStoreConfigurationBuilder.class);
       storeBuilder.dataSource().jndiUrl(getDatasourceLocation());
-      UnitTestDatabaseManager.buildTableManipulation(storeBuilder.table(), true);
+      UnitTestDatabaseManager.buildTableManagerConfig(storeBuilder.table(), true);
 
       JdbcBinaryStore jdbcBinaryStore = new JdbcBinaryStore();
       jdbcBinaryStore.init(createContext(builder.build()));

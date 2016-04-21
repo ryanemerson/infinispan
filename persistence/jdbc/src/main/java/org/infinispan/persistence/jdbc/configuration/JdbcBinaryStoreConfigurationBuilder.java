@@ -10,11 +10,11 @@ import static org.infinispan.persistence.jdbc.configuration.JdbcBinaryStoreConfi
 
 public class JdbcBinaryStoreConfigurationBuilder extends
                                                       AbstractJdbcStoreConfigurationBuilder<JdbcBinaryStoreConfiguration, JdbcBinaryStoreConfigurationBuilder> {
-   protected final BinaryTableManipulationConfigurationBuilder table;
+   protected final BinaryTableManagerConfigurationBuilder table;
 
    public JdbcBinaryStoreConfigurationBuilder(PersistenceConfigurationBuilder builder) {
       super(builder, JdbcBinaryStoreConfiguration.attributeDefinitionSet());
-      this.table = new BinaryTableManipulationConfigurationBuilder(this);
+      this.table = new BinaryTableManagerConfigurationBuilder(this);
    }
 
    @Override
@@ -25,7 +25,7 @@ public class JdbcBinaryStoreConfigurationBuilder extends
    /**
     * Allows configuration of table-specific parameters such as column names and types
     */
-   public BinaryTableManipulationConfigurationBuilder table() {
+   public BinaryTableManagerConfigurationBuilder table() {
       return table;
    }
 
@@ -69,10 +69,10 @@ public class JdbcBinaryStoreConfigurationBuilder extends
 
 
 
-   public class BinaryTableManipulationConfigurationBuilder extends
-         TableManipulationConfigurationBuilder<JdbcBinaryStoreConfigurationBuilder, BinaryTableManipulationConfigurationBuilder> {
+   public class BinaryTableManagerConfigurationBuilder extends
+                                                       TableManagerConfigurationBuilder<JdbcBinaryStoreConfigurationBuilder, BinaryTableManagerConfigurationBuilder> {
 
-      BinaryTableManipulationConfigurationBuilder(AbstractJdbcStoreConfigurationBuilder<?, JdbcBinaryStoreConfigurationBuilder> builder) {
+      BinaryTableManagerConfigurationBuilder(AbstractJdbcStoreConfigurationBuilder<?, JdbcBinaryStoreConfigurationBuilder> builder) {
          super(builder);
       }
 
@@ -87,7 +87,7 @@ public class JdbcBinaryStoreConfigurationBuilder extends
       }
 
       @Override
-      public BinaryTableManipulationConfigurationBuilder self() {
+      public BinaryTableManagerConfigurationBuilder self() {
          return this;
       }
    }

@@ -3,7 +3,7 @@ package org.infinispan.it.osgi.persistence.jdbc;
 import org.infinispan.persistence.jdbc.DatabaseType;
 import org.infinispan.persistence.jdbc.configuration.AbstractJdbcStoreConfigurationBuilder;
 import org.infinispan.persistence.jdbc.configuration.ConnectionFactoryConfigurationBuilder;
-import org.infinispan.persistence.jdbc.configuration.TableManipulationConfigurationBuilder;
+import org.infinispan.persistence.jdbc.configuration.TableManagerConfigurationBuilder;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -62,7 +62,7 @@ public class UnitTestDatabaseManager {
       return null;
    }
 
-   public static void buildTableManipulation(TableManipulationConfigurationBuilder<?, ?> table, boolean binary) {
+   public static void buildTableManager(TableManagerConfigurationBuilder<?, ?> table, boolean binary) {
       table.tableNamePrefix(binary ? "ISPN_BINARY" : "ISPN_STRING")
          .idColumnName("ID_COLUMN")
          .idColumnType(binary ? "INT" : "VARCHAR(255)")

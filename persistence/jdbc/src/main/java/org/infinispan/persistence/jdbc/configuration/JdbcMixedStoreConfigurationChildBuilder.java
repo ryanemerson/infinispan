@@ -9,13 +9,13 @@ public interface JdbcMixedStoreConfigurationChildBuilder<S extends AbstractJdbcS
     * Allows configuration of table-specific parameters such as column names and types for the table
     * used to store entries with binary keys
     */
-   JdbcMixedStoreConfigurationBuilder.MixedTableManipulationConfigurationBuilder binaryTable();
+   JdbcMixedStoreConfigurationBuilder.MixedTableManagerConfigurationBuilder binaryTable();
 
    /**
     * Allows configuration of table-specific parameters such as column names and types for the table
     * used to store entries with string keys
     */
-   JdbcMixedStoreConfigurationBuilder.MixedTableManipulationConfigurationBuilder stringTable();
+   JdbcMixedStoreConfigurationBuilder.MixedTableManagerConfigurationBuilder stringTable();
 
    /**
     * The class name of a {@link Key2StringMapper} to use for mapping keys to strings suitable for

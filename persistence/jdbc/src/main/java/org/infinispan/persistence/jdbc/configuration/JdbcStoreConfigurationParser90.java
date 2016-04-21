@@ -275,7 +275,7 @@ public class JdbcStoreConfigurationParser90 implements ConfigurationParser {
       persistenceBuilder.addStore(builder);
    }
 
-   private void parseTable(XMLExtendedStreamReader reader, TableManipulationConfigurationBuilder<?, ?> builder)
+   private void parseTable(XMLExtendedStreamReader reader, TableManagerConfigurationBuilder<?, ?> builder)
          throws XMLStreamException {
       for (int i = 0; i < reader.getAttributeCount(); i++) {
          ParseUtils.requireNoNamespaceAttribute(reader, i);
@@ -310,7 +310,7 @@ public class JdbcStoreConfigurationParser90 implements ConfigurationParser {
       parseTableElements(reader, builder);
    }
 
-   private void parseTableElements(XMLExtendedStreamReader reader, TableManipulationConfigurationBuilder<?, ?> builder)
+   private void parseTableElements(XMLExtendedStreamReader reader, TableManagerConfigurationBuilder<?, ?> builder)
          throws XMLStreamException {
       while (reader.hasNext() && (reader.nextTag() != XMLStreamConstants.END_ELEMENT)) {
          Element element = Element.forName(reader.getLocalName());

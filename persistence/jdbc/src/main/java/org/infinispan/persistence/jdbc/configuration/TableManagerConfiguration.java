@@ -1,11 +1,11 @@
 package org.infinispan.persistence.jdbc.configuration;
 
+import org.infinispan.commons.configuration.attributes.Attribute;
 import org.infinispan.commons.configuration.attributes.AttributeDefinition;
 import org.infinispan.commons.configuration.attributes.AttributeSet;
-import org.infinispan.commons.configuration.attributes.Attribute;
-import org.infinispan.persistence.jdbc.TableManipulation;
+import org.infinispan.persistence.jdbc.table.management.TableManager;
 
-public class TableManipulationConfiguration {
+public class TableManagerConfiguration {
    static final AttributeDefinition<String> ID_COLUMN_NAME = AttributeDefinition.builder("idColumnName", null, String.class).immutable().build();
    static final AttributeDefinition<String> ID_COLUMN_TYPE = AttributeDefinition.builder("idColumnType", null, String.class).immutable().build();
    static final AttributeDefinition<String> TABLE_NAME_PREFIX = AttributeDefinition.builder("tableNamePrefix", null, String.class).immutable().build();
@@ -14,14 +14,14 @@ public class TableManipulationConfiguration {
    static final AttributeDefinition<String> DATA_COLUMN_TYPE = AttributeDefinition.builder("dataColumnType", null, String.class).immutable().build();
    static final AttributeDefinition<String> TIMESTAMP_COLUMN_NAME = AttributeDefinition.builder("timestampColumnName", null, String.class).immutable().build();
    static final AttributeDefinition<String> TIMESTAMP_COLUMN_TYPE = AttributeDefinition.builder("timestampColumnType", null, String.class).immutable().build();
-   static final AttributeDefinition<Integer> BATCH_SIZE = AttributeDefinition.builder("batchSize", TableManipulation.DEFAULT_BATCH_SIZE).immutable().build();
-   static final AttributeDefinition<Integer> FETCH_SIZE = AttributeDefinition.builder("fetchSize", TableManipulation.DEFAULT_FETCH_SIZE).immutable().build();
+   static final AttributeDefinition<Integer> BATCH_SIZE = AttributeDefinition.builder("batchSize", TableManager.DEFAULT_BATCH_SIZE).immutable().build();
+   static final AttributeDefinition<Integer> FETCH_SIZE = AttributeDefinition.builder("fetchSize", TableManager.DEFAULT_FETCH_SIZE).immutable().build();
    static final AttributeDefinition<Boolean> CREATE_ON_START = AttributeDefinition.builder("createOnStart", true).immutable().build();
    static final AttributeDefinition<Boolean> DROP_ON_EXIT = AttributeDefinition.builder("dropOnExit", false).immutable().build();
 
    static AttributeSet attributeSet() {
-      return new AttributeSet(TableManipulationConfiguration.class, ID_COLUMN_NAME, ID_COLUMN_TYPE, TABLE_NAME_PREFIX, CACHE_NAME, DATA_COLUMN_NAME, DATA_COLUMN_TYPE,
-            TIMESTAMP_COLUMN_NAME, TIMESTAMP_COLUMN_TYPE, BATCH_SIZE, FETCH_SIZE, CREATE_ON_START, DROP_ON_EXIT);
+      return new AttributeSet(TableManagerConfiguration.class, ID_COLUMN_NAME, ID_COLUMN_TYPE, TABLE_NAME_PREFIX, CACHE_NAME, DATA_COLUMN_NAME, DATA_COLUMN_TYPE,
+                              TIMESTAMP_COLUMN_NAME, TIMESTAMP_COLUMN_TYPE, BATCH_SIZE, FETCH_SIZE, CREATE_ON_START, DROP_ON_EXIT);
    }
 
    private final Attribute<String> idColumnName;
@@ -38,7 +38,7 @@ public class TableManipulationConfiguration {
    private final Attribute<Boolean> dropOnExit;
    private final AttributeSet attributes;
 
-   TableManipulationConfiguration(AttributeSet attributes) {
+   TableManagerConfiguration(AttributeSet attributes) {
       this.attributes = attributes.checkProtection();
       idColumnName = attributes.attribute(ID_COLUMN_NAME);
       idColumnType = attributes.attribute(ID_COLUMN_TYPE);
@@ -111,7 +111,7 @@ public class TableManipulationConfiguration {
 
    @Override
    public String toString() {
-      return "TableManipulationConfiguration [attributes=" + attributes + "]";
+      return "TableManagerConfiguration [attributes=" + attributes + "]";
    }
 
    @Override
@@ -130,7 +130,7 @@ public class TableManipulationConfiguration {
          return false;
       if (getClass() != obj.getClass())
          return false;
-      TableManipulationConfiguration other = (TableManipulationConfiguration) obj;
+      TableManagerConfiguration other = (TableManagerConfiguration) obj;
       if (attributes == null) {
          if (other.attributes != null)
             return false;
