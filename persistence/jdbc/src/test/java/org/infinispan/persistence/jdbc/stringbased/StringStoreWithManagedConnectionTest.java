@@ -34,7 +34,7 @@ public class StringStoreWithManagedConnectionTest extends ManagedConnectionFacto
 
       storeBuilder.dataSource()
             .jndiUrl(getDatasourceLocation());
-      UnitTestDatabaseManager.buildTableManipulation(storeBuilder.table(), false);
+      UnitTestDatabaseManager.buildTableManipulationConfig(storeBuilder.table(), false);
 
       JdbcStringBasedStore stringBasedCacheStore = new JdbcStringBasedStore();
       stringBasedCacheStore.init(createContext(builder.build()));

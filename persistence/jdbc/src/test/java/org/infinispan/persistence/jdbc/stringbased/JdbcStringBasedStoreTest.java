@@ -2,12 +2,12 @@ package org.infinispan.persistence.jdbc.stringbased;
 
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.persistence.BaseStoreTest;
-import org.infinispan.persistence.spi.PersistenceException;
-import org.infinispan.persistence.jdbc.TableManipulation;
 import org.infinispan.persistence.jdbc.configuration.JdbcStringBasedStoreConfigurationBuilder;
 import org.infinispan.persistence.jdbc.connectionfactory.ConnectionFactory;
+import org.infinispan.persistence.jdbc.table.management.TableManager;
 import org.infinispan.persistence.keymappers.UnsupportedKeyTypeException;
 import org.infinispan.persistence.spi.AdvancedLoadWriteStore;
+import org.infinispan.persistence.spi.PersistenceException;
 import org.infinispan.test.fwk.TestCacheManagerFactory;
 import org.infinispan.test.fwk.UnitTestDatabaseManager;
 import org.testng.annotations.Test;
@@ -31,7 +31,7 @@ public class JdbcStringBasedStoreTest extends BaseStoreTest {
             .persistence()
                .addStore(JdbcStringBasedStoreConfigurationBuilder.class);
       UnitTestDatabaseManager.configureUniqueConnectionFactory(storeBuilder);
-      UnitTestDatabaseManager.buildTableManipulation(storeBuilder.table(), false);
+      UnitTestDatabaseManager.buildTableManipulationConfig(storeBuilder.table(), false);
       JdbcStringBasedStore stringBasedCacheStore = new JdbcStringBasedStore();
       stringBasedCacheStore.init(createContext(builder.build()));
       return stringBasedCacheStore;
@@ -54,16 +54,16 @@ public class JdbcStringBasedStoreTest extends BaseStoreTest {
 
       // this will make sure that if a method like stop is called on the connection then it will barf an exception
       ConnectionFactory connectionFactory = mock(ConnectionFactory.class);
-      TableManipulation tableManipulation = mock(TableManipulation.class);
+      TableManager tableManager = mock(TableManager.class);
 
-      tableManipulation.start(connectionFactory);
-      tableManipulation.setCacheName("otherName");
+      tableManager.start();
+      tableManager.setCacheName("otherName");
 
       stringBasedCacheStore.initializeConnectionFactory(connectionFactory);
 
       //stop should be called even if this is an external
-      reset(tableManipulation, connectionFactory);
-      tableManipulation.stop();
+      reset(tableManager, connectionFactory);
+      tableManager.stop();
 
       stringBasedCacheStore.stop();
    }

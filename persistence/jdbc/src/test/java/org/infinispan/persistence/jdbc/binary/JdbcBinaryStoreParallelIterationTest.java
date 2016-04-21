@@ -17,7 +17,7 @@ public class JdbcBinaryStoreParallelIterationTest extends ParallelIterationTest 
    protected void configurePersistence(ConfigurationBuilder cb) {
       JdbcBinaryStoreConfigurationBuilder store = cb.persistence()
             .addStore(JdbcBinaryStoreConfigurationBuilder.class);
-      UnitTestDatabaseManager.buildTableManipulation(store.table(), true);
+      UnitTestDatabaseManager.buildTableManipulationConfig(store.table(), true);
       UnitTestDatabaseManager.configureUniqueConnectionFactory(store);
    }
 }

@@ -1,13 +1,13 @@
 package org.infinispan.persistence.jdbc.binary;
 
 import org.infinispan.configuration.cache.ConfigurationBuilder;
-import org.infinispan.persistence.BaseStoreTest;
-import org.infinispan.persistence.jdbc.TableManipulation;
-import org.infinispan.persistence.jdbc.configuration.JdbcBinaryStoreConfigurationBuilder;
-import org.infinispan.persistence.jdbc.connectionfactory.ConnectionFactory;
-import org.infinispan.persistence.spi.AdvancedLoadWriteStore;
 import org.infinispan.metadata.Metadata;
 import org.infinispan.metadata.impl.InternalMetadataImpl;
+import org.infinispan.persistence.BaseStoreTest;
+import org.infinispan.persistence.jdbc.configuration.JdbcBinaryStoreConfigurationBuilder;
+import org.infinispan.persistence.jdbc.connectionfactory.ConnectionFactory;
+import org.infinispan.persistence.jdbc.table.management.TableManager;
+import org.infinispan.persistence.spi.AdvancedLoadWriteStore;
 import org.infinispan.test.fwk.TestCacheManagerFactory;
 import org.infinispan.test.fwk.UnitTestDatabaseManager;
 import org.infinispan.util.concurrent.WithinThreadExecutor;
@@ -35,7 +35,7 @@ public class JdbcBinaryStoreTest extends BaseStoreTest {
       JdbcBinaryStoreConfigurationBuilder storeBuilder = builder
             .persistence()
             .addStore(JdbcBinaryStoreConfigurationBuilder.class);
-      UnitTestDatabaseManager.buildTableManipulation(storeBuilder.table(), true);
+      UnitTestDatabaseManager.buildTableManipulationConfig(storeBuilder.table(), true);
       UnitTestDatabaseManager.configureUniqueConnectionFactory(storeBuilder);
 
       JdbcBinaryStore jdbcBinaryCacheStore = new JdbcBinaryStore();
@@ -60,14 +60,14 @@ public class JdbcBinaryStoreTest extends BaseStoreTest {
 
       /* this will make sure that if a method like stop is called on the connection then it will barf an exception */
       ConnectionFactory connectionFactory = mock(ConnectionFactory.class);
-      TableManipulation tableManipulation = mock(TableManipulation.class);
+      TableManager tableManager = mock(TableManager.class);
 
-      tableManipulation.start(connectionFactory);
-      tableManipulation.setCacheName("aName");
+      tableManager.start();
+      tableManager.setCacheName("aName");
       jdbcBucketCacheStore.doConnectionFactoryInitialization(connectionFactory);
 
       //stop should be called even if this is an externally managed connection
-      tableManipulation.stop();
+      tableManager.stop();
       jdbcBucketCacheStore.stop();
    }
 

@@ -9,7 +9,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.infinispan.persistence.jdbc.DatabaseType;
 import org.infinispan.persistence.jdbc.JdbcUtil;
-import org.infinispan.persistence.jdbc.TableName;
+import org.infinispan.persistence.jdbc.table.management.TableName;
 import org.infinispan.persistence.jdbc.configuration.AbstractJdbcStoreConfigurationBuilder;
 import org.infinispan.persistence.jdbc.configuration.ConnectionFactoryConfigurationBuilder;
 import org.infinispan.persistence.jdbc.configuration.TableManipulationConfigurationBuilder;
@@ -104,7 +104,7 @@ public class UnitTestDatabaseManager {
       builder.dialect(dt);
    }
 
-   public static void buildTableManipulation(TableManipulationConfigurationBuilder<?, ?> table, boolean binary) {
+   public static void buildTableManipulationConfig(TableManipulationConfigurationBuilder<?, ?> table, boolean binary) {
       table
          .tableNamePrefix(binary ? "ISPN_BINARY" : "ISPN_STRING")
          .idColumnName("ID_COLUMN")

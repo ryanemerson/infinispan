@@ -21,8 +21,8 @@ public class JdbcMixedStoreParallelIterationTest extends ParallelIterationTest {
                .addStore(JdbcMixedStoreConfigurationBuilder.class);
       UnitTestDatabaseManager.configureUniqueConnectionFactory(storeBuilder);
       UnitTestDatabaseManager.setDialect(storeBuilder);
-      UnitTestDatabaseManager.buildTableManipulation(storeBuilder.stringTable(), false);
-      UnitTestDatabaseManager.buildTableManipulation(storeBuilder.binaryTable(), true);
+      UnitTestDatabaseManager.buildTableManipulationConfig(storeBuilder.stringTable(), false);
+      UnitTestDatabaseManager.buildTableManipulationConfig(storeBuilder.binaryTable(), true);
       storeBuilder
             .stringTable()
             .tableNamePrefix("STRINGS_TABLE")
