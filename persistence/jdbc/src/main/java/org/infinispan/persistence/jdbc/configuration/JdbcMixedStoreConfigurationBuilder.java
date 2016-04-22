@@ -24,13 +24,13 @@ import org.infinispan.persistence.keymappers.Key2StringMapper;
  */
 public class JdbcMixedStoreConfigurationBuilder extends AbstractJdbcStoreConfigurationBuilder<JdbcMixedStoreConfiguration, JdbcMixedStoreConfigurationBuilder>
       implements JdbcMixedStoreConfigurationChildBuilder<JdbcMixedStoreConfigurationBuilder> {
-   private final MixedTableManipulationConfigurationBuilder binaryTable;
-   private final MixedTableManipulationConfigurationBuilder stringTable;
+   private final MixedTableManagerConfigurationBuilder binaryTable;
+   private final MixedTableManagerConfigurationBuilder stringTable;
 
    public JdbcMixedStoreConfigurationBuilder(PersistenceConfigurationBuilder builder) {
       super(builder, JdbcMixedStoreConfiguration.attributeDefinitionSet());
-      this.binaryTable = new MixedTableManipulationConfigurationBuilder(this);
-      this.stringTable = new MixedTableManipulationConfigurationBuilder(this);
+      this.binaryTable = new MixedTableManagerConfigurationBuilder(this);
+      this.stringTable = new MixedTableManagerConfigurationBuilder(this);
    }
 
    @Override
@@ -41,7 +41,7 @@ public class JdbcMixedStoreConfigurationBuilder extends AbstractJdbcStoreConfigu
    /**
     * When doing repetitive DB inserts this will be batched
     * according to this parameter. This is an optional parameter, and if it is not specified it will
-    * be defaulted to {@link org.infinispan.persistence.jdbc.TableManipulation#DEFAULT_BATCH_SIZE}.
+    * be defaulted to {@link org.infinispan.persistence.jdbc.DatabaseManager#DEFAULT_BATCH_SIZE}.
     */
    public JdbcMixedStoreConfigurationBuilder batchSize(int batchSize) {
       attributes.attribute(BATCH_SIZE).set(batchSize);
@@ -50,7 +50,7 @@ public class JdbcMixedStoreConfigurationBuilder extends AbstractJdbcStoreConfigu
 
    /**
     * For DB queries the fetch size will be set on {@link java.sql.ResultSet#setFetchSize(int)}. This is optional
-    * parameter, if not specified will be defaulted to {@link org.infinispan.persistence.jdbc.TableManipulation#DEFAULT_FETCH_SIZE}.
+    * parameter, if not specified will be defaulted to {@link org.infinispan.persistence.jdbc.DatabaseManager#DEFAULT_FETCH_SIZE}.
     */
    public JdbcMixedStoreConfigurationBuilder fetchSize(int fetchSize) {
       attributes.attribute(FETCH_SIZE).set(fetchSize);
@@ -62,7 +62,7 @@ public class JdbcMixedStoreConfigurationBuilder extends AbstractJdbcStoreConfigu
     * used to store entries with binary keys
     */
    @Override
-   public MixedTableManipulationConfigurationBuilder binaryTable() {
+   public MixedTableManagerConfigurationBuilder binaryTable() {
       return binaryTable;
    }
 
@@ -71,7 +71,7 @@ public class JdbcMixedStoreConfigurationBuilder extends AbstractJdbcStoreConfigu
     * used to store entries with string keys
     */
    @Override
-   public MixedTableManipulationConfigurationBuilder stringTable() {
+   public MixedTableManagerConfigurationBuilder stringTable() {
       return stringTable;
    }
 
@@ -137,26 +137,26 @@ public class JdbcMixedStoreConfigurationBuilder extends AbstractJdbcStoreConfigu
       return this;
    }
 
-   public class MixedTableManipulationConfigurationBuilder extends
-         TableManipulationConfigurationBuilder<JdbcMixedStoreConfigurationBuilder, MixedTableManipulationConfigurationBuilder> implements
+   public class MixedTableManagerConfigurationBuilder extends
+                                                      TableManagerConfigurationBuilder<JdbcMixedStoreConfigurationBuilder, MixedTableManagerConfigurationBuilder> implements
                                                                                                                                JdbcMixedStoreConfigurationChildBuilder<JdbcMixedStoreConfigurationBuilder> {
 
-      MixedTableManipulationConfigurationBuilder(AbstractJdbcStoreConfigurationBuilder<?, JdbcMixedStoreConfigurationBuilder> builder) {
+      MixedTableManagerConfigurationBuilder(AbstractJdbcStoreConfigurationBuilder<?, JdbcMixedStoreConfigurationBuilder> builder) {
          super(builder);
       }
 
       @Override
-      public MixedTableManipulationConfigurationBuilder self() {
+      public MixedTableManagerConfigurationBuilder self() {
          return this;
       }
 
       @Override
-      public MixedTableManipulationConfigurationBuilder binaryTable() {
+      public MixedTableManagerConfigurationBuilder binaryTable() {
          return binaryTable;
       }
 
       @Override
-      public MixedTableManipulationConfigurationBuilder stringTable() {
+      public MixedTableManagerConfigurationBuilder stringTable() {
          return stringTable;
       }
 

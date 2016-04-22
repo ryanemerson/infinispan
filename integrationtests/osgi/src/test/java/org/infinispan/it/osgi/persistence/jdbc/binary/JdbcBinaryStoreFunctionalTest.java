@@ -22,7 +22,7 @@ public class JdbcBinaryStoreFunctionalTest extends JdbcStringBasedStoreFunctiona
    protected PersistenceConfigurationBuilder createCacheStoreConfig(PersistenceConfigurationBuilder persistence, boolean preload) {
       JdbcBinaryStoreConfigurationBuilder store = persistence
             .addStore(JdbcBinaryStoreConfigurationBuilder.class).preload(preload);
-      UnitTestDatabaseManager.buildTableManipulation(store.table(), true);
+      UnitTestDatabaseManager.buildTableManager(store.table(), true);
       UnitTestDatabaseManager.setDialect(store);
       UnitTestDatabaseManager.configureUniqueConnectionFactory(store);
       return persistence;

@@ -7,7 +7,7 @@ import org.infinispan.commons.configuration.attributes.AttributeDefinition;
 import org.infinispan.commons.configuration.attributes.AttributeSet;
 import org.infinispan.configuration.cache.AsyncStoreConfiguration;
 import org.infinispan.configuration.cache.SingletonStoreConfiguration;
-import org.infinispan.persistence.jdbc.TableManipulation;
+import org.infinispan.persistence.jdbc.table.management.TableManager;
 import org.infinispan.persistence.jdbc.mixed.JdbcMixedStore;
 import org.infinispan.persistence.keymappers.DefaultTwoWayKey2StringMapper;
 
@@ -21,8 +21,8 @@ import org.infinispan.persistence.keymappers.DefaultTwoWayKey2StringMapper;
 @BuiltBy(JdbcMixedStoreConfigurationBuilder.class)
 @ConfigurationFor(JdbcMixedStore.class)
 public class JdbcMixedStoreConfiguration extends AbstractJdbcStoreConfiguration {
-   static final AttributeDefinition<Integer> BATCH_SIZE = AttributeDefinition.builder("batchSize", TableManipulation.DEFAULT_BATCH_SIZE).immutable().build();
-   static final AttributeDefinition<Integer> FETCH_SIZE = AttributeDefinition.builder("fetchSize", TableManipulation.DEFAULT_FETCH_SIZE).immutable().build();
+   static final AttributeDefinition<Integer> BATCH_SIZE = AttributeDefinition.builder("batchSize", TableManager.DEFAULT_BATCH_SIZE).immutable().build();
+   static final AttributeDefinition<Integer> FETCH_SIZE = AttributeDefinition.builder("fetchSize", TableManager.DEFAULT_FETCH_SIZE).immutable().build();
    static final AttributeDefinition<String> KEY2STRING_MAPPER = AttributeDefinition.builder("key2StringMapper", DefaultTwoWayKey2StringMapper.class.getName()).immutable().build();
    static final AttributeDefinition<Integer> CONCURRENCY_LEVEL = AttributeDefinition.builder("concurrencyLevel", 2048).immutable().build();
    static final AttributeDefinition<Long> LOCK_ACQUISITION_TIMEOUT = AttributeDefinition.builder("lockAcquisitionTimeout", 60000l).immutable().build();
@@ -37,14 +37,14 @@ public class JdbcMixedStoreConfiguration extends AbstractJdbcStoreConfiguration 
    private final Attribute<String> key2StringMapper;
    private final Attribute<Integer> concurrencyLevel;
    private final Attribute<Long> lockAcquisitionTimeout;
-   private final TableManipulationConfiguration binaryTable;
-   private final TableManipulationConfiguration stringTable;
+   private final TableManagerConfiguration binaryTable;
+   private final TableManagerConfiguration stringTable;
 
    public JdbcMixedStoreConfiguration(AttributeSet attributes,
                                       AsyncStoreConfiguration async, SingletonStoreConfiguration singletonStore,
                                       ConnectionFactoryConfiguration connectionFactory,
-                                      TableManipulationConfiguration binaryTable,
-                                      TableManipulationConfiguration stringTable) {
+                                      TableManagerConfiguration binaryTable,
+                                      TableManagerConfiguration stringTable) {
       super(attributes, async, singletonStore, connectionFactory);
       this.binaryTable = binaryTable;
       this.stringTable = stringTable;
@@ -59,11 +59,11 @@ public class JdbcMixedStoreConfiguration extends AbstractJdbcStoreConfiguration 
       return key2StringMapper.get();
    }
 
-   public TableManipulationConfiguration binaryTable() {
+   public TableManagerConfiguration binaryTable() {
       return binaryTable;
    }
 
-   public TableManipulationConfiguration stringTable() {
+   public TableManagerConfiguration stringTable() {
       return stringTable;
    }
 

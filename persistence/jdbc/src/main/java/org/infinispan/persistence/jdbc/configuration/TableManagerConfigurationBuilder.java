@@ -6,30 +6,30 @@ import org.infinispan.commons.configuration.attributes.AttributeDefinition;
 import org.infinispan.commons.configuration.attributes.AttributeSet;
 import org.infinispan.commons.logging.LogFactory;
 import org.infinispan.configuration.global.GlobalConfiguration;
-import org.infinispan.persistence.jdbc.TableManipulation;
 import org.infinispan.persistence.jdbc.logging.Log;
+import org.infinispan.persistence.jdbc.table.management.TableManager;
 
-import static org.infinispan.persistence.jdbc.configuration.TableManipulationConfiguration.*;
+import static org.infinispan.persistence.jdbc.configuration.TableManagerConfiguration.*;
 
 /**
- * TableManipulationConfigurationBuilder.
+ * TableManagerConfigurationBuilder.
  *
  * @author Tristan Tarrant
  * @since 5.2
  */
-public abstract class TableManipulationConfigurationBuilder<B extends AbstractJdbcStoreConfigurationBuilder<?, B>, S extends TableManipulationConfigurationBuilder<B, S>> extends
-                                                                                                                                                                          AbstractJdbcStoreConfigurationChildBuilder<B> implements Builder<TableManipulationConfiguration>, Self<S> {
-   private static final Log log = LogFactory.getLog(TableManipulationConfigurationBuilder.class, Log.class);
+public abstract class TableManagerConfigurationBuilder<B extends AbstractJdbcStoreConfigurationBuilder<?, B>, S extends TableManagerConfigurationBuilder<B, S>> extends
+                                                                                                                                                                          AbstractJdbcStoreConfigurationChildBuilder<B> implements Builder<TableManagerConfiguration>, Self<S> {
+   private static final Log log = LogFactory.getLog(TableManagerConfigurationBuilder.class, Log.class);
    private final AttributeSet attributes;
 
-   TableManipulationConfigurationBuilder(AbstractJdbcStoreConfigurationBuilder<?, B> builder) {
+   TableManagerConfigurationBuilder(AbstractJdbcStoreConfigurationBuilder<?, B> builder) {
       super(builder);
-      attributes = TableManipulationConfiguration.attributeSet();
+      attributes = TableManagerConfiguration.attributeSet();
    }
 
    /**
     * Repetitive DB operations this are batched according to this parameter. This is an optional parameter, and if it
-    * is not specified it will be defaulted to {@link TableManipulation#DEFAULT_BATCH_SIZE}.
+    * is not specified it will be defaulted to {@link TableManager#DEFAULT_BATCH_SIZE}.
     */
    public S batchSize(int batchSize) {
       attributes.attribute(BATCH_SIZE).set(batchSize);
@@ -38,7 +38,7 @@ public abstract class TableManipulationConfigurationBuilder<B extends AbstractJd
 
    /**
     * For DB queries the fetch size is on {@link java.sql.ResultSet#setFetchSize(int)}. This is optional
-    * parameter, if not specified will be defaulted to {@link TableManipulation#DEFAULT_FETCH_SIZE}.
+    * parameter, if not specified will be defaulted to {@link TableManager#DEFAULT_FETCH_SIZE}.
     */
    public S fetchSize(int fetchSize) {
       attributes.attribute(FETCH_SIZE).set(fetchSize);
@@ -145,19 +145,19 @@ public abstract class TableManipulationConfigurationBuilder<B extends AbstractJd
    }
 
    @Override
-   public TableManipulationConfiguration create() {
-      return new TableManipulationConfiguration(attributes.protect());
+   public TableManagerConfiguration create() {
+      return new TableManagerConfiguration(attributes.protect());
    }
 
    @Override
-   public Builder<?> read(TableManipulationConfiguration template) {
+   public Builder<?> read(TableManagerConfiguration template) {
       attributes.read(template.attributes());
       return this;
    }
 
    @Override
    public String toString() {
-      return "TableManipulationConfigurationBuilder [attributes=" + attributes + "]";
+      return "TableManagerConfigurationBuilder [attributes=" + attributes + "]";
    }
 
 

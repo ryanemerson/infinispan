@@ -4,18 +4,17 @@ import org.infinispan.Cache;
 import org.infinispan.commons.marshall.StreamingMarshaller;
 import org.infinispan.commons.util.ReflectionUtil;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
-import org.infinispan.persistence.spi.PersistenceException;
+import org.infinispan.manager.EmbeddedCacheManager;
+import org.infinispan.marshall.core.MarshalledEntry;
 import org.infinispan.marshall.core.MarshalledEntryImpl;
-import org.infinispan.persistence.jdbc.TableManipulation;
-import org.infinispan.persistence.jdbc.TableName;
+import org.infinispan.persistence.jdbc.table.management.TableName;
 import org.infinispan.persistence.jdbc.configuration.JdbcMixedStoreConfigurationBuilder;
 import org.infinispan.persistence.jdbc.connectionfactory.ConnectionFactory;
-import org.infinispan.persistence.jdbc.connectionfactory.ConnectionFactoryConfig;
+import org.infinispan.persistence.jdbc.table.management.TableManager;
 import org.infinispan.persistence.jdbc.stringbased.Person;
 import org.infinispan.persistence.keymappers.DefaultTwoWayKey2StringMapper;
 import org.infinispan.persistence.spi.AdvancedLoadWriteStore;
-import org.infinispan.marshall.core.MarshalledEntry;
-import org.infinispan.manager.EmbeddedCacheManager;
+import org.infinispan.persistence.spi.PersistenceException;
 import org.infinispan.test.AbstractInfinispanTest;
 import org.infinispan.test.TestingUtil;
 import org.infinispan.test.fwk.TestCacheManagerFactory;
@@ -38,9 +37,8 @@ import static org.infinispan.test.TestingUtil.internalMetadata;
 public class JdbcMixedStoreTest extends AbstractInfinispanTest {
 
    private AdvancedLoadWriteStore cacheStore;
-   private TableManipulation stringsTm;
-   private TableManipulation binaryTm;
-   private ConnectionFactoryConfig cfc;
+   private TableManager stringsTm;
+   private TableManager binaryTm;
 
    private static final Person MIRCEA = new Person("Mircea", "Markus", 28);
    private static final Person MANIK = new Person("Manik", "Surtani", 18);
@@ -58,8 +56,8 @@ public class JdbcMixedStoreTest extends AbstractInfinispanTest {
             .addStore(JdbcMixedStoreConfigurationBuilder.class);
       UnitTestDatabaseManager.configureUniqueConnectionFactory(storeBuilder);
       UnitTestDatabaseManager.setDialect(storeBuilder);
-      UnitTestDatabaseManager.buildTableManipulation(storeBuilder.stringTable(), false);
-      UnitTestDatabaseManager.buildTableManipulation(storeBuilder.binaryTable(), true);
+      UnitTestDatabaseManager.buildTableManagerConfig(storeBuilder.stringTable(), false);
+      UnitTestDatabaseManager.buildTableManagerConfig(storeBuilder.binaryTable(), true);
       storeBuilder
             .stringTable()
             .tableNamePrefix("STRINGS_TABLE")
@@ -72,8 +70,8 @@ public class JdbcMixedStoreTest extends AbstractInfinispanTest {
       cache = cacheManager.getCache();
 
       cacheStore = TestingUtil.getFirstWriter(cache);
-      stringsTm = (TableManipulation) ReflectionUtil.getValue(((JdbcMixedStore)cacheStore).getStringStore(), "tableManipulation");
-      binaryTm = (TableManipulation) ReflectionUtil.getValue(((JdbcMixedStore)cacheStore).getBinaryStore(), "tableManipulation");
+      stringsTm = (TableManager) ReflectionUtil.getValue(((JdbcMixedStore)cacheStore).getStringStore(), "tableManager");
+      binaryTm = (TableManager) ReflectionUtil.getValue(((JdbcMixedStore)cacheStore).getBinaryStore(), "tableManager");
    }
 
 

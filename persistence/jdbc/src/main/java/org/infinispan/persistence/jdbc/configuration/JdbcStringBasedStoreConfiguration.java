@@ -20,10 +20,10 @@ public class JdbcStringBasedStoreConfiguration extends AbstractJdbcStoreConfigur
    }
 
    private final Attribute<String> key2StringMapper;
-   private final TableManipulationConfiguration table;
+   private final TableManagerConfiguration table;
 
    public JdbcStringBasedStoreConfiguration(AttributeSet attributes, AsyncStoreConfiguration async, SingletonStoreConfiguration singletonStore,
-         ConnectionFactoryConfiguration connectionFactory, TableManipulationConfiguration table) {
+         ConnectionFactoryConfiguration connectionFactory, TableManagerConfiguration table) {
       super(attributes, async, singletonStore, connectionFactory);
       this.table = table;
       key2StringMapper = attributes.attribute(KEY2STRING_MAPPER);
@@ -33,7 +33,7 @@ public class JdbcStringBasedStoreConfiguration extends AbstractJdbcStoreConfigur
       return key2StringMapper.get();
    }
 
-   public TableManipulationConfiguration table() {
+   public TableManagerConfiguration table() {
       return table;
    }
 

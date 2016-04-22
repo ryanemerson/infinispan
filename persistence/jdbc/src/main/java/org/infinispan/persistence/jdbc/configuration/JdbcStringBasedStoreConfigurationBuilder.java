@@ -8,7 +8,6 @@ import org.infinispan.configuration.parsing.XmlConfigHelper;
 import org.infinispan.persistence.keymappers.DefaultTwoWayKey2StringMapper;
 import org.infinispan.persistence.keymappers.Key2StringMapper;
 import org.infinispan.commons.configuration.Builder;
-import org.infinispan.commons.configuration.attributes.AttributeSet;
 import org.infinispan.commons.util.TypedProperties;
 
 import static org.infinispan.persistence.jdbc.configuration.JdbcStringBasedStoreConfiguration.*;
@@ -21,11 +20,11 @@ import static org.infinispan.persistence.jdbc.configuration.JdbcStringBasedStore
  * @since 5.2
  */
 public class JdbcStringBasedStoreConfigurationBuilder extends AbstractJdbcStoreConfigurationBuilder<JdbcStringBasedStoreConfiguration, JdbcStringBasedStoreConfigurationBuilder> {
-   private StringTableManipulationConfigurationBuilder table;
+   private StringTableManagerConfigurationBuilder table;
 
    public JdbcStringBasedStoreConfigurationBuilder(PersistenceConfigurationBuilder builder) {
       super(builder, JdbcStringBasedStoreConfiguration.attributeDefinitionSet());
-      table = new StringTableManipulationConfigurationBuilder(this);
+      table = new StringTableManagerConfigurationBuilder(this);
    }
 
    @Override
@@ -54,7 +53,7 @@ public class JdbcStringBasedStoreConfigurationBuilder extends AbstractJdbcStoreC
    /**
     * Allows configuration of table-specific parameters such as column names and types
     */
-   public StringTableManipulationConfigurationBuilder table() {
+   public StringTableManagerConfigurationBuilder table() {
       return table;
    }
 
@@ -80,15 +79,15 @@ public class JdbcStringBasedStoreConfigurationBuilder extends AbstractJdbcStoreC
       return this;
    }
 
-   public class StringTableManipulationConfigurationBuilder extends
-         TableManipulationConfigurationBuilder<JdbcStringBasedStoreConfigurationBuilder, StringTableManipulationConfigurationBuilder> {
+   public class StringTableManagerConfigurationBuilder extends
+                                                       TableManagerConfigurationBuilder<JdbcStringBasedStoreConfigurationBuilder, StringTableManagerConfigurationBuilder> {
 
-      StringTableManipulationConfigurationBuilder(AbstractJdbcStoreConfigurationBuilder<?, JdbcStringBasedStoreConfigurationBuilder> builder) {
+      StringTableManagerConfigurationBuilder(AbstractJdbcStoreConfigurationBuilder<?, JdbcStringBasedStoreConfigurationBuilder> builder) {
          super(builder);
       }
 
       @Override
-      public StringTableManipulationConfigurationBuilder self() {
+      public StringTableManagerConfigurationBuilder self() {
          return this;
       }
 

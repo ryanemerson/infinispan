@@ -23,8 +23,8 @@ public class JdbcMixedStoreFunctionalTest extends JdbcStringBasedStoreFunctional
       JdbcMixedStoreConfigurationBuilder store = persistence
             .addStore(JdbcMixedStoreConfigurationBuilder.class)
             .preload(preload);
-      UnitTestDatabaseManager.buildTableManipulation(store.binaryTable(), true);
-      UnitTestDatabaseManager.buildTableManipulation(store.stringTable(), false);
+      UnitTestDatabaseManager.buildTableManager(store.binaryTable(), true);
+      UnitTestDatabaseManager.buildTableManager(store.stringTable(), false);
       UnitTestDatabaseManager.setDialect(store);
       UnitTestDatabaseManager.configureUniqueConnectionFactory(store);
       return persistence;
