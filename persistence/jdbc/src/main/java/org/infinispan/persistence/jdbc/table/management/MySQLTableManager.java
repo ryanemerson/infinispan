@@ -13,10 +13,26 @@ public class MySQLTableManager extends AbstractTableManager {
 
    public MySQLTableManager(ConnectionFactory connectionFactory, TableManagerConfiguration config, DbMetaData metaData) {
       super(connectionFactory, config, metaData, LOG);
+      identifierQuoteString = "`";
    }
 
    @Override
    public int getFetchSize() {
       return Integer.MIN_VALUE;
+   }
+
+   @Override
+   public boolean isUpsertSupported() {
+      return true;
+   }
+
+   @Override
+   public String getUpsertRowSql() {
+      if (upsertRowSql == null) {
+         // Assumes that config.idColumnName is the primary key
+         upsertRowSql = String.format("%s ON DUPLICATE KEY UPDATE %s = ?, %s = ?", getInsertRowSql(),
+                                      config.dataColumnName(), config.timestampColumnName());
+      }
+      return upsertRowSql;
    }
 }

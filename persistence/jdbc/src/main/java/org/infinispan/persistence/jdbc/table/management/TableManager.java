@@ -30,6 +30,8 @@ public interface TableManager {
 
    int getBatchSize();
 
+   boolean isUpsertSupported();
+
    TableName getTableName();
 
    String getIdentifierQuoteString();
@@ -37,6 +39,8 @@ public interface TableManager {
    String getInsertRowSql();
 
    String getUpdateRowSql();
+
+   String getUpsertRowSql();
 
    String getSelectRowSql();
 

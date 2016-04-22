@@ -22,7 +22,6 @@ public class OracleTableManager extends AbstractTableManager {
 
    public OracleTableManager(ConnectionFactory connectionFactory, TableManagerConfiguration config, DbMetaData metaData) {
       super(connectionFactory, config, metaData, LOG);
-      identifierQuoteString = "`";
    }
 
    @Override
