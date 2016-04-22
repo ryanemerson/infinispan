@@ -37,12 +37,16 @@ public class TableManagerFactory {
       DbMetaData metaData = getDbMetaData(connectionFactory, databaseType, dbMajorVersion, dbMinorVersion, upsertDisabled);
 
       switch (metaData.getType()) {
+         case H2:
+            return new H2TableManager(connectionFactory, config, metaData);
          case MYSQL:
             return new MySQLTableManager(connectionFactory, config, metaData);
          case ORACLE:
             return new OracleTableManager(connectionFactory, config, metaData);
          case POSTGRES:
             return new PostgresTableManager(connectionFactory, config, metaData);
+         case SQLITE:
+            return new SQLiteTableManager(connectionFactory, config, metaData);
          case SYBASE:
             return new SybaseTableManager(connectionFactory, config, metaData);
          default:
