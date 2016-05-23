@@ -9,7 +9,7 @@ import org.infinispan.configuration.cache.AsyncStoreConfiguration;
 import org.infinispan.configuration.cache.SingletonStoreConfiguration;
 import org.infinispan.configuration.serializing.SerializedWith;
 import org.infinispan.persistence.jdbc.table.management.TableManager;
-import org.infinispan.persistence.jdbc.mixed.JdbcMixedStore;
+import org.infinispan.persistence.jdbc.stores.mixed.JdbcMixedStore;
 import org.infinispan.persistence.keymappers.DefaultTwoWayKey2StringMapper;
 
 /**

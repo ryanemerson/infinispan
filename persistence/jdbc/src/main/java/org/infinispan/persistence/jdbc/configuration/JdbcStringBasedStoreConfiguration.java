@@ -8,7 +8,7 @@ import org.infinispan.commons.configuration.attributes.AttributeSet;
 import org.infinispan.configuration.cache.AsyncStoreConfiguration;
 import org.infinispan.configuration.cache.SingletonStoreConfiguration;
 import org.infinispan.configuration.serializing.SerializedWith;
-import org.infinispan.persistence.jdbc.stringbased.JdbcStringBasedStore;
+import org.infinispan.persistence.jdbc.stores.stringbased.JdbcStringBasedStore;
 import org.infinispan.persistence.keymappers.DefaultTwoWayKey2StringMapper;
 
 @BuiltBy(JdbcStringBasedStoreConfigurationBuilder.class)

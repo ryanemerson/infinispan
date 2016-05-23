@@ -8,7 +8,7 @@ import org.infinispan.commons.configuration.attributes.AttributeSet;
 import org.infinispan.configuration.cache.AsyncStoreConfiguration;
 import org.infinispan.configuration.cache.SingletonStoreConfiguration;
 import org.infinispan.configuration.serializing.SerializedWith;
-import org.infinispan.persistence.jdbc.binary.JdbcBinaryStore;
+import org.infinispan.persistence.jdbc.stores.binary.JdbcBinaryStore;
 
 @BuiltBy(JdbcBinaryStoreConfigurationBuilder.class)
 @ConfigurationFor(JdbcBinaryStore.class)

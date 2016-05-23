@@ -20,7 +20,7 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 /**
- * Test similar to {@link org.infinispan.persistence.jdbc.stringbased.JdbcStringBasedStoreFunctionalTest}.
+ * Test similar to {@link org.infinispan.persistence.jdbc.stores.stringbased.JdbcStringBasedStoreFunctionalTest}.
  *
  * @author mgencur
  */

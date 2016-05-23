@@ -28,7 +28,7 @@ import org.testng.annotations.Test;
 /**
  * Test to verify that it's possible to use the index using a JdbcStringBasedStore
  *
- * @see org.infinispan.persistence.jdbc.stringbased.JdbcStringBasedStore
+ * @see org.infinispan.persistence.jdbc.stores.stringbased.JdbcStringBasedStore
  *
  * @author Sanne Grinovero
  * @since 4.1
