@@ -8,7 +8,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.Future;
@@ -22,7 +21,6 @@ import org.infinispan.marshall.core.MarshalledEntry;
 import org.infinispan.persistence.TaskContextImpl;
 import org.infinispan.persistence.jdbc.JdbcUtil;
 import org.infinispan.persistence.jdbc.configuration.JdbcStringBasedStoreConfiguration;
-import org.infinispan.persistence.jdbc.connectionfactory.ConnectionFactory;
 import org.infinispan.persistence.jdbc.logging.Log;
 import org.infinispan.persistence.jdbc.stores.AbstractJdbcStore;
 import org.infinispan.persistence.jdbc.table.management.TableManager;
@@ -32,8 +30,11 @@ import org.infinispan.persistence.keymappers.TwoWayKey2StringMapper;
 import org.infinispan.persistence.keymappers.UnsupportedKeyTypeException;
 import org.infinispan.persistence.spi.InitializationContext;
 import org.infinispan.persistence.spi.PersistenceException;
+import org.infinispan.persistence.support.BatchModification;
 import org.infinispan.util.KeyValuePair;
 import org.infinispan.util.logging.LogFactory;
+
+import javax.transaction.Transaction;
 
 /**
  * {@link org.infinispan.persistence.spi.AdvancedCacheLoader} implementation that stores the entries in a database. In contrast to the
@@ -119,11 +120,7 @@ public class JdbcStringBasedStore<K,V> extends AbstractJdbcStore<K,V> {
       String keyStr = key2Str(entry.getKey());
       try {
          connection = connectionFactory.getConnection();
-         if (tableManager.isUpsertSupported()) {
-            executeUpsert(connection, entry, keyStr);
-         } else {
-            executeLegacyUpdate(connection, entry, keyStr);
-         }
+         write(entry, connection, keyStr);
       } catch (SQLException ex) {
          log.sqlFailureStoringKey(keyStr, ex);
          throw new PersistenceException(String.format("Error while storing string key to database; key: '%s'", keyStr), ex);
@@ -134,6 +131,18 @@ public class JdbcStringBasedStore<K,V> extends AbstractJdbcStore<K,V> {
          Thread.currentThread().interrupt();
       } finally {
          connectionFactory.releaseConnection(connection);
+      }
+   }
+
+   private void write(MarshalledEntry entry, Connection connection) throws SQLException, InterruptedException {
+      write(entry, connection, key2Str(entry.getKey()));
+   }
+
+   private void write(MarshalledEntry entry, Connection connection, String keyStr) throws SQLException, InterruptedException {
+      if (tableManager.isUpsertSupported()) {
+         executeUpsert(connection, entry, keyStr);
+      } else {
+         executeLegacyUpdate(connection, entry, keyStr);
       }
    }
 
@@ -321,6 +330,45 @@ public class JdbcStringBasedStore<K,V> extends AbstractJdbcStore<K,V> {
          }
       });
       waitForFutureToComplete(future);
+   }
+
+   @Override
+   public void prepareWithModifications(Transaction transaction, BatchModification batchModification) throws PersistenceException {
+      try {
+         Connection connection = getTxConnection(transaction);
+         connection.setAutoCommit(false);
+
+         boolean upsertSupported = tableManager.isUpsertSupported();
+         try (PreparedStatement upsertBatch = upsertSupported ? connection.prepareStatement(tableManager.getUpsertRowSql()) : null;
+              PreparedStatement deleteBatch = connection.prepareStatement(tableManager.getDeleteRowSql())) {
+
+            for (MarshalledEntry entry : batchModification.getMarshalledEntries()) {
+               if (upsertSupported) {
+                  String keyStr = key2Str(entry.getKey());
+                  prepareUpdateStatement(entry, keyStr, upsertBatch);
+                  upsertBatch.addBatch();
+               } else {
+                  write(entry, connection);
+               }
+            }
+
+            for (Object key : batchModification.getKeysToRemove()) {
+               String keyStr = key2Str(key);
+               deleteBatch.setString(1, keyStr);
+               deleteBatch.addBatch();
+            }
+
+            if (upsertSupported && !batchModification.getMarshalledEntries().isEmpty())
+               upsertBatch.executeBatch();
+
+            if (!batchModification.getKeysToRemove().isEmpty())
+               deleteBatch.executeUpdate();
+         }
+         // We do not call connection.close() in the event of an exception, as close() on active Tx behaviour is implementation
+         // dependent. See https://docs.oracle.com/javase/8/docs/api/java/sql/Connection.html#close--
+      } catch (SQLException | InterruptedException e) {
+         throw log.prepareTxFailure(e);
+      }
    }
 
    @Override

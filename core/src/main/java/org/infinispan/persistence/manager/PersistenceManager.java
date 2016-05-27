@@ -10,6 +10,10 @@ import org.infinispan.context.InvocationContext;
 import org.infinispan.filter.KeyFilter;
 import org.infinispan.persistence.spi.AdvancedCacheLoader;
 import org.infinispan.marshall.core.MarshalledEntry;
+import org.infinispan.persistence.spi.PersistenceException;
+import org.infinispan.persistence.support.BatchModification;
+
+import javax.transaction.Transaction;
 
 /**
  * Defines the logic for interacting with the chain of external storage.
@@ -109,6 +113,40 @@ public interface PersistenceManager extends Lifecycle {
 
    void setClearOnStop(boolean clearOnStop);
 
+   /**
+    * Explicitly write to all stores that do not implement {@link org.infinispan.persistence.spi.TransactionalCacheWriter}.
+    *
+    * @param marshalledEntry the entry to be written to all non-tx stores.
+    * @param accessMode the type of access to the underlying store.
+    */
+   void writeToAllNonTxStores(MarshalledEntry marshalledEntry, AccessMode accessMode);
+
+   /**
+    * Perform the prepare phase of 2PC on all Tx stores.
+    *
+    * @param transaction the current transactional context.
+    * @param batchModification an object containing the write/remove operations required for this transaction.
+    * @param accessMode the type of access to the underlying store.
+    * @throws PersistenceException if an error is encountered at any of the underlying stores.
+    */
+   void prepareAllTxStores(Transaction transaction, BatchModification batchModification,
+                           AccessMode accessMode) throws PersistenceException;
+
+   /**
+    * Perform the commit operation for the provided transaction on all stores.
+    *
+    * @param transaction the transactional context to be committed.
+    * @param accessMode the type of access to the underlying store.
+    */
+   void commitAllTxStores(Transaction transaction, AccessMode accessMode);
+
+   /**
+    * Perform the rollback operation for the provided transaction on all stores.
+    *
+    * @param transaction the transactional context to be rolledback.
+    * @param accessMode the type of access to the underlying store.
+    */
+   void rollbackAllTxStores(Transaction transaction, AccessMode accessMode);
 }
 
 

@@ -40,6 +40,7 @@ import org.infinispan.persistence.spi.AdvancedCacheLoader;
 import org.infinispan.persistence.spi.AdvancedLoadWriteStore;
 import org.infinispan.persistence.spi.CacheLoader;
 import org.infinispan.persistence.spi.CacheWriter;
+import org.infinispan.persistence.spi.TransactionalCacheWriter;
 import org.infinispan.remoting.inboundhandler.PerCacheInboundInvocationHandler;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.remoting.transport.Transport;
@@ -1396,6 +1397,12 @@ public class TestingUtil {
    public static <T extends CacheWriter<K, V>, K, V> T getFirstWriter(Cache<K, V> cache) {
       PersistenceManagerImpl persistenceManager = (PersistenceManagerImpl) extractComponent(cache, PersistenceManager.class);
       return (T) persistenceManager.getAllWriters().get(0);
+   }
+
+   @SuppressWarnings("unchecked")
+   public static <T extends CacheWriter<K, V>, K, V> T getFirstTxWriter(Cache<K, V> cache) {
+      PersistenceManagerImpl persistenceManager = (PersistenceManagerImpl) extractComponent(cache, PersistenceManager.class);
+      return (T) persistenceManager.getAllTxWriters().get(0);
    }
 
    public static StreamingMarshaller marshaller(Cache cache) {

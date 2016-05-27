@@ -23,8 +23,6 @@ import org.infinispan.container.entries.CacheEntry;
 import org.infinispan.container.entries.DeltaAwareCacheEntry;
 import org.infinispan.container.entries.InternalCacheEntry;
 import org.infinispan.container.entries.InternalCacheValue;
-import org.infinispan.container.versioning.EntryVersion;
-import org.infinispan.container.versioning.EntryVersionsMap;
 import org.infinispan.context.Flag;
 import org.infinispan.context.InvocationContext;
 import org.infinispan.context.impl.TxInvocationContext;
@@ -36,8 +34,7 @@ import org.infinispan.jmx.annotations.ManagedAttribute;
 import org.infinispan.jmx.annotations.ManagedOperation;
 import org.infinispan.jmx.annotations.MeasurementType;
 import org.infinispan.marshall.core.MarshalledEntryImpl;
-import org.infinispan.metadata.EmbeddedMetadata;
-import org.infinispan.metadata.Metadata;
+import org.infinispan.persistence.PersistenceUtil;
 import org.infinispan.persistence.manager.PersistenceManager;
 import org.infinispan.transaction.xa.GlobalTransaction;
 import org.infinispan.util.logging.Log;
@@ -461,7 +458,7 @@ public class CacheWriterInterceptor extends JmxStatsCommandInterceptor {
       protected Object visitSingleStore(InvocationContext ctx, FlagAffectedCommand command, Object key) throws Throwable {
          if (isProperWriter(ctx, command, key)) {
             if (generateStatistics) putCount++;
-            InternalCacheValue sv = getStoredValue(key, ctx);
+            InternalCacheValue sv = PersistenceUtil.getValueFromCtxOrCreateNew(key, ctx, entryFactory);
             MarshalledEntryImpl me = new MarshalledEntryImpl(key, sv.getValue(), internalMetadata(sv), marshaller);
             persistenceManager.writeToAllStores(me, command.hasFlag(Flag.SKIP_SHARED_CACHE_STORE) ? PRIVATE : BOTH);
          }
@@ -488,7 +485,7 @@ public class CacheWriterInterceptor extends JmxStatsCommandInterceptor {
    }
 
    void storeEntry(InvocationContext ctx, Object key, FlagAffectedCommand command) {
-      InternalCacheValue sv = getStoredValue(key, ctx);
+      InternalCacheValue sv = PersistenceUtil.getValueFromCtxOrCreateNew(key, ctx, entryFactory);
       persistenceManager.writeToAllStores(new MarshalledEntryImpl(key, sv.getValue(), internalMetadata(sv), marshaller),
                                           skipSharedStores(ctx, key, command) ? PRIVATE : BOTH);
       if (trace) getLog().tracef("Stored entry %s under key %s", sv, key);
@@ -496,36 +493,6 @@ public class CacheWriterInterceptor extends JmxStatsCommandInterceptor {
 
    protected boolean skipSharedStores(InvocationContext ctx, Object key, FlagAffectedCommand command) {
       return !ctx.isOriginLocal() || command.hasFlag(Flag.SKIP_SHARED_CACHE_STORE);
-   }
-
-   InternalCacheValue getStoredValue(Object key, InvocationContext ctx) {
-      CacheEntry entry = ctx.lookupEntry(key);
-      if (entry instanceof InternalCacheEntry) {
-         return ((InternalCacheEntry) entry).toInternalCacheValue();
-      } else {
-         if (ctx.isInTxScope()) {
-            EntryVersionsMap updatedVersions =
-                  ((TxInvocationContext) ctx).getCacheTransaction().getUpdatedEntryVersions();
-            if (updatedVersions != null) {
-               EntryVersion version = updatedVersions.get(entry.getKey());
-               if (version != null) {
-                  Metadata metadata = entry.getMetadata();
-                  if (metadata == null) {
-                     // If no metadata passed, assumed embedded metadata
-                     metadata = new EmbeddedMetadata.Builder()
-                           .lifespan(entry.getLifespan()).maxIdle(entry.getMaxIdle())
-                           .version(version).build();
-                     return entryFactory.create(entry.getKey(), entry.getValue(), metadata).toInternalCacheValue();
-                  } else {
-                     metadata = metadata.builder().version(version).build();
-                     return entryFactory.create(entry.getKey(), entry.getValue(), metadata).toInternalCacheValue();
-                  }
-               }
-            }
-         }
-
-         return entryFactory.create(entry).toInternalCacheValue();
-      }
    }
 
    public void disableInterceptor() {
