@@ -138,6 +138,23 @@
          <artifactId>c3p0</artifactId>
          <optional>${uberjar.deps.optional}</optional>
       </dependency>
+
+      <dependency>
+         <groupId>com.zaxxer</groupId>
+         <artifactId>HikariCP</artifactId>
+         <optional>${uberjar.deps.optional}</optional>
+      </dependency>
+      <dependency>
+         <groupId>org.jboss.slf4j</groupId>
+         <artifactId>slf4j-jboss-logging</artifactId>
+         <optional>${uberjar.deps.optional}</optional>
+      </dependency>
+      <dependency>
+         <groupId>org.slf4j</groupId>
+         <artifactId>slf4j-api</artifactId>
+         <scope>runtime</scope>
+         <optional>${uberjar.deps.optional}</optional>
+      </dependency>
    </dependencies>
 
    <build>
@@ -309,6 +326,8 @@
                            org.jgroups.*;version=${version.jgroups},
                         </_exportcontents>
                         <Import-Package>
+                           !org.slf4j.*,
+                           !com.zaxxer.hikari.*,
                            !com.mchange.v2.c3p0,
                            !com.sun.jmx.mbeanserver,
                            !infinispan.*,

@@ -21,6 +21,27 @@
       </dependency>
 
       <dependency>
+         <groupId>com.zaxxer</groupId>
+         <artifactId>HikariCP</artifactId>
+         <optional>true</optional>
+      </dependency>
+
+
+      <dependency>
+         <groupId>org.jboss.slf4j</groupId>
+         <artifactId>slf4j-jboss-logging</artifactId>
+         <scope>runtime</scope>
+         <optional>true</optional>
+      </dependency>
+
+      <dependency>
+         <groupId>org.slf4j</groupId>
+         <artifactId>slf4j-api</artifactId>
+         <scope>runtime</scope>
+         <optional>true</optional>
+      </dependency>
+
+      <dependency>
          <groupId>com.h2database</groupId>
          <artifactId>h2</artifactId>
          <scope>test</scope>
@@ -37,6 +58,7 @@
          <artifactId>metainf-services</artifactId>
          <optional>true</optional>
       </dependency>
+
    </dependencies>
 
    <build>

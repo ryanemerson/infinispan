@@ -9,6 +9,12 @@
       <bundle>wrap:mvn:com.mchange/c3p0/${version.c3p0}$DynamicImport-Package=*</bundle>
       <bundle>wrap:mvn:com.mchange/mchange-commons-java/${version.c3p0_dep.mchange-commons-java}</bundle>
    </feature>
+
+   <feature name="hikaricp" version="${project.version}">
+      <bundle>wrap:org.slf4j/slf4j-api/${version.slf4j-api}$DynamicImport-Package=*</bundle>
+      <bundle>wrap:org.jboss.slf4j/slf4j-jboss-logging/${version.slf4j-jboss-logging}$DynamicImport-Package=*</bundle>
+      <bundle>wrap:mvn:com.zaxxer/HikariCP/${version.hikaricp}$DynamicImport-Package=*</bundle>
+   </feature>
    <!-- Hibernate dependencies required only when using JPACacheStore -->
    <feature name="hibernate" version="${project.version}">
       <feature>jndi</feature>
