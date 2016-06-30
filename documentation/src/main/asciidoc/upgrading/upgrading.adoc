@@ -55,6 +55,18 @@ Additionally there is no Logger implementation specified (since this may vary de
 === Total order executor is not removed
 The total order protocol now uses the `remote-command-executor`. The attribute `total-order-executor` in `<container>` tag is removed.
 
+=== HikariCP is now the default implementation for JDBC PooledConnectionFactory
+link:https://github.com/brettwooldridge/HikariCP[HikariCP] offers superior performance to c3p0 and is now the default implementation.
+Additional properties for HikariCP can be provided by placing a `hikari.properties` file on the classpath or by using the
+system property `hikaricp.configurationFile` to specify the location of a hikari properties file. N.B. When both
+`hikaricp.configurationFile` and `hikari.properties` are provided, only the properties of the former are loaded.
+
+Support for c3p0 has been deprecated and will be removed in a future release.
+
+Users can force c3p0 to always be utilised by providing the system property `-Dc3p0.force=true`. However, if no hikari
+property file exists (on the classpath or via the system property) and there is a `c3p0.properties` or `c3p0-config.xml` file
+on the classpath, then c3p0 will be utilised without needing to specify `c3p0.force=true`.
+
 == Upgrading from 8.1 to 8.2
 === Entry Retriever is deprecated
 Entry Retriever is now deprecated and will be removed in Infinispan 9.  This is replaced by the new Streams feature.
