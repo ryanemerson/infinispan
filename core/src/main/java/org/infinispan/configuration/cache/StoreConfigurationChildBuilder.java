@@ -65,7 +65,8 @@ public interface StoreConfigurationChildBuilder<S> extends ConfigurationChildBui
 
    /**
     * This setting should be set to true when the underlying cache store supports transactions and it is desirable for
-    * the underlying store and the cache to always remain synchronized.
+    * the underlying store and the cache to remain synchronized. With this enabled any Exceptions thrown whilst writing
+    * to the underlying store will result in both the store's and the cache's transaction rollingback.
     * <p/>
     * If enabled and this store is shared, then writes to this store will be performed at prepare time of the Infinispan Tx.
     * If an exception is encountered by the store during prepare time, then this will result in the global Tx being

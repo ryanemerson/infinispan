@@ -1301,7 +1301,7 @@
     </xs:attribute>
     <xs:attribute name="transactional" type="xs:boolean" default="false">
       <xs:annotation>
-        <xs:documentation>This setting should be set to true when the underlying cache store supports transactions and it is desirable for the underlying store and the cache to always remain synchronized.</xs:documentation>
+        <xs:documentation>This setting should be set to true when the underlying cache store supports transactions and it is desirable for the underlying store and the cache to remain synchronized. With this enabled any Exceptions thrown whilst writing to the underlying store will result in both the store's and cache's transactions rollingback.</xs:documentation>
       </xs:annotation>
     </xs:attribute>
     <xs:attribute name="preload" type="xs:boolean" default="false">
