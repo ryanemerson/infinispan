@@ -59,7 +59,7 @@ public class TransactionalStoreInterceptor extends DDAsyncInterceptor {
 
    @Override
    public CompletableFuture<Void> visitPrepareCommand(TxInvocationContext ctx, PrepareCommand command) throws Throwable {
-      if (isValidContext(ctx)) {
+      if (isStoreEnabled() && ctx.isOriginLocal()) {
          Transaction tx = ctx.getTransaction();
          Updater modBuilder = new Updater();
          List<WriteCommand> modifications = ctx.getCacheTransaction().getAllModifications();
@@ -73,7 +73,7 @@ public class TransactionalStoreInterceptor extends DDAsyncInterceptor {
 
    @Override
    public CompletableFuture<Void> visitCommitCommand(TxInvocationContext ctx, CommitCommand command) throws Throwable {
-      if (isValidContext(ctx)) {
+      if (isStoreEnabled() && ctx.isOriginLocal()) {
          persistenceManager.commitAllTxStores(ctx.getTransaction(), SHARED);
       }
       return ctx.continueInvocation();
@@ -81,7 +81,7 @@ public class TransactionalStoreInterceptor extends DDAsyncInterceptor {
 
    @Override
    public CompletableFuture<Void> visitRollbackCommand(TxInvocationContext ctx, RollbackCommand command) throws Throwable {
-      if (isValidContext(ctx)) {
+      if (isStoreEnabled() && ctx.isOriginLocal()) {
          persistenceManager.rollbackAllTxStores(ctx.getTransaction(), SHARED);
       }
       return ctx.continueInvocation();
@@ -89,10 +89,6 @@ public class TransactionalStoreInterceptor extends DDAsyncInterceptor {
 
    public void disableInterceptor() {
       enabled = false;
-   }
-
-   private boolean isValidContext(TxInvocationContext ctx) {
-      return isStoreEnabled() && ctx.isOriginLocal() && ctx.isInTxScope();
    }
 
    private boolean isStoreEnabled() {
