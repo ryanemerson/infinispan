@@ -150,7 +150,7 @@ public class TransactionalStoreInterceptor extends DDAsyncInterceptor {
       }
 
       private Object visitSingleStore(InvocationContext ctx, Object key) throws Throwable {
-         InternalCacheValue icv = PersistenceUtil.getValueFromCtxOrCreateNew(key, ctx, entryFactory);
+         InternalCacheValue icv = entryFactory.getValueFromCtxOrCreateNew(key, ctx);
          modifications.addMarshalledEntry(key, new MarshalledEntryImpl(key, icv.getValue(), PersistenceUtil.internalMetadata(icv), marshaller));
          return null;
       }

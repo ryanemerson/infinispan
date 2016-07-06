@@ -458,7 +458,7 @@ public class CacheWriterInterceptor extends JmxStatsCommandInterceptor {
       protected Object visitSingleStore(InvocationContext ctx, FlagAffectedCommand command, Object key) throws Throwable {
          if (isProperWriter(ctx, command, key)) {
             if (generateStatistics) putCount++;
-            InternalCacheValue sv = PersistenceUtil.getValueFromCtxOrCreateNew(key, ctx, entryFactory);
+            InternalCacheValue sv = entryFactory.getValueFromCtxOrCreateNew(key, ctx);
             MarshalledEntryImpl me = new MarshalledEntryImpl(key, sv.getValue(), internalMetadata(sv), marshaller);
             persistenceManager.writeToAllNonTxStores(me, command.hasFlag(Flag.SKIP_SHARED_CACHE_STORE) ? PRIVATE : BOTH);
          }
@@ -485,7 +485,7 @@ public class CacheWriterInterceptor extends JmxStatsCommandInterceptor {
    }
 
    void storeEntry(InvocationContext ctx, Object key, FlagAffectedCommand command) {
-      InternalCacheValue sv = PersistenceUtil.getValueFromCtxOrCreateNew(key, ctx, entryFactory);
+      InternalCacheValue sv = entryFactory.getValueFromCtxOrCreateNew(key, ctx);
       persistenceManager.writeToAllNonTxStores(new MarshalledEntryImpl(key, sv.getValue(), internalMetadata(sv), marshaller),
                                                skipSharedStores(ctx, key, command) ? PRIVATE : BOTH);
       if (trace) getLog().tracef("Stored entry %s under key %s", sv, key);

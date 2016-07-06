@@ -2,16 +2,11 @@ package org.infinispan.persistence;
 
 import org.infinispan.container.DataContainer;
 import org.infinispan.container.InternalEntryFactory;
-import org.infinispan.container.entries.CacheEntry;
 import org.infinispan.container.entries.InternalCacheEntry;
 import org.infinispan.container.entries.InternalCacheValue;
-import org.infinispan.container.versioning.EntryVersion;
-import org.infinispan.container.versioning.EntryVersionsMap;
 import org.infinispan.context.InvocationContext;
-import org.infinispan.context.impl.TxInvocationContext;
 import org.infinispan.filter.KeyFilter;
 import org.infinispan.marshall.core.MarshalledEntry;
-import org.infinispan.metadata.EmbeddedMetadata;
 import org.infinispan.metadata.InternalMetadata;
 import org.infinispan.metadata.Metadata;
 import org.infinispan.metadata.impl.InternalMetadataImpl;
@@ -141,38 +136,6 @@ public class PersistenceUtil {
          //metadata is null!
          //noinspection unchecked
          return factory.create(loaded.getKey(), loaded.getValue(), (Metadata) null);
-      }
-   }
-
-   public static InternalCacheValue getValueFromCtxOrCreateNew(Object key, InvocationContext ctx,
-                                                               InternalEntryFactory entryFactory) {
-      CacheEntry entry = ctx.lookupEntry(key);
-      if (entry instanceof InternalCacheEntry) {
-         return ((InternalCacheEntry) entry).toInternalCacheValue();
-      } else {
-         if (ctx.isInTxScope()) {
-            EntryVersionsMap updatedVersions =
-                  ((TxInvocationContext) ctx).getCacheTransaction().getUpdatedEntryVersions();
-            if (updatedVersions != null) {
-               EntryVersion version = updatedVersions.get(entry.getKey());
-               if (version != null) {
-                  Metadata metadata = entry.getMetadata();
-                  if (metadata == null) {
-                     // If no metadata passed, assumed embedded metadata
-                     metadata = new EmbeddedMetadata.Builder()
-                           .lifespan(entry.getLifespan()).maxIdle(entry.getMaxIdle())
-                           .version(version).build();
-                     return entryFactory.create(entry.getKey(), entry.getValue(), metadata)
-                           .toInternalCacheValue();
-                  } else {
-                     metadata = metadata.builder().version(version).build();
-                     return entryFactory.create(entry.getKey(), entry.getValue(), metadata)
-                           .toInternalCacheValue();
-                  }
-               }
-            }
-         }
-         return entryFactory.create(entry).toInternalCacheValue();
       }
    }
 }
