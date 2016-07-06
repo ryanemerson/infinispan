@@ -18,20 +18,21 @@ import java.util.Set;
  */
 public class BatchModification {
    private final Map<Object, MarshalledEntry> marshalledEntries = new HashMap<>();
-   private final Set<Object> affectedKeys = new HashSet<>();
    private final Set<Object> keysToRemove = new HashSet<>();
+   private final Set<Object> affectedKeys;
 
+   public BatchModification(Set<Object> affectedKeys) {
+      this.affectedKeys = affectedKeys;
+   }
 
    public void addMarshalledEntry(Object key, MarshalledEntry marshalledEntry) {
       keysToRemove.remove(key);
       marshalledEntries.put(key, marshalledEntry);
-      affectedKeys.add(key);
    }
 
    public void removeEntry(Object key) {
       marshalledEntries.remove(key);
       keysToRemove.add(key);
-      affectedKeys.add(key);
    }
 
    public Set<Object> getAffectedKeys() {

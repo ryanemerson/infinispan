@@ -31,10 +31,12 @@ import org.infinispan.persistence.support.BatchModification;
 import javax.transaction.Transaction;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 import static org.infinispan.factories.KnownComponentNames.CACHE_MARSHALLER;
 import static org.infinispan.persistence.manager.PersistenceManager.AccessMode.SHARED;
+import org.infinispan.transaction.impl.AbstractCacheTransaction;
 
 /**
  * An interceptor which ensures that writes to an underlying transactional store are prepared->committed/rolledback as part
@@ -61,7 +63,7 @@ public class TransactionalStoreInterceptor extends DDAsyncInterceptor {
    public CompletableFuture<Void> visitPrepareCommand(TxInvocationContext ctx, PrepareCommand command) throws Throwable {
       if (isStoreEnabled() && ctx.isOriginLocal()) {
          Transaction tx = ctx.getTransaction();
-         Updater modBuilder = new Updater();
+         Updater modBuilder = new Updater(ctx.getCacheTransaction().getAffectedKeys());
          List<WriteCommand> modifications = ctx.getCacheTransaction().getAllModifications();
          for (WriteCommand writeCommand : modifications) {
             writeCommand.acceptVisitor(ctx, modBuilder);
@@ -96,7 +98,11 @@ public class TransactionalStoreInterceptor extends DDAsyncInterceptor {
    }
 
    private class Updater extends AbstractVisitor {
-      private final BatchModification modifications = new BatchModification();
+      private final BatchModification modifications;
+
+      Updater(Set<Object> affectedKeys) {
+         modifications = new BatchModification(affectedKeys);
+      }
 
       @Override
       public Object visitPutKeyValueCommand(InvocationContext ctx, PutKeyValueCommand command) throws Throwable {
