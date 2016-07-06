@@ -422,7 +422,7 @@ public class CacheWriterInterceptor extends JmxStatsCommandInterceptor {
                ice = entryFactory.create(entry);
             }
             MarshalledEntryImpl marshalledEntry = new MarshalledEntryImpl(ice.getKey(), ice.getValue(), internalMetadata(ice), marshaller);
-            persistenceManager.writeToAllStores(marshalledEntry, command.hasFlag(Flag.SKIP_SHARED_CACHE_STORE) ? PRIVATE : BOTH);
+            persistenceManager.writeToAllNonTxStores(marshalledEntry, command.hasFlag(Flag.SKIP_SHARED_CACHE_STORE) ? PRIVATE : BOTH);
          }
          return null;
       }
@@ -460,7 +460,7 @@ public class CacheWriterInterceptor extends JmxStatsCommandInterceptor {
             if (generateStatistics) putCount++;
             InternalCacheValue sv = PersistenceUtil.getValueFromCtxOrCreateNew(key, ctx, entryFactory);
             MarshalledEntryImpl me = new MarshalledEntryImpl(key, sv.getValue(), internalMetadata(sv), marshaller);
-            persistenceManager.writeToAllStores(me, command.hasFlag(Flag.SKIP_SHARED_CACHE_STORE) ? PRIVATE : BOTH);
+            persistenceManager.writeToAllNonTxStores(me, command.hasFlag(Flag.SKIP_SHARED_CACHE_STORE) ? PRIVATE : BOTH);
          }
          return null;
       }
@@ -486,8 +486,8 @@ public class CacheWriterInterceptor extends JmxStatsCommandInterceptor {
 
    void storeEntry(InvocationContext ctx, Object key, FlagAffectedCommand command) {
       InternalCacheValue sv = PersistenceUtil.getValueFromCtxOrCreateNew(key, ctx, entryFactory);
-      persistenceManager.writeToAllStores(new MarshalledEntryImpl(key, sv.getValue(), internalMetadata(sv), marshaller),
-                                          skipSharedStores(ctx, key, command) ? PRIVATE : BOTH);
+      persistenceManager.writeToAllNonTxStores(new MarshalledEntryImpl(key, sv.getValue(), internalMetadata(sv), marshaller),
+                                               skipSharedStores(ctx, key, command) ? PRIVATE : BOTH);
       if (trace) getLog().tracef("Stored entry %s under key %s", sv, key);
    }
 

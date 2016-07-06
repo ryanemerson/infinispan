@@ -80,7 +80,7 @@ public class PersistenceManagerStub implements PersistenceManager {
    }
 
    @Override
-   public void writeToAllStores(MarshalledEntry marshalledEntry, AccessMode modes) {
+   public void writeToAllNonTxStores(MarshalledEntry marshalledEntry, AccessMode modes) {
    }
 
    @Override
@@ -95,10 +95,6 @@ public class PersistenceManagerStub implements PersistenceManager {
 
    @Override
    public void setClearOnStop(boolean clearOnStop) {
-   }
-
-   @Override
-   public void writeToAllNonTxStores(MarshalledEntry marshalledEntry, AccessMode accessMode) {
    }
 
    @Override

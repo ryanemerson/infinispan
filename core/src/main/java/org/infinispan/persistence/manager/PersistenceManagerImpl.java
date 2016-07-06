@@ -85,7 +85,7 @@ public class PersistenceManagerImpl implements PersistenceManager {
    TransactionManager transactionManager;
    private TimeService timeService;
    private final List<CacheLoader> loaders = new ArrayList<>();
-   private final List<CacheWriter> writers = new ArrayList<>();
+   private final List<CacheWriter> nonTxWriters = new ArrayList<>();
    private final List<CacheWriter> txWriters = new ArrayList<>();
 
    private final ReadWriteLock storesMutex = new ReentrantReadWriteLock();
@@ -260,13 +260,13 @@ public class PersistenceManagerImpl implements PersistenceManager {
          storesMutex.writeLock().lock();
          try {
             removeCacheLoader(storeType, loaders);
-            removeCacheWriter(storeType, writers);
+            removeCacheWriter(storeType, nonTxWriters);
             removeCacheWriter(storeType, txWriters);
          } finally {
             storesMutex.writeLock().unlock();
          }
 
-         if (loaders.isEmpty() && writers.isEmpty() && txWriters.isEmpty()) {
+         if (loaders.isEmpty() && nonTxWriters.isEmpty() && txWriters.isEmpty()) {
             AsyncInterceptorChain chain = cache.getAdvancedCache().getAsyncInterceptorChain();
             AsyncInterceptor loaderInterceptor = chain.findInterceptorExtending(CacheLoaderInterceptor.class);
             if (loaderInterceptor == null) {
@@ -322,7 +322,7 @@ public class PersistenceManagerImpl implements PersistenceManager {
          Set<String> loaderTypes = new HashSet<String>(loaders.size());
          for (CacheLoader loader : loaders)
             loaderTypes.add(undelegate(loader).getClass().getName());
-         for (CacheWriter writer : writers)
+         for (CacheWriter writer : nonTxWriters)
             loaderTypes.add(undelegate(writer).getClass().getName());
          for (CacheWriter writer : txWriters)
             loaderTypes.add(undelegate(writer).getClass().getName());
@@ -409,7 +409,7 @@ public class PersistenceManagerImpl implements PersistenceManager {
       storesMutex.readLock().lock();
       try {
          boolean removed = false;
-         for (CacheWriter w : writers) {
+         for (CacheWriter w : nonTxWriters) {
             if (mode.canPerform(configMap.get(w))) {
                removed |= w.delete(key);
             }
@@ -480,15 +480,10 @@ public class PersistenceManagerImpl implements PersistenceManager {
    }
 
    @Override
-   public void writeToAllStores(MarshalledEntry marshalledEntry, AccessMode mode) {
-      writeToAllNonTxStores(marshalledEntry, mode);
-   }
-
-   @Override
    public void writeToAllNonTxStores(MarshalledEntry marshalledEntry, AccessMode accessMode) {
       storesMutex.readLock().lock();
       try {
-         writers.stream().filter(canPerform(accessMode)).forEach(writer -> writer.write(marshalledEntry));
+         nonTxWriters.stream().filter(canPerform(accessMode)).forEach(writer -> writer.write(marshalledEntry));
       } finally {
          storesMutex.readLock().unlock();
       }
@@ -559,7 +554,7 @@ public class PersistenceManagerImpl implements PersistenceManager {
    }
 
    public List<CacheWriter> getAllWriters() {
-      return Collections.unmodifiableList(writers);
+      return Collections.unmodifiableList(nonTxWriters);
    }
 
    public List<CacheWriter> getAllTxWriters() {
@@ -624,10 +619,17 @@ public class PersistenceManagerImpl implements PersistenceManager {
          if (writer instanceof DelegatingCacheWriter)
             writer.init(ctx);
 
-         if (undelegate(writer) instanceof TransactionalCacheWriter && cfg.transactional())
-            txWriters.add(writer);
-         else
-            writers.add(writer);
+         if (undelegate(writer) instanceof TransactionalCacheWriter && cfg.transactional()) {
+            if (configuration.transaction().transactionMode().isTransactional()) {
+               txWriters.add(writer);
+            } else {
+               // If cache is non-transactional then it is not possible for the store to be, so treat as normal store
+               nonTxWriters.add(writer);
+               log.transactionalStoreInNonTransactionalCache(writer.getClass().getSimpleName(), cache.getName());
+            }
+         } else {
+            nonTxWriters.add(writer);
+         }
 
          configMap.put(writer, cfg);
       }
@@ -679,7 +681,7 @@ public class PersistenceManagerImpl implements PersistenceManager {
             CACHE_MODE_LOCAL, SKIP_OWNERSHIP_CHECK, IGNORE_RETURN_VALUES, SKIP_CACHE_STORE, SKIP_LOCKING));
 
       boolean hasShared = false;
-      for (CacheWriter w : writers) {
+      for (CacheWriter w : nonTxWriters) {
          if (configMap.get(w).shared()) {
             hasShared = true;
             break;
@@ -807,6 +809,6 @@ public class PersistenceManagerImpl implements PersistenceManager {
    }
 
    private Stream<CacheWriter> getWritersStream() {
-      return Stream.concat(writers.stream(), txWriters.stream());
+      return Stream.concat(nonTxWriters.stream(), txWriters.stream());
    }
 }

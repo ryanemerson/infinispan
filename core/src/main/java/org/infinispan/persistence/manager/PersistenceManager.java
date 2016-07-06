@@ -60,8 +60,6 @@ public interface PersistenceManager extends Lifecycle {
 
    MarshalledEntry loadFromAllStores(Object key, InvocationContext context);
 
-   void writeToAllStores(MarshalledEntry marshalledEntry, AccessMode modes);
-
    /**
     * Returns the store one configured with fetch persistent state, or null if none exist.
     */
@@ -114,12 +112,18 @@ public interface PersistenceManager extends Lifecycle {
    void setClearOnStop(boolean clearOnStop);
 
    /**
-    * Explicitly write to all stores that do not implement {@link org.infinispan.persistence.spi.TransactionalCacheWriter}.
+    * Write to all stores that are not transactional. A store is considered transactional if all of the following are true:
+    *
+    * <p><ul>
+    *    <li>The store implements {@link org.infinispan.persistence.spi.TransactionalCacheWriter}</li>
+    *    <li>The store is configured to be transactional</li>
+    *    <li>The cache's TransactionMode === TRANSACTIONAL</li>
+    * </ul></p>
     *
     * @param marshalledEntry the entry to be written to all non-tx stores.
     * @param accessMode the type of access to the underlying store.
     */
-   void writeToAllNonTxStores(MarshalledEntry marshalledEntry, AccessMode accessMode);
+   void writeToAllNonTxStores(MarshalledEntry marshalledEntry, AccessMode modes);
 
    /**
     * Perform the prepare phase of 2PC on all Tx stores.
@@ -133,7 +137,7 @@ public interface PersistenceManager extends Lifecycle {
                            AccessMode accessMode) throws PersistenceException;
 
    /**
-    * Perform the commit operation for the provided transaction on all stores.
+    * Perform the commit operation for the provided transaction on all Tx stores.
     *
     * @param transaction the transactional context to be committed.
     * @param accessMode the type of access to the underlying store.
@@ -141,7 +145,7 @@ public interface PersistenceManager extends Lifecycle {
    void commitAllTxStores(Transaction transaction, AccessMode accessMode);
 
    /**
-    * Perform the rollback operation for the provided transaction on all stores.
+    * Perform the rollback operation for the provided transaction on all Tx stores.
     *
     * @param transaction the transactional context to be rolledback.
     * @param accessMode the type of access to the underlying store.

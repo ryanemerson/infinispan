@@ -1430,4 +1430,9 @@ public interface Log extends BasicLogger {
    @LogMessage(level = ERROR)
    @Message(value = "Error executing submitted store task", id = 416)
    void errorExecutingSubmittedStoreTask(@Cause Throwable cause);
+
+   @LogMessage(level = WARN)
+   @Message(value = "It is not possible for a store to be transactional in a non-transactional cache. " +
+         "Transactional flag ignored for store ('%s') in cache ('%s')", id = 417)
+   void transactionalStoreInNonTransactionalCache(String className, String cacheName);
 }

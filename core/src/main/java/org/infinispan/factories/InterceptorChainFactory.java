@@ -257,8 +257,8 @@ public class InterceptorChainFactory extends AbstractNamedCacheComponentFactory 
             else
                interceptorChain.appendInterceptor(createInterceptor(new CacheLoaderInterceptor(), CacheLoaderInterceptor.class), false);
 
-            boolean transactional  = configuration.persistence().stores().stream().anyMatch(StoreConfiguration::transactional);
-            if (transactional)
+            boolean transactionalStore = configuration.persistence().stores().stream().anyMatch(StoreConfiguration::transactional);
+            if (transactionalStore && transactionMode.isTransactional())
                interceptorChain.appendInterceptor(createInterceptor(new TransactionalStoreInterceptor(), TransactionalStoreInterceptor.class), false);
 
             switch (cacheMode) {
