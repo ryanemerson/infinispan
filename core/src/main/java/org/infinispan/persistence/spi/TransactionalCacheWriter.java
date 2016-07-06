@@ -5,8 +5,16 @@ import org.infinispan.persistence.support.BatchModification;
 import javax.transaction.Transaction;
 
 /**
- * Defines the functionality of a transactional store.  This allows the implementing store to participate in the cache's 2PC
- * protocol to ensure consistency between the underlying store and the cache.
+ * Defines the functionality of a transactional store.  This interface allows the implementing store to participate in the
+ * 2PC protocol of a cache's transaction. This enables the cache transaction to be rolledback if an exception occurs whilst
+ * writing key changes to the underlying store, or for the writes to the underlying store to be rolledback if the exception
+ * occurs in-memory.
+ *
+ * As this writer is part of the 2PC, all writes to the underlying store should only be executed by the originator of a
+ * transaction in normal operation.  In the event that the originator crashes between the prepare and commit/rollback phase
+ * it is expected that the underlying store's transaction will eventually timeout and rollback. In the event that the originator
+ * crashes and transaction recovery is enabled, then forcing commit will result in the replaying of said Tx's (prepare/commit) to
+ * the underlying store.
  *
  * @author Ryan Emerson
  * @since 9.0
