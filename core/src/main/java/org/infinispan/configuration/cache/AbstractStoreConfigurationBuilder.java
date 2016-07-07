@@ -163,6 +163,15 @@ public abstract class AbstractStoreConfigurationBuilder<T extends StoreConfigura
       return self();
    }
 
+   /**
+    * {@inheritDoc}
+    */
+   @Override
+   public S transactional(boolean b) {
+      attributes.attribute(TRANSACTIONAL).set(b);
+      return self();
+   }
+
    @Override
    public void validate() {
       async.validate();
