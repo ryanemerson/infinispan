@@ -144,4 +144,8 @@ public interface Log extends org.infinispan.util.logging.Log {
 
    @Message(value = "Cannot specify a ConnectionFactory and manageConnectionFactory at the same time", id = 8030)
    CacheConfigurationException unmanagedConnectionFactory();
+
+   @LogMessage(level = ERROR)
+   @Message(value = "Error when creating Hikari connection pool", id = 8031)
+   void errorCreatingHikariCP(@Cause Exception e);
 }
