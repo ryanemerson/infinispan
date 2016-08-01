@@ -332,6 +332,7 @@
                         </Import-Package>
                         <DynamicImport-Package>*</DynamicImport-Package>
                         <Dependencies>org.hibernate</Dependencies>
+                        <!--<Dependencies>com.zaxxer.hikari</Dependencies>-->
                      </instructions>
                   </configuration>
                </execution>
