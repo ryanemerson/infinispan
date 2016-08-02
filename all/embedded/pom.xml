@@ -308,6 +308,8 @@
                         </_exportcontents>
                         <Import-Package>
                            !com.mchange.v2.c3p0,
+                           !com.zaxxer.hikari,
+                           !com.codahale.metrics.*,
                            !com.sun.jmx.mbeanserver,
                            !infinispan.*,
                            !javax.cache.*,
@@ -332,7 +334,6 @@
                         </Import-Package>
                         <DynamicImport-Package>*</DynamicImport-Package>
                         <Dependencies>org.hibernate</Dependencies>
-                        <!--<Dependencies>com.zaxxer.hikari</Dependencies>-->
                      </instructions>
                   </configuration>
                </execution>
