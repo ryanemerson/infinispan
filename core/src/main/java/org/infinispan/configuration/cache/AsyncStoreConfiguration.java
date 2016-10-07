@@ -16,7 +16,7 @@ public class AsyncStoreConfiguration {
    public static final AttributeDefinition<Integer> MODIFICATION_QUEUE_SIZE  = AttributeDefinition.builder("modificationQueueSize", 1024).immutable().build();
    public static final AttributeDefinition<Integer> THREAD_POOL_SIZE = AttributeDefinition.builder("threadPoolSize", 1).immutable().build();
 
-   static AttributeSet attributeDefinitionSet() {
+   public static AttributeSet attributeDefinitionSet() {
       return new AttributeSet(AsyncStoreConfiguration.class, ENABLED, MODIFICATION_QUEUE_SIZE, THREAD_POOL_SIZE);
    }
 

@@ -8,26 +8,26 @@ package org.infinispan.configuration.cache;
  */
 public class SecurityConfiguration {
 
-   private final AuthorizationConfiguration authorization;
+   private final AuthorizationConfiguration authorizationConfiguration;
 
    SecurityConfiguration(AuthorizationConfiguration authorization) {
-      this.authorization = authorization;
+      this.authorizationConfiguration = authorization;
    }
 
    public AuthorizationConfiguration authorization() {
-      return authorization;
+      return authorizationConfiguration;
    }
 
    @Override
    public String toString() {
-      return "SecurityConfiguration [authorization=" + authorization + "]";
+      return "SecurityConfiguration [authorization=" + authorizationConfiguration + "]";
    }
 
    @Override
    public int hashCode() {
       final int prime = 31;
       int result = 1;
-      result = prime * result + ((authorization == null) ? 0 : authorization.hashCode());
+      result = prime * result + ((authorizationConfiguration == null) ? 0 : authorizationConfiguration.hashCode());
       return result;
    }
 
@@ -40,10 +40,10 @@ public class SecurityConfiguration {
       if (getClass() != obj.getClass())
          return false;
       SecurityConfiguration other = (SecurityConfiguration) obj;
-      if (authorization == null) {
-         if (other.authorization != null)
+      if (authorizationConfiguration == null) {
+         if (other.authorizationConfiguration != null)
             return false;
-      } else if (!authorization.equals(other.authorization))
+      } else if (!authorizationConfiguration.equals(other.authorizationConfiguration))
          return false;
       return true;
    }

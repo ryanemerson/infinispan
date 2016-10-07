@@ -60,7 +60,7 @@ public class TransactionConfiguration {
    private final Attribute<TransactionProtocol> transactionProtocol;
    private final Attribute<Boolean> notifications;
    private final AttributeSet attributes;
-   private final RecoveryConfiguration recovery;
+   private final RecoveryConfiguration recoveryConfiguration;
 
    TransactionConfiguration(AttributeSet attributes, RecoveryConfiguration recovery) {
       this.attributes = attributes.checkProtection();
@@ -80,7 +80,7 @@ public class TransactionConfiguration {
       completedTxTimeout = attributes.attribute(COMPLETED_TX_TIMEOUT);
       transactionProtocol = attributes.attribute(TRANSACTION_PROTOCOL);
       notifications = attributes.attribute(NOTIFICATIONS);
-      this.recovery = recovery;
+      this.recoveryConfiguration = recovery;
    }
 
    /**
@@ -258,7 +258,7 @@ public class TransactionConfiguration {
     * call {@link RecoveryConfigurationBuilder#enabled(boolean)} with false as parameter
     */
    public RecoveryConfiguration recovery() {
-      return recovery;
+      return recoveryConfiguration;
    }
 
    /**
@@ -318,7 +318,7 @@ public class TransactionConfiguration {
 
    @Override
    public String toString() {
-      return "TransactionConfiguration [attributes=" + attributes + ", recovery=" + recovery + "]";
+      return "TransactionConfiguration [attributes=" + attributes + ", recovery=" + recoveryConfiguration + "]";
    }
 
    @Override
@@ -335,10 +335,10 @@ public class TransactionConfiguration {
             return false;
       } else if (!attributes.equals(other.attributes))
          return false;
-      if (recovery == null) {
-         if (other.recovery != null)
+      if (recoveryConfiguration == null) {
+         if (other.recoveryConfiguration != null)
             return false;
-      } else if (!recovery.equals(other.recovery))
+      } else if (!recoveryConfiguration.equals(other.recoveryConfiguration))
          return false;
       return true;
    }
@@ -348,7 +348,7 @@ public class TransactionConfiguration {
       final int prime = 31;
       int result = 1;
       result = prime * result + ((attributes == null) ? 0 : attributes.hashCode());
-      result = prime * result + ((recovery == null) ? 0 : recovery.hashCode());
+      result = prime * result + ((recoveryConfiguration == null) ? 0 : recoveryConfiguration.hashCode());
       return result;
    }
 

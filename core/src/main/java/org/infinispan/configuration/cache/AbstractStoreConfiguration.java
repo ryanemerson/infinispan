@@ -30,7 +30,7 @@ public class AbstractStoreConfiguration implements StoreConfiguration {
    private final Attribute<TypedProperties> properties;
 
    protected final AttributeSet attributes;
-   private final AsyncStoreConfiguration async;
+   private final AsyncStoreConfiguration asyncConfiguration;
    private final SingletonStoreConfiguration singletonStore;
 
    /**
@@ -48,7 +48,7 @@ public class AbstractStoreConfiguration implements StoreConfiguration {
       attributes.attribute(TRANSACTIONAL).set(false);
       attributes.attribute(PROPERTIES).set(TypedProperties.toTypedProperties(properties));
 
-      this.async = async;
+      this.asyncConfiguration = async;
       this.singletonStore = singletonStore;
       this.fetchPersistentState = attributes.attribute(FETCH_PERSISTENT_STATE);
       this.purgeOnStartup = attributes.attribute(PURGE_ON_STARTUP);
@@ -62,7 +62,7 @@ public class AbstractStoreConfiguration implements StoreConfiguration {
    public AbstractStoreConfiguration(AttributeSet attributes, AsyncStoreConfiguration async,
          SingletonStoreConfiguration singletonStore) {
       this.attributes = attributes.checkProtection();
-      this.async = async;
+      this.asyncConfiguration = async;
       this.singletonStore = singletonStore;
       this.fetchPersistentState = attributes.attribute(FETCH_PERSISTENT_STATE);
       this.purgeOnStartup = attributes.attribute(PURGE_ON_STARTUP);
@@ -79,7 +79,7 @@ public class AbstractStoreConfiguration implements StoreConfiguration {
     */
    @Override
    public AsyncStoreConfiguration async() {
-      return async;
+      return asyncConfiguration;
    }
 
    /**
@@ -149,7 +149,7 @@ public class AbstractStoreConfiguration implements StoreConfiguration {
 
    @Override
    public String toString() {
-      return "AbstractStoreConfiguration [attributes=" + attributes + ", async=" + async + ", singletonStore="
+      return "AbstractStoreConfiguration [attributes=" + attributes + ", async=" + asyncConfiguration + ", singletonStore="
             + singletonStore + "]";
    }
 
@@ -157,7 +157,7 @@ public class AbstractStoreConfiguration implements StoreConfiguration {
    public int hashCode() {
       final int prime = 31;
       int result = 1;
-      result = prime * result + ((async == null) ? 0 : async.hashCode());
+      result = prime * result + ((asyncConfiguration == null) ? 0 : asyncConfiguration.hashCode());
       result = prime * result + ((attributes == null) ? 0 : attributes.hashCode());
       result = prime * result + ((singletonStore == null) ? 0 : singletonStore.hashCode());
       return result;
@@ -172,10 +172,10 @@ public class AbstractStoreConfiguration implements StoreConfiguration {
       if (getClass() != obj.getClass())
          return false;
       AbstractStoreConfiguration other = (AbstractStoreConfiguration) obj;
-      if (async == null) {
-         if (other.async != null)
+      if (asyncConfiguration == null) {
+         if (other.asyncConfiguration != null)
             return false;
-      } else if (!async.equals(other.async))
+      } else if (!asyncConfiguration.equals(other.asyncConfiguration))
          return false;
       if (attributes == null) {
          if (other.attributes != null)

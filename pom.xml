@@ -73,6 +73,7 @@
       <module>cdi/common</module>
       <module>cdi/embedded</module>
       <module>cdi/remote</module>
+      <module>xsd</module>
       <module>server/integration</module>
       <module>jcache</module>
       <module>as-modules/embedded</module>
