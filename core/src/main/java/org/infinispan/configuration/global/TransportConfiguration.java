@@ -37,7 +37,7 @@ public class TransportConfiguration {
             }
          }).immutable().build();
 
-   static AttributeSet attributeSet() {
+   static AttributeSet attributeDefinitionSet() {
       return new AttributeSet(TransportConfiguration.class, CLUSTER_NAME, MACHINE_ID, RACK_ID, SITE_ID, NODE_NAME,
             DISTRIBUTED_SYNC_TIMEOUT, INITIAL_CLUSTER_SIZE, INITIAL_CLUSTER_TIMEOUT, TRANSPORT, PROPERTIES);
    }

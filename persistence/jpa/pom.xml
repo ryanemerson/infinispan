@@ -13,6 +13,10 @@
    <name>Infinispan JPA CacheStore</name>
    <description>Infinispan JPA CacheStore module</description>
 
+   <properties>
+      <defaults.file>${project.build.directory}/defaults.properties</defaults.file>
+   </properties>
+
    <build>
       <resources>
          <resource>
@@ -104,6 +108,57 @@
 
                <threadCount>1</threadCount>
             </configuration>
+         </plugin>
+         <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>exec-maven-plugin</artifactId>
+            <configuration>
+               <workingDirectory>${project.build.directory}</workingDirectory>
+            </configuration>
+            <executions>
+               <execution>
+                  <id>defaults</id>
+                  <phase>process-classes</phase>
+                  <goals>
+                     <goal>java</goal>
+                  </goals>
+                  <configuration>
+                     <mainClass>org.infinispan.configuration.defaults.DefaultAttributes</mainClass>
+                     <arguments>
+                        <argument>${defaults.file}</argument>
+                     </arguments>
+                  </configuration>
+               </execution>
+            </executions>
+         </plugin>
+         <plugin>
+            <artifactId>maven-resources-plugin</artifactId>
+            <executions>
+               <execution>
+                  <id>add-defaults-to-xsd</id>
+                  <phase>prepare-package</phase>
+                  <goals>
+                     <goal>copy-resources</goal>
+                  </goals>
+                  <configuration>
+                     <overwrite>true</overwrite>
+                     <outputDirectory>${project.build.directory}/classes/schema</outputDirectory>
+                     <resources>
+                        <resource>
+                           <directory>${project.basedir}/src/main/resources/schema</directory>
+                           <targetPath>${project.build.directory}/classes/schema</targetPath>
+                           <includes>
+                              <include>*.xsd</include>
+                           </includes>
+                           <filtering>true</filtering>
+                        </resource>
+                     </resources>
+                     <filters>
+                        <filter>${defaults.file}</filter>
+                     </filters>
+                  </configuration>
+               </execution>
+            </executions>
          </plugin>
       </plugins>
    </build>

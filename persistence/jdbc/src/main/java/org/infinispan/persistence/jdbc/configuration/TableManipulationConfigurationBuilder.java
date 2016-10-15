@@ -33,7 +33,7 @@ public abstract class TableManipulationConfigurationBuilder<B extends AbstractJd
 
    TableManipulationConfigurationBuilder(AbstractJdbcStoreConfigurationBuilder<?, B> builder) {
       super(builder);
-      attributes = TableManipulationConfiguration.attributeSet();
+      attributes = TableManipulationConfiguration.attributeDefinitionSet();
    }
 
    /**

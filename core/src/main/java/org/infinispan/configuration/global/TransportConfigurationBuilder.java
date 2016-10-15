@@ -39,7 +39,7 @@ public class TransportConfigurationBuilder extends AbstractGlobalConfigurationBu
 
    TransportConfigurationBuilder(GlobalConfigurationBuilder globalConfig) {
       super(globalConfig);
-      attributes = TransportConfiguration.attributeSet();
+      attributes = TransportConfiguration.attributeDefinitionSet();
       transportThreadPool = new ThreadPoolConfigurationBuilder(globalConfig);
       remoteCommandThreadPool = new ThreadPoolConfigurationBuilder(globalConfig);
    }

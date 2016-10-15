@@ -19,10 +19,40 @@
     <properties>
         <infinispan.version>9.0</infinispan.version>
         <skipTests>true</skipTests>
+        <defaults.file>${project.build.directory}/default-attributes.adoc</defaults.file>
     </properties>
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>1.5.0</version>
+                <executions>
+                    <execution>
+                        <id>defaults</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>java</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <includePluginDependencies>true</includePluginDependencies>
+                    <mainClass>org.infinispan.configuration.defaults.DefaultAttributes</mainClass>
+                    <arguments>
+                        <argument>${defaults.file}</argument>
+                        <argument>-asciidoctor</argument>
+                    </arguments>
+                </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.infinispan</groupId>
+                        <artifactId>infinispan-tools</artifactId>
+                        <version>${project.version}</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
             <plugin>
                 <groupId>org.asciidoctor</groupId>
                 <artifactId>asciidoctor-maven-plugin</artifactId>
@@ -61,6 +91,7 @@
                                 <docinfo>true</docinfo>
                                 <experimental>true</experimental>
                                 <infinispanversion>${infinispan.version}</infinispanversion>
+                                <defaults>${defaults.file}</defaults>
                             </attributes>
                         </configuration>
                     </execution>
@@ -90,6 +121,7 @@
                                 <docinfo>true</docinfo>
                                 <experimental>true</experimental>
                                 <infinispanversion>${infinispan.version}</infinispanversion>
+                                <defaults>${defaults.file}</defaults>
                             </attributes>
                         </configuration>
                     </execution>
