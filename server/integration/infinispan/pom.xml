@@ -36,6 +36,10 @@
             <artifactId>wildfly-threads</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.wildfly.core</groupId>
+            <artifactId>wildfly-controller-client</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.wildfly</groupId>
             <artifactId>wildfly-transactions</artifactId>
         </dependency>
@@ -194,10 +198,10 @@
                             <goal>java</goal>
                         </goals>
                         <configuration>
-                            <mainClass>org.infinispan.configuration.defaults.DefaultAttributes</mainClass>
+                            <mainClass>org.infinispan.server.commons.defaults.ResourceDefaultsExtractor</mainClass>
                             <arguments>
                                 <argument>${defaults.file}</argument>
-                                <argument>infinispan-core.jar</argument>
+                                <!--<argument>infinispan-core.jar</argument>-->
                                 <!--<argument>infinispan-cachestore-jdbc.jar</argument>-->
                                 <!--<argument>infinispan-cachestore-jpa.jar</argument>-->
                                 <!--<argument>infinispan-cachestore-leveldb.jar</argument>-->
@@ -246,6 +250,12 @@
                         <groupId>org.infinispan</groupId>
                         <artifactId>infinispan-cachestore-jdbc</artifactId>
                         <version>${project.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.wildfly.core</groupId>
+                        <artifactId>wildfly-controller-client</artifactId>
+                        <version>${version.org.wildfly.core}</version>
+                        <scope>runtime</scope>
                     </dependency>
                 </dependencies>
             </plugin>

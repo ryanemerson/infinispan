@@ -1,11 +1,10 @@
-package org.infinispan.configuration.defaults;
+package org.infinispan.commons.configuration.defaults;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -31,22 +30,21 @@ import org.infinispan.commons.configuration.attributes.AttributeSet;
 /**
  * @author Ryan Emerson
  */
-public class DefaultAttributes {
+public class DefaultAttributeExtractor {
+
+   // TODO move to commons
+   // Create implementation of ConfigurationDefaultsExtractor here as well
 
    private final String separator;
    private final Set<Class> configClasses;
-   private final Map<String, String> defaultsMap;
+   private final Map<String, String> map;
 
-   public DefaultAttributes(Set<Class> configClasses, String separator) throws Exception {
+   public DefaultAttributeExtractor(Set<Class> configClasses, String separator) throws Exception {
       this.configClasses = configClasses;
       this.separator = separator;
-      this.defaultsMap = new HashMap<>();
+      this.map = new HashMap<>();
 
       extractDefaultsFromClasses();
-   }
-
-   public Map<String, String> getDefaultsMap() {
-      return defaultsMap;
    }
 
    private void extractDefaultsFromClasses() throws Exception {
@@ -58,30 +56,15 @@ public class DefaultAttributes {
          attributeSet.attributes().stream()
                .map(Attribute::getAttributeDefinition)
                .filter(definition -> definition.getDefaultValue() != null)
-               .forEach(definition -> defaultsMap.put(clazz.getSimpleName() + separator + definition.name(), getOutputValue(definition)));
+               .forEach(definition -> map.put(clazz.getSimpleName() + separator + definition.name(), getOutputValue(definition)));
       }
    }
 
-   private AttributeSet getAttributeSet(Class clazz) throws Exception {
-      boolean isServerResource = clazz.getName().endsWith("Resource");
-      return isServerResource ? getAttributeSetFromConfiguration(clazz) : getAttributeSetFromResource(clazz);
-   }
-
-   private AttributeSet getAttributeSetFromConfiguration(Class clazz) throws Exception {
-      try {
-         Method method = clazz.getDeclaredMethod("attributeDefinitionSet");
-         method.setAccessible(true);
-         return (AttributeSet) method.invoke(null);
-      } catch (NoSuchMethodException e) {
-         return null;
-      }
-   }
-
-   private AttributeSet getAttributeSetFromResource(Class clazz) throws Exception {
+   private AttributeSet getAttributeSet(Class clazz) throws IllegalAccessException {
       Field[] declaredFields = clazz.getDeclaredFields();
       List<AttributeDefinition> attributeDefinitions = new ArrayList<>();
       for (Field field : declaredFields) {
-         if (Modifier.isStatic(field.getModifiers()) && field.getType().isAssignableFrom(AttributeDefinition.class)) {
+         if (Modifier.isStatic(field.getModifiers()) && AttributeDefinition.class.isAssignableFrom(field.getType())) {
             field.setAccessible(true);
             attributeDefinitions.add((AttributeDefinition) field.get(null));
          }
@@ -120,11 +103,11 @@ public class DefaultAttributes {
       getClassesFromPackages(urls, configClasses);
       jarNames.forEach(jar -> getClassesFromJar(jar, urls, configClasses));
 
-      DefaultAttributes defaults = new DefaultAttributes(configClasses, elementSeparator);
-      writeMapToFile(defaults.getDefaultsMap(), args[0], createPropsFile);
+      DefaultAttributeExtractor defaults = new DefaultAttributeExtractor(configClasses, elementSeparator);
+      writeMapToFile(defaults.map, args[0], createPropsFile);
    }
 
-   private static void getClassesFromJar(String jarName, URL[] urls, Set<Class> classes) {
+   public static void getClassesFromJar(String jarName, URL[] urls, Set<Class> classes) {
       Optional<String> jarPath = Stream.of(urls).map(URL::getPath)
             .filter(path -> path.endsWith(jarName))
             .findFirst();
@@ -133,7 +116,8 @@ public class DefaultAttributes {
          try {
             ZipInputStream jar = new ZipInputStream(new FileInputStream(jarPath.get()));
             for (ZipEntry entry = jar.getNextEntry(); entry != null; entry = jar.getNextEntry()) {
-               if (!entry.isDirectory() && entry.getName().endsWith("Configuration.class")) {
+               String name = entry.getName();
+               if (!entry.isDirectory() && (name.endsWith("Configuration.class") || name.endsWith("Resource.class"))) {
                   String className = entry.getName().replace("/", ".");
                   classes.add(Class.forName(className.substring(0, className.length() - 6)));
                }
@@ -146,7 +130,7 @@ public class DefaultAttributes {
       }
    }
 
-   private static void getClassesFromPackages(URL[] urls, Set<Class> classes) {
+   public static void getClassesFromPackages(URL[] urls, Set<Class> classes) {
       PathMatcher pathMatcher = FileSystems.getDefault().getPathMatcher("glob:**/infinispan/**/target/classes");
       List<File> classDirs = Stream.of(urls)
             .map(url -> new File(url.getPath()).toPath())
@@ -171,7 +155,7 @@ public class DefaultAttributes {
             if (file.isDirectory()) {
                String subpackage = packageName.isEmpty() ? fileName : packageName + "." + fileName;
                getClassesInPackage(file, subpackage, classes);
-            } else if (fileName.endsWith("Configuration.class") && !fileName.contains("$")) {
+            } else if ((fileName.endsWith("Configuration.class") || fileName.endsWith("Resource.class")) && !fileName.contains("$")) {
                String className = fileName.substring(0, fileName.length() - 6);
                classes.add(Class.forName(packageName + "." + className));
             }
@@ -181,7 +165,7 @@ public class DefaultAttributes {
       }
    }
 
-   private static void writeMapToFile(Map<String, String> map, String path, boolean propsFile) throws IOException {
+   public static void writeMapToFile(Map<String, String> map, String path, boolean propsFile) throws IOException {
       File file = new File(path);
       if (file.getParentFile() != null)
          file.getParentFile().mkdirs();

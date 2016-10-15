@@ -133,7 +133,6 @@
             <groupId>org.wildfly.core</groupId>
             <artifactId>wildfly-controller-client</artifactId>
             <version>${version.org.wildfly.core}</version>
-            <scope>provided</scope>
          </dependency>
 
          <dependency>

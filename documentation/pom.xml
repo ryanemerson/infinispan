@@ -39,7 +39,7 @@
                 </executions>
                 <configuration>
                     <includePluginDependencies>true</includePluginDependencies>
-                    <mainClass>org.infinispan.configuration.defaults.DefaultAttributes</mainClass>
+                    <mainClass>org.infinispan.commons.configuration.defaults.DefaultAttributeExtractor</mainClass>
                     <arguments>
                         <argument>${defaults.file}</argument>
                         <argument>-asciidoctor</argument>
