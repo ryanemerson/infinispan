@@ -17,7 +17,7 @@ import org.infinispan.configuration.global.GlobalConfiguration;
 public class ExecutorFactoryConfigurationBuilder extends AbstractRemoteStoreConfigurationChildBuilder<RemoteStoreConfigurationBuilder> implements Builder<ExecutorFactoryConfiguration> {
    private final AttributeSet attributes;
    ExecutorFactoryConfigurationBuilder(RemoteStoreConfigurationBuilder builder) {
-      super(builder);
+      super(builder, ExecutorFactoryConfiguration.attributeDefinitionSet());
       attributes = ExecutorFactoryConfiguration.attributeSet();
    }
 

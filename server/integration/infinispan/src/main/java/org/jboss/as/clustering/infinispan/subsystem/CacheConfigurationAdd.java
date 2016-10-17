@@ -968,11 +968,11 @@ public abstract class CacheConfigurationAdd extends AbstractAddStepHandler imple
     }
 
     private void buildBinaryKeyedTable(TableManipulationConfigurationBuilder<?, ?> builder, OperationContext context, ModelNode table) throws OperationFailedException {
-        this.buildTable(builder, context, table, "ispn_bucket");
+        this.buildTable(builder, context, table, BaseJDBCStoreConfigurationResource.BINARY_KEYED_TABLE_PREFIX.getDefaultValue().asString());
     }
 
     private void buildStringKeyedTable(TableManipulationConfigurationBuilder<?, ?> builder, OperationContext context, ModelNode table) throws OperationFailedException {
-        this.buildTable(builder, context, table, "ispn_entry");
+        this.buildTable(builder, context, table, BaseJDBCStoreConfigurationResource.STRING_KEYED_TABLE_PREFIX.getDefaultValue().asString());
     }
 
     private void buildTable(TableManipulationConfigurationBuilder<?, ?> builder, OperationContext context, ModelNode table, String defaultTableNamePrefix) throws OperationFailedException {
