@@ -133,10 +133,9 @@ public class DefaultAttributeExtractor {
    }
 
    private static String formatOutput(Map.Entry<String, String> entry, boolean propsFile) {
-      String propName = entry.getKey().startsWith("Configuration") ? entry.getKey() : entry.getKey().replace("Configuration", "");
       if (!propsFile) {
-         return ":" + propName + ":" + entry.getValue();
+         return ":" + entry.getKey() + ":" + entry.getValue();
       }
-      return propName + " = " + entry.getValue();
+      return entry.getKey() + " = " + entry.getValue();
    }
 }

@@ -57,6 +57,7 @@ public class ResourceDefaultsResolver implements DefaultsResolver {
    }
 
    private String getOutputKey(Class clazz, AttributeDefinition attribute, String seperator) {
-      return "Server." + clazz.getSimpleName().replace("Resource", "") + seperator + attribute.getName();
+      String className = clazz.getSimpleName().replace("Configuration", "").replace("Resource", "");
+      return "Server." + className + seperator + attribute.getName();
    }
 }
