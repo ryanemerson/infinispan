@@ -85,7 +85,15 @@ public class DefaultAttributeExtractor {
    }
 
    private static void getClassesFromPackages(DefaultsResolver extractor, URL[] urls, Set<Class> classes) {
-      PathMatcher pathMatcher = FileSystems.getDefault().getPathMatcher("glob:**/infinispan/**/target/classes");
+      PathMatcher pathMatcher = FileSystems.getDefault().getPathMatcher("glob:*/**/infinispan/**/target/classes");
+      PathMatcher pathMatcherJGroups = FileSystems.getDefault().getPathMatcher("glob:*/**/jgroups/**/target/classes");
+
+      File file = new File(urls[0].getPath());
+      Path path = file.toPath();
+      String pathString = path.toString();
+      boolean match1 = pathMatcher.matches(path);
+      boolean match2 = pathMatcherJGroups.matches(path);
+
       List<File> classDirs = Stream.of(urls)
             .map(url -> new File(url.getPath()).toPath())
             .filter(pathMatcher::matches)

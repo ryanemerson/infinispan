@@ -13,9 +13,12 @@
    <name>Infinispan Server - Endpoints Subsystem</name>
    <description>Infinispan Server - Endpoints Subsystem</description>
 
+   <properties>
+      <defaults.file>${project.build.directory}/defaults.properties</defaults.file>
+   </properties>
+
    <build>
       <plugins>
-         
          <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-enforcer-plugin</artifactId>
@@ -86,6 +89,58 @@
                            </excludes>
                         </bannedDependencies>
                      </rules>
+                  </configuration>
+               </execution>
+            </executions>
+         </plugin>
+         <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>exec-maven-plugin</artifactId>
+            <configuration>
+               <workingDirectory>${project.build.directory}</workingDirectory>
+            </configuration>
+            <executions>
+               <execution>
+                  <id>endpoint-defaults</id>
+                  <phase>process-classes</phase>
+                  <goals>
+                     <goal>java</goal>
+                  </goals>
+                  <configuration>
+                     <mainClass>org.infinispan.commons.configuration.defaults.DefaultAttributeExtractor</mainClass>
+                     <arguments>
+                        <argument>${defaults.file}</argument>
+                        <argument>org.infinispan.server.commons.defaults.ResourceDefaultsResolver</argument>
+                     </arguments>
+                  </configuration>
+               </execution>
+            </executions>
+         </plugin>
+         <plugin>
+            <artifactId>maven-resources-plugin</artifactId>
+            <executions>
+               <execution>
+                  <id>add-defaults-to-xsd</id>
+                  <phase>prepare-package</phase>
+                  <goals>
+                     <goal>copy-resources</goal>
+                  </goals>
+                  <configuration>
+                     <overwrite>true</overwrite>
+                     <outputDirectory>${project.build.directory}/classes/schema</outputDirectory>
+                     <resources>
+                        <resource>
+                           <directory>${project.basedir}/src/main/resources/schema</directory>
+                           <targetPath>${project.build.directory}/classes/schema</targetPath>
+                           <includes>
+                              <include>*.xsd</include>
+                           </includes>
+                           <filtering>true</filtering>
+                        </resource>
+                     </resources>
+                     <filters>
+                        <filter>${defaults.file}</filter>
+                     </filters>
                   </configuration>
                </execution>
             </executions>

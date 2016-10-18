@@ -21,7 +21,7 @@ public class ResourceDefaultsResolver implements DefaultsResolver {
 
    @Override
    public boolean isValidClass(String className) {
-      return className.endsWith("Resource.class") && !className.contains("$");
+      return className.contains("Resource") && !className.contains("$");
    }
 
    @Override

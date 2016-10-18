@@ -209,21 +209,6 @@
                             </arguments>
                         </configuration>
                     </execution>
-                    <!--<execution>-->
-                        <!--<id>ispn-defaults</id>-->
-                        <!--<phase>process-classes</phase>-->
-                        <!--<goals>-->
-                            <!--<goal>java</goal>-->
-                        <!--</goals>-->
-                        <!--<configuration>-->
-                            <!--<mainClass>org.infinispan.commons.configuration.defaults.DefaultAttributeExtractor</mainClass>-->
-                            <!--<arguments>-->
-                                <!--<argument>${defaults.file}</argument>-->
-                                <!--<argument>org.infinispan.commons.configuration.defaults.InfinispanDefaultsResolver</argument>-->
-                                <!--<argument>infinispan-core.jar</argument>-->
-                            <!--</arguments>-->
-                        <!--</configuration>-->
-                    <!--</execution>-->
                 </executions>
             </plugin>
             <plugin>
@@ -254,24 +239,6 @@
                         </configuration>
                     </execution>
                 </executions>
-                <dependencies>
-                    <!--<dependency>-->
-                        <!--<groupId>org.infinispan</groupId>-->
-                        <!--<artifactId>infinispan-core</artifactId>-->
-                        <!--<version>${project.version}</version>-->
-                    <!--</dependency>-->
-                    <dependency>
-                        <groupId>org.infinispan</groupId>
-                        <artifactId>infinispan-commons</artifactId>
-                        <version>${project.version}</version>
-                    </dependency>
-                    <dependency>
-                        <groupId>org.wildfly.core</groupId>
-                        <artifactId>wildfly-controller-client</artifactId>
-                        <version>${version.org.wildfly.core}</version>
-                        <scope>runtime</scope>
-                    </dependency>
-                </dependencies>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
