@@ -498,3 +498,36 @@ and editing the module definition to include the jar as resource-root:
 
 ----
 
+==== Custom Marshaller Bridges
+Infinispan provides two marshalling bridges for marshalling client/server requests using the Kryo and Protostuff libraries.
+To utilise either of these marshallers, you simply place the dependency of the marshaller you require in your client
+pom. e.g. for Protostuff:
+
+[source,xml]
+----
+<dependency>
+  <groupId>org.infinispan</groupId>
+  <artifactId>infinispan-marshaller-protostuff</artifactId>
+  <version>{infinispanversion}</version>
+</dependency>
+----
+
+Custom schemas for object marshalling must then be registered with the selected library using the libraries api on the client.
+
+===== Compatibility Mode
+As previously stated, when utilising a custom marshaller in compatibility mode, it is necessary for the marshaller to be on
+the classpath of the server. In order to achieve this with either the Protostuff or Kryo bridges, it is necessary for both
+the bridge class files and the underlying library's runtime dependencies to be on the classpath. To aid with this step,
+we have created a "bundle" jar for each of the bridge implementations which includes all of the runtime class files required
+by the bridge and underlying library.  Therefore, it is only necessary to include this single jar on the server's classpath.
+
+To create a bundle jar:
+
+. `git clone git@github.com:infinispan/infinispan.git`
+. 'cd client/marshaller/<bridge implementation>'
+. `mvn package`
+. Copy `target/infinispan-marshaller-<bridge implementation>-bundle.jar` to `modules/system/layers/base/org/infinispan/main/`
+. update `modules.xml`
+
+NOTE: In compatibility mode, any custom schemas utilised by the client must also be registered on the server side.
+
