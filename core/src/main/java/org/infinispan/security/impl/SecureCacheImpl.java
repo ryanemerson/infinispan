@@ -16,6 +16,7 @@ import org.infinispan.CacheSet;
 import org.infinispan.atomic.Delta;
 import org.infinispan.batch.BatchContainer;
 import org.infinispan.configuration.cache.Configuration;
+import org.infinispan.conflict.resolution.ConflictResolutionManager;
 import org.infinispan.container.DataContainer;
 import org.infinispan.container.entries.CacheEntry;
 import org.infinispan.context.Flag;
@@ -695,6 +696,13 @@ public final class SecureCacheImpl<K, V> implements SecureCache<K, V> {
    public void removeGroup(String groupName) {
       authzManager.checkPermission(AuthorizationPermission.BULK_WRITE);
       delegate.removeGroup(groupName);
+   }
+
+   @Override
+   public ConflictResolutionManager<K, V> getConflictResolutionManager() {
+      authzManager.checkPermission(AuthorizationPermission.ALL_READ);
+      authzManager.checkPermission(AuthorizationPermission.ALL_WRITE);
+      return delegate.getConflictResolutionManager();
    }
 
    @Override

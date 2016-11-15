@@ -35,6 +35,7 @@ import org.infinispan.commons.util.CloseableIterator;
 import org.infinispan.commons.util.CloseableSpliterator;
 import org.infinispan.commons.util.Closeables;
 import org.infinispan.configuration.cache.Configuration;
+import org.infinispan.conflict.resolution.ConflictResolutionManager;
 import org.infinispan.container.DataContainer;
 import org.infinispan.container.entries.CacheEntry;
 import org.infinispan.context.Flag;
@@ -383,6 +384,11 @@ public final class FunctionalAdvancedCache<K, V> implements AdvancedCache<K, V> 
    @Override
    public ClassLoader getClassLoader() {
       return null;  // TODO: Customise this generated block
+   }
+
+   @Override
+   public ConflictResolutionManager<K, V> getConflictResolutionManager() {
+      return null;
    }
 
    @Override

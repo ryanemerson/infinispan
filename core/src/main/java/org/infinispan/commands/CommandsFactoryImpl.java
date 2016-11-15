@@ -74,6 +74,7 @@ import org.infinispan.commons.marshall.Externalizer;
 import org.infinispan.commons.marshall.LambdaExternalizer;
 import org.infinispan.commons.marshall.SerializeFunctionWith;
 import org.infinispan.configuration.cache.Configuration;
+import org.infinispan.conflict.resolution.StateReceiver;
 import org.infinispan.container.DataContainer;
 import org.infinispan.container.InternalEntryFactory;
 import org.infinispan.context.Flag;
@@ -162,6 +163,7 @@ public class CommandsFactoryImpl implements CommandsFactory {
    private ClusterStreamManager clusterStreamManager;
    private ClusteringDependentLogic clusteringDependentLogic;
    private TimeService timeService;
+   private StateReceiver stateReceiver;
 
    private Map<Byte, ModuleCommandInitializer> moduleCommandInitializers;
    private ExternalizerTable externalizerTable;
@@ -178,7 +180,8 @@ public class CommandsFactoryImpl implements CommandsFactory {
                                  XSiteStateTransferManager xSiteStateTransferManager,
                                  GroupManager groupManager, PartitionHandlingManager partitionHandlingManager,
                                  LocalStreamManager localStreamManager, ClusterStreamManager clusterStreamManager,
-                                 ClusteringDependentLogic clusteringDependentLogic, ExternalizerTable externalizerTable) {
+                                 ClusteringDependentLogic clusteringDependentLogic, ExternalizerTable externalizerTable,
+                                 StateReceiver stateReceiver) {
       this.dataContainer = container;
       this.notifier = notifier;
       this.cache = cache;
@@ -205,6 +208,7 @@ public class CommandsFactoryImpl implements CommandsFactory {
       this.clusteringDependentLogic = clusteringDependentLogic;
       this.timeService = timeService;
       this.externalizerTable = externalizerTable;
+      this.stateReceiver = stateReceiver;
    }
 
    @Start(priority = 1)
@@ -429,7 +433,7 @@ public class CommandsFactoryImpl implements CommandsFactory {
             ((StateRequestCommand) c).init(stateProvider);
             break;
          case StateResponseCommand.COMMAND_ID:
-            ((StateResponseCommand) c).init(stateConsumer);
+            ((StateResponseCommand) c).init(stateConsumer, stateReceiver);
             break;
          case GetInDoubtTransactionsCommand.COMMAND_ID:
             GetInDoubtTransactionsCommand gptx = (GetInDoubtTransactionsCommand) c;
@@ -524,13 +528,14 @@ public class CommandsFactoryImpl implements CommandsFactory {
    }
 
    @Override
-   public StateRequestCommand buildStateRequestCommand(StateRequestCommand.Type subtype, Address sender, int viewId, Set<Integer> segments) {
+   public StateRequestCommand buildStateRequestCommand(StateRequestCommand.Type subtype, Address sender, int viewId,
+                                                       Set<Integer> segments) {
       return new StateRequestCommand(cacheName, subtype, sender, viewId, segments);
    }
 
    @Override
-   public StateResponseCommand buildStateResponseCommand(Address sender, int topologyId, Collection<StateChunk> stateChunks) {
-      return new StateResponseCommand(cacheName, sender, topologyId, stateChunks);
+   public StateResponseCommand buildStateResponseCommand(Address sender, int topologyId, Collection<StateChunk> stateChunks, boolean applyState) {
+      return new StateResponseCommand(cacheName, sender, topologyId, stateChunks, applyState);
    }
 
    @Override

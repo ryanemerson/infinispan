@@ -274,7 +274,7 @@ public class StateProviderImpl implements StateProvider {
    }
 
    @Override
-   public void startOutboundTransfer(Address destination, int requestTopologyId, Set<Integer> segments)
+   public void startOutboundTransfer(Address destination, int requestTopologyId, Set<Integer> segments, boolean applyState)
          throws InterruptedException {
       if (trace) {
          log.tracef("Starting outbound transfer of segments %s to node %s with topology id %d for cache %s", segments,
@@ -285,7 +285,8 @@ public class StateProviderImpl implements StateProvider {
 
       // the destination node must already have an InboundTransferTask waiting for these segments
       OutboundTransferTask outboundTransfer = new OutboundTransferTask(destination, segments, chunkSize, requestTopologyId,
-            cacheTopology.getReadConsistentHash(), this, dataContainer, persistenceManager, rpcManager, commandsFactory, entryFactory, timeout, cacheName);
+            cacheTopology.getReadConsistentHash(), this, dataContainer, persistenceManager, rpcManager, commandsFactory,
+            entryFactory, timeout, cacheName, applyState);
       addTransfer(outboundTransfer);
       outboundTransfer.execute(executorService);
    }
