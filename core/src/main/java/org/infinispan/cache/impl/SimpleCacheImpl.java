@@ -41,6 +41,7 @@ import org.infinispan.commons.util.IteratorMapper;
 import org.infinispan.commons.util.Util;
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.configuration.format.PropertyFormatter;
+import org.infinispan.conflict.resolution.ConflictResolutionManager;
 import org.infinispan.container.DataContainer;
 import org.infinispan.container.InternalEntryFactory;
 import org.infinispan.container.entries.CacheEntry;
@@ -1079,6 +1080,11 @@ public class SimpleCacheImpl<K, V> implements AdvancedCache<K, V> {
 
    @Override
    public ClassLoader getClassLoader() {
+      return null;
+   }
+
+   @Override
+   public ConflictResolutionManager<K, V> getConflictResolutionManager() {
       return null;
    }
 

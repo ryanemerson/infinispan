@@ -1512,4 +1512,12 @@ public interface Log extends BasicLogger {
    @Message(value = "Cache with name %s is defined more than once!", id = 438)
    CacheConfigurationException duplicateCacheName(String name);
 
+   @Message(value = "ConflictResolutionaManager.getConflicts() already in progress", id = 439)
+   IllegalStateException getConflictsAlreadyInProgress();
+
+   @Message(value = "Unable to retrieve conflicts for key '%s' as StateTransfer is in progress for this key", id=440)
+   IllegalStateException getConflictStateTransferInProgress(Object key);
+
+   @Message(value = "Unable to retrieve conflicts as StateTransfer is currently in progress for this cache", id=441)
+   IllegalStateException getConflictsStateTransferInProgress();
 }

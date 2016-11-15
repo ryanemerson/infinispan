@@ -65,6 +65,7 @@ import org.infinispan.commons.util.Util;
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.configuration.format.PropertyFormatter;
 import org.infinispan.configuration.global.GlobalConfiguration;
+import org.infinispan.conflict.resolution.ConflictResolutionManager;
 import org.infinispan.container.DataContainer;
 import org.infinispan.container.entries.CacheEntry;
 import org.infinispan.context.Flag;
@@ -157,6 +158,7 @@ public class CacheImpl<K, V> implements AdvancedCache<K, V> {
    private PartitionHandlingManager partitionHandlingManager;
    private GlobalConfiguration globalCfg;
    private LocalTopologyManager localTopologyManager;
+   private ConflictResolutionManager<K, V> conflictResolutionManager;
    private volatile boolean stopping = false;
    private boolean transactional;
    private boolean batchingEnabled;
@@ -186,7 +188,8 @@ public class CacheImpl<K, V> implements AdvancedCache<K, V> {
                                   AuthorizationManager authorizationManager,
                                   GlobalConfiguration globalCfg,
                                   PartitionHandlingManager partitionHandlingManager,
-                                  LocalTopologyManager localTopologyManager) {
+                                  LocalTopologyManager localTopologyManager,
+                                  ConflictResolutionManager conflictResolutionManager) {
       this.commandsFactory = commandsFactory;
       this.invoker = interceptorChain;
       this.config = configuration;
@@ -211,6 +214,7 @@ public class CacheImpl<K, V> implements AdvancedCache<K, V> {
       this.globalCfg = globalCfg;
       this.partitionHandlingManager = partitionHandlingManager;
       this.localTopologyManager = localTopologyManager;
+      this.conflictResolutionManager = conflictResolutionManager;
 
       // We have to do this before start, since some components may start before the actual cache and they
       // have to have access to the default metadata on some operations
@@ -1667,4 +1671,8 @@ public class CacheImpl<K, V> implements AdvancedCache<K, V> {
       return new PropertyFormatter().format(config);
    }
 
+   @Override
+   public ConflictResolutionManager<K, V> getConflictResolutionManager() {
+      return conflictResolutionManager;
+   }
 }

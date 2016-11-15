@@ -14,6 +14,7 @@ import org.infinispan.batch.BatchContainer;
 import org.infinispan.cache.impl.DecoratedCache;
 import org.infinispan.commons.util.Experimental;
 import org.infinispan.configuration.cache.PartitionHandlingConfiguration;
+import org.infinispan.conflict.resolution.ConflictResolutionManager;
 import org.infinispan.container.DataContainer;
 import org.infinispan.container.entries.CacheEntry;
 import org.infinispan.context.Flag;
@@ -556,4 +557,10 @@ public interface AdvancedCache<K, V> extends Cache<K, V> {
     * @param lifespan the lifespan that should match.  If null is provided it will match any lifespan value
     */
    void removeExpired(K key, V value, Long lifespan);
+
+   /**
+    * Get the {@link ConflictResolutionManager} associated with this cache.
+    * @return the conflict manager for this cache.
+    */
+   ConflictResolutionManager<K, V> getConflictResolutionManager();
 }

@@ -14,6 +14,7 @@ import org.infinispan.commons.CacheException;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.configuration.global.GlobalConfiguration;
+import org.infinispan.conflict.resolution.StateReceiver;
 import org.infinispan.distribution.ch.ConsistentHash;
 import org.infinispan.distribution.ch.ConsistentHashFactory;
 import org.infinispan.distribution.ch.KeyPartitioner;
@@ -52,6 +53,7 @@ public class StateTransferManagerImpl implements StateTransferManager {
 
    private StateConsumer stateConsumer;
    private StateProvider stateProvider;
+   private StateReceiver stateReceiver;
    private PartitionHandlingManager partitionHandlingManager;
    private String cacheName;
    private CacheNotifier cacheNotifier;
@@ -73,6 +75,7 @@ public class StateTransferManagerImpl implements StateTransferManager {
    @Inject
    public void init(StateConsumer stateConsumer,
                     StateProvider stateProvider,
+                    StateReceiver stateReceiver,
                     Cache cache,
                     CacheNotifier cacheNotifier,
                     Configuration configuration,
@@ -84,6 +87,7 @@ public class StateTransferManagerImpl implements StateTransferManager {
                     GlobalStateManager globalStateManager) {
       this.stateConsumer = stateConsumer;
       this.stateProvider = stateProvider;
+      this.stateReceiver = stateReceiver;
       this.cacheName = cache.getName();
       this.cacheNotifier = cacheNotifier;
       this.configuration = configuration;
@@ -202,6 +206,7 @@ public class StateTransferManagerImpl implements StateTransferManager {
 
       stateConsumer.onTopologyUpdate(newCacheTopology, isRebalance);
       stateProvider.onTopologyUpdate(newCacheTopology, isRebalance);
+      stateReceiver.onTopologyUpdate(newCacheTopology, isRebalance);
 
       cacheNotifier.notifyTopologyChanged(oldCacheTopology, newCacheTopology, newCacheTopology.getTopologyId(), false);
 

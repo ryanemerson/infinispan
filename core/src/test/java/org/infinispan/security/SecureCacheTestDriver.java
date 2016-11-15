@@ -589,6 +589,11 @@ public class SecureCacheTestDriver {
    }
 
    @TestCachePermission(AuthorizationPermission.ADMIN)
+   public void testGetConflictResolutionManager(SecureCache<String, String> cache) {
+      cache.getConflictResolutionManager();
+   }
+
+   @TestCachePermission(AuthorizationPermission.ADMIN)
    public void testGetInterceptorChain(SecureCache<String, String> cache) {
       cache.getInterceptorChain();
    }

@@ -16,6 +16,7 @@ import org.infinispan.atomic.Delta;
 import org.infinispan.batch.BatchContainer;
 import org.infinispan.commons.CacheException;
 import org.infinispan.commons.util.EnumUtil;
+import org.infinispan.conflict.resolution.ConflictResolutionManager;
 import org.infinispan.container.DataContainer;
 import org.infinispan.container.entries.CacheEntry;
 import org.infinispan.context.Flag;
@@ -165,6 +166,11 @@ public class AbstractDelegatingAdvancedCache<K, V> extends AbstractDelegatingCac
    @Override
    public XAResource getXAResource() {
       return cache.getXAResource();
+   }
+
+   @Override
+   public ConflictResolutionManager<K, V> getConflictResolutionManager() {
+      return cache.getConflictResolutionManager();
    }
 
    @Override

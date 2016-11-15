@@ -819,7 +819,7 @@ public class StateConsumerImpl implements StateConsumer {
             // get cluster listeners
             try {
                StateRequestCommand cmd = commandsFactory.buildStateRequestCommand(StateRequestCommand.Type.GET_CACHE_LISTENERS,
-                                                                                  rpcManager.getAddress(), topology.getTopologyId(), null);
+                     rpcManager.getAddress(), topology.getTopologyId(), null);
                Map<Address, Response> responses = rpcManager.invokeRemotely(Collections.singleton(source), cmd, rpcOptions);
                Response response = responses.get(source);
                if (response instanceof SuccessfulResponse) {
@@ -841,7 +841,8 @@ public class StateConsumerImpl implements StateConsumer {
          log.tracef("Requesting transactions for segments %s of cache %s from node %s", segments, cacheName, source);
       }
       // get transactions and locks
-      StateRequestCommand cmd = commandsFactory.buildStateRequestCommand(StateRequestCommand.Type.GET_TRANSACTIONS, rpcManager.getAddress(), topologyId, segments);
+      StateRequestCommand cmd = commandsFactory.buildStateRequestCommand(StateRequestCommand.Type.GET_TRANSACTIONS,
+            rpcManager.getAddress(), topologyId, segments);
       Map<Address, Response> responses = rpcManager.invokeRemotely(Collections.singleton(source), cmd, rpcOptions);
       return responses.get(source);
    }
@@ -1014,8 +1015,8 @@ public class StateConsumerImpl implements StateConsumer {
             return null;
          }
 
-         inboundTransfer = new InboundTransferTask(segmentsFromSource, source,
-               cacheTopology.getTopologyId(), rpcManager, commandsFactory, timeout, cacheName);
+         inboundTransfer = new InboundTransferTask(segmentsFromSource, source, cacheTopology.getTopologyId(),
+               rpcManager, commandsFactory, timeout, cacheName, true);
          for (int segmentId : segmentsFromSource) {
             transfersBySegment.put(segmentId, inboundTransfer);
          }
