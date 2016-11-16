@@ -73,7 +73,6 @@ public class DefaultConflictResolutionManager<K, V> implements ConflictResolutio
       ClusteredGetCommand cmd = commandsFactory.buildClusteredGetCommand(key, EnumUtil.EMPTY_BIT_SET);
       RpcOptions rpcOptions = new RpcOptions(15, TimeUnit.SECONDS, null, ResponseMode.SYNCHRONOUS_IGNORE_LEAVERS, DeliverOrder.NONE);
       CompletableFuture<Map<Address, Response>> future = rpcManager.invokeRemotelyAsync(hash.getMembers(), cmd, rpcOptions);
-//      commandsFactory.initializeReplicableCommand(cmd, true);
       try {
          Map<Address, Response> responseMap = future.get();
          for (Map.Entry<Address, Response> entry : responseMap.entrySet()) {
@@ -138,7 +137,7 @@ public class DefaultConflictResolutionManager<K, V> implements ConflictResolutio
                Thread.currentThread().interrupt();
                throw new CacheException(e);
             } catch (ExecutionException e) {
-               throw new CacheException(e); // Should we throw exception? Or WARN and just continue to the next segment?
+               throw new CacheException(e.getCause()); // Should we throw exception? Or WARN and just continue to the next segment?
             }
          }
          action.accept(iterator.next());

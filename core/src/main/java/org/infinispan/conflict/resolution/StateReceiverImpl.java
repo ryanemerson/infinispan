@@ -3,10 +3,8 @@ package org.infinispan.conflict.resolution;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -16,7 +14,6 @@ import org.infinispan.commons.logging.Log;
 import org.infinispan.commons.logging.LogFactory;
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.container.DataContainer;
-import org.infinispan.container.entries.CacheEntry;
 import org.infinispan.container.entries.InternalCacheEntry;
 import org.infinispan.container.entries.InternalCacheValue;
 import org.infinispan.distribution.ch.ConsistentHash;
@@ -52,7 +49,7 @@ public class StateReceiverImpl<K, V> implements StateReceiver<V> {
    @GuardedBy("keyReplicaMap")
    private final Map<Address, InboundTransferTask> transferTaskMap = new HashMap<>();
 
-   private volatile CompletableFuture<Void> transferFuture = new CompletableFuture<>();
+   private volatile CompletableFuture<List<Map<Address, InternalCacheValue<V>>>> transferFuture;
 
    @Inject
    public void init(Cache cache,
@@ -72,12 +69,22 @@ public class StateReceiverImpl<K, V> implements StateReceiver<V> {
    }
 
    @Override
-   public CompletableFuture<List<Map<Address, InternalCacheValue<V>>>> getAllReplicasForSegment(int segmentId) {
-      CacheTopology cacheTopology = localTopologyManager.getCacheTopology(cache.getName());
-      ConsistentHash hash = cacheTopology.getWriteConsistentHash();
-      List<Address> replicas = hash.locateOwnersForSegment(segmentId);
+   public boolean isStateTransferInProgress() {
+      return transferFuture != null;
+   }
 
+   @Override
+   public CompletableFuture<List<Map<Address, InternalCacheValue<V>>>> getAllReplicasForSegment(int segmentId) {
+      // TODO improve handling of concurrent invocations
       synchronized (keyReplicaMap) {
+         if (transferFuture != null)
+            throw new IllegalStateException("It is not possible to request multiple segments of a cache simultaneously.");
+
+         transferFuture = new CompletableFuture<>();
+         CacheTopology cacheTopology = localTopologyManager.getCacheTopology(cache.getName());
+         ConsistentHash hash = cacheTopology.getWriteConsistentHash();
+         List<Address> replicas = hash.locateOwnersForSegment(segmentId);
+
          for (Address replica : replicas) {
             if (replica.equals(rpcManager.getAddress())) {
                dataContainer.forEach(entry -> {
@@ -96,19 +103,7 @@ public class StateReceiverImpl<K, V> implements StateReceiver<V> {
             }
          }
       }
-
-      return transferFuture.thenApply(v -> getAndClearKeyReplicaMap());
-   }
-
-   private List<Map<Address, InternalCacheValue<V>>> getAndClearKeyReplicaMap() {
-      transferFuture = new CompletableFuture<>();
-      synchronized (keyReplicaMap) {
-         List<Map<Address, InternalCacheValue<V>>> retVal = keyReplicaMap.entrySet().stream()
-               .map(Map.Entry::getValue)
-               .collect(Collectors.toList());
-         keyReplicaMap.clear();
-         return retVal;
-      }
+      return transferFuture;
    }
 
    @Override
@@ -123,9 +118,29 @@ public class StateReceiverImpl<K, V> implements StateReceiver<V> {
          }
 
          if (lastChunkReceived) {
-            transferFuture.complete(null);
+            List<Map<Address, InternalCacheValue<V>>> retVal = keyReplicaMap.entrySet().stream()
+                  .map(Map.Entry::getValue)
+                  .collect(Collectors.toList());
+            keyReplicaMap.clear();
+            transferFuture.complete(retVal);
+            transferFuture = null;
          }
       }
+   }
+
+   @Override
+   public void stop() {
+      cancelAllSegmentRequests(null);
+   }
+
+   private void cancelAllSegmentRequests(Throwable t) {
+      transferTaskMap.forEach((address, inboundTransferTask) -> inboundTransferTask.cancel());
+      if (t != null) {
+         transferFuture.completeExceptionally(t);
+      } else {
+         transferFuture.cancel(true);
+      }
+      transferFuture = null;
    }
 
    private void addKeyToReplicaMap(Address address, InternalCacheEntry<K, V> ice) {

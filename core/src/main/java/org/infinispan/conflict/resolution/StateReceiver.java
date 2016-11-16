@@ -19,8 +19,18 @@ import org.infinispan.statetransfer.StateChunk;
 @Scope(Scopes.NAMED_CACHE)
 public interface StateReceiver<V> {
 
+   boolean isStateTransferInProgress();
+
+   /**
+    * Cancels all ongoing replica requests.
+    * This is executed when the cache is shutting down.
+    */
+   void stop();
+
    /**
     * Return all replicas of a cache entry for a given segment
+    *
+    * @throws IllegalStateException if this method is invoked whilst a previous request for Replicas is still executing
     */
    CompletableFuture<List<Map<Address, InternalCacheValue<V>>>> getAllReplicasForSegment(int segmentId);
 

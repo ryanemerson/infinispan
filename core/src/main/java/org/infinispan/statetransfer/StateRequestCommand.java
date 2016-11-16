@@ -83,11 +83,11 @@ public class StateRequestCommand extends BaseRpcCommand implements TopologyAffec
                return CompletableFuture.completedFuture(transactions);
 
             case START_CONSISTENCY_CHECK:
-               stateProvider.startOutboundTransfer(getOrigin(), topologyId, segments, true);
+               stateProvider.startOutboundTransfer(getOrigin(), topologyId, segments, false);
                return CompletableFutures.completedNull();
 
             case START_STATE_TRANSFER:
-               stateProvider.startOutboundTransfer(getOrigin(), topologyId, segments, false);
+               stateProvider.startOutboundTransfer(getOrigin(), topologyId, segments, true);
                return CompletableFutures.completedNull();
 
             case CANCEL_CONSISTENCY_CHECK:
