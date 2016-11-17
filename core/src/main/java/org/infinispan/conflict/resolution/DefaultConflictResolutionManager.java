@@ -21,6 +21,7 @@ import org.infinispan.commands.CommandsFactory;
 import org.infinispan.commands.remote.ClusteredGetCommand;
 import org.infinispan.commons.CacheException;
 import org.infinispan.commons.util.EnumUtil;
+import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.container.DataContainer;
 import org.infinispan.container.entries.InternalCacheValue;
 import org.infinispan.distribution.DistributionManager;
@@ -72,9 +73,9 @@ public class DefaultConflictResolutionManager<K, V> implements ConflictResolutio
          versionsMap.put(localAddress, icv);
       }
 
-      // TODO add timeout configuration
       ClusteredGetCommand cmd = commandsFactory.buildClusteredGetCommand(key, EnumUtil.EMPTY_BIT_SET);
-      RpcOptions rpcOptions = new RpcOptions(15, TimeUnit.SECONDS, null, ResponseMode.SYNCHRONOUS_IGNORE_LEAVERS, DeliverOrder.NONE);
+      long timeout = cache.getCacheConfiguration().clustering().remoteTimeout();
+      RpcOptions rpcOptions = new RpcOptions(timeout, TimeUnit.SECONDS, null, ResponseMode.SYNCHRONOUS_IGNORE_LEAVERS, DeliverOrder.NONE);
       CompletableFuture<Map<Address, Response>> future = rpcManager.invokeRemotelyAsync(hash.getMembers(), cmd, rpcOptions);
       try {
          Map<Address, Response> responseMap = future.get();
