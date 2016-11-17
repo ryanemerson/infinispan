@@ -83,7 +83,7 @@ public class StateResponseCommand extends BaseRpcCommand {
          if (applyState) {
             stateConsumer.applyState(getOrigin(), topologyId, stateChunks);
          } else {
-            stateReceiver.receiveState(getOrigin(), stateChunks);
+            stateReceiver.receiveState(getOrigin(), topologyId, stateChunks);
          }
          return CompletableFutures.completedNull();
       } finally {

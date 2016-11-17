@@ -1,5 +1,6 @@
 package org.infinispan.conflict.resolution;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -10,6 +11,7 @@ import java.util.stream.Collectors;
 
 import org.infinispan.Cache;
 import org.infinispan.commands.CommandsFactory;
+import org.infinispan.commons.CacheException;
 import org.infinispan.commons.logging.Log;
 import org.infinispan.commons.logging.LogFactory;
 import org.infinispan.configuration.cache.Configuration;
@@ -23,7 +25,6 @@ import org.infinispan.remoting.transport.Address;
 import org.infinispan.statetransfer.InboundTransferTask;
 import org.infinispan.statetransfer.StateChunk;
 import org.infinispan.topology.CacheTopology;
-import org.infinispan.topology.LocalTopologyManager;
 
 import net.jcip.annotations.GuardedBy;
 
@@ -34,35 +35,37 @@ import net.jcip.annotations.GuardedBy;
 public class StateReceiverImpl<K, V> implements StateReceiver<V> {
 
    private static Log log = LogFactory.getLog(StateReceiverImpl.class);
+   private static boolean trace = log.isTraceEnabled();
 
-   private Cache cache;
+   private String cacheName;
    private CommandsFactory commandsFactory;
-   private Configuration configuration;
    private DataContainer<K, V> dataContainer;
-   private LocalTopologyManager localTopologyManager;
    private RpcManager rpcManager;
    private long transferTimeout;
 
-   @GuardedBy("keyReplicaMap")
+   private final Object lock = new Object();
+
+   @GuardedBy("lock")
    private final Map<K, Map<Address, InternalCacheValue<V>>> keyReplicaMap = new HashMap<>();
 
-   @GuardedBy("keyReplicaMap")
+   @GuardedBy("lock")
    private final Map<Address, InboundTransferTask> transferTaskMap = new HashMap<>();
 
-   private volatile CompletableFuture<List<Map<Address, InternalCacheValue<V>>>> transferFuture;
+   private CompletableFuture<List<Map<Address, InternalCacheValue<V>>>> completableFuture = CompletableFuture.completedFuture(null);
+
+   private CacheTopology cacheTopology;
+   private int segmentId;
+   private int minTopologyId = 0;
 
    @Inject
    public void init(Cache cache,
                     CommandsFactory commandsFactory,
                     Configuration configuration,
                     DataContainer<K, V> dataContainer,
-                    LocalTopologyManager localTopologyManager,
                     RpcManager rpcManager) {
-      this.cache = cache;
+      this.cacheName = cache.getName();
       this.commandsFactory = commandsFactory;
-      this.configuration = configuration;
       this.dataContainer = dataContainer;
-      this.localTopologyManager = localTopologyManager;
       this.rpcManager = rpcManager;
 
       this.transferTimeout = configuration.clustering().stateTransfer().timeout();
@@ -70,21 +73,24 @@ public class StateReceiverImpl<K, V> implements StateReceiver<V> {
 
    @Override
    public boolean isStateTransferInProgress() {
-      return transferFuture != null;
+      synchronized (lock) {
+         return !completableFuture.isDone();
+      }
    }
 
    @Override
    public CompletableFuture<List<Map<Address, InternalCacheValue<V>>>> getAllReplicasForSegment(int segmentId) {
-      // TODO improve handling of concurrent invocations
-      synchronized (keyReplicaMap) {
-         if (transferFuture != null)
+      synchronized (lock) {
+         // TODO improve handling of concurrent invocations
+         if (!completableFuture.isDone()) {
+            if (trace) log.tracef("Concurrent invocations of getAllReplicasForSegment detected %s", completableFuture);
             throw new IllegalStateException("It is not possible to request multiple segments of a cache simultaneously.");
+         }
 
-         transferFuture = new CompletableFuture<>();
-         CacheTopology cacheTopology = localTopologyManager.getCacheTopology(cache.getName());
-         ConsistentHash hash = cacheTopology.getWriteConsistentHash();
+         this.segmentId = segmentId;
+         ConsistentHash hash = cacheTopology.getReadConsistentHash();
          List<Address> replicas = hash.locateOwnersForSegment(segmentId);
-
+         List<CompletableFuture<Void>> completableFutures = new ArrayList<>();
          for (Address replica : replicas) {
             if (replica.equals(rpcManager.getAddress())) {
                dataContainer.forEach(entry -> {
@@ -96,54 +102,113 @@ public class StateReceiverImpl<K, V> implements StateReceiver<V> {
             } else {
                InboundTransferTask inboundTransferTask = new InboundTransferTask(
                      Collections.singleton(segmentId), replica, cacheTopology.getTopologyId(), rpcManager,
-                     commandsFactory, transferTimeout, cache.getName(), false);
+                     commandsFactory, transferTimeout, cacheName, false);
 
                transferTaskMap.put(replica, inboundTransferTask);
-               inboundTransferTask.requestSegments();
+               completableFutures.add(inboundTransferTask.requestSegments());
             }
          }
+         completableFuture = CompletableFuture
+               .allOf(completableFutures.toArray(new CompletableFuture[completableFutures.size()]))
+               .thenApply(aVoid -> getAddressValueMap());
+
+         // If an exception is thrown by any of the inboundTransferTasks, then remove all segment results and cancel all tasks
+         completableFuture.exceptionally(throwable -> {
+            if (trace) log.tracef(throwable, "Exception when processing InboundTransferTask for cache %s", cacheName);
+            cancelAllSegmentRequests(throwable);
+            return null;
+         });
+         return completableFuture;
       }
-      return transferFuture;
    }
 
    @Override
-   public void receiveState(Address sender, Collection<StateChunk> stateChunks) {
-      synchronized (keyReplicaMap) {
-         InboundTransferTask transferTask = transferTaskMap.get(sender);
-         boolean lastChunkReceived = false;
-         for (StateChunk chunk : stateChunks) {
-            transferTask.onStateReceived(chunk.getSegmentId(), chunk.isLastChunk());
-            chunk.getCacheEntries().forEach(ice -> addKeyToReplicaMap(sender, ice));
-            lastChunkReceived = chunk.isLastChunk();
+   public void receiveState(Address sender, int topologyId, Collection<StateChunk> stateChunks) {
+      synchronized (lock) {
+         if (completableFuture.isDone()) {
+            if (trace) log.tracef("Ignoring received state for cache %s because the associated request has completed %s",
+                  cacheName, completableFuture);
+            return;
          }
 
-         if (lastChunkReceived) {
-            List<Map<Address, InternalCacheValue<V>>> retVal = keyReplicaMap.entrySet().stream()
-                  .map(Map.Entry::getValue)
-                  .collect(Collectors.toList());
-            keyReplicaMap.clear();
-            transferFuture.complete(retVal);
-            transferFuture = null;
+         if (topologyId < minTopologyId) {
+            if (trace)
+               log.tracef("Discarding state response with old topology id %d for cache %s, the smallest allowed topology id is %d",
+                  topologyId, minTopologyId, cacheName);
+            return;
+         }
+
+         InboundTransferTask transferTask = transferTaskMap.get(sender);
+         for (StateChunk chunk : stateChunks) {
+            chunk.getCacheEntries().forEach(ice -> addKeyToReplicaMap(sender, ice));
+            transferTask.onStateReceived(chunk.getSegmentId(), chunk.isLastChunk());
          }
       }
    }
 
    @Override
    public void stop() {
-      cancelAllSegmentRequests(null);
+      synchronized (lock) {
+         if (trace) log.tracef("Stop called on StateReceiverImpl for cache %s", cacheName);
+         cancelAllSegmentRequests(null);
+      }
    }
 
-   private void cancelAllSegmentRequests(Throwable t) {
-      transferTaskMap.forEach((address, inboundTransferTask) -> inboundTransferTask.cancel());
-      if (t != null) {
-         transferFuture.completeExceptionally(t);
-      } else {
-         transferFuture.cancel(true);
+   @Override
+   public void onTopologyUpdate(CacheTopology cacheTopology, boolean isRebalance) {
+      if (trace) {
+         boolean isMember = cacheTopology.getMembers().contains(rpcManager.getAddress());
+         log.tracef("Received new topology for cache %s, isRebalance = %b, isMember = %b, topology = %s",
+               cacheName, isRebalance, isMember, cacheTopology);
       }
-      transferFuture = null;
+
+      synchronized (lock) {
+         boolean newSegmentOwners = isRebalance && newSegmentOwners(cacheTopology);
+         this.cacheTopology = cacheTopology;
+
+         if (newSegmentOwners)
+            minTopologyId = cacheTopology.getTopologyId();
+
+         if (newSegmentOwners && !completableFuture.isDone())
+            cancelAllSegmentRequests(new CacheException("Cancelling replica request as the owners of the requested " +
+                  "segment have changed."));
+      }
+   }
+
+   private List<Map<Address, InternalCacheValue<V>>> getAddressValueMap() {
+      synchronized (lock) {
+         List<Map<Address, InternalCacheValue<V>>> retVal = keyReplicaMap.entrySet().stream()
+               .map(Map.Entry::getValue)
+               .collect(Collectors.toList());
+         keyReplicaMap.clear();
+         transferTaskMap.clear();
+         return retVal;
+      }
+   }
+
+   private void cancelAllSegmentRequests(Throwable throwable) {
+      synchronized (lock) {
+         if (trace) log.tracef(throwable, "Cancelling All Segment Requests on cache %s", cacheName);
+         transferTaskMap.forEach((address, inboundTransferTask) -> inboundTransferTask.cancel());
+         transferTaskMap.clear();
+         if (throwable != null) {
+            completableFuture.completeExceptionally(throwable);
+         } else {
+            completableFuture.cancel(true);
+         }
+      }
    }
 
    private void addKeyToReplicaMap(Address address, InternalCacheEntry<K, V> ice) {
       keyReplicaMap.computeIfAbsent(ice.getKey(), k -> new HashMap()).put(address, ice.toInternalCacheValue());
+   }
+
+   private boolean newSegmentOwners(CacheTopology newTopology) {
+      if (cacheTopology == null)
+         return true;
+
+      Collection<Address> newMembers = newTopology.getReadConsistentHash().locateOwnersForSegment(segmentId);
+      Collection<Address> currentMembers = cacheTopology.getReadConsistentHash().locateOwnersForSegment(segmentId);
+      return !currentMembers.equals(newMembers);
    }
 }

@@ -6,9 +6,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Spliterators;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -43,6 +45,7 @@ public class DefaultConflictResolutionManager<K, V> implements ConflictResolutio
    private DistributionManager distributionManager;
    private StateReceiver<V> stateReceiver;
    private RpcManager rpcManager;
+   private final AtomicBoolean streamInProgress = new AtomicBoolean();
 
    @Inject
    public void inject(Cache cache,
@@ -94,8 +97,7 @@ public class DefaultConflictResolutionManager<K, V> implements ConflictResolutio
 
    @Override
    public Stream<Map<Address, InternalCacheValue<V>>> getConflicts() {
-      ConsistentHash hash = distributionManager.getConsistentHash();
-      return StreamSupport.stream(new ReplicaSpliterator(hash.getNumSegments()), false).filter(filterConsistentEntries());
+      return StreamSupport.stream(new ReplicaSpliterator(), false).filter(filterConsistentEntries());
    }
 
    @Override
@@ -120,15 +122,23 @@ public class DefaultConflictResolutionManager<K, V> implements ConflictResolutio
       private List<Map<Address, InternalCacheValue<V>>> segmentEntries;
       private Iterator<Map<Address, InternalCacheValue<V>>> iterator = Collections.emptyIterator();
 
-      ReplicaSpliterator(int totalSegments) {
+      ReplicaSpliterator() {
          super(Long.MAX_VALUE, 0);
-         this.totalSegments = totalSegments;
+
+         if (!streamInProgress.compareAndSet(false, true))
+            throw new IllegalStateException("ConflictResolutionaManager.getConflicts() already in progress");
+
+         this.totalSegments = distributionManager.getConsistentHash().getNumSegments();
       }
 
       @Override
       public boolean tryAdvance(Consumer<? super Map<Address, InternalCacheValue<V>>> action) {
          while (!iterator.hasNext()) {
-            if (currentSegment >= totalSegments) return false;
+            if (currentSegment >= totalSegments) {
+               streamInProgress.compareAndSet(true, false);
+               return false;
+            }
+
             try {
                segmentEntries = stateReceiver.getAllReplicasForSegment(currentSegment).get();
                iterator = segmentEntries.iterator();
@@ -136,7 +146,7 @@ public class DefaultConflictResolutionManager<K, V> implements ConflictResolutio
             } catch (InterruptedException e) {
                Thread.currentThread().interrupt();
                throw new CacheException(e);
-            } catch (ExecutionException e) {
+            } catch (ExecutionException | CancellationException e) {
                throw new CacheException(e.getCause()); // Should we throw exception? Or WARN and just continue to the next segment?
             }
          }

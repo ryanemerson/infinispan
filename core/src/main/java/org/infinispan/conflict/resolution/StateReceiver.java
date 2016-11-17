@@ -11,6 +11,7 @@ import org.infinispan.factories.scopes.Scope;
 import org.infinispan.factories.scopes.Scopes;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.statetransfer.StateChunk;
+import org.infinispan.topology.CacheTopology;
 
 /**
  * @author Ryan Emerson
@@ -34,5 +35,7 @@ public interface StateReceiver<V> {
     */
    CompletableFuture<List<Map<Address, InternalCacheValue<V>>>> getAllReplicasForSegment(int segmentId);
 
-   void receiveState(Address sender, Collection<StateChunk> stateChunks);
+   void receiveState(Address sender, int topologyId, Collection<StateChunk> stateChunks);
+
+   void onTopologyUpdate(CacheTopology cacheTopology, boolean isRebalance);
 }
