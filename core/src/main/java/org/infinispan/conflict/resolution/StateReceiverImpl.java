@@ -100,12 +100,9 @@ public class StateReceiverImpl<K, V> implements StateReceiver<V> {
                   }
                });
             } else {
-               InboundTransferTask inboundTransferTask = new InboundTransferTask(
-                     Collections.singleton(segmentId), replica, cacheTopology.getTopologyId(), rpcManager,
-                     commandsFactory, transferTimeout, cacheName, false);
-
-               transferTaskMap.put(replica, inboundTransferTask);
-               completableFutures.add(inboundTransferTask.requestSegments());
+               InboundTransferTask transferTask = createTransferTask(segmentId, replica);
+               transferTaskMap.put(replica, transferTask);
+               completableFutures.add(transferTask.requestSegments());
             }
          }
          completableFuture = CompletableFuture
@@ -126,15 +123,16 @@ public class StateReceiverImpl<K, V> implements StateReceiver<V> {
    public void receiveState(Address sender, int topologyId, Collection<StateChunk> stateChunks) {
       synchronized (lock) {
          if (completableFuture.isDone()) {
-            if (trace) log.tracef("Ignoring received state for cache %s because the associated request has completed %s",
-                  cacheName, completableFuture);
+            if (trace)
+               log.tracef("Ignoring received state for cache %s because the associated request has completed %s",
+                     cacheName, completableFuture);
             return;
          }
 
          if (topologyId < minTopologyId) {
             if (trace)
                log.tracef("Discarding state response with old topology id %d for cache %s, the smallest allowed topology id is %d",
-                  topologyId, minTopologyId, cacheName);
+                     topologyId, minTopologyId, cacheName);
             return;
          }
 
@@ -173,6 +171,11 @@ public class StateReceiverImpl<K, V> implements StateReceiver<V> {
             cancelAllSegmentRequests(new CacheException("Cancelling replica request as the owners of the requested " +
                   "segment have changed."));
       }
+   }
+
+   InboundTransferTask createTransferTask(int segmentId, Address source) {
+      return new InboundTransferTask(Collections.singleton(segmentId), source, cacheTopology.getTopologyId(),
+            rpcManager, commandsFactory, transferTimeout, cacheName, false);
    }
 
    private List<Map<Address, InternalCacheValue<V>>> getAddressValueMap() {
