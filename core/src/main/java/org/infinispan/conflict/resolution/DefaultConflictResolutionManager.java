@@ -65,10 +65,10 @@ public class DefaultConflictResolutionManager<K, V> implements ConflictResolutio
 
    @Override
    public Map<Address, InternalCacheValue<V>> getAllVersions(K key) {
-      ConsistentHash hash = distributionManager.getConsistentHash();
+      List<Address> keyReplicaNodes = distributionManager.getConsistentHash().locateOwners(key);
       Address localAddress = rpcManager.getAddress();
       Map<Address, InternalCacheValue<V>> versionsMap = new HashMap<>();
-      if (hash.getMembers().contains(localAddress)) {
+      if (keyReplicaNodes.contains(localAddress)) {
          InternalCacheValue<V> icv = dataContainer.containsKey(key) ? dataContainer.get(key).toInternalCacheValue() : null;
          versionsMap.put(localAddress, icv);
       }
@@ -76,7 +76,7 @@ public class DefaultConflictResolutionManager<K, V> implements ConflictResolutio
       ClusteredGetCommand cmd = commandsFactory.buildClusteredGetCommand(key, EnumUtil.EMPTY_BIT_SET);
       long timeout = cache.getCacheConfiguration().clustering().remoteTimeout();
       RpcOptions rpcOptions = new RpcOptions(timeout, TimeUnit.SECONDS, null, ResponseMode.SYNCHRONOUS_IGNORE_LEAVERS, DeliverOrder.NONE);
-      CompletableFuture<Map<Address, Response>> future = rpcManager.invokeRemotelyAsync(hash.getMembers(), cmd, rpcOptions);
+      CompletableFuture<Map<Address, Response>> future = rpcManager.invokeRemotelyAsync(keyReplicaNodes, cmd, rpcOptions);
       try {
          Map<Address, Response> responseMap = future.get();
          for (Map.Entry<Address, Response> entry : responseMap.entrySet()) {
