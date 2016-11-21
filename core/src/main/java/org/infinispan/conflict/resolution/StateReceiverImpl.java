@@ -55,7 +55,7 @@ public class StateReceiverImpl<K, V> implements StateReceiver<V> {
 
    private CacheTopology cacheTopology;
    private int segmentId;
-   private int minTopologyId = 0;
+   private int minTopologyId = -1;
 
    @Inject
    public void init(Cache cache,
@@ -72,7 +72,7 @@ public class StateReceiverImpl<K, V> implements StateReceiver<V> {
    }
 
    @Override
-   public boolean isStateTransferInProgress() {
+   public boolean isTransferInProgress() {
       synchronized (lock) {
          return !completableFuture.isDone();
       }
@@ -136,7 +136,13 @@ public class StateReceiverImpl<K, V> implements StateReceiver<V> {
             return;
          }
 
-         InboundTransferTask transferTask = transferTaskMap.get(sender);
+         InboundTransferTask transferTask = transferTaskMap.remove(sender);
+         if (transferTask == null) {
+            if (trace)
+               log.tracef("State received for an unknown request. No record of a state request exists for node %s", sender);
+            return;
+         }
+
          for (StateChunk chunk : stateChunks) {
             chunk.getCacheEntries().forEach(ice -> addKeyToReplicaMap(sender, ice));
             transferTask.onStateReceived(chunk.getSegmentId(), chunk.isLastChunk());
@@ -164,13 +170,21 @@ public class StateReceiverImpl<K, V> implements StateReceiver<V> {
          boolean newSegmentOwners = isRebalance && newSegmentOwners(cacheTopology);
          this.cacheTopology = cacheTopology;
 
-         if (newSegmentOwners)
+         if (minTopologyId < 0 || newSegmentOwners)
             minTopologyId = cacheTopology.getTopologyId();
 
          if (newSegmentOwners && !completableFuture.isDone())
             cancelAllSegmentRequests(new CacheException("Cancelling replica request as the owners of the requested " +
                   "segment have changed."));
       }
+   }
+
+   Map<K, Map<Address, InternalCacheValue<V>>> getKeyReplicaMap() {
+      return keyReplicaMap;
+   }
+
+   Map<Address, InboundTransferTask> getTransferTaskMap() {
+      return transferTaskMap;
    }
 
    InboundTransferTask createTransferTask(int segmentId, Address source) {

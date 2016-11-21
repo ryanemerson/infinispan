@@ -20,7 +20,7 @@ import org.infinispan.topology.CacheTopology;
 @Scope(Scopes.NAMED_CACHE)
 public interface StateReceiver<V> {
 
-   boolean isStateTransferInProgress();
+   boolean isTransferInProgress();
 
    /**
     * Cancels all ongoing replica requests.
