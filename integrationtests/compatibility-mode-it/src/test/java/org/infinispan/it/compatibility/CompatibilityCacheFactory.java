@@ -64,6 +64,7 @@ public class CompatibilityCacheFactory<K, V> {
    private final CacheMode cacheMode;
    private final int numOwners;
    private final boolean l1Enable;
+   private final boolean memcachedWithDecoder;
    private int restPort;
    private Equivalence keyEquivalence = null;
    private Equivalence valueEquivalence = null;
@@ -84,7 +85,11 @@ public class CompatibilityCacheFactory<K, V> {
       this(cacheName, marshaller, cacheMode, numOwners, false, null);
    }
 
-   public CompatibilityCacheFactory(String cacheName, Marshaller marshaller, CacheMode cacheMode, int numOwners, boolean l1Enable,
+   public CompatibilityCacheFactory(String cacheName, Marshaller marshaller, CacheMode cacheMode, Transcoder transcoder) {
+      this(cacheName, marshaller, cacheMode, DEFAULT_NUM_OWNERS, false, transcoder);
+   }
+
+   CompatibilityCacheFactory(String cacheName, Marshaller marshaller, CacheMode cacheMode, int numOwners, boolean l1Enable,
                              Transcoder transcoder) {
       this.cacheName = cacheName;
       this.marshaller = marshaller;
@@ -92,6 +97,7 @@ public class CompatibilityCacheFactory<K, V> {
       this.numOwners = numOwners;
       this.l1Enable = l1Enable;
       this.transcoder = transcoder;
+      this.memcachedWithDecoder = transcoder != null;
    }
 
    CompatibilityCacheFactory<K, V> keyEquivalence(Equivalence equivalence) {
@@ -104,7 +110,7 @@ public class CompatibilityCacheFactory<K, V> {
       return this;
    }
 
-   CompatibilityCacheFactory<K, V> setup() throws Exception {
+   public CompatibilityCacheFactory<K, V> setup() throws Exception {
       createEmbeddedCache();
       createHotRodCache();
       createRestMemcachedCaches();
@@ -192,7 +198,7 @@ public class CompatibilityCacheFactory<K, V> {
    }
 
    private void createMemcachedCache(int port) throws IOException {
-      memcached = startMemcachedTextServer(cacheManager, port);
+      memcached = memcachedWithDecoder ? startMemcachedTextServer(cacheManager, port, cacheName) : startMemcachedTextServer(cacheManager, port);
       memcachedClient = createMemcachedClient(60000, memcached.getPort());
    }
 
