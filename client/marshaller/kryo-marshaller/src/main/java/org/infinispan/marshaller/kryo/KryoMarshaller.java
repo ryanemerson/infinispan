@@ -1,12 +1,11 @@
 package org.infinispan.marshaller.kryo;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 import org.infinispan.commons.io.ByteBuffer;
 import org.infinispan.commons.io.ByteBufferImpl;
+import org.infinispan.commons.io.ExposedByteArrayOutputStream;
 import org.infinispan.commons.marshall.AbstractMarshaller;
-import org.infinispan.commons.marshall.Marshaller;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
@@ -38,7 +37,7 @@ public class KryoMarshaller extends AbstractMarshaller {
          return new ByteBufferImpl(bytes, 0, bytes.length);
       }
 
-      try (Output output = new Output(new ByteArrayOutputStream(estimatedSize), estimatedSize)) {
+      try (Output output = new Output(new ExposedByteArrayOutputStream(estimatedSize), estimatedSize)) {
          kryo.writeClassAndObject(output, obj);
          byte[] bytes = output.toBytes();
          return new ByteBufferImpl(bytes, 0, bytes.length);
