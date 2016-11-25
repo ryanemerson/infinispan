@@ -11,13 +11,13 @@
 
     <artifactId>infinispan-marshaller-kryo-bundle</artifactId>
     <packaging>jar</packaging>
-    <name>Infinispan Kryo Marshaller Bridge Compatibility Bundle</name>
+    <name>Infinispan kryo Marshaller Bridge Compatibility Bundle</name>
 
     <dependencies>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-marshaller-kryo</artifactId>
-            <version>${project.version}</version>
+            <version>9.0.0-SNAPSHOT</version>
         </dependency>
     </dependencies>
 
@@ -40,21 +40,30 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
-                            <finalName>${project.artifactId}</finalName>
+                            <finalName>${project.artifactId}-${project.version}</finalName>
                             <artifactSet>
                                 <excludes>
                                     <exclude>org.infinispan:infinispan-core:jar:</exclude>
                                     <exclude>org.infinispan:infinispan-commons:jar:</exclude>
                                     <exclude>org.jgroups:jgroups:jar:</exclude>
                                     <exclude>org.jboss.marshalling:jboss-marshalling-osgi:jar:</exclude>
-
                                     <exclude>org.apache.logging.log4j:log4j-core:jar:</exclude>
                                     <exclude>org.apache.logging.log4j:log4j-api:jar:</exclude>
                                     <exclude>org.jboss.spec.javax.transaction:jboss-transaction-api_1.1_spec:jar:</exclude>
-                                    <exclude>org.jboss.logging:jboss-logging:jar:jar:</exclude>
+                                    <exclude>org.jboss.logging:jboss-logging:jar:</exclude>
                                     <exclude>net.jcip:jcip-annotations:jar:</exclude>
+                                    <exclude>net.*</exclude>
                                 </excludes>
                             </artifactSet>
+                            <filters>
+                                <filter>
+                                    <artifact>org.infinispan:infinispan-marshaller-kryo-bundle</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/maven/org.infinispan/infinispan-marshaller-kryo-bundle</exclude>
+                                        <exclude>META-INF/maven/org.infinispan/infinispan-marshaller-kryo-bundle/*</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
                         </configuration>
                     </execution>
                 </executions>
