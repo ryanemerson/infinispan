@@ -1,7 +1,5 @@
 package org.infinispan.marshaller.kryo;
 
-import java.io.IOException;
-
 import org.infinispan.commons.io.ByteBuffer;
 import org.infinispan.commons.io.ByteBufferImpl;
 import org.infinispan.commons.io.ExposedByteArrayOutputStream;
@@ -24,14 +22,14 @@ public class KryoMarshaller extends AbstractMarshaller {
    }
 
    @Override
-   public Object objectFromByteBuffer(byte[] bytes, int offset, int length) throws IOException, ClassNotFoundException {
+   public Object objectFromByteBuffer(byte[] bytes, int offset, int length) {
       try (Input input = new Input(bytes, offset, length)) {
          return kryo.readClassAndObject(input);
       }
    }
 
    @Override
-   protected ByteBuffer objectToBuffer(Object obj, int estimatedSize) throws IOException, InterruptedException {
+   protected ByteBuffer objectToBuffer(Object obj, int estimatedSize) {
       if (obj instanceof byte[]) {
          byte[] bytes = (byte[]) obj;
          return new ByteBufferImpl(bytes, 0, bytes.length);

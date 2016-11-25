@@ -1,8 +1,8 @@
 package org.infinispan.marshaller.protostuff;
 
 import org.infinispan.configuration.cache.CacheMode;
+import org.infinispan.it.compatibility.CompatibilityCacheFactory;
 import org.infinispan.marshaller.test.AbstractCompatibilityTest;
-import org.infinispan.marshaller.test.CompatibilityCacheFactory;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -18,7 +18,7 @@ public class ProtostuffCompatibilityTest extends AbstractCompatibilityTest {
    protected void setup() throws Exception {
       ProtostuffMarshaller marshaller = new ProtostuffMarshaller();
       Transcoder transcoder = new ProtostuffTranscoder(marshaller);
-      cacheFactory = new CompatibilityCacheFactory<>("protoCache", marshaller, transcoder, CacheMode.LOCAL);
+      cacheFactory = new CompatibilityCacheFactory<>("protoCache", marshaller, CacheMode.LOCAL, transcoder);
       cacheFactory.setup();
    }
 }
