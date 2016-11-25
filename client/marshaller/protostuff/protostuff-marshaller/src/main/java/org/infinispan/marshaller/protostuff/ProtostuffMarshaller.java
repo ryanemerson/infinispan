@@ -3,6 +3,7 @@ package org.infinispan.marshaller.protostuff;
 import static io.protostuff.LinkedBuffer.MIN_BUFFER_SIZE;
 
 import java.io.IOException;
+import java.util.ServiceLoader;
 
 import org.infinispan.commons.io.ByteBuffer;
 import org.infinispan.commons.io.ByteBufferImpl;
@@ -19,6 +20,10 @@ import io.protostuff.runtime.RuntimeSchema;
  */
 public class ProtostuffMarshaller extends AbstractMarshaller {
 
+   static {
+      ClassLoader loader = ProtostuffMarshaller.class.getClassLoader();
+      ServiceLoader.load(SchemaRegistryService.class, loader).forEach(SchemaRegistryService::register);
+   }
    private static final Schema<Wrapper> WRAPPER_SCHEMA = RuntimeSchema.getSchema(Wrapper.class);
 
    @Override

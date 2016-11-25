@@ -1,5 +1,9 @@
 package org.infinispan.marshaller.kryo;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.ServiceLoader;
+
 import org.infinispan.commons.io.ByteBuffer;
 import org.infinispan.commons.io.ByteBufferImpl;
 import org.infinispan.commons.io.ExposedByteArrayOutputStream;
@@ -15,7 +19,17 @@ import com.esotericsoftware.kryo.io.Output;
  */
 public class KryoMarshaller extends AbstractMarshaller {
 
+   private static List<SerializerRegistryService> serializerServices = new ArrayList<>();
+   static {
+      ServiceLoader.load(SerializerRegistryService.class, KryoMarshaller.class.getClassLoader())
+            .forEach(serializerRegistryService -> serializerServices.add(serializerRegistryService));
+   }
+
    private final Kryo kryo = new Kryo();
+
+   public KryoMarshaller() {
+      serializerServices.forEach(service -> service.register(kryo));
+   }
 
    public Kryo getKryo() {
       return kryo;
