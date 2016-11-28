@@ -10,6 +10,7 @@ import org.infinispan.commons.io.ExposedByteArrayOutputStream;
 import org.infinispan.commons.marshall.AbstractMarshaller;
 
 import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.Serializer;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 
@@ -33,6 +34,10 @@ public class KryoMarshaller extends AbstractMarshaller {
 
    public Kryo getKryo() {
       return kryo;
+   }
+
+   public void registerSerializer(Class type, Serializer serializer) {
+      kryo.register(type, serializer);
    }
 
    @Override
