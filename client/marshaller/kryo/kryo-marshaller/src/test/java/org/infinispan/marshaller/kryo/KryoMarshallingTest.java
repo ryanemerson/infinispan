@@ -20,13 +20,6 @@ public class KryoMarshallingTest extends AbstractMarshallingTest {
       super(new KryoMarshaller());
    }
 
-   @BeforeTest
-   public void setup() {
-      Kryo kryo = ((KryoMarshaller) marshaller).getKryo();
-      kryo.register(User.class, new UserSerializer());
-      UnmodifiableCollectionsSerializer.registerSerializers(kryo);
-   }
-
    protected void checkCustomSerializerCounters(int readCount, int writeCount) {
       assert UserSerializer.readCount.get() == readCount;
       assert UserSerializer.writeCount.get() == writeCount;

@@ -18,11 +18,6 @@ public class ProtostuffMarshallingTest extends AbstractMarshallingTest {
       super(new ProtostuffMarshaller());
    }
 
-   @BeforeTest
-   public void setup() {
-      RuntimeSchema.register(User.class, new UserSchema());
-   }
-
    protected void checkCustomSerializerCounters(int readCount, int writeCount) {
       assert UserSchema.mergeFromCount.get() == readCount;
       assert UserSchema.writeToCount.get() == writeCount;
