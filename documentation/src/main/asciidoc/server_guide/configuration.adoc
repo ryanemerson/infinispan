@@ -501,7 +501,7 @@ and editing the module definition to include the jar as resource-root:
 ==== Custom Marshaller Bridges
 Infinispan provides two marshalling bridges for marshalling client/server requests using the Kryo and Protostuff libraries.
 To utilise either of these marshallers, you simply place the dependency of the marshaller you require in your client
-pom. Custom schemas for object marshalling must then be registered with the selected library using the libraries api on
+pom. Custom schemas for object marshalling must then be registered with the selected library using the library's api on
 the client or by implementing a RegistryService for the given marshaller bridge. Examples of how to achieve this for both
 libraries are presented below:
 
@@ -566,16 +566,14 @@ ConfigurationBuilder builder = new ConfigurationBuilder();
 ----
 
 Alternatively, you can implement a service provider for the `SerializerRegistryService.java` interface, placing all serializer registrations
-in the `register(Kryo)` method, where the serializers should be applied to the provided `Kryo` object via the Kryo api.
+in the `register(Kryo)` method; where serializers should be registered with the supplied `Kryo` object using the Kryo api.
 e.g. `kryo.register(ExampleObject.class, new ExampleObjectSerializer())`.  Implementations of this interface are loaded
 via Java's ServiceLoader api, therefore the full path of the implementing class(es) should be provided in a
 `META-INF/services/org/infinispan/marshaller/kryo/SerializerRegistryService` file within your deployment jar.
 
-http://central.maven.org/maven2/org/infinispan/infinispan-marshaller-kryo-bundle/{infinispanversion}/infinispan-marshaller-kryo-bundle-{infinispanversion}.jar
-
 ===== Server Compatibility Mode
 When using the Protostuff/Kryo bridges in compatibility mode, it is necessary for the class files of all custom objects to
-be placed on the classpath of the server.  To achieve this users can follow the steps outlined in the protocol interoperability
+be placed on the classpath of the server.  To achieve this, you should follow the steps outlined in the link:#_protocol_interoperability[Protocol Interoperability]
 section, to place a jar containing all of their custom classes on the server's classpath.
 
 When utilising a custom marshaller in compatibility mode, it is also necessary for the marshaller and it's runtime dependencies
@@ -584,6 +582,7 @@ which includes all of the runtime class files required by the bridge and underly
 necessary to include this single jar on the server's classpath.
 
 Bundle jar downloads:
+
 - link:http://central.maven.org/maven2/org/infinispan/infinispan-marshaller-kryo-bundle/{infinispanversion}/infinispan-marshaller-kryo-bundle-{infinispanversion}.jar[Kryo Bundle]
 - link:http://central.maven.org/maven2/org/infinispan/infinispan-marshaller-protostuff-bundle/{infinispanversion}/infinispan-marshaller-protostuff-bundle-{infinispanversion}.jar[Protostuff Bundle]
 
@@ -599,3 +598,4 @@ in the same directory or module as the marshaller bundle and custom classes.
 NOTE: It is not necessary for the service provider implementation to be provided in the same jar as the user's custom
 classes, however the jar containing the provider must be in the same directory/module as the marshaller and custom class
 jars.
+
