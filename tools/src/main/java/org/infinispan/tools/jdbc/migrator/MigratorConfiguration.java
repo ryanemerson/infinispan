@@ -5,9 +5,14 @@ import static org.infinispan.tools.jdbc.migrator.Element.CACHE_NAME;
 import static org.infinispan.tools.jdbc.migrator.Element.CONNECTION_POOL;
 import static org.infinispan.tools.jdbc.migrator.Element.CONNECTION_URL;
 import static org.infinispan.tools.jdbc.migrator.Element.DATA;
+import static org.infinispan.tools.jdbc.migrator.Element.DB;
 import static org.infinispan.tools.jdbc.migrator.Element.DIALECT;
+import static org.infinispan.tools.jdbc.migrator.Element.DISABLE_INDEXING;
+import static org.infinispan.tools.jdbc.migrator.Element.DISABLE_UPSERT;
 import static org.infinispan.tools.jdbc.migrator.Element.DRIVER_CLASS;
 import static org.infinispan.tools.jdbc.migrator.Element.ID;
+import static org.infinispan.tools.jdbc.migrator.Element.MAJOR_VERSION;
+import static org.infinispan.tools.jdbc.migrator.Element.MINOR_VERSION;
 import static org.infinispan.tools.jdbc.migrator.Element.NAME;
 import static org.infinispan.tools.jdbc.migrator.Element.PASSWORD;
 import static org.infinispan.tools.jdbc.migrator.Element.SOURCE;
@@ -25,10 +30,10 @@ import org.infinispan.commons.CacheConfigurationException;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.persistence.jdbc.DatabaseType;
 import org.infinispan.persistence.jdbc.configuration.ConnectionFactoryConfiguration;
-import org.infinispan.persistence.jdbc.configuration.JdbcStringBasedStoreConfiguration;
 import org.infinispan.persistence.jdbc.configuration.JdbcStringBasedStoreConfigurationBuilder;
 import org.infinispan.persistence.jdbc.configuration.PooledConnectionFactoryConfiguration;
 import org.infinispan.persistence.jdbc.configuration.TableManipulationConfiguration;
+import org.infinispan.persistence.jdbc.table.management.DbMetaData;
 import org.infinispan.transaction.TransactionMode;
 import org.infinispan.transaction.lookup.DummyTransactionManagerLookup;
 
@@ -37,17 +42,18 @@ import org.infinispan.transaction.lookup.DummyTransactionManagerLookup;
  * @since 9.0
  */
 class MigratorConfiguration {
+   final String cacheName;
+   final StoreType storeType;
    private final Properties props;
-   private final String cacheName;
    private final boolean sourceStore;
    private final Element orientation;
-   private final StoreType storeType;
+   private DbMetaData dbMetaData;
+   private TableManipulationConfiguration stringTable = null;
+   private TableManipulationConfiguration binaryTable = null;
    private ConnectionFactoryConfiguration connectionConfig;
-   private TableManipulationConfiguration stringTable;
-   private TableManipulationConfiguration binaryTable;
-   private JdbcStringBasedStoreConfiguration jdbcConfig;
+   private JdbcStringBasedStoreConfigurationBuilder jdbcConfigBuilder;
 
-   public MigratorConfiguration(boolean sourceStore, Properties props) {
+   MigratorConfiguration(boolean sourceStore, Properties props) {
       this.props = props;
       this.sourceStore = sourceStore;
       this.orientation = sourceStore ? SOURCE : TARGET;
@@ -66,9 +72,8 @@ class MigratorConfiguration {
       JdbcStringBasedStoreConfigurationBuilder builder = new ConfigurationBuilder().persistence()
             .addStore(JdbcStringBasedStoreConfigurationBuilder.class);
 
-      builder.dialect(DatabaseType.valueOf(property(orientation, DIALECT).toUpperCase()));
+      dbMetaData = createDbMeta();
       connectionConfig = createConnectionConfig(builder);
-
       if (sourceStore) {
          if (storeType == StoreType.MIXED || storeType == StoreType.STRING)
             stringTable = createTableConfig(STRING, builder);
@@ -82,7 +87,17 @@ class MigratorConfiguration {
                .transactionManagerLookup(new DummyTransactionManagerLookup());
       }
       builder.validate();
-      jdbcConfig = builder.create();
+      jdbcConfigBuilder = builder;
+   }
+
+   private DbMetaData createDbMeta() {
+      String prop;
+      DatabaseType type = DatabaseType.valueOf(property(orientation, DIALECT).toUpperCase());
+      int major = (prop = property(DB, MAJOR_VERSION)) != null ? new Integer(prop) : -1;
+      int minor = (prop = property(DB, MINOR_VERSION)) != null ? new Integer(prop) : -1;
+      boolean upsert = Boolean.parseBoolean(property(DB, DISABLE_UPSERT));
+      boolean indexing = Boolean.parseBoolean(property(DB, DISABLE_INDEXING));
+      return new DbMetaData(type, major, minor, upsert, indexing);
    }
 
    private TableManipulationConfiguration createTableConfig(Element tableType, JdbcStringBasedStoreConfigurationBuilder storeBuilder) {
@@ -108,8 +123,25 @@ class MigratorConfiguration {
             .create();
    }
 
+   ConnectionFactoryConfiguration getConnectionConfig() {
+      return connectionConfig;
+   }
 
+   DbMetaData getDbMeta() {
+      return dbMetaData;
+   }
 
+   TableManipulationConfiguration getStringTable() {
+      return stringTable;
+   }
+
+   TableManipulationConfiguration getBinaryTable() {
+      return binaryTable;
+   }
+
+   JdbcStringBasedStoreConfigurationBuilder getJdbcConfigBuilder() {
+      return jdbcConfigBuilder;
+   }
 
    private String property(Element... elements) {
       StringBuilder sb = new StringBuilder();
