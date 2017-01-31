@@ -1515,9 +1515,12 @@ public interface Log extends BasicLogger {
    @Message(value = "ConflictResolutionaManager.getConflicts() already in progress", id = 439)
    IllegalStateException getConflictsAlreadyInProgress();
 
-   @Message(value = "Unable to retrieve conflicts for key '%s' as StateTransfer is in progress for this key", id=440)
-   IllegalStateException getConflictStateTransferInProgress(Object key);
+   @Message(value = "Unable to retrieve all versions of key '%s' as StateTransfer is currently in progress for cache '%s'", id=440)
+   IllegalStateException getAllVersionsOfKeyDuringStateTransfer(Object key, String cacheName);
 
-   @Message(value = "Unable to retrieve conflicts as StateTransfer is currently in progress for this cache", id=441)
-   IllegalStateException getConflictsStateTransferInProgress();
+   @Message(value = "Aborting attempt to retrieve all versions of key '%s' as a topology change has occurred on cache '%s'", id=441)
+   CacheException getAllVersionsOfKeyTopologyChange(Object key, String cacheName);
+
+   @Message(value = "Unable to retrieve conflicts as StateTransfer is currently in progress for cache '%s'", id=442)
+   IllegalStateException getConflictsStateTransferInProgress(String cacheName);
 }

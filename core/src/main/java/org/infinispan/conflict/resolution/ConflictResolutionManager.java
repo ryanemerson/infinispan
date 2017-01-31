@@ -21,11 +21,16 @@ public interface ConflictResolutionManager<K, V> {
     *
     * @param key the key for which associated entries are to be returned
     * @return a map of an address and it's associated CacheEntry
+    * @throws org.infinispan.commons.CacheException if one or more versions of a key cannot be retrieved. Also thrown
+    * if a rebalance is initiated while attempting to retrieve all versions of the key.
+    * @throws IllegalStateException if called whilst state transfer is in progress.
     */
    Map<Address, InternalCacheValue<V>> getAllVersions(K key);
 
    /**
-    * @return a stream of Map<Address, InternalCacheValue>> for all conflicts detected throughout this cache
+    * @return a stream of Map<Address, InternalCacheValue>> for all conflicts detected throughout this cache.
+    * @throws org.infinispan.commons.CacheException if a rebalance is initiated while checking for conflicts.
+    * @throws IllegalStateException if called whilst state transfer is in progress.
     */
    Stream<Map<Address, InternalCacheEntry<K, V>>> getConflicts();
 
@@ -35,12 +40,4 @@ public interface ConflictResolutionManager<K, V> {
     * @return true if it's possible to check for conflicts on this cache, otherwise false.
     */
    boolean isResolutionPossible() throws Exception;
-
-   /**
-    * It is is possible to check for conflicts on the given key if State transfer is not in progress for the given key.
-    * 
-    * @param key the key object to check for conflicts
-    * @return true if it's possible to check for conflicts on this cache, otherwise false.
-    */
-   boolean isResolutionPossible(Object key) throws Exception;
 }

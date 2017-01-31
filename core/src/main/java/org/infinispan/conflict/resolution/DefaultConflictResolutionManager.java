@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Spliterators;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
@@ -20,7 +21,6 @@ import org.infinispan.Cache;
 import org.infinispan.commands.CommandsFactory;
 import org.infinispan.commands.remote.ClusteredGetCommand;
 import org.infinispan.commons.CacheException;
-import org.infinispan.commons.util.EnumUtil;
 import org.infinispan.container.DataContainer;
 import org.infinispan.container.entries.InternalCacheEntry;
 import org.infinispan.container.entries.InternalCacheValue;
@@ -35,6 +35,7 @@ import org.infinispan.remoting.rpc.RpcManager;
 import org.infinispan.remoting.rpc.RpcOptions;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.statetransfer.StateTransferManager;
+import org.infinispan.topology.CacheTopology;
 import org.infinispan.topology.RebalancingStatus;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
@@ -74,9 +75,10 @@ public class DefaultConflictResolutionManager<K, V> implements ConflictResolutio
 
    @Override
    public Map<Address, InternalCacheValue<V>> getAllVersions(K key) {
-      if (stateTransferManager.isStateTransferInProgressForKey(key))
-         throw log.getConflictStateTransferInProgress(key);
+      if (stateTransferManager.isStateTransferInProgress())
+         throw log.getAllVersionsOfKeyDuringStateTransfer(key, cache.getName());
 
+      final CacheTopology startTopology = stateTransferManager.getCacheTopology();
       List<Address> keyReplicaNodes = distributionManager.getWriteConsistentHash().locateOwners(key);
       Address localAddress = rpcManager.getAddress();
       Map<Address, InternalCacheValue<V>> versionsMap = new HashMap<>();
@@ -105,13 +107,18 @@ public class DefaultConflictResolutionManager<K, V> implements ConflictResolutio
       } catch (ExecutionException e) {
          throw new CacheException(e.getCause());
       }
+
+      CacheTopology currentTopology = stateTransferManager.getCacheTopology();
+      if (!Objects.equals(currentTopology, startTopology) && currentTopology.getRebalanceId() > startTopology.getRebalanceId()) {
+         throw log.getAllVersionsOfKeyTopologyChange(key, cache.getName());
+      }
       return versionsMap;
    }
 
    @Override
    public Stream<Map<Address, InternalCacheEntry<K, V>>> getConflicts() {
       if (stateTransferManager.isStateTransferInProgress())
-         throw log.getConflictsStateTransferInProgress();
+         throw log.getConflictsStateTransferInProgress(cache.getName());
 
       return StreamSupport.stream(new ReplicaSpliterator(), false).filter(filterConsistentEntries());
    }
@@ -119,12 +126,6 @@ public class DefaultConflictResolutionManager<K, V> implements ConflictResolutio
    @Override
    public boolean isResolutionPossible() throws Exception {
       return !stateTransferManager.isStateTransferInProgress() &&
-            stateTransferManager.getRebalancingStatus().equals(RebalancingStatus.COMPLETE.toString());
-   }
-
-   @Override
-   public boolean isResolutionPossible(Object key) throws Exception {
-      return !stateTransferManager.isStateTransferInProgressForKey(key) &&
             stateTransferManager.getRebalancingStatus().equals(RebalancingStatus.COMPLETE.toString());
    }
 
@@ -167,7 +168,7 @@ public class DefaultConflictResolutionManager<K, V> implements ConflictResolutio
                throw new CacheException(e);
             } catch (ExecutionException | CancellationException e) {
                streamInProgress.compareAndSet(true, false);
-               throw new CacheException(e.getCause()); // Should we throw exception? Or WARN and just continue to the next segment?
+               throw new CacheException(e.getMessage(), e.getCause()); // Should we throw exception? Or WARN and just continue to the next segment?
             }
          }
          action.accept(iterator.next());

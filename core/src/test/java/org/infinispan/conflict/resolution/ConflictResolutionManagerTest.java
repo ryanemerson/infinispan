@@ -1,8 +1,5 @@
 package org.infinispan.conflict.resolution;
 
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.spy;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
@@ -22,14 +19,8 @@ import org.infinispan.container.entries.InternalCacheEntry;
 import org.infinispan.container.entries.InternalCacheValue;
 import org.infinispan.context.Flag;
 import org.infinispan.distribution.ch.ConsistentHash;
-import org.infinispan.remoting.rpc.RpcManager;
 import org.infinispan.remoting.transport.Address;
-import org.infinispan.statetransfer.StateConsumer;
-import org.infinispan.statetransfer.StateRequestCommand;
 import org.infinispan.test.MultipleCacheManagersTest;
-import org.infinispan.test.TestingUtil;
-import org.infinispan.topology.CacheTopology;
-import org.infinispan.tx.dld.ControlledRpcManager;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -63,37 +54,6 @@ public class ConflictResolutionManagerTest extends MultipleCacheManagersTest {
    public void populateCaches() {
       AdvancedCache<Integer, String> cache0 = advancedCache(0);
       IntStream.range(0, NUMBER_OF_CACHE_ENTRIES).forEach(i -> cache0.put(i, "v" + i));
-   }
-
-   @Test(expectedExceptions = IllegalStateException.class,
-         expectedExceptionsMessageRegExp = ".* Unable to retrieve conflicts for key .*")
-   public void testGetAllVersionsDuringStateTransfer() {
-      AdvancedCache cache0 = advancedCache(0);
-      StateConsumer sc = TestingUtil.extractComponent(cache0, StateConsumer.class);
-
-      sc = spy(sc);
-      doReturn(true).when(sc).isStateTransferInProgressForKey(any());
-      TestingUtil.replaceComponent(cache0, StateConsumer.class, sc, true);
-      cache0.getConflictResolutionManager().getAllVersions("testKey");
-   }
-
-   @Test(expectedExceptions = IllegalStateException.class,
-   expectedExceptionsMessageRegExp = ".* Unable to retrieve conflicts as StateTransfer is currently in progress for this cache")
-   public void testGetConflictsDuringStateTransfer() {
-      assertClusterSize("Wrong number of caches.", NUMBER_OF_NODES);
-
-      AdvancedCache cache0 = advancedCache(0);
-      ControlledRpcManager controlledRpcManager = new ControlledRpcManager(TestingUtil.extractComponent(cache0, RpcManager.class));
-      TestingUtil.replaceComponent(cache0, RpcManager.class, controlledRpcManager, true);
-      controlledRpcManager.blockAfter(StateRequestCommand.class);
-
-      StateConsumer sc = TestingUtil.extractComponent(cache0, StateConsumer.class);
-      CacheTopology ct = sc.getCacheTopology();
-      CacheTopology newTopology = new CacheTopology(ct.getTopologyId() + 1, ct.getRebalanceId() + 1, ct.getCurrentCH(), null, ct.getMembers(), ct.getMembersPersistentUUIDs());
-      sc.onTopologyUpdate(newTopology, true);
-
-      assertTrue(cache0.getDistributionManager().isRehashInProgress());
-      cache0.getConflictResolutionManager().getConflicts();
    }
 
    public void testAllVersionsOfKeyReturned() {
