@@ -5,6 +5,7 @@ import java.util.Collection;
 import org.infinispan.distribution.ch.ConsistentHash;
 import org.infinispan.notifications.cachelistener.annotation.DataRehashed;
 import org.infinispan.remoting.transport.Address;
+import org.infinispan.topology.CacheTopology;
 
 /**
  * An event passed in to methods annotated with {@link DataRehashed}.
@@ -53,4 +54,9 @@ public interface DataRehashedEvent<K, V> extends Event<K, V> {
     * @return Retrieves the new topology id after rehashing was triggered.
     */
    int getNewTopologyId();
+
+   /**
+    * @return the current phase of a rehash event. See {@link CacheTopology.Phase} for a description of each phase.
+    */
+   CacheTopology.Phase getPhase();
 }

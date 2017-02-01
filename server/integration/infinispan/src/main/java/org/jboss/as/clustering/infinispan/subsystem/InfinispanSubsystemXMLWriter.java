@@ -29,6 +29,11 @@ import java.util.Map;
 
 import javax.xml.stream.XMLStreamException;
 
+import org.infinispan.commons.configuration.attributes.AttributeSet;
+import org.infinispan.configuration.cache.Configuration;
+import org.infinispan.configuration.cache.PartitionHandlingConfiguration;
+import org.infinispan.configuration.parsing.Parser;
+import org.infinispan.conflict.EntryMergePolicy;
 import org.infinispan.security.impl.ClusterRoleMapper;
 import org.infinispan.security.impl.CommonNameRoleMapper;
 import org.infinispan.security.impl.IdentityRoleMapper;
@@ -585,7 +590,9 @@ public class InfinispanSubsystemXMLWriter implements XMLElementWriter<SubsystemM
         if (cache.get(ModelKeys.PARTITION_HANDLING, ModelKeys.PARTITION_HANDLING_NAME).isDefined()) {
             ModelNode partitionHandling = cache.get(ModelKeys.PARTITION_HANDLING, ModelKeys.PARTITION_HANDLING_NAME);
             writer.writeStartElement(Element.PARTITION_HANDLING.getLocalName());
-            this.writeOptional(writer, Attribute.ENABLED, partitionHandling, ModelKeys.ENABLED);
+            this.writeOptional(writer, Attribute.TYPE, partitionHandling, ModelKeys.TYPE);
+            this.writeOptional(writer, Attribute.MERGE_POLICY, partitionHandling, ModelKeys.MERGE_POLICY);
+            this.writeOptional(writer, Attribute.MERGE_POLICY_CLASS, partitionHandling, ModelKeys.MERGE_POLICY_CLASS);
             writer.writeEndElement();
         }
 

@@ -34,7 +34,7 @@ public class PreferConsistencyStrategyTest {
 
    public void testAvoidingNullPointerExceptionWhenUpdatingPartitionWithNullTopology() {
       //when
-      preferConsistencyStrategy.onPartitionMerge(status, Collections.emptyList());
+      preferConsistencyStrategy.onPartitionMerge(status, Collections.emptyMap());
 
       //then
       Assert.assertNull(status.getCurrentTopology());

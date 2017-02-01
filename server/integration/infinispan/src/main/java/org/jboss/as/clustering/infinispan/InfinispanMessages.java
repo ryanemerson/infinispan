@@ -271,4 +271,7 @@ public interface InfinispanMessages {
 
    @Message(id = 123, value = "%s has been removed since 9.0.0. Please use %s instead")
    CacheConfigurationException removeJDBCStoreSpecified(String oldStore, String newStore);
+
+   @Message(id = 124, value = "%s is not a valid EntryMergePolicy")
+   IllegalArgumentException invalidEntryMergePolicy(@Cause Throwable cause, String mergePolicy);
 }

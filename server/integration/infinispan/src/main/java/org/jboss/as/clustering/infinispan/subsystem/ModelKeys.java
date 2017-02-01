@@ -156,6 +156,8 @@ public class ModelKeys {
     static final String MAX_THREADS = "max-threads";
     static final String MAX_TOTAL_CONNECTIONS = "max-total-connections";
     static final String MEMORY = "memory";
+    static final String MERGE_POLICY = "merge-policy";
+    static final String MERGE_POLICY_CLASS = "merge-policy-class";
     static final String MIGRATOR_NAME = "migrator-name";
     static final String MIN_THREADS = "min-threads";
     static final String MODE = "mode";

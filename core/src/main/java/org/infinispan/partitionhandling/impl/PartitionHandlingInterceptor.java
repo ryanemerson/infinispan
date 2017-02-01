@@ -1,11 +1,7 @@
 package org.infinispan.partitionhandling.impl;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
+import java.util.Collections;
 import java.util.Map;
-import java.util.Set;
 
 import org.infinispan.commands.DataCommand;
 import org.infinispan.commands.FlagAffectedCommand;
@@ -23,37 +19,29 @@ import org.infinispan.commands.write.PutKeyValueCommand;
 import org.infinispan.commands.write.PutMapCommand;
 import org.infinispan.commands.write.RemoveCommand;
 import org.infinispan.commands.write.ReplaceCommand;
-import org.infinispan.commons.util.InfinispanCollections;
 import org.infinispan.context.InvocationContext;
 import org.infinispan.context.impl.FlagBitSets;
 import org.infinispan.context.impl.TxInvocationContext;
 import org.infinispan.distribution.DistributionManager;
+import org.infinispan.distribution.LocalizedCacheTopology;
 import org.infinispan.factories.annotations.Inject;
 import org.infinispan.interceptors.DDAsyncInterceptor;
 import org.infinispan.partitionhandling.AvailabilityMode;
 import org.infinispan.remoting.RpcException;
-import org.infinispan.remoting.transport.Address;
-import org.infinispan.remoting.transport.Transport;
 import org.infinispan.statetransfer.AllOwnersLostException;
-import org.infinispan.statetransfer.StateTransferManager;
-import org.infinispan.topology.CacheTopology;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 
 public class PartitionHandlingInterceptor extends DDAsyncInterceptor {
    private static final Log log = LogFactory.getLog(PartitionHandlingInterceptor.class);
+   private static final boolean trace = log.isTraceEnabled();
 
    private PartitionHandlingManager partitionHandlingManager;
-   private Transport transport;
-   private StateTransferManager stateTransferManager;
    private DistributionManager distributionManager;
 
    @Inject
-   void init(PartitionHandlingManager partitionHandlingManager, Transport transport,
-             StateTransferManager stateTransferManager, DistributionManager distributionManager) {
+   void init(PartitionHandlingManager partitionHandlingManager, DistributionManager distributionManager) {
       this.partitionHandlingManager = partitionHandlingManager;
-      this.transport = transport;
-      this.stateTransferManager = stateTransferManager;
       this.distributionManager = distributionManager;
    }
 
@@ -156,16 +144,12 @@ public class PartitionHandlingInterceptor extends DDAsyncInterceptor {
                   // and we only fail the operation if _all_ owners have left the cluster.
                   // TODO Move this to the availability strategy when implementing ISPN-4624
                   // TODO We should collect the owners and check the topology atomically
-                  Collection<Address> owners =
-                        distributionManager.getCacheTopology().getDistribution(dataCommand.getKey()).readOwners();
-                  CacheTopology cacheTopology = stateTransferManager.getCacheTopology();
-                  if (cacheTopology == null || cacheTopology.getTopologyId() != dataCommand.getTopologyId()) {
+                  LocalizedCacheTopology cacheTopology = distributionManager.getCacheTopology();
+                  if (cacheTopology.getTopologyId() != dataCommand.getTopologyId()) {
                      // just rethrow the exception
                      throw t;
                   }
-                  if (!InfinispanCollections.containsAny(transport.getMembers(), owners)) {
-                     throw log.degradedModeKeyUnavailable(dataCommand.getKey());
-                  }
+                  partitionHandlingManager.checkForMissingKeys(Collections.singleton(dataCommand.getKey()), null);
                }
                throw t;
             }
@@ -234,21 +218,7 @@ public class PartitionHandlingInterceptor extends DDAsyncInterceptor {
             // If all owners left and we still haven't received the availability update yet, we could return
             // an incorrect value. So we need a special check for missing results.
             if (result.size() != getAllCommand.getKeys().size()) {
-               // Unlike in PartitionHandlingManager.checkRead(), here we ignore the availability status
-               // and we only fail the operation if _all_ owners have left the cluster.
-               // TODO Move this to the availability strategy when implementing ISPN-4624
-               Set<Object> missingKeys = new HashSet<>(getAllCommand.getKeys());
-               missingKeys.removeAll(result.keySet());
-               for (Iterator<Object> it = missingKeys.iterator(); it.hasNext(); ) {
-                  Object key = it.next();
-                  List<Address> readOwners = distributionManager.getCacheTopology().getDistribution(key).readOwners();
-                  if (InfinispanCollections.containsAny(transport.getMembers(), readOwners)) {
-                     it.remove();
-                  }
-               }
-               if (!missingKeys.isEmpty()) {
-                  throw log.degradedModeKeysUnavailable(missingKeys);
-               }
+               partitionHandlingManager.checkForMissingKeys(getAllCommand.getKeys(), result.keySet());
             }
          }
 

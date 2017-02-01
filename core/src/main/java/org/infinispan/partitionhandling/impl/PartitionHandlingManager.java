@@ -27,6 +27,14 @@ public interface PartitionHandlingManager {
 
    void checkBulkRead();
 
+   /**
+    * Unlike in {@link #checkRead(Object)}, here we ignore the availability status and we only fail the operation if
+    * _all_ owners have left the cluster.
+    *
+    * @throws org.infinispan.partitionhandling.AvailabilityException if all owners of the keys are missing
+    */
+   void checkForMissingKeys(Collection<?> expected, Collection<?> actual);
+
    @Deprecated //test use only. it can be removed if we update the tests
    CacheTopology getLastStableTopology();
 

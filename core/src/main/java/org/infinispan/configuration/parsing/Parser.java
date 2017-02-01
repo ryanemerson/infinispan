@@ -13,6 +13,8 @@ import static org.infinispan.factories.KnownComponentNames.shortened;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
@@ -58,10 +60,13 @@ import org.infinispan.configuration.global.ShutdownHookBehavior;
 import org.infinispan.configuration.global.ThreadPoolConfiguration;
 import org.infinispan.configuration.global.ThreadPoolConfigurationBuilder;
 import org.infinispan.configuration.global.TransportConfigurationBuilder;
+import org.infinispan.conflict.EntryMergePolicy;
+import org.infinispan.conflict.MergePolicies;
 import org.infinispan.eviction.EvictionStrategy;
 import org.infinispan.eviction.EvictionThreadPolicy;
 import org.infinispan.eviction.EvictionType;
 import org.infinispan.factories.threads.DefaultThreadFactory;
+import org.infinispan.partitionhandling.PartitionHandling;
 import org.infinispan.persistence.cluster.ClusterLoader;
 import org.infinispan.persistence.file.SingleFileStore;
 import org.infinispan.persistence.spi.CacheLoader;
@@ -1244,14 +1249,29 @@ public class Parser implements ConfigurationParser {
       }
    }
 
-   private void parsePartitionHandling(XMLExtendedStreamReader reader, ConfigurationBuilder builder) throws XMLStreamException {
+   private void parsePartitionHandling(XMLExtendedStreamReader reader, ConfigurationBuilderHolder holder) throws XMLStreamException {
+      ConfigurationBuilder builder = holder.getCurrentConfigurationBuilder();
       PartitionHandlingConfigurationBuilder ph = builder.clustering().partitionHandling();
       for (int i = 0; i < reader.getAttributeCount(); i++) {
          String value = replaceProperties(reader.getAttributeValue(i));
          Attribute attribute = Attribute.forName(reader.getAttributeLocalName(i));
          switch (attribute) {
             case ENABLED: {
+               log.partitionHandlingConfigurationEnabledDeprecated();
                ph.enabled(Boolean.valueOf(value));
+               break;
+            }
+            case TYPE: {
+               ph.type(PartitionHandling.valueOf(value.toUpperCase()));
+               break;
+            }
+            case MERGE_POLICY: {
+               if (Attribute.CUSTOM.getLocalName().equalsIgnoreCase(value)) {
+                  String customImp = ParseUtils.requireAttributes(reader, Attribute.MERGE_POLICY_CLASS.getLocalName())[0];
+                  ph.mergePolicy(Util.getInstance(customImp, holder.getClassLoader()));
+                  break;
+               }
+               ph.mergePolicy(MergePolicy.valueOf(value).impl);
                break;
             }
             default: {
@@ -1499,7 +1519,7 @@ public class Parser implements ConfigurationParser {
             break;
          }
          case PARTITION_HANDLING: {
-            this.parsePartitionHandling(reader, builder);
+            this.parsePartitionHandling(reader, holder);
             break;
          }
          case SECURITY: {
@@ -2553,6 +2573,31 @@ public class Parser implements ConfigurationParser {
          }
       }
       return properties;
+   }
+
+   public enum MergePolicy {
+      CUSTOM(null),
+      NONE(null),
+      PREFERRED_ALWAYS(MergePolicies.PREFERRED_ALWAYS),
+      PREFERRED_NON_NULL(MergePolicies.PREFERRED_NON_NULL);
+
+      private final EntryMergePolicy impl;
+      MergePolicy(EntryMergePolicy policy) {
+         this.impl = policy;
+      }
+
+      public EntryMergePolicy getImpl() {
+         return impl;
+      }
+
+      public static MergePolicy fromConfiguration(EntryMergePolicy policy) {
+         if (policy == null) return NONE;
+
+         for (MergePolicy mp : MergePolicy.values())
+            if (mp.impl != null && Objects.equals(mp.impl.getClass(), policy.getClass()))
+               return mp;
+         return CUSTOM;
+      }
    }
 
    public enum TransactionMode {
