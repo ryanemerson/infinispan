@@ -1560,4 +1560,10 @@ public interface Log extends BasicLogger {
    @LogMessage(level = ERROR)
    @Message(value = "Failure during leaver transactions cleanup", id = 455)
    void transactionCleanupError(@Cause Throwable e);
+
+   @Message(value = "ConflictResolutionaManager.getConflicts() already in progress", id = 456)
+   IllegalStateException getConflictsAlreadyInProgress();
+
+   @Message(value = "Unable to retrieve conflicts as StateTransfer is currently in progress for cache '%s'", id = 457)
+   IllegalStateException getConflictsStateTransferInProgress(String cacheName);
 }
