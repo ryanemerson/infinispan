@@ -68,6 +68,8 @@ public class OutboundTransferTask implements Runnable {
 
    private final String cacheName;
 
+   private final boolean applyState;
+
    private final Map<Integer, List<InternalCacheEntry>> entriesBySegment = CollectionFactory.makeConcurrentMap();
 
    /**
@@ -85,9 +87,10 @@ public class OutboundTransferTask implements Runnable {
    private InternalEntryFactory entryFactory;
 
    public OutboundTransferTask(Address destination, Set<Integer> segments, int stateTransferChunkSize,
-                               int topologyId, ConsistentHash readCh, StateProviderImpl stateProvider, DataContainer dataContainer,
-                               PersistenceManager persistenceManager, RpcManager rpcManager,
-                               CommandsFactory commandsFactory, InternalEntryFactory ef, long timeout, String cacheName) {
+                               int topologyId, ConsistentHash readCh, StateProviderImpl stateProvider,
+                               DataContainer dataContainer, PersistenceManager persistenceManager,
+                               RpcManager rpcManager, CommandsFactory commandsFactory, InternalEntryFactory ef,
+                               long timeout, String cacheName, boolean applyState) {
       if (segments == null || segments.isEmpty()) {
          throw new IllegalArgumentException("Segments must not be null or empty");
       }
@@ -110,6 +113,7 @@ public class OutboundTransferTask implements Runnable {
       this.commandsFactory = commandsFactory;
       this.timeout = timeout;
       this.cacheName = cacheName;
+      this.applyState = applyState;
       //the rpc options does not change in runtime. re-use the same instance
       this.rpcOptions = rpcManager.getRpcOptionsBuilder(ResponseMode.SYNCHRONOUS)
             .timeout(timeout, TimeUnit.MILLISECONDS).build();
@@ -231,7 +235,7 @@ public class OutboundTransferTask implements Runnable {
             }
          }
 
-         StateResponseCommand cmd = commandsFactory.buildStateResponseCommand(rpcManager.getAddress(), topologyId, chunks);
+         StateResponseCommand cmd = commandsFactory.buildStateResponseCommand(rpcManager.getAddress(), topologyId, chunks, applyState);
          // send synchronously, in order. it is important that the last chunk is received last in order to correctly detect completion of the stream of chunks
          try {
             rpcManager.invokeRemotely(Collections.singleton(destination), cmd, rpcOptions);

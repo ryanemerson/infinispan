@@ -1516,4 +1516,10 @@ public interface Log extends BasicLogger {
    @LogMessage(level = ERROR)
    @Message(value = "Error sending response for command %s", id = 440)
    void errorSendingResponse(ReplicableCommand command);
+
+   @Message(value = "ConflictResolutionaManager.getConflicts() already in progress", id = 441)
+   IllegalStateException getConflictsAlreadyInProgress();
+
+   @Message(value = "Unable to retrieve conflicts as StateTransfer is currently in progress for cache '%s'", id = 442)
+   IllegalStateException getConflictsStateTransferInProgress(String cacheName);
 }
