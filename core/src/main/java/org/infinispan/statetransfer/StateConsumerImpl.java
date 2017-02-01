@@ -1004,8 +1004,8 @@ public class StateConsumerImpl implements StateConsumer {
             return null;
          }
 
-         inboundTransfer = new InboundTransferTask(segmentsFromSource, source,
-               cacheTopology.getTopologyId(), rpcManager, commandsFactory, timeout, cacheName);
+         inboundTransfer = new InboundTransferTask(segmentsFromSource, source, cacheTopology.getTopologyId(),
+               rpcManager, commandsFactory, timeout, cacheName, true);
          for (int segmentId : segmentsFromSource) {
             transfersBySegment.put(segmentId, inboundTransfer);
          }

@@ -1560,4 +1560,10 @@ public interface Log extends BasicLogger {
    @LogMessage(level = WARN)
    @Message(value = "Calling getCache with a cache override is no longer supported. Please invoke defineConfiguration first and then getCache. Cache name was %s", id = 454)
    void warnAttemptToOverrideExistingConfiguration(String cacheName);
+
+   @Message(value = "ConflictResolutionaManager.getConflicts() already in progress", id = 455)
+   IllegalStateException getConflictsAlreadyInProgress();
+
+   @Message(value = "Unable to retrieve conflicts as StateTransfer is currently in progress for cache '%s'", id = 456)
+   IllegalStateException getConflictsStateTransferInProgress(String cacheName);
 }
