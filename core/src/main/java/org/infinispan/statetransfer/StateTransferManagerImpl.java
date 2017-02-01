@@ -205,12 +205,12 @@ public class StateTransferManagerImpl implements StateTransferManager {
       // handle the partitioner
       newCacheTopology = addPartitioner(newCacheTopology);
 
-      cacheNotifier.notifyTopologyChanged(oldCacheTopology, newCacheTopology, newCacheTopology.getTopologyId(), true);
+      cacheNotifier.notifyTopologyChanged(oldCacheTopology, newCacheTopology, newCacheTopology.getTopologyId(), true, newCacheTopology.getPhase());
 
       stateConsumer.onTopologyUpdate(newCacheTopology, isRebalance);
       stateProvider.onTopologyUpdate(newCacheTopology, isRebalance);
 
-      cacheNotifier.notifyTopologyChanged(oldCacheTopology, newCacheTopology, newCacheTopology.getTopologyId(), false);
+      cacheNotifier.notifyTopologyChanged(oldCacheTopology, newCacheTopology, newCacheTopology.getTopologyId(), false, newCacheTopology.getPhase());
 
       if (initialStateTransferComplete.getCount() > 0) {
          assert stateConsumer.getCacheTopology() == newCacheTopology;

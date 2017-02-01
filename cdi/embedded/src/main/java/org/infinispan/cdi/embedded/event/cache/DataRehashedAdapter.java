@@ -11,6 +11,7 @@ import org.infinispan.notifications.Listener;
 import org.infinispan.notifications.cachelistener.annotation.DataRehashed;
 import org.infinispan.notifications.cachelistener.event.DataRehashedEvent;
 import org.infinispan.remoting.transport.Address;
+import org.infinispan.topology.CacheTopology;
 
 /**
  * Event bridge for {@link org.infinispan.notifications.cachelistener.annotation.DataRehashed}.
@@ -79,6 +80,11 @@ public class DataRehashedAdapter<K, V> extends AbstractAdapter<DataRehashedEvent
       public Cache<K, V> getCache() {
          return decoratedEvent.getCache();
       }
+
+      @Override
+      public CacheTopology.Phase getPhase() {
+         return decoratedEvent.getPhase();
+      }
    }
 
    public static final DataRehashedEvent<?, ?> EMPTY = new DataRehashedEvent<Object, Object>() {
@@ -125,6 +131,11 @@ public class DataRehashedAdapter<K, V> extends AbstractAdapter<DataRehashedEvent
 
       @Override
       public Cache<Object, Object> getCache() {
+         return null;
+      }
+
+      @Override
+      public CacheTopology.Phase getPhase() {
          return null;
       }
    };

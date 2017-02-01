@@ -26,6 +26,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import javax.transaction.SystemException;
 import javax.transaction.TransactionManager;
@@ -40,6 +42,7 @@ import org.infinispan.commons.util.SmallIntSet;
 import org.infinispan.commons.util.concurrent.ConcurrentHashSet;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.Configuration;
+import org.infinispan.configuration.cache.PartitionHandlingConfiguration;
 import org.infinispan.container.DataContainer;
 import org.infinispan.container.entries.InternalCacheEntry;
 import org.infinispan.context.InvocationContext;
@@ -60,6 +63,7 @@ import org.infinispan.factories.annotations.Stop;
 import org.infinispan.filter.KeyFilter;
 import org.infinispan.interceptors.AsyncInterceptorChain;
 import org.infinispan.notifications.cachelistener.CacheNotifier;
+import org.infinispan.partitionhandling.PartitionHandling;
 import org.infinispan.persistence.manager.PersistenceManager;
 import org.infinispan.remoting.responses.CacheNotFoundResponse;
 import org.infinispan.remoting.responses.Response;
@@ -299,7 +303,7 @@ public class StateConsumerImpl implements StateConsumer {
          // response with a smaller topology id
          stateTransferTopologyId.compareAndSet(NO_STATE_TRANSFER_IN_PROGRESS, cacheTopology.getTopologyId());
          cacheNotifier.notifyDataRehashed(cacheTopology.getCurrentCH(), cacheTopology.getPendingCH(),
-                                          cacheTopology.getUnionCH(), cacheTopology.getTopologyId(), true);
+               cacheTopology.getUnionCH(), cacheTopology.getTopologyId(), true, cacheTopology.getPhase());
       }
 
       awaitTotalOrderTransactions(cacheTopology, startRebalance);
@@ -415,7 +419,7 @@ public class StateConsumerImpl implements StateConsumer {
                // if the coordinator changed, we might get two concurrent topology updates,
                // but we only want to notify the @DataRehashed listeners once
                cacheNotifier.notifyDataRehashed(previousReadCh, cacheTopology.getPendingCH(), previousWriteCh,
-                     cacheTopology.getTopologyId(), false);
+                     cacheTopology.getTopologyId(), false, cacheTopology.getPhase());
                if (trace) {
                   log.tracef("Unlock State Transfer in Progress for topology ID %s", cacheTopology.getTopologyId());
                }
@@ -457,18 +461,19 @@ public class StateConsumerImpl implements StateConsumer {
                localTopologyManager.confirmRebalancePhase(cacheName, cacheTopology.getTopologyId(), cacheTopology.getRebalanceId(), null);
          }
 
+         PartitionHandlingConfiguration phConfig = configuration.clustering().partitionHandling();
+         boolean wasMember = previousWriteCh != null && previousWriteCh.getMembers().contains(rpcManager.getAddress());
+         boolean deletePastMemberVals = wasMember && phConfig.getType() != PartitionHandling.ALLOW_ALL && phConfig.getMergePolicy() == null;
          // Any data for segments we do not own should be removed from data container and cache store
          // We need to discard data from all segments we don't own, not just those we previously owned,
          // when we lose membership (e.g. because there was a merge, the local partition was in degraded mode
          // and the other partition was available) or when L1 is enabled.
+         // The only exception, is if a merge policy has been enabled, in which case we must only perform the removal
+         // when this node is a member of the new topology, otherwise entries updated during conflict resolution can be
+         // removed, resulting in only a subset of the owners hosting the resolved entry.
          Set<Integer> removedSegments;
-         boolean wasMember =
-               previousWriteCh != null && previousWriteCh.getMembers().contains(rpcManager.getAddress());
-         if ((isMember || wasMember) && cacheTopology.getPhase() == CacheTopology.Phase.NO_REBALANCE) {
-            removedSegments = new HashSet<>(newWriteCh.getNumSegments());
-            for (int i = 0; i < newWriteCh.getNumSegments(); i++) {
-               removedSegments.add(i);
-            }
+         if ((isMember || deletePastMemberVals) && cacheTopology.getPhase() == CacheTopology.Phase.NO_REBALANCE) {
+            removedSegments = IntStream.range(0, newWriteCh.getNumSegments()).boxed().collect(Collectors.toSet());
             Set<Integer> newSegments = getOwnedSegments(newWriteCh);
             removedSegments.removeAll(newSegments);
 
@@ -961,6 +966,7 @@ public class StateConsumerImpl implements StateConsumer {
             interceptorChain.invoke(ctx, invalidateCmd);
 
             if (trace) log.tracef("Removed %d keys, data container now has %d keys", keysToRemove.size(), dataContainer.sizeIncludingExpired());
+            log.errorf("Removed %d keys, data container now has %d keys", keysToRemove.size(), dataContainer.sizeIncludingExpired());
          } catch (CacheException e) {
             log.failedToInvalidateKeys(e);
          }
@@ -1019,8 +1025,8 @@ public class StateConsumerImpl implements StateConsumer {
             return null;
          }
 
-         inboundTransfer = new InboundTransferTask(segmentsFromSource, source,
-               cacheTopology.getTopologyId(), rpcManager, commandsFactory, timeout, cacheName);
+         inboundTransfer = new InboundTransferTask(segmentsFromSource, source, cacheTopology.getTopologyId(),
+               rpcManager, commandsFactory, timeout, cacheName, true);
          for (int segmentId : segmentsFromSource) {
             transfersBySegment.put(segmentId, inboundTransfer);
          }

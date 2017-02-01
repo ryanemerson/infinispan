@@ -43,6 +43,7 @@ import org.infinispan.notifications.cachemanagerlistener.annotation.Merged;
 import org.infinispan.notifications.cachemanagerlistener.annotation.ViewChanged;
 import org.infinispan.notifications.cachemanagerlistener.event.ViewChangedEvent;
 import org.infinispan.partitionhandling.AvailabilityMode;
+import org.infinispan.partitionhandling.PartitionHandling;
 import org.infinispan.partitionhandling.impl.AvailabilityStrategy;
 import org.infinispan.partitionhandling.impl.PreferAvailabilityStrategy;
 import org.infinispan.partitionhandling.impl.PreferConsistencyStrategy;
@@ -114,7 +115,7 @@ public class ClusterTopologyManagerImpl implements ClusterTopologyManager {
    private final Condition clusterStateChanged = clusterManagerLock.newCondition();
 
 
-   private final ConcurrentMap<String, ClusterCacheStatus> cacheStatusMap = CollectionFactory.makeConcurrentMap();
+   public final ConcurrentMap<String, ClusterCacheStatus> cacheStatusMap = CollectionFactory.makeConcurrentMap();
    private ClusterViewListener viewListener;
 
    // The global rebalancing status
@@ -395,6 +396,8 @@ public class ClusterTopologyManagerImpl implements ClusterTopologyManager {
             log.tracef("Received new cluster view: %d, isCoordinator = %s, old status = %s", (Object) newViewId,
                   isCoordinator, clusterManagerStatus);
          }
+//         log.errorf("Received new cluster view: %d, isCoordinator = %s, old status = %s", (Object) newViewId,
+//               isCoordinator, clusterManagerStatus);
 
          if (!isCoordinator) {
             clusterManagerStatus = ClusterManagerStatus.REGULAR_MEMBER;
@@ -417,12 +420,13 @@ public class ClusterTopologyManagerImpl implements ClusterTopologyManager {
       return cacheStatusMap.computeIfAbsent(cacheName, (name) -> {
          // We assume that any cache with partition handling configured is already defined on all the nodes
          // (including the coordinator) before it starts on any node.
-         Configuration cacheConfiguration = cacheManager.getCacheConfiguration(cacheName);
          AvailabilityStrategy availabilityStrategy;
-         if (cacheConfiguration != null && cacheConfiguration.clustering().partitionHandling().enabled()) {
+         Configuration cacheConfiguration = cacheManager.getCacheConfiguration(cacheName);
+         PartitionHandling  partitionHandling = cacheConfiguration != null ? cacheConfiguration.clustering().partitionHandling().getType() : null;
+         if (partitionHandling != null && partitionHandling != PartitionHandling.ALLOW_ALL) {
             availabilityStrategy = new PreferConsistencyStrategy(eventLogManager, persistentUUIDManager);
          } else {
-            availabilityStrategy = new PreferAvailabilityStrategy(eventLogManager, persistentUUIDManager);
+            availabilityStrategy = new PreferAvailabilityStrategy(cacheManager, eventLogManager, persistentUUIDManager);
          }
          Optional<GlobalStateManager> globalStateManager = cacheManager.getGlobalComponentRegistry().getOptionalComponent(GlobalStateManager.class);
          Optional<ScopedPersistentState> persistedState = globalStateManager.flatMap(gsm -> gsm.readScopedState(cacheName));
@@ -478,11 +482,7 @@ public class ClusterTopologyManagerImpl implements ClusterTopologyManager {
          recoveredRebalancingStatus &= nodeStatus.isRebalancingEnabled();
          for (Map.Entry<String, CacheStatusResponse> statusEntry : nodeStatus.getCaches().entrySet()) {
             String cacheName = statusEntry.getKey();
-            Map<Address, CacheStatusResponse> cacheResponses = responsesByCache.get(cacheName);
-            if (cacheResponses == null) {
-               cacheResponses = new HashMap<>();
-               responsesByCache.put(cacheName, cacheResponses);
-            }
+            Map<Address, CacheStatusResponse> cacheResponses = responsesByCache.computeIfAbsent(cacheName, k -> new HashMap<>());
             cacheResponses.put(sender, statusEntry.getValue());
          }
       }

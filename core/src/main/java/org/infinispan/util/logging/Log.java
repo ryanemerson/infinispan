@@ -1576,4 +1576,17 @@ public interface Log extends BasicLogger {
 
    @Message(value = "Fine grained maps require explict transaction or auto-commit enabled", id = 460)
    IllegalStateException atomicFineGrainedNeedsExplicitTxOrAutoCommit();
+
+   @Message(value = "ConflictResolutionaManager.getConflicts() already in progress", id = 461)
+   IllegalStateException getConflictsAlreadyInProgress();
+
+   @Message(value = "Unable to retrieve conflicts as StateTransfer is currently in progress for cache '%s'", id = 462)
+   IllegalStateException getConflictsStateTransferInProgress(String cacheName);
+
+   @LogMessage(level = WARN)
+   @Message(value = "The partition handling 'enable' attribute has been deprecated. Please update your configuration file to use the 'type' attribute instead", id = 463)
+   void partitionHandlingConfigurationEnabledDeprecated();
+
+   @Message(value = "Keys '%s' are not available. No owners exist in this partition", id = 464)
+   AvailabilityException degradedModeNoOwnersExist(Object key);
 }

@@ -551,7 +551,7 @@ public class ClusterCacheStatus implements AvailabilityStrategyContext {
          // TODO Should automatically detect when the coordinator has left and there is only one partition
          // and continue any in-progress rebalance without resetting the cache topology.
 
-         availabilityStrategy.onPartitionMerge(this, statusResponses.values());
+         availabilityStrategy.onPartitionMerge(this, statusResponses);
       } catch (Exception e) {
          log.failedToRecoverCacheState(cacheName, e);
       }
