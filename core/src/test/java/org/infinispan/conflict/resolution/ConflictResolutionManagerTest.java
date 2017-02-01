@@ -1,6 +1,7 @@
 package org.infinispan.conflict.resolution;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotEquals;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
@@ -24,10 +25,6 @@ import org.infinispan.test.MultipleCacheManagersTest;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-/**
- * @author Ryan Emerson
- * @since 9.0
- */
 @Test(groups = "functional", testName = "conflict.resolution.ConflictResolutionManagerTest")
 public class ConflictResolutionManagerTest extends MultipleCacheManagersTest {
 
@@ -63,6 +60,14 @@ public class ConflictResolutionManagerTest extends MultipleCacheManagersTest {
       introduceCacheConflicts();
       compareCacheValuesForKey(INCONSISTENT_VALUE_INCREMENT, false);
       compareCacheValuesForKey(NULL_VALUE_FREQUENCY, false);
+   }
+
+   public void testConsecutiveInvocationOfAllVersionsForKey() throws Exception {
+      int key = 1;
+      Map<Address, InternalCacheValue<Object>> result1 = getAllVersions(advancedCache(0), key);
+      Map<Address, InternalCacheValue<Object>> result2 = getAllVersions(advancedCache(0), key);
+      assertNotEquals(System.identityHashCode(result1), System.identityHashCode(result2)); // Assert that a different map is returned, i.e. a new CompleteableFuture was created
+      assertEquals(result1, result2); // Assert that returned values are still logically equivalent
    }
 
    public void testConflictsDetected() {

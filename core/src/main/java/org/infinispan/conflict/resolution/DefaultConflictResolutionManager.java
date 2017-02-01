@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Spliterators;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
@@ -34,8 +33,9 @@ import org.infinispan.remoting.rpc.ResponseMode;
 import org.infinispan.remoting.rpc.RpcManager;
 import org.infinispan.remoting.rpc.RpcOptions;
 import org.infinispan.remoting.transport.Address;
-import org.infinispan.statetransfer.StateTransferManager;
+import org.infinispan.statetransfer.StateConsumer;
 import org.infinispan.topology.CacheTopology;
+import org.infinispan.topology.LocalTopologyManager;
 import org.infinispan.topology.RebalancingStatus;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
@@ -51,37 +51,68 @@ public class DefaultConflictResolutionManager<K, V> implements ConflictResolutio
    private CommandsFactory commandsFactory;
    private DataContainer<K, V> dataContainer;
    private DistributionManager distributionManager;
-   private StateReceiver<K, V> stateReceiver;
+   private LocalTopologyManager localTopologyManager;
    private RpcManager rpcManager;
-   private StateTransferManager stateTransferManager;
+   private StateConsumer stateConsumer;
+   private StateReceiver<K, V> stateReceiver;
+   private String cacheName;
    private final AtomicBoolean streamInProgress = new AtomicBoolean();
+   private final Map<K, VersionRequestMeta> versionRequestMap = new HashMap<>();
+   private volatile CacheTopology cacheTopology;
 
    @Inject
    public void inject(Cache cache,
                       CommandsFactory commandsFactory,
                       DataContainer<K, V> dataContainer,
                       DistributionManager distributionManager,
-                      StateReceiver<K, V> stateReceiver,
+                      LocalTopologyManager localTopologyManager,
                       RpcManager rpcManager,
-                      StateTransferManager stateTransferManager) {
+                      StateConsumer stateConsumer,
+                      StateReceiver<K, V> stateReceiver) {
       this.cache = cache;
       this.commandsFactory = commandsFactory;
       this.dataContainer = dataContainer;
       this.distributionManager = distributionManager;
-      this.stateReceiver = stateReceiver;
+      this.localTopologyManager = localTopologyManager;
       this.rpcManager = rpcManager;
-      this.stateTransferManager = stateTransferManager;
+      this.stateConsumer = stateConsumer;
+      this.stateReceiver = stateReceiver;
+      this.cacheName = cache.getName();
    }
 
    @Override
-   public Map<Address, InternalCacheValue<V>> getAllVersions(K key) {
-      if (stateTransferManager.isStateTransferInProgress())
-         throw log.getAllVersionsOfKeyDuringStateTransfer(key, cache.getName());
+   public void onTopologyUpdate(CacheTopology cacheTopology, boolean isRebalance) {
+      this.cacheTopology = cacheTopology;
+      if (isRebalance)
+         cancelOutdatedKeyVersionRequests(cacheTopology);
+      stateReceiver.onTopologyUpdate(cacheTopology, isRebalance);
+   }
 
-      final CacheTopology startTopology = stateTransferManager.getCacheTopology();
+   private void cancelOutdatedKeyVersionRequests(CacheTopology newTopology) {
+      synchronized (versionRequestMap) {
+         for (Map.Entry<K, VersionRequestMeta> entry : versionRequestMap.entrySet()) {
+            VersionRequestMeta meta = entry.getValue();
+            if (newTopology.getRebalanceId() > meta.rebalanceId)
+               meta.completableFuture.completeExceptionally(log.getAllVersionsOfKeyTopologyChange(entry.getKey(), cacheName));
+         }
+      }
+   }
+
+   @Override
+   public Map<Address, InternalCacheValue<V>> getAllVersions(final K key) {
+      if (stateConsumer.isStateTransferInProgress())
+         throw log.getAllVersionsOfKeyDuringStateTransfer(key, cacheName);
+
+      final VersionRequestMeta meta;
+      final Map<Address, InternalCacheValue<V>> versionsMap = new HashMap<>();
+      synchronized (versionRequestMap) {
+         meta = versionRequestMap.computeIfAbsent(key, k -> new VersionRequestMeta());
+         if (meta.isRequestInProgress())
+            return waitForAllVersions(key, meta); // Return the existing CompletableFuture if a request is already in progress
+      }
+
       List<Address> keyReplicaNodes = distributionManager.getWriteConsistentHash().locateOwners(key);
       Address localAddress = rpcManager.getAddress();
-      Map<Address, InternalCacheValue<V>> versionsMap = new HashMap<>();
       if (keyReplicaNodes.contains(localAddress)) {
          InternalCacheValue<V> icv = dataContainer.containsKey(key) ? dataContainer.get(key).toInternalCacheValue() : null;
          versionsMap.put(localAddress, icv);
@@ -89,10 +120,16 @@ public class DefaultConflictResolutionManager<K, V> implements ConflictResolutio
 
       ClusteredGetCommand cmd = commandsFactory.buildClusteredGetCommand(key, FlagBitSets.SKIP_OWNERSHIP_CHECK);
       long timeout = cache.getCacheConfiguration().clustering().remoteTimeout();
-      RpcOptions rpcOptions = new RpcOptions(timeout, TimeUnit.SECONDS, null, ResponseMode.SYNCHRONOUS_IGNORE_LEAVERS, DeliverOrder.NONE);
-      CompletableFuture<Map<Address, Response>> future = rpcManager.invokeRemotelyAsync(keyReplicaNodes, cmd, rpcOptions);
-      try {
-         Map<Address, Response> responseMap = future.get();
+      RpcOptions rpcOptions = new RpcOptions(timeout, TimeUnit.MILLISECONDS, null, ResponseMode.SYNCHRONOUS_IGNORE_LEAVERS, DeliverOrder.NONE);
+      CompletableFuture<Map<Address, Response>> rpcFuture = rpcManager.invokeRemotelyAsync(keyReplicaNodes, cmd, rpcOptions);
+
+      meta.completableFuture = rpcFuture.handle((responseMap, exception) -> {
+         if (exception != null) {
+            String msg = String.format("%s encountered when trying to receive all versions of key '%s' on cache '%s'",
+                  exception.getCause(), key, cacheName);
+            throw new CacheException(msg, exception.getCause());
+         }
+
          for (Map.Entry<Address, Response> entry : responseMap.entrySet()) {
             if (entry.getValue() instanceof SuccessfulResponse) {
                SuccessfulResponse response = (SuccessfulResponse) entry.getValue();
@@ -101,32 +138,50 @@ public class DefaultConflictResolutionManager<K, V> implements ConflictResolutio
                throw new CacheException(String.format("Unable to get key %s from %s: %s", key, entry.getKey(), entry.getValue()));
             }
          }
+         return versionsMap;
+      });
+      return waitForAllVersions(key, meta);
+   }
+
+   private Map<Address, InternalCacheValue<V>> waitForAllVersions(K key, VersionRequestMeta meta) {
+      try {
+         return meta.completableFuture.get();
       } catch (InterruptedException e) {
          Thread.currentThread().interrupt();
          throw new CacheException(e);
       } catch (ExecutionException e) {
-         throw new CacheException(e.getCause());
-      }
+         if (e.getCause() instanceof CacheException)
+            throw (CacheException) e.getCause();
 
-      CacheTopology currentTopology = stateTransferManager.getCacheTopology();
-      if (!Objects.equals(currentTopology, startTopology) && currentTopology.getRebalanceId() > startTopology.getRebalanceId()) {
-         throw log.getAllVersionsOfKeyTopologyChange(key, cache.getName());
+         throw new CacheException(e.getCause());
+      } finally {
+         synchronized (versionRequestMap) {
+            versionRequestMap.remove(key);
+         }
       }
-      return versionsMap;
    }
 
    @Override
    public Stream<Map<Address, InternalCacheEntry<K, V>>> getConflicts() {
-      if (stateTransferManager.isStateTransferInProgress())
-         throw log.getConflictsStateTransferInProgress(cache.getName());
+      if (stateConsumer.isStateTransferInProgress())
+         throw log.getConflictsStateTransferInProgress(cacheName);
 
       return StreamSupport.stream(new ReplicaSpliterator(), false).filter(filterConsistentEntries());
    }
 
    @Override
    public boolean isResolutionPossible() throws Exception {
-      return !stateTransferManager.isStateTransferInProgress() &&
-            stateTransferManager.getRebalancingStatus().equals(RebalancingStatus.COMPLETE.toString());
+      return !stateConsumer.isStateTransferInProgress() &&
+            localTopologyManager.getRebalancingStatus(cacheName).equals(RebalancingStatus.COMPLETE);
+   }
+
+   private class VersionRequestMeta {
+      final int rebalanceId = cacheTopology.getRebalanceId();
+      volatile CompletableFuture<Map<Address, InternalCacheValue<V>>> completableFuture;
+
+      boolean isRequestInProgress() {
+         return completableFuture != null && !completableFuture.isDone();
+      }
    }
 
    private Predicate<? super Map<Address, InternalCacheEntry<K, V>>> filterConsistentEntries() {

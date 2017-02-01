@@ -14,7 +14,7 @@ import org.infinispan.commons.CacheException;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.configuration.global.GlobalConfiguration;
-import org.infinispan.conflict.resolution.StateReceiver;
+import org.infinispan.conflict.resolution.ConflictResolutionManager;
 import org.infinispan.distribution.ch.ConsistentHash;
 import org.infinispan.distribution.ch.ConsistentHashFactory;
 import org.infinispan.distribution.ch.KeyPartitioner;
@@ -53,7 +53,6 @@ public class StateTransferManagerImpl implements StateTransferManager {
 
    private StateConsumer stateConsumer;
    private StateProvider stateProvider;
-   private StateReceiver stateReceiver;
    private PartitionHandlingManager partitionHandlingManager;
    private String cacheName;
    private CacheNotifier cacheNotifier;
@@ -61,6 +60,7 @@ public class StateTransferManagerImpl implements StateTransferManager {
    private GlobalConfiguration globalConfiguration;
    private RpcManager rpcManager;
    private LocalTopologyManager localTopologyManager;
+   private ConflictResolutionManager conflictResolutionManager;
    private Optional<Integer> persistentStateChecksum;
 
    private final CountDownLatch initialStateTransferComplete = new CountDownLatch(1);
@@ -75,7 +75,6 @@ public class StateTransferManagerImpl implements StateTransferManager {
    @Inject
    public void init(StateConsumer stateConsumer,
                     StateProvider stateProvider,
-                    StateReceiver stateReceiver,
                     Cache cache,
                     CacheNotifier cacheNotifier,
                     Configuration configuration,
@@ -84,10 +83,10 @@ public class StateTransferManagerImpl implements StateTransferManager {
                     KeyPartitioner keyPartitioner,
                     LocalTopologyManager localTopologyManager,
                     PartitionHandlingManager partitionHandlingManager,
-                    GlobalStateManager globalStateManager) {
+                    GlobalStateManager globalStateManager,
+                    ConflictResolutionManager conflictResolutionManager) {
       this.stateConsumer = stateConsumer;
       this.stateProvider = stateProvider;
-      this.stateReceiver = stateReceiver;
       this.cacheName = cache.getName();
       this.cacheNotifier = cacheNotifier;
       this.configuration = configuration;
@@ -96,6 +95,7 @@ public class StateTransferManagerImpl implements StateTransferManager {
       this.keyPartitioner = keyPartitioner;
       this.localTopologyManager = localTopologyManager;
       this.partitionHandlingManager = partitionHandlingManager;
+      this.conflictResolutionManager = conflictResolutionManager;
       if (globalStateManager != null) {
          persistentStateChecksum = globalStateManager.readScopedState(cacheName).map(state -> state.getChecksum());
       } else {
@@ -206,7 +206,7 @@ public class StateTransferManagerImpl implements StateTransferManager {
 
       stateConsumer.onTopologyUpdate(newCacheTopology, isRebalance);
       stateProvider.onTopologyUpdate(newCacheTopology, isRebalance);
-      stateReceiver.onTopologyUpdate(newCacheTopology, isRebalance);
+      conflictResolutionManager.onTopologyUpdate(newCacheTopology, isRebalance);
 
       cacheNotifier.notifyTopologyChanged(oldCacheTopology, newCacheTopology, newCacheTopology.getTopologyId(), false);
 

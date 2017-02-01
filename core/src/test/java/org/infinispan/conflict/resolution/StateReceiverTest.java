@@ -54,10 +54,6 @@ import org.mockito.stubbing.Answer;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-/**
- * @author Ryan Emerson
- * @since 9.0
- */
 @Test(groups = "functional", testName = "conflict.resolution.StateReceiverTest")
 public class StateReceiverTest extends AbstractInfinispanTest {
 

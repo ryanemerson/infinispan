@@ -1,6 +1,7 @@
 package org.infinispan.conflict.resolution;
 
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
 import org.infinispan.container.entries.InternalCacheEntry;
@@ -8,6 +9,7 @@ import org.infinispan.container.entries.InternalCacheValue;
 import org.infinispan.factories.scopes.Scope;
 import org.infinispan.factories.scopes.Scopes;
 import org.infinispan.remoting.transport.Address;
+import org.infinispan.topology.CacheTopology;
 
 /**
  * @author Ryan Emerson
@@ -16,8 +18,11 @@ import org.infinispan.remoting.transport.Address;
 @Scope(Scopes.NAMED_CACHE)
 public interface ConflictResolutionManager<K, V> {
 
+   void onTopologyUpdate(CacheTopology cacheTopology, boolean isRebalance);
+
    /**
-    * Get all CacheEntry's that exists for a given key.
+    * Get all CacheEntry's that exists for a given key. Note, concurrent calls to this method for the same key will utilise
+    * the same CompletableFuture inside this method and consequently return the same results as all other invocations.
     *
     * @param key the key for which associated entries are to be returned
     * @return a map of an address and it's associated CacheEntry
