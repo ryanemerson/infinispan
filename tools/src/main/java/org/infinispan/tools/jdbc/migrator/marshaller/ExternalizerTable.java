@@ -10,7 +10,7 @@ import org.infinispan.commons.io.ByteBufferImpl;
 import org.infinispan.commons.io.UnsignedNumeric;
 import org.infinispan.commons.marshall.AdvancedExternalizer;
 import org.infinispan.commons.marshall.StreamingMarshaller;
-import org.infinispan.configuration.global.GlobalConfiguration;
+import org.infinispan.commons.util.Util;
 import org.infinispan.container.entries.ImmortalCacheEntry;
 import org.infinispan.container.entries.ImmortalCacheValue;
 import org.infinispan.container.entries.MortalCacheEntry;
@@ -27,6 +27,7 @@ import org.infinispan.container.entries.metadata.MetadataTransientCacheEntry;
 import org.infinispan.container.entries.metadata.MetadataTransientCacheValue;
 import org.infinispan.container.entries.metadata.MetadataTransientMortalCacheEntry;
 import org.infinispan.container.entries.metadata.MetadataTransientMortalCacheValue;
+import org.infinispan.container.versioning.NumericVersion;
 import org.infinispan.container.versioning.SimpleClusteredVersion;
 import org.infinispan.marshall.core.MarshalledEntryImpl;
 import org.infinispan.marshall.exts.EnumSetExternalizer;
@@ -59,38 +60,14 @@ import org.jboss.marshalling.Unmarshaller;
 class ExternalizerTable implements ObjectTable {
    private static final Log log = LogFactory.getLog(ExternalizerTable.class);
    private static final int MAX_ID = 255;
-   private static Map<Integer, Integer> LEGACY_TO_CURRENT_ID_MAP = new HashMap<>();
-   static {
-      LEGACY_TO_CURRENT_ID_MAP.put(2, 1); // MAPS
-      LEGACY_TO_CURRENT_ID_MAP.put(10, 7); // IMMORTAL_ENTRY
-      LEGACY_TO_CURRENT_ID_MAP.put(11, 8); // MORTAL_ENTRY
-      LEGACY_TO_CURRENT_ID_MAP.put(12, 9); // TRANSIENT_ENTRY
-      LEGACY_TO_CURRENT_ID_MAP.put(13, 10); // TRANSIENT_MORTAL_ENTRY
-      LEGACY_TO_CURRENT_ID_MAP.put(14, 11); // IMMORTAL_VALUE
-      LEGACY_TO_CURRENT_ID_MAP.put(15, 12); // MORTAL_VALUE
-      LEGACY_TO_CURRENT_ID_MAP.put(16, 13); // TRANSIENT_VALUE
-      LEGACY_TO_CURRENT_ID_MAP.put(17, 14); // TRANSIENT_VALUE
-      LEGACY_TO_CURRENT_ID_MAP.put(76, 38); // METADATA_IMMORTAL_ENTRY
-      LEGACY_TO_CURRENT_ID_MAP.put(77, 39); // METADATA_MORTAL_ENTRY
-      LEGACY_TO_CURRENT_ID_MAP.put(78, 40); // METADATA_TRANSIENT_ENTRY
-      LEGACY_TO_CURRENT_ID_MAP.put(79, 41); // METADATA_TRANSIENT_MORTAL_ENTRY
-      LEGACY_TO_CURRENT_ID_MAP.put(80, 42); // METADATA_IMMORTAL_ENTRY
-      LEGACY_TO_CURRENT_ID_MAP.put(81, 43); // METADATA_MORTAL_ENTRY
-      LEGACY_TO_CURRENT_ID_MAP.put(82, 44); // METADATA_TRANSIENT_VALUE
-      LEGACY_TO_CURRENT_ID_MAP.put(83, 45); // METADATA_TRANSIENT_MORTAL_VALUE
-      LEGACY_TO_CURRENT_ID_MAP.put(103, 60); // KEY_VALUE_PAIR
-      LEGACY_TO_CURRENT_ID_MAP.put(104, 61); // INTERNAL_METADATA
-      LEGACY_TO_CURRENT_ID_MAP.put(106, 106); // BYTE_BUFFER
-      LEGACY_TO_CURRENT_ID_MAP.put(121, 63); // ENUM_SET
-   }
 
    private final Map<Integer, ExternalizerAdapter> readers = new HashMap<>();
    private final StreamingMarshaller globalMarshaller;
 
-   ExternalizerTable(StreamingMarshaller globalMarshaller) {
+   ExternalizerTable(StreamingMarshaller globalMarshaller, Map<Integer, ? extends AdvancedExternalizer<?>> externalizerMap) {
       this.globalMarshaller = globalMarshaller;
       loadInternalMarshallables();
-//      loadForeignMarshallables(); // TODO add support for externalizers
+      initForeignMarshallables(externalizerMap);
    }
 
    @Override
@@ -131,6 +108,7 @@ class ExternalizerTable implements ObjectTable {
       addInternalExternalizer(new ArrayExternalizers.ListArray());
       addInternalExternalizer(new SingletonListExternalizer());
 
+      addInternalExternalizer(new NumericVersion.Externalizer());
       addInternalExternalizer(new ByteBufferImpl.Externalizer());
       addInternalExternalizer(new KeyValuePair.Externalizer());
       addInternalExternalizer(new InternalMetadataImpl.Externalizer());
@@ -160,51 +138,46 @@ class ExternalizerTable implements ObjectTable {
 
    private void addInternalExternalizer(AdvancedExternalizer<?> ext) {
       int id = checkInternalIdLimit(ext.getId(), ext);
-      updateExtReadersWritersWithTypes(new ExternalizerAdapter(id, ext));
+      updateExtReadersWithTypes(new ExternalizerAdapter(id, ext));
    }
 
-   private void updateExtReadersWritersWithTypes(ExternalizerAdapter adapter) {
-      updateExtReadersWritersWithTypes(adapter, adapter.id);
+   private void updateExtReadersWithTypes(ExternalizerAdapter adapter) {
+      updateExtReadersWithTypes(adapter, adapter.id);
    }
 
-   private void updateExtReadersWritersWithTypes(ExternalizerAdapter adapter, int readerIndex) {
+   private void updateExtReadersWithTypes(ExternalizerAdapter adapter, int readerIndex) {
       Set<Class<?>> typeClasses = adapter.externalizer.getTypeClasses();
       if (typeClasses.size() > 0) {
          for (Class<?> typeClass : typeClasses)
-            updateExtReadersWriters(adapter, typeClass, readerIndex);
+            updateExtReaders(adapter, typeClass, readerIndex);
       } else {
          throw log.advanceExternalizerTypeClassesUndefined(adapter.externalizer.getClass().getName());
       }
    }
 
-   private void loadForeignMarshallables(GlobalConfiguration globalCfg) {
-      for (Map.Entry<Integer, AdvancedExternalizer<?>> config : globalCfg.serialization().advancedExternalizers().entrySet()) {
-         AdvancedExternalizer<?> ext = config.getValue();
-
-         // If no XML or programmatic config, id in annotation is used
-         // as long as it's not default one (meaning, user did not set it).
-         // If XML or programmatic config in use ignore @Marshalls annotation and use value in config.
+   private void initForeignMarshallables(Map<Integer, ? extends AdvancedExternalizer<?>> externalizerMap) {
+      for (Map.Entry<Integer, ? extends AdvancedExternalizer<?>> entry : externalizerMap.entrySet()) {
+         AdvancedExternalizer<?> ext = entry.getValue();
          Integer id = ext.getId();
-         if (config.getKey() == null && id == null)
+         if (entry.getKey() == null && id == null)
             throw new CacheConfigurationException(String.format(
                   "No advanced externalizer identifier set for externalizer %s",
                   ext.getClass().getName()));
-         else if (config.getKey() != null)
-            id = config.getKey();
+         else if (entry.getKey() != null)
+            id = entry.getKey();
 
          id = checkForeignIdLimit(id, ext);
-         updateExtReadersWritersWithTypes(new ExternalizerAdapter(id, ext), generateForeignReaderIndex(id));
+         updateExtReadersWithTypes(new ExternalizerAdapter(id, ext), generateForeignReaderIndex(id));
       }
    }
 
-   private void updateExtReadersWriters(ExternalizerAdapter adapter, Class<?> typeClass, int readerIndex) {
+   private void updateExtReaders(ExternalizerAdapter adapter, Class<?> typeClass, int readerIndex) {
       ExternalizerAdapter prevReader = readers.put(readerIndex, adapter);
       // Several externalizers might share same id (i.e. HashMap and TreeMap use MapExternalizer)
       // but a duplicate is only considered when that particular index has already been entered
       // in the readers map and the externalizers are different (they're from different classes)
       if (prevReader != null && !prevReader.equals(adapter))
-         throw log.duplicateExternalizerIdFound(
-               adapter.id, typeClass, prevReader.externalizer.getClass().getName(), readerIndex);
+         throw log.duplicateExternalizerIdFound(adapter.id, typeClass, prevReader.externalizer.getClass().getName(), readerIndex);
    }
 
    private int checkInternalIdLimit(int id, AdvancedExternalizer<?> ext) {

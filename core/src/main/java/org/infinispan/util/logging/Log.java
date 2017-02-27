@@ -297,9 +297,9 @@ public interface Log extends BasicLogger {
    @Message(value = "Exception while marshalling object: %s", id = 65)
    void errorMarshallingObject(@Cause Throwable ioe, Object obj);
 
-//   @LogMessage(level = ERROR)
-//   @Message(value = "Unable to read version id from first two bytes of stream, barfing.", id = 66)
-//   void unableToReadVersionId();
+   @LogMessage(level = ERROR)
+   @Message(value = "Unable to read version id from first two bytes of stream, barfing.", id = 66)
+   void unableToReadVersionId();
 
 //   @LogMessage(level = INFO)
 //   @Message(value = "Will try and wait for the cache %s to start", id = 67)

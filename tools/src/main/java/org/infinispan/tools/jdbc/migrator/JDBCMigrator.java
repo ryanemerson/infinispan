@@ -10,19 +10,14 @@ import javax.transaction.Status;
 import javax.transaction.TransactionManager;
 
 import org.infinispan.AdvancedCache;
-import org.infinispan.commons.marshall.StreamingMarshaller;
-import org.infinispan.commons.marshall.jboss.GenericJBossMarshaller;
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.configuration.global.GlobalConfiguration;
 import org.infinispan.configuration.global.GlobalConfigurationBuilder;
 import org.infinispan.context.Flag;
 import org.infinispan.manager.DefaultCacheManager;
-import org.infinispan.manager.EmbeddedCacheManager;
-import org.infinispan.marshall.core.JBossMarshaller;
 import org.infinispan.marshall.core.MarshalledEntry;
-import org.infinispan.tools.jdbc.migrator.marshaller.LegacyJBossMarshaller;
-import org.infinispan.tools.jdbc.migrator.marshaller.VersionAwareMarshaller;
+import org.infinispan.tools.jdbc.migrator.marshaller.LegacyVersionAwareMarshaller;
 
 /**
  * @author Ryan Emerson
@@ -32,11 +27,6 @@ public class JDBCMigrator {
 
    private static final int DEFAULT_BATCH_SIZE = 1000;
    private final String defaultCacheName = this.getClass().getName();
-   private final GlobalConfiguration globalConfiguration = new GlobalConfigurationBuilder()
-         .defaultCacheName(defaultCacheName)
-         .globalJmxStatistics()
-         .allowDuplicateDomains(true)
-         .build();
    private final Properties properties;
 
    private JDBCMigrator(Properties properties) {
@@ -69,16 +59,17 @@ public class JDBCMigrator {
 
    private JdbcStoreReader initAndGetSourceReader() {
       MigratorConfiguration config = new MigratorConfiguration(true, properties);
-      if (!config.hasCustomMarshaller()) {
-         // TODO configure user Externalizers
-         config.setMarshaller(new VersionAwareMarshaller());
-      }
       return new JdbcStoreReader(config);
    }
 
    private AdvancedCache initAndGetTargetCache() {
       MigratorConfiguration config = new MigratorConfiguration(false, properties);
-      GlobalConfiguration globalConfig = globalConfiguration;
+      GlobalConfiguration globalConfig = new GlobalConfigurationBuilder()
+            .defaultCacheName(defaultCacheName)
+            .globalJmxStatistics()
+            .allowDuplicateDomains(true)
+            .build();
+
       if (config.hasCustomMarshaller()) {
          globalConfig = new GlobalConfigurationBuilder()
                .globalJmxStatistics().allowDuplicateDomains(true)

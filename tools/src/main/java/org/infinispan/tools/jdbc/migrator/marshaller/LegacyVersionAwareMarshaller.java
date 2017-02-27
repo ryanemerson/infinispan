@@ -1,38 +1,31 @@
 package org.infinispan.tools.jdbc.migrator.marshaller;
 
 import java.io.ByteArrayInputStream;
-import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.io.OutputStream;
+import java.util.Map;
 
 import org.infinispan.commons.io.ByteBuffer;
-import org.infinispan.commons.io.ByteBufferImpl;
-import org.infinispan.commons.io.ExposedByteArrayOutputStream;
 import org.infinispan.commons.marshall.AbstractMarshaller;
-import org.infinispan.commons.marshall.NotSerializableException;
+import org.infinispan.commons.marshall.AdvancedExternalizer;
 import org.infinispan.commons.marshall.StreamingMarshaller;
-import org.infinispan.commons.marshall.jboss.DefaultContextClassResolver;
-import org.infinispan.commons.marshall.jboss.SerializeWithExtFactory;
-import org.infinispan.configuration.global.GlobalConfigurationBuilder;
-import org.infinispan.marshall.core.JBossMarshaller;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 
 /**
- * Legacy VersionAwareMarshaller that reads and ignores the short previously writte
- * A delegate to various other marshallers like {@link JBossMarshaller}. This delegating marshaller adds versioning
- * information to the stream when marshalling objects and is able to pick the appropriate marshaller to delegate to
- * based on the versioning information when unmarshalling objects.
- *
- * @author Manik Surtani
- * @author Galder Zamarreño
- * @since 4.0
+ * LegacyVersionAwareMarshaller that is used to read bytes marshalled using Infinispan 8.x. This is useful for providing
+ * a migration path between 8.x and 9.x stores.
  */
-public class VersionAwareMarshaller extends AbstractMarshaller implements StreamingMarshaller {
-   private final LegacyJBossMarshaller defaultMarshaller = new LegacyJBossMarshaller();
+public class LegacyVersionAwareMarshaller extends AbstractMarshaller implements StreamingMarshaller {
+   private static final Log log = LogFactory.getLog(LegacyVersionAwareMarshaller.class);
+   private final LegacyJBossMarshaller defaultMarshaller;
+
+   public LegacyVersionAwareMarshaller(Map<Integer, ? extends AdvancedExternalizer<?>> externalizerMap) {
+      this.defaultMarshaller = new LegacyJBossMarshaller(externalizerMap);
+   }
 
    @Override
    public void stop() {
@@ -68,6 +61,7 @@ public class VersionAwareMarshaller extends AbstractMarshaller implements Stream
       }
       catch (Exception e) {
          finishObjectInput(in);
+         log.unableToReadVersionId();
          throw new IOException("Unable to read version id from first two bytes of stream: " + e.getMessage());
       }
       return in;

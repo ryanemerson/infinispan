@@ -32,7 +32,9 @@ public class LegacyIds {
       map.put(81, 43); // METADATA_MORTAL_ENTRY
       map.put(82, 44); // METADATA_TRANSIENT_VALUE
       map.put(83, 45); // METADATA_TRANSIENT_MORTAL_VALUE
+      map.put(96, 55); // SIMPLE_CLUSTERED_VERSION
       map.put(98, 57); // EMBEDDED_METADATA
+      map.put(99, 58); // NUMERIC_VERSION
       map.put(103, 60); // KEY_VALUE_PAIR
       map.put(104, 61); // INTERNAL_METADATA
       map.put(105, 62); // MARSHALLED_ENTRY
