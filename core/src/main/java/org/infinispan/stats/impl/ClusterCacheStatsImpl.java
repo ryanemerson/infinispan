@@ -73,6 +73,12 @@ public class ClusterCacheStatsImpl implements ClusterCacheStats, JmxStatisticsEx
    private static final String CACHE_LOADER_MISSES = "cacheLoaderMisses";
    private static final String CACHE_WRITER_STORES = "cacheWriterStores";
 
+   // Memory
+   private static final String MEMORY_AVAILABLE = "memoryAvailable";
+   private static final String MEMORY_MAX = "memoryMax";
+   private static final String MEMORY_TOTAL = "memoryTotal";
+   private static final String MEMORY_USED = "memoryUsed";
+
 
    public static final long DEFAULT_STALE_STATS_THRESHOLD = 3000;
 
@@ -113,6 +119,12 @@ public class ClusterCacheStatsImpl implements ClusterCacheStats, JmxStatisticsEx
    private long cacheLoaderLoads;
    private long cacheLoaderMisses;
    private long cacheWriterStores;
+
+   // Memory metrics
+   private long memoryAvailable;
+   private long memoryMax;
+   private long memoryTotal;
+   private long memoryUsed;
 
    @Inject
    public void injectDependencies(Cache<?, ?> cache, TimeService ts, Configuration configuration) {
@@ -429,6 +441,11 @@ public class ClusterCacheStatsImpl implements ClusterCacheStats, JmxStatisticsEx
       cacheLoaderLoads = 0;
       cacheLoaderMisses = 0;
       cacheWriterStores = 0;
+
+      memoryAvailable = 0;
+      memoryMax = 0;
+      memoryTotal = 0;
+      memoryUsed = 0;
    }
 
    @ManagedAttribute(description = "Total number of exclusive locks available in the cluster",
@@ -543,6 +560,62 @@ public class ClusterCacheStatsImpl implements ClusterCacheStats, JmxStatisticsEx
       }
    }
 
+   @ManagedAttribute(description = "The maximum amount of free memory in bytes across the cluster JVMs",
+         displayName = "Cluster wide available memory.",
+         measurementType = MeasurementType.DYNAMIC,
+         displayType = DisplayType.SUMMARY)
+   @Override
+   public long getMemoryAvailable() {
+      if (isStatisticsEnabled()) {
+         fetchClusterWideStatsIfNeeded();
+         return memoryAvailable;
+      } else {
+         return -1;
+      }
+   }
+
+   @ManagedAttribute(description = "The maximum amount of memory that JVMs across the cluster will attempt to utilise in bytes",
+         displayName = "Cluster wide max memory of JVMs",
+         measurementType = MeasurementType.DYNAMIC,
+         displayType = DisplayType.SUMMARY)
+   @Override
+   public long getMemoryMax() {
+      if (isStatisticsEnabled()) {
+         fetchClusterWideStatsIfNeeded();
+         return memoryMax;
+      } else {
+         return -1;
+      }
+   }
+
+   @ManagedAttribute(description = "The total amount of memory in the JVMs across the cluster in bytes",
+         displayName = "Cluster wide total memory",
+         measurementType = MeasurementType.DYNAMIC,
+         displayType = DisplayType.SUMMARY)
+   @Override
+   public long getMemoryTotal() {
+      if (isStatisticsEnabled()) {
+         fetchClusterWideStatsIfNeeded();
+         return memoryTotal;
+      } else {
+         return -1;
+      }
+   }
+
+   @ManagedAttribute(description = "The amount of memory used by JVMs across the cluster in bytes",
+         displayName = "Cluster wide memory utilisation",
+         measurementType = MeasurementType.DYNAMIC,
+         displayType = DisplayType.SUMMARY)
+   @Override
+   public long getMemoryUsed() {
+      if (isStatisticsEnabled()) {
+         fetchClusterWideStatsIfNeeded();
+         return memoryUsed;
+      } else {
+         return -1;
+      }
+   }
+
    private boolean launchNewDistTask() {
       long duration = ts.timeDuration(statsUpdateTimestamp, ts.time(), TimeUnit.MILLISECONDS);
       return duration > staleStatsTreshold;
@@ -590,6 +663,11 @@ public class ClusterCacheStatsImpl implements ClusterCacheStats, JmxStatisticsEx
       cacheLoaderLoads = addLongAttributes(responseList, CACHE_LOADER_LOADS);
       cacheLoaderMisses = addLongAttributes(responseList, CACHE_LOADER_MISSES);
       cacheWriterStores = addLongAttributes(responseList, CACHE_WRITER_STORES);
+
+      memoryAvailable = addLongAttributes(responseList, MEMORY_AVAILABLE);
+      memoryMax = addLongAttributes(responseList, MEMORY_MAX);
+      memoryTotal = addLongAttributes(responseList, MEMORY_TOTAL);
+      memoryUsed = addLongAttributes(responseList, MEMORY_USED);
    }
 
    private long addLongAttributes(List<CompletableFuture<Map<String, Number>>> responseList, String attribute) throws Exception {
@@ -678,11 +756,7 @@ public class ClusterCacheStatsImpl implements ClusterCacheStats, JmxStatisticsEx
    private static class DistributedCacheStatsCallable implements
          DistributedCallable<Object, Object, Map<String, Number>>, Serializable {
 
-      /**
-       *
-       */
       private static final long serialVersionUID = -8400973931071456798L;
-
       private transient AdvancedCache<Object, Object> remoteCache;
 
       @Override
@@ -759,6 +833,15 @@ public class ClusterCacheStatsImpl implements ClusterCacheStats, JmxStatisticsEx
          } else {
             map.put(CACHE_WRITER_STORES, 0);
          }
+
+         // Memory stats
+         long available = Runtime.getRuntime().freeMemory();
+         long total = Runtime.getRuntime().totalMemory();
+         map.put(MEMORY_AVAILABLE, available);
+         map.put(MEMORY_MAX, Runtime.getRuntime().maxMemory());
+         map.put(MEMORY_TOTAL, total);
+         map.put(MEMORY_USED, total - available);
+
          return map;
       }
 

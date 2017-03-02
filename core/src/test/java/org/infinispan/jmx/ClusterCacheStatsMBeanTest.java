@@ -87,6 +87,10 @@ public class ClusterCacheStatsMBeanTest extends MultipleCacheManagersTest {
       assertAttributeValue(mBeanServer, clusterStats, "CacheLoaderMisses", 0);
       assertAttributeValue(mBeanServer, clusterStats, "StoreWrites", 0);
 
+      assertAttributeValueGreaterThanOrEqualTo(mBeanServer, clusterStats, "MemoryAvailable", 1);
+      assertAttributeValueGreaterThanOrEqualTo(mBeanServer, clusterStats, "MemoryMax", 1);
+      assertAttributeValueGreaterThanOrEqualTo(mBeanServer, clusterStats, "MemoryTotal", 1);
+      assertAttributeValueGreaterThanOrEqualTo(mBeanServer, clusterStats, "MemoryUsed", 1);
    }
 
    private void assertAttributeValue(MBeanServer mBeanServer, ObjectName oName, String attrName, long expectedValue)

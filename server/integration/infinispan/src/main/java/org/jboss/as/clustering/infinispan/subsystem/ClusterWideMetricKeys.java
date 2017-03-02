@@ -68,4 +68,8 @@ public class ClusterWideMetricKeys {
    public static final String CACHE_LOADER_MISSES = "clusterwide-cache-loader-misses";
    public static final String CACHE_LOADER_STORES = "clusterwide-cache-loader-stores";
 
+   public static final String MEMORY_AVAILABLE = "clusterwide-memory-available";
+   public static final String MEMORY_MAX = "clusterwide-memory-max";
+   public static final String MEMORY_TOTAL = "clusterwide-memory-total";
+   public static final String MEMORY_USED = "clusterwide-memory-used";
 }
