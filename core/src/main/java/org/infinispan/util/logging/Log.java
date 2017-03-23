@@ -1566,4 +1566,11 @@ public interface Log extends BasicLogger {
 
    @Message(value = "Unable to retrieve conflicts as StateTransfer is currently in progress for cache '%s'", id = 457)
    IllegalStateException getConflictsStateTransferInProgress(String cacheName);
+
+   @LogMessage(level = WARN)
+   @Message(value = "The partition handling 'enable' attribute has been deprecated. Please update your configuration file to use the 'type' attribute instead", id = 457)
+   void partitionHandlingConfigurationEnabledDeprecated();
+
+   @Message(value = "Keys '%s' are not available. No owners exist in this partition", id = 458)
+   AvailabilityException degradedModeNoOwnersExist(Object key);
 }

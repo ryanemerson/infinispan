@@ -40,6 +40,7 @@ import javax.xml.stream.XMLStreamException;
 
 import org.infinispan.eviction.EvictionStrategy;
 import org.infinispan.eviction.EvictionType;
+import org.infinispan.partitionhandling.PartitionHandling;
 import org.infinispan.security.impl.ClusterRoleMapper;
 import org.infinispan.security.impl.CommonNameRoleMapper;
 import org.infinispan.security.impl.IdentityRoleMapper;
@@ -2404,7 +2405,23 @@ public final class InfinispanSubsystemXMLReader implements XMLElementReader<List
          Attribute attribute = Attribute.forName(reader.getAttributeLocalName(i));
          switch (attribute) {
             case ENABLED: {
-               PartitionHandlingConfigurationResource.ENABLED.parseAndSetParameter(value, partitionHandling, reader);
+               if (namespace.since(Namespace.INFINISPAN_SERVER_9_1))
+                  throw ParseUtils.unexpectedAttribute(reader, i);
+
+               PartitionHandling type = Boolean.valueOf(value) ? PartitionHandling.DENY_ALL : PartitionHandling.ALLOW_ALL;
+               PartitionHandlingConfigurationResource.TYPE.parseAndSetParameter(type.toString(), partitionHandling, reader);
+               break;
+            }
+            case TYPE: {
+               PartitionHandlingConfigurationResource.TYPE.parseAndSetParameter(value, partitionHandling, reader);
+               break;
+            }
+            case MERGE_POLICY: {
+               PartitionHandlingConfigurationResource.MERGE_POLICY.parseAndSetParameter(value, partitionHandling, reader);
+               break;
+            }
+            case MERGE_POLICY_CLASS: {
+               PartitionHandlingConfigurationResource.MERGE_POLICY_CLASS.parseAndSetParameter(value, partitionHandling, reader);
                break;
             }
             default: {

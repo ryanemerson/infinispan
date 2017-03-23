@@ -245,6 +245,7 @@ public class ClusterTopologyManagerTest extends MultipleCacheManagersTest {
       TestingUtil.waitForNoRebalance(c2);
       TestingUtil.waitForNoRebalance(c3);
 
+      log.debugf("Disable DISCARD on merge coordinator %s", advancedCache(mergeCoordIndex).getRpcManager().getAddress());
       // Disable DISCARD *only* on the merge coordinator
       if (mergeCoordIndex == 0) d1.setDiscardAll(false);
       if (mergeCoordIndex == 1) d2.setDiscardAll(false);

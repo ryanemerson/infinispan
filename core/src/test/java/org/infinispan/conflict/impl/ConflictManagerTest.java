@@ -32,6 +32,7 @@ import org.infinispan.notifications.Listener;
 import org.infinispan.notifications.cachelistener.annotation.DataRehashed;
 import org.infinispan.notifications.cachelistener.event.DataRehashedEvent;
 import org.infinispan.partitionhandling.BasePartitionHandlingTest;
+import org.infinispan.partitionhandling.PartitionHandling;
 import org.infinispan.remoting.inboundhandler.DeliverOrder;
 import org.infinispan.remoting.inboundhandler.PerCacheInboundInvocationHandler;
 import org.infinispan.remoting.inboundhandler.Reply;
@@ -52,14 +53,14 @@ public class ConflictManagerTest extends BasePartitionHandlingTest {
 
    public ConflictManagerTest() {
       this.cacheMode = CacheMode.DIST_SYNC;
-      this.partitionHandling = false;
+      this.partitionHandling = PartitionHandling.ALLOW_ALL;
    }
 
    @Override
    protected void createCacheManagers() throws Throwable {
       super.createCacheManagers();
       ConfigurationBuilder builder = getDefaultClusteredCacheConfig(CacheMode.DIST_SYNC);
-      builder.clustering().partitionHandling().enabled(false).stateTransfer().fetchInMemoryState(true);
+      builder.clustering().partitionHandling().type(partitionHandling).mergePolicy(null).stateTransfer().fetchInMemoryState(true);
       defineConfigurationOnAllManagers(CACHE_NAME, builder);
    }
 
@@ -82,7 +83,7 @@ public class ConflictManagerTest extends BasePartitionHandlingTest {
       });
       fork(() -> partition(0).merge(partition(1)));
 
-      Map<Address, InternalCacheValue<Object>> versionMap = versionFuture.get(STATE_TRANSFER_DELAY * 4, TimeUnit.MILLISECONDS);
+      Map<Address, InternalCacheValue<Object>> versionMap = versionFuture.get(STATE_TRANSFER_DELAY * 8, TimeUnit.MILLISECONDS);
       assertTrue(versionMap != null);
       assertTrue(!versionMap.isEmpty());
       assertEquals(String.format("Returned versionMap %s", versionMap),2, versionMap.size());
@@ -129,10 +130,9 @@ public class ConflictManagerTest extends BasePartitionHandlingTest {
       waitForClusterToForm(CACHE_NAME);
       IntStream.range(0, NUMBER_OF_CACHE_ENTRIES).forEach(i -> getCache(0).put(i, "v" + i));
       compareCacheValuesForKey(INCONSISTENT_VALUE_INCREMENT, true);
-      compareCacheValuesForKey(NULL_VALUE_FREQUENCY, true);
       introduceCacheConflicts();
       compareCacheValuesForKey(INCONSISTENT_VALUE_INCREMENT, false);
-      compareCacheValuesForKey(NULL_VALUE_FREQUENCY, false);
+      compareCacheValuesForKey(NULL_VALUE_FREQUENCY, true);
    }
 
    public void testConsecutiveInvocationOfAllVersionsForKey() throws Exception {
@@ -181,22 +181,15 @@ public class ConflictManagerTest extends BasePartitionHandlingTest {
       for (int i = 0; i < numMembersInCluster; i++)
          cacheVersions.add(getAllVersions(i, key));
 
+      int expectedValues = key % NULL_VALUE_FREQUENCY == 0 ? NUMBER_OF_OWNERS - 1 : NUMBER_OF_OWNERS;
       for (Map<Address, InternalCacheValue<Object>> map : cacheVersions) {
-         assertEquals(NUMBER_OF_OWNERS, map.keySet().size());
-
-         if (map.values().contains(null)) {
-            if (expectEquality) {
-               fail("Inconsistent values returned, they should be the same");
-            } else {
-               assertTrue(String.format("Null CacheValue encountered unexpectedly for key '%s'", key), key % NULL_VALUE_FREQUENCY == 0);
-               return;
-            }
-         }
+         assertEquals(map.toString(), expectedValues, map.keySet().size());
+         assertTrue("Version map contains null entries.", !map.values().contains(null));
 
          List<Object> values = map.values().stream()
                .map(InternalCacheValue::getValue)
                .collect(Collectors.toList());
-         assertEquals(NUMBER_OF_OWNERS, values.size());
+         assertEquals(values.toString(), expectedValues, values.size());
 
          if (expectEquality) {
             assertTrue("Inconsistent values returned, they should be the same", values.stream().allMatch(v -> v.equals(values.get(0))));

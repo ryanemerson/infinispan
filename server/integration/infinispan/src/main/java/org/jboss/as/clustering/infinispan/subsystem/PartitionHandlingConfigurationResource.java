@@ -22,6 +22,8 @@
 
 package org.jboss.as.clustering.infinispan.subsystem;
 
+import org.infinispan.configuration.cache.PartitionHandlingConfiguration;
+import org.infinispan.configuration.parsing.Parser;
 import org.jboss.as.controller.AttributeDefinition;
 import org.jboss.as.controller.PathElement;
 import org.jboss.as.controller.SimpleAttributeDefinition;
@@ -41,15 +43,39 @@ public class PartitionHandlingConfigurationResource extends CacheConfigurationCh
     public static final PathElement PATH = PathElement.pathElement(ModelKeys.PARTITION_HANDLING, ModelKeys.PARTITION_HANDLING_NAME);
 
     // attributes
+    @Deprecated
     static final SimpleAttributeDefinition ENABLED =
             new SimpleAttributeDefinitionBuilder(ModelKeys.ENABLED, ModelType.BOOLEAN, true)
                     .setXmlName(Attribute.ENABLED.getLocalName())
                     .setAllowExpression(true)
                     .setFlags(AttributeAccess.Flag.RESTART_RESOURCE_SERVICES)
                     .setDefaultValue(new ModelNode().set(true))
+                    .setDeprecated(Namespace.INFINISPAN_SERVER_9_1.getVersion())
                     .build();
 
-    static final AttributeDefinition[] ATTRIBUTES = {ENABLED};
+    static final SimpleAttributeDefinition TYPE =
+          new SimpleAttributeDefinitionBuilder(ModelKeys.TYPE, ModelType.STRING, true)
+                .setXmlName(Attribute.TYPE.getLocalName())
+                .setAllowExpression(true)
+                .setFlags(AttributeAccess.Flag.RESTART_RESOURCE_SERVICES)
+                .setDefaultValue(new ModelNode().set(PartitionHandlingConfiguration.TYPE.getDefaultValue().name()))
+                .build();
+
+    static final SimpleAttributeDefinition MERGE_POLICY =
+          new SimpleAttributeDefinitionBuilder(ModelKeys.MERGE_POLICY, ModelType.STRING, true)
+                .setXmlName(Attribute.ENABLED.getLocalName())
+                .setAllowExpression(true)
+                .setFlags(AttributeAccess.Flag.RESTART_RESOURCE_SERVICES)
+                .setDefaultValue(new ModelNode().set(Parser.MergePolicy.PREFERRED_ALWAYS.toString()))
+                .build();
+
+    static final SimpleAttributeDefinition MERGE_POLICY_CLASS =
+          new SimpleAttributeDefinitionBuilder(ModelKeys.MERGE_POLICY_CLASS, ModelType.STRING, true)
+                .setXmlName(Attribute.ENABLED.getLocalName())
+                .setFlags(AttributeAccess.Flag.RESTART_RESOURCE_SERVICES)
+                .build();
+
+    static final AttributeDefinition[] ATTRIBUTES = {ENABLED, TYPE, MERGE_POLICY, MERGE_POLICY_CLASS};
 
     public PartitionHandlingConfigurationResource(CacheConfigurationResource parent) {
         super(PATH, ModelKeys.PARTITION_HANDLING, parent, ATTRIBUTES);

@@ -4,11 +4,20 @@ import static org.infinispan.util.logging.events.Messages.MESSAGES;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ExecutionException;
 
+import org.infinispan.AdvancedCache;
+import org.infinispan.commons.CacheException;
 import org.infinispan.commons.util.InfinispanCollections;
+import org.infinispan.conflict.ConflictManagerFactory;
+import org.infinispan.conflict.impl.DefaultConflictManager;
+import org.infinispan.conflict.impl.PartitionMergeInfo;
 import org.infinispan.distribution.ch.ConsistentHash;
+import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.partitionhandling.AvailabilityMode;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.topology.CacheStatusResponse;
@@ -21,10 +30,13 @@ import org.infinispan.util.logging.events.EventLogManager;
 
 public class PreferAvailabilityStrategy implements AvailabilityStrategy {
    private static final Log log = LogFactory.getLog(PreferAvailabilityStrategy.class);
+   private final EmbeddedCacheManager cacheManager;
    private final EventLogManager eventLogManager;
    private final PersistentUUIDManager persistentUUIDManager;
+   private DefaultConflictManager conflictManager;
 
-   public PreferAvailabilityStrategy(EventLogManager eventLogManager, PersistentUUIDManager persistentUUIDManager) {
+   public PreferAvailabilityStrategy(EmbeddedCacheManager cacheManager, EventLogManager eventLogManager, PersistentUUIDManager persistentUUIDManager) {
+      this.cacheManager = cacheManager;
       this.eventLogManager = eventLogManager;
       this.persistentUUIDManager = persistentUUIDManager;
    }
@@ -82,15 +94,18 @@ public class PreferAvailabilityStrategy implements AvailabilityStrategy {
    }
 
    @Override
-   public void onPartitionMerge(AvailabilityStrategyContext context, Collection<CacheStatusResponse> statusResponses) {
+   public void onPartitionMerge(AvailabilityStrategyContext context, Map<Address, CacheStatusResponse> statusResponseMap) {
       // Pick the biggest stable topology (i.e. the one with most members)
       CacheTopology maxStableTopology = null;
-      for (CacheStatusResponse response : statusResponses) {
-         CacheTopology stableTopology = response.getStableTopology();
+      Map<Address, CacheTopology> maxTopologyMap = new HashMap<>();
+      for (Map.Entry<Address, CacheStatusResponse> entry : statusResponseMap.entrySet()) {
+         CacheTopology stableTopology = entry.getValue().getStableTopology();
          if (stableTopology == null) {
             // The node hasn't properly joined yet.
             continue;
          }
+
+         maxTopologyMap.put(entry.getKey(), stableTopology);
          if (maxStableTopology == null || maxStableTopology.getMembers().size() < stableTopology.getMembers().size()) {
             maxStableTopology = stableTopology;
          }
@@ -98,6 +113,7 @@ public class PreferAvailabilityStrategy implements AvailabilityStrategy {
 
       // Now pick the biggest current topology derived from the biggest stable topology
       CacheTopology maxTopology = null;
+      Collection<CacheStatusResponse> statusResponses = statusResponseMap.values();
       for (CacheStatusResponse response : statusResponses) {
          CacheTopology stableTopology = response.getStableTopology();
          if (!Objects.equals(stableTopology, maxStableTopology))
@@ -132,6 +148,23 @@ public class PreferAvailabilityStrategy implements AvailabilityStrategy {
          }
       }
 
+      // If we have more expected members than stable members, then we know that a split brain heal is occurring, so initiate
+      // conflict resolution before a new merged topology is disseminated across the cluster
+      List<Address> newMembers = context.getExpectedMembers();
+      boolean isNewCoordinator = maxTopology != null && maxTopology.getMembers().size() == 1;
+      if (!isNewCoordinator && maxStableTopology != null && newMembers.size() > maxStableTopology.getMembers().size()) {
+         if (conflictManager == null) {
+            AdvancedCache<?, ?> cache = cacheManager.getCache(context.getCacheName()).getAdvancedCache();
+            conflictManager = (DefaultConflictManager) ConflictManagerFactory.get(cache);
+         }
+
+         boolean resolveConflicts = cacheManager.getCacheConfiguration(context.getCacheName()).clustering().partitionHandling().getMergePolicy() != null;
+         if (resolveConflicts) {
+            PartitionMergeInfo mergeInfo = PartitionMergeInfo.create(context, maxStableTopology.getCurrentCH(), maxTopologyMap);
+            conflictManager.resolveConflicts(mergeInfo);
+         }
+      }
+
       // Increment the topology id so that it's bigger than any topology that might have been sent by the old
       // coordinator. +1 is enough because there nodes wait for the new JGroups view before answering the status
       // request, and after they have the new view they can't process topology updates with the old view id.
@@ -148,7 +181,6 @@ public class PreferAvailabilityStrategy implements AvailabilityStrategy {
       context.updateTopologiesAfterMerge(mergedTopology, maxStableTopology, null);
 
       // First update the CHs to remove any nodes that left from the current topology
-      List<Address> newMembers = context.getExpectedMembers();
       List<Address> survivingMembers = new ArrayList<>(newMembers);
       if (mergedTopology != null && survivingMembers.retainAll(mergedTopology.getMembers())) {
          checkForLostData(context, survivingMembers);

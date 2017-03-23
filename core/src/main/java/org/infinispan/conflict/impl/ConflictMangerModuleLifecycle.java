@@ -9,7 +9,7 @@ import org.kohsuke.MetaInfServices;
 
 /**
  * @author Ryan Emerson
- * @since 9.0
+ * @since 9.1
  */
 @SuppressWarnings("unused")
 @MetaInfServices(value = ModuleLifecycle.class)

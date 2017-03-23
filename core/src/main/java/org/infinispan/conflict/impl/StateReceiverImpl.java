@@ -16,14 +16,13 @@ import org.infinispan.commons.logging.Log;
 import org.infinispan.commons.logging.LogFactory;
 import org.infinispan.container.DataContainer;
 import org.infinispan.container.entries.InternalCacheEntry;
+import org.infinispan.distribution.LocalizedCacheTopology;
 import org.infinispan.distribution.ch.ConsistentHash;
 import org.infinispan.factories.annotations.Inject;
 import org.infinispan.factories.annotations.Start;
 import org.infinispan.notifications.Listener;
 import org.infinispan.notifications.cachelistener.annotation.DataRehashed;
-import org.infinispan.notifications.cachelistener.annotation.TopologyChanged;
 import org.infinispan.notifications.cachelistener.event.DataRehashedEvent;
-import org.infinispan.notifications.cachelistener.event.TopologyChangedEvent;
 import org.infinispan.remoting.rpc.RpcManager;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.statetransfer.InboundTransferTask;
@@ -58,7 +57,6 @@ public class StateReceiverImpl<K, V> implements StateReceiver<K, V> {
 
    private CompletableFuture<List<Map<Address, InternalCacheEntry<K, V>>>> segmentRequestFuture = CompletableFuture.completedFuture(null);
 
-   private volatile ConsistentHash writeConsistentHash;
    private volatile int minTopologyId;
    private volatile int segmentId;
 
@@ -88,18 +86,14 @@ public class StateReceiverImpl<K, V> implements StateReceiver<K, V> {
       }
    }
 
-   @TopologyChanged
-   @SuppressWarnings("unused")
-   public void onTopologyChanged(TopologyChangedEvent<K, V> event) {
-      this.writeConsistentHash = event.getConsistentHashAtEnd();
-   }
-
    @DataRehashed
    @SuppressWarnings("unused")
    void onDataRehash(DataRehashedEvent dataRehashedEvent) {
       if (dataRehashedEvent.isPre()) {
          // Perform actions on the pre-event so that we can cancel remaining transfers ASAP
          synchronized (lock) {
+            if (trace) log.tracef("Received DataRehashedEvent %s", dataRehashedEvent);
+
             boolean newSegmentOwners = newSegmentOwners(dataRehashedEvent);
 
             if (minTopologyId < 0 || newSegmentOwners)
@@ -113,7 +107,7 @@ public class StateReceiverImpl<K, V> implements StateReceiver<K, V> {
    }
 
    @Override
-   public CompletableFuture<List<Map<Address, InternalCacheEntry<K, V>>>> getAllReplicasForSegment(int segmentId) {
+   public CompletableFuture<List<Map<Address, InternalCacheEntry<K, V>>>> getAllReplicasForSegment(int segmentId, LocalizedCacheTopology topology) {
       synchronized (lock) {
          // TODO improve handling of concurrent invocations
          if (!segmentRequestFuture.isDone()) {
@@ -122,13 +116,16 @@ public class StateReceiverImpl<K, V> implements StateReceiver<K, V> {
          }
 
          this.segmentId = segmentId;
-         List<Address> replicas = writeConsistentHash.locateOwnersForSegment(segmentId);
+         List<Address> replicas = topology.getDistributionForSegment(segmentId).writeOwners();
+
+         if (trace) log.tracef("Attempting to receive replicas for segment %s from %s", segmentId, replicas);
+
          List<CompletableFuture<Void>> completableFutures = new ArrayList<>();
          for (Address replica : replicas) {
             if (replica.equals(rpcManager.getAddress())) {
                dataContainer.forEach(entry -> {
-                  K key = entry.getKey();
-                  if (writeConsistentHash.getSegment(key) == segmentId) {
+                  int keySegment = topology.getDistribution(entry.getKey()).segmentId();
+                  if (keySegment == segmentId) {
                      addKeyToReplicaMap(replica, entry);
                   }
                });
@@ -176,6 +173,7 @@ public class StateReceiverImpl<K, V> implements StateReceiver<K, V> {
             return;
          }
 
+         if (trace) log.tracef("State chunks received from %s, with topologyId %s, statechunks %s", sender, topologyId, stateChunks);
          for (StateChunk chunk : stateChunks) {
             chunk.getCacheEntries().forEach(ice -> addKeyToReplicaMap(sender, ice));
             transferTask.onStateReceived(chunk.getSegmentId(), chunk.isLastChunk());
@@ -221,7 +219,7 @@ public class StateReceiverImpl<K, V> implements StateReceiver<K, V> {
    }
 
    private void addKeyToReplicaMap(Address address, InternalCacheEntry<K, V> ice) {
-      keyReplicaMap.computeIfAbsent(ice.getKey(), k -> new HashMap()).put(address, ice);
+      keyReplicaMap.computeIfAbsent(ice.getKey(), k -> new HashMap<>()).put(address, ice);
    }
 
    private boolean newSegmentOwners(DataRehashedEvent dataRehashedEvent) {

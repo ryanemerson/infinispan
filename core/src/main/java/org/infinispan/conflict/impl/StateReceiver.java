@@ -6,6 +6,8 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 import org.infinispan.container.entries.InternalCacheEntry;
+import org.infinispan.distribution.LocalizedCacheTopology;
+import org.infinispan.distribution.ch.ConsistentHash;
 import org.infinispan.factories.scopes.Scope;
 import org.infinispan.factories.scopes.Scopes;
 import org.infinispan.remoting.transport.Address;
@@ -26,11 +28,13 @@ public interface StateReceiver<K, V> {
    void stop();
 
    /**
-    * Return all replicas of a cache entry for a given segment
+    * Return all replicas of a cache entry for a given segment. We require the ConsitentHash to be passed here, as it is
+    * necessary for the hash of the last stable topology to be utilised during an automatic merge, before a
+    * new merged topology is installed.
     *
     * @throws IllegalStateException if this method is invoked whilst a previous request for Replicas is still executing
     */
-   CompletableFuture<List<Map<Address, InternalCacheEntry<K, V>>>> getAllReplicasForSegment(int segmentId);
+   CompletableFuture<List<Map<Address, InternalCacheEntry<K, V>>>> getAllReplicasForSegment(int segmentId, LocalizedCacheTopology topology);
 
    void receiveState(Address sender, int topologyId, Collection<StateChunk> stateChunks);
 }

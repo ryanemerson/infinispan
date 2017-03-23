@@ -48,6 +48,9 @@ public class AvailablePartitionHandlingManager implements PartitionHandlingManag
    public void checkBulkRead() {/*no-op*/}
 
    @Override
+   public void checkForMissingKeys(Collection<?> expected, Collection<?> actual) {/*no-op*/}
+
+   @Override
    public CacheTopology getLastStableTopology() {
       return null;
    }
