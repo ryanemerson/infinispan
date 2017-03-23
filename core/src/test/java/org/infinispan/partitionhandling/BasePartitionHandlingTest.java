@@ -57,7 +57,7 @@ public class BasePartitionHandlingTest extends MultipleCacheManagersTest {
    @Override
    protected void createCacheManagers() throws Throwable {
       ConfigurationBuilder dcc = cacheConfiguration();
-      dcc.clustering().cacheMode(cacheMode).partitionHandling().enabled(partitionHandling);
+      dcc.clustering().cacheMode(cacheMode).partitionHandling().type(partitionHandling ? PartitionHandling.DENY_ALL : PartitionHandling.ALLOW_ALL);
       createClusteredCaches(numMembersInCluster, dcc, new TransportFlags().withFD(true).withMerge(true));
       waitForClusterToForm();
    }

@@ -59,7 +59,7 @@ public class ConflictManagerTest extends BasePartitionHandlingTest {
    protected void createCacheManagers() throws Throwable {
       super.createCacheManagers();
       ConfigurationBuilder builder = getDefaultClusteredCacheConfig(CacheMode.DIST_SYNC);
-      builder.clustering().partitionHandling().enabled(false).stateTransfer().fetchInMemoryState(true);
+      builder.clustering().stateTransfer().fetchInMemoryState(true);
       defineConfigurationOnAllManagers(CACHE_NAME, builder);
    }
 
@@ -93,7 +93,7 @@ public class ConflictManagerTest extends BasePartitionHandlingTest {
          expectedExceptionsMessageRegExp = ".* encountered when trying to receive all versions .*")
    public void testGetAllVersionsTimeout() throws Throwable {
       ConfigurationBuilder builder = getDefaultClusteredCacheConfig(CacheMode.DIST_SYNC);
-      builder.clustering().remoteTimeout(5000).partitionHandling().enabled(false).stateTransfer().fetchInMemoryState(true);
+      builder.clustering().remoteTimeout(5000).stateTransfer().fetchInMemoryState(true);
       String cacheName = CACHE_NAME + "2";
       defineConfigurationOnAllManagers(cacheName, builder);
       waitForClusterToForm(cacheName);

@@ -1,8 +1,9 @@
 package org.infinispan.configuration.cache;
 
-import org.infinispan.commons.configuration.attributes.Attribute;
 import org.infinispan.commons.configuration.attributes.AttributeDefinition;
 import org.infinispan.commons.configuration.attributes.AttributeSet;
+import org.infinispan.partitionhandling.MergePolicy;
+import org.infinispan.partitionhandling.PartitionHandling;
 
 /**
  * Controls how the cache handles partitioning and/or multiple node failures.
@@ -12,23 +13,41 @@ import org.infinispan.commons.configuration.attributes.AttributeSet;
  */
 public class PartitionHandlingConfiguration {
 
+   @Deprecated
    public static final AttributeDefinition<Boolean> ENABLED = AttributeDefinition.builder("enabled", false).immutable()
          .build();
+   public static final AttributeDefinition<PartitionHandling> TYPE = AttributeDefinition.builder("type", PartitionHandling.ALLOW_ALL)
+         .immutable().build();
+   public static final AttributeDefinition<MergePolicy> MERGE_POLICY = AttributeDefinition.builder("mergePolicy", MergePolicy.PRIMARY_ALWAYS)
+         .immutable().build();
+   public static final AttributeDefinition<Class> MERGE_POLICY_CLASS = AttributeDefinition.builder("mergePolicyClass", null, Class.class)
+         .immutable().build();
 
    static AttributeSet attributeDefinitionSet() {
-      return new AttributeSet(PartitionHandlingConfiguration.class, ENABLED);
+      return new AttributeSet(PartitionHandlingConfiguration.class, ENABLED, TYPE, MERGE_POLICY, MERGE_POLICY_CLASS);
    }
 
-   private final Attribute<Boolean> enabled;
    private final AttributeSet attributes;
 
    public PartitionHandlingConfiguration(AttributeSet attributes) {
       this.attributes = attributes.checkProtection();
-      enabled = attributes.attribute(ENABLED);
    }
 
+   @Deprecated
    public boolean enabled() {
-      return enabled.get();
+      return getType() != PartitionHandling.ALLOW_ALL;
+   }
+
+   public PartitionHandling getType() {
+      return attributes.attribute(TYPE).get();
+   }
+
+   public MergePolicy getMergePolicy() {
+      return attributes.attribute(MERGE_POLICY).get();
+   }
+
+   public Class<?> getMergePolicyClass() {
+      return attributes.attribute(MERGE_POLICY_CLASS).get();
    }
 
    public AttributeSet attributes() {
@@ -64,5 +83,4 @@ public class PartitionHandlingConfiguration {
          return false;
       return true;
    }
-
 }

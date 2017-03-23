@@ -62,6 +62,8 @@ import org.infinispan.eviction.EvictionStrategy;
 import org.infinispan.eviction.EvictionThreadPolicy;
 import org.infinispan.eviction.EvictionType;
 import org.infinispan.factories.threads.DefaultThreadFactory;
+import org.infinispan.partitionhandling.MergePolicy;
+import org.infinispan.partitionhandling.PartitionHandling;
 import org.infinispan.persistence.cluster.ClusterLoader;
 import org.infinispan.persistence.file.SingleFileStore;
 import org.infinispan.persistence.spi.CacheLoader;
@@ -1244,14 +1246,28 @@ public class Parser implements ConfigurationParser {
       }
    }
 
-   private void parsePartitionHandling(XMLExtendedStreamReader reader, ConfigurationBuilder builder) throws XMLStreamException {
+   private void parsePartitionHandling(XMLExtendedStreamReader reader, ConfigurationBuilderHolder holder) throws XMLStreamException {
+      ConfigurationBuilder builder = holder.getCurrentConfigurationBuilder();
       PartitionHandlingConfigurationBuilder ph = builder.clustering().partitionHandling();
       for (int i = 0; i < reader.getAttributeCount(); i++) {
          String value = replaceProperties(reader.getAttributeValue(i));
          Attribute attribute = Attribute.forName(reader.getAttributeLocalName(i));
          switch (attribute) {
             case ENABLED: {
+               log.partitionHandlingConfigurationEnabledDeprecated();
                ph.enabled(Boolean.valueOf(value));
+               break;
+            }
+            case TYPE: {
+               ph.type(PartitionHandling.valueOf(value.toUpperCase()));
+               break;
+            }
+            case MERGE_POLICY: {
+               ph.mergePolicy(MergePolicy.valueOf(value.toUpperCase()));
+               break;
+            }
+            case MERGE_POLICY_CLASS: {
+               ph.mergePolicyClass(Util.loadClass(value, holder.getClassLoader()));
                break;
             }
             default: {
@@ -1499,7 +1515,7 @@ public class Parser implements ConfigurationParser {
             break;
          }
          case PARTITION_HANDLING: {
-            this.parsePartitionHandling(reader, builder);
+            this.parsePartitionHandling(reader, holder);
             break;
          }
          case SECURITY: {
@@ -1520,7 +1536,6 @@ public class Parser implements ConfigurationParser {
          Attribute attribute = Attribute.forName(reader.getAttributeLocalName(i));
          switch (attribute) {
             case CLASS:
-               log.dataContainerConfigurationDeprecated();
                builder.dataContainer().dataContainer(Util.getInstance(value, holder.getClassLoader()));
                break;
             case KEY_EQUIVALENCE:

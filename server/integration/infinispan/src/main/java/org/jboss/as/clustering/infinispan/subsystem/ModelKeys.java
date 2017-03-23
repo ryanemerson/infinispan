@@ -93,6 +93,7 @@ public class ModelKeys {
     static final String DROP_ON_EXIT = "drop-on-exit";
     static final String ENABLED = "enabled";
     static final String ENTRY_TABLE = "entry-table";
+    static final String ENTRY_MERGE_POLICY = "entry-merge-policy";
     static final String EVICTION = "eviction";
     static final String EVICTION_NAME = "EVICTION";
     @Deprecated

@@ -74,6 +74,7 @@ public enum Attribute {
     DIALECT(ModelKeys.DIALECT),
     DROP_ON_EXIT(ModelKeys.DROP_ON_EXIT),
     ENABLED(ModelKeys.ENABLED),
+    ENTRY_MERGE_POLICY(ModelKeys.ENTRY_MERGE_POLICY),
     EVICTION(ModelKeys.EVICTION),
     @Deprecated
     EVICTION_EXECUTOR(ModelKeys.EVICTION_EXECUTOR),

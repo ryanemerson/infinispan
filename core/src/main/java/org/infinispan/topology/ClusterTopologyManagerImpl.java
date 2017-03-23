@@ -43,6 +43,7 @@ import org.infinispan.notifications.cachemanagerlistener.annotation.Merged;
 import org.infinispan.notifications.cachemanagerlistener.annotation.ViewChanged;
 import org.infinispan.notifications.cachemanagerlistener.event.ViewChangedEvent;
 import org.infinispan.partitionhandling.AvailabilityMode;
+import org.infinispan.partitionhandling.PartitionHandling;
 import org.infinispan.partitionhandling.impl.AvailabilityStrategy;
 import org.infinispan.partitionhandling.impl.PreferAvailabilityStrategy;
 import org.infinispan.partitionhandling.impl.PreferConsistencyStrategy;
@@ -417,9 +418,10 @@ public class ClusterTopologyManagerImpl implements ClusterTopologyManager {
       return cacheStatusMap.computeIfAbsent(cacheName, (name) -> {
          // We assume that any cache with partition handling configured is already defined on all the nodes
          // (including the coordinator) before it starts on any node.
-         Configuration cacheConfiguration = cacheManager.getCacheConfiguration(cacheName);
          AvailabilityStrategy availabilityStrategy;
-         if (cacheConfiguration != null && cacheConfiguration.clustering().partitionHandling().enabled()) {
+         Configuration cacheConfiguration = cacheManager.getCacheConfiguration(cacheName);
+         PartitionHandling  partitionHandling = cacheConfiguration != null ? cacheConfiguration.clustering().partitionHandling().getType() : null;
+         if (partitionHandling != null && partitionHandling == PartitionHandling.DENY_ALL) {
             availabilityStrategy = new PreferConsistencyStrategy(eventLogManager, persistentUUIDManager);
          } else {
             availabilityStrategy = new PreferAvailabilityStrategy(eventLogManager, persistentUUIDManager);

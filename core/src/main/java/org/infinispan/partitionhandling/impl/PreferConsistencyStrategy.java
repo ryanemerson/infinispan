@@ -189,15 +189,12 @@ public class PreferConsistencyStrategy implements AvailabilityStrategy {
       // status request, and then they can't process topology updates from the old view.
       // Also cancel any pending rebalance by removing the pending CH, because we don't recover the rebalance
       // confirmation status (yet).
-      if (mergedTopology != null) {
-         mergedTopology = new CacheTopology(maxTopologyId + 1, mergedTopology.getRebalanceId(),
-               mergedTopology.getCurrentCH(), null, actualMembers, persistentUUIDManager.mapAddresses(actualMembers));
-      }
+      mergedTopology = new CacheTopology(maxTopologyId + 1, mergedTopology.getRebalanceId(),  mergedTopology.getCurrentCH(),
+            null, actualMembers, persistentUUIDManager.mapAddresses(actualMembers));
       context.updateTopologiesAfterMerge(mergedTopology, maxStableTopology, mergedAvailabilityMode);
 
       // Now check if the availability mode should change
-      AvailabilityMode newAvailabilityMode = computeAvailabilityAfterMerge(context, maxStableTopology, actualMembers,
-            mergedAvailabilityMode);
+      AvailabilityMode newAvailabilityMode = computeAvailabilityAfterMerge(context, maxStableTopology, actualMembers);
 
       // It shouldn't be possible to recover from unavailable mode without user action
       if (newAvailabilityMode == AvailabilityMode.DEGRADED_MODE) {
@@ -209,8 +206,8 @@ public class PreferConsistencyStrategy implements AvailabilityStrategy {
       }
    }
 
-   protected AvailabilityMode computeAvailabilityAfterMerge(AvailabilityStrategyContext context,
-         CacheTopology maxStableTopology, List<Address> newMembers, AvailabilityMode initialMode) {
+   private AvailabilityMode computeAvailabilityAfterMerge(AvailabilityStrategyContext context,
+         CacheTopology maxStableTopology, List<Address> newMembers) {
       if (maxStableTopology != null) {
          List<Address> stableMembers = maxStableTopology.getMembers();
          List<Address> lostMembers = new ArrayList<>(stableMembers);

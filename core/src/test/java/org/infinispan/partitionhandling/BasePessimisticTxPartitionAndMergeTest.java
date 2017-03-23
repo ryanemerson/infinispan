@@ -32,7 +32,7 @@ public abstract class BasePessimisticTxPartitionAndMergeTest extends BaseTxParti
    protected void createCacheManagers() throws Throwable {
       super.createCacheManagers();
       ConfigurationBuilder builder = getDefaultClusteredCacheConfig(CacheMode.DIST_SYNC);
-      builder.clustering().partitionHandling().enabled(true);
+      builder.clustering().partitionHandling().type(PartitionHandling.DENY_ALL);
       builder.transaction().lockingMode(LockingMode.PESSIMISTIC).transactionMode(TransactionMode.TRANSACTIONAL).transactionManagerLookup(new EmbeddedTransactionManagerLookup());
       defineConfigurationOnAllManagers(PESSIMISTIC_TX_CACHE_NAME, builder);
    }

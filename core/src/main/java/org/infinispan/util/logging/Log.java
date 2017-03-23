@@ -1566,4 +1566,20 @@ public interface Log extends BasicLogger {
 
    @Message(value = "Unable to retrieve conflicts as StateTransfer is currently in progress for cache '%s'", id = 456)
    IllegalStateException getConflictsStateTransferInProgress(String cacheName);
+
+   @LogMessage(level = WARN)
+   @Message(value = "The partition handling 'enable' attribute has been deprecated. Please update your configuration file to use the 'type' attribute instead", id = 457)
+   void partitionHandlingConfigurationEnabledDeprecated();
+
+   @Message(value = "Key '%s' is not available. Not all owners are in this partition", id = 458)
+   AvailabilityException degradedModeDenyAllKeyUnavailable(Object key);
+
+   @Message(value = "Keys '%s' are not available. Not all owners are in this partition", id = 459)
+   AvailabilityException degradedModeDenyAllKeysUnavailable(Collection<?> keys);
+
+   @Message(value = "Keys '%s' is not available. No owners exist in this partition", id = 460)
+   AvailabilityException degradedModeReadOnlyKeyUnavailable(Object key);
+
+   @Message(value = "Keys '%s' are not available. No owners exist in this partition for keys '%s'", id = 461)
+   AvailabilityException degradedModeReadOnlyKeysUnavailable(Collection<?> allKeys, Collection<?> noOwnerKeys);
 }

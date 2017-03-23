@@ -76,6 +76,8 @@ public enum Attribute {
     MAX_RETRIES("max-retries"),
     MAX_THREADS("max-threads"),
     MBEAN_SERVER_LOOKUP("mbean-server-lookup"),
+    MERGE_POLICY("merge-policy"),
+    MERGE_POLICY_CLASS("merge-policy-class"),
     MODE("mode"),
     NODE_NAME("node-name"),
     MODIFICATION_QUEUE_SIZE("modification-queue-size"),
