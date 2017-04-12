@@ -4,11 +4,23 @@ import static org.infinispan.util.logging.events.Messages.MESSAGES;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import org.infinispan.AdvancedCache;
+import org.infinispan.Cache;
 import org.infinispan.commons.util.InfinispanCollections;
+import org.infinispan.conflict.ConflictManagerFactory;
+import org.infinispan.conflict.impl.MergeConflictManager;
+import org.infinispan.container.entries.InternalCacheEntry;
 import org.infinispan.distribution.ch.ConsistentHash;
+import org.infinispan.distribution.ch.ConsistentHashFactory;
+import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.partitionhandling.AvailabilityMode;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.topology.CacheStatusResponse;
@@ -21,10 +33,13 @@ import org.infinispan.util.logging.events.EventLogManager;
 
 public class PreferAvailabilityStrategy implements AvailabilityStrategy {
    private static final Log log = LogFactory.getLog(PreferAvailabilityStrategy.class);
+   private final EmbeddedCacheManager cacheManager;
    private final EventLogManager eventLogManager;
    private final PersistentUUIDManager persistentUUIDManager;
+   private MergeConflictManager<Object, Object> conflictManager;
 
-   public PreferAvailabilityStrategy(EventLogManager eventLogManager, PersistentUUIDManager persistentUUIDManager) {
+   public PreferAvailabilityStrategy(EmbeddedCacheManager cacheManager, EventLogManager eventLogManager, PersistentUUIDManager persistentUUIDManager) {
+      this.cacheManager = cacheManager;
       this.eventLogManager = eventLogManager;
       this.persistentUUIDManager = persistentUUIDManager;
    }
@@ -132,6 +147,12 @@ public class PreferAvailabilityStrategy implements AvailabilityStrategy {
          }
       }
 
+      // If we have more expected members than stable members, then we know that a split brain heal is occurring, so initiate
+      // conflict resolution before a new merged topology is disseminated across the cluster
+      List<Address> newMembers = context.getExpectedMembers();
+      if (maxStableTopology != null && newMembers.size() > maxStableTopology.getMembers().size())
+         resolveConflicts(context, newMembers, maxStableTopology.getCurrentCH());
+
       // Increment the topology id so that it's bigger than any topology that might have been sent by the old
       // coordinator. +1 is enough because there nodes wait for the new JGroups view before answering the status
       // request, and after they have the new view they can't process topology updates with the old view id.
@@ -146,7 +167,6 @@ public class PreferAvailabilityStrategy implements AvailabilityStrategy {
       context.updateTopologiesAfterMerge(mergedTopology, maxStableTopology, null);
 
       // First update the CHs to remove any nodes that left from the current topology
-      List<Address> newMembers = context.getExpectedMembers();
       List<Address> survivingMembers = new ArrayList<>(newMembers);
       if (mergedTopology != null && survivingMembers.retainAll(mergedTopology.getMembers())) {
          checkForLostData(context, survivingMembers);
@@ -155,6 +175,19 @@ public class PreferAvailabilityStrategy implements AvailabilityStrategy {
 
       // Then start a rebalance with the merged members
       context.queueRebalance(newMembers);
+   }
+
+   private void resolveConflicts(AvailabilityStrategyContext context, List<Address> newMembers, ConsistentHash existingHash) {
+      if (conflictManager == null) {
+         AdvancedCache<Object, Object> cache = cacheManager.getCache(context.getCacheName()).getAdvancedCache();
+         conflictManager = (MergeConflictManager) ConflictManagerFactory.get(cache);
+      }
+
+      // We need to use the same ConsistentHash generated during rebalance
+      ConsistentHashFactory chFactory = context.getJoinInfo().getConsistentHashFactory();
+      ConsistentHash updatedMembersCH = chFactory.updateMembers(existingHash, newMembers, context.getCapacityFactors());
+      ConsistentHash newCh = chFactory.rebalance(updatedMembersCH);
+      conflictManager.resolveConflicts(newCh);
    }
 
    @Override

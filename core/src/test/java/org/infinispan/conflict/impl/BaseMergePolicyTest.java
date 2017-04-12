@@ -1,22 +1,37 @@
-package org.infinispan.partitionhandling;
+package org.infinispan.conflict.impl;
 
-import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.testng.annotations.Test;
+import org.infinispan.partitionhandling.BasePartitionHandlingTest;
+import org.infinispan.conflict.MergePolicy;
+import org.infinispan.partitionhandling.PartitionHandling;
+import org.infinispan.util.logging.Log;
+import org.infinispan.util.logging.LogFactory;
 
-@Test(groups = "functional", testName = "partitionhandling.PartitionHappeningTest")
-public class PartitionHappeningTest extends BasePartitionHandlingTest {
+/**
+ * @author Ryan Emerson
+ * @since 9.0
+ */
+public abstract class BaseMergePolicyTest extends BasePartitionHandlingTest {
 
-   public PartitionHappeningTest() {
-      partitionHandling = PartitionHandling.ALLOW_ALL;
+   private static Log log = LogFactory.getLog(BaseMergePolicyTest.class);
+   private static boolean trace = log.isTraceEnabled();
+
+   protected final MergePolicy mergePolicy;
+
+   BaseMergePolicyTest(MergePolicy mergePolicy) {
+      this.mergePolicy = mergePolicy;
+      this.partitionHandling = PartitionHandling.ALLOW_ALL;
    }
 
-   public void testPartitionHappening() throws Throwable {
+   abstract void beforeSplit();
+   abstract void duringSplit();
+   abstract void afterMerge();
 
+   public void testPartitionMergePolicy() throws Throwable {
       final List<ViewChangedHandler> listeners = new ArrayList<>();
       for (int i = 0; i < caches().size(); i++) {
          ViewChangedHandler listener = new ViewChangedHandler();
@@ -24,6 +39,8 @@ public class PartitionHappeningTest extends BasePartitionHandlingTest {
          listeners.add(listener);
       }
 
+      log.trace("beforeSplit");
+      beforeSplit();
       splitCluster(new int[]{0, 1}, new int[]{2, 3});
 
       eventually(() -> {
@@ -38,25 +55,19 @@ public class PartitionHappeningTest extends BasePartitionHandlingTest {
       eventually(() -> clusterAndChFormed(2, 2));
       eventually(() -> clusterAndChFormed(3, 2));
 
-
-      cache(0).put("k", "v1");
-      cache(2).put("k", "v2");
-
-      assertEquals(cache(0).get("k"), "v1");
-      assertEquals(cache(1).get("k"), "v1");
-      assertEquals(cache(2).get("k"), "v2");
-      assertEquals(cache(3).get("k"), "v2");
+      duringSplit();
 
       partition(0).merge(partition(1));
       assertTrue(clusterAndChFormed(0, 4));
       assertTrue(clusterAndChFormed(1, 4));
       assertTrue(clusterAndChFormed(2, 4));
       assertTrue(clusterAndChFormed(3, 4));
+
+      afterMerge();
    }
 
-   public boolean clusterAndChFormed(int cacheIndex, int memberCount) {
+   protected boolean clusterAndChFormed(int cacheIndex, int memberCount) {
       return advancedCache(cacheIndex).getRpcManager().getTransport().getMembers().size() == memberCount &&
             advancedCache(cacheIndex).getDistributionManager().getWriteConsistentHash().getMembers().size() == memberCount;
    }
-
 }

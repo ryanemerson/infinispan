@@ -57,13 +57,14 @@ import org.testng.annotations.Test;
 public class StateReceiverTest extends AbstractInfinispanTest {
 
    private StateReceiverImpl<Object, Object> stateReceiver;
+   private ConsistentHash hash;
 
    public void testGetReplicaException() throws Exception {
       CompletableFuture<Void> taskFuture = new CompletableFuture<>();
       taskFuture.completeExceptionally(new CacheException("Problem encountered retrieving state"));
       initTransferTaskMock(taskFuture);
 
-      CompletableFuture<List<Map<Address, InternalCacheEntry<Object, Object>>>> cf = stateReceiver.getAllReplicasForSegment(0);
+      CompletableFuture<List<Map<Address, InternalCacheEntry<Object, Object>>>> cf = stateReceiver.getAllReplicasForSegment(0, hash);
       try {
          cf.get();
          fail("Expected an ExecutionExceptions caused by a CacheException");
@@ -76,14 +77,14 @@ public class StateReceiverTest extends AbstractInfinispanTest {
    public void testConcurrentInvocationsOfRequestSegments() {
       initTransferTaskMock(new CompletableFuture<>());
 
-      stateReceiver.getAllReplicasForSegment(0);
-      stateReceiver.getAllReplicasForSegment(1);
+      stateReceiver.getAllReplicasForSegment(0, hash);
+      stateReceiver.getAllReplicasForSegment(1, hash);
    }
 
    public void testTopologyChangeDuringSegmentRequest() throws Exception {
       initTransferTaskMock(new CompletableFuture<>());
 
-      CompletableFuture<List<Map<Address, InternalCacheEntry<Object, Object>>>> cf = stateReceiver.getAllReplicasForSegment(0);
+      CompletableFuture<List<Map<Address, InternalCacheEntry<Object, Object>>>> cf = stateReceiver.getAllReplicasForSegment(0, hash);
       assertTrue(!cf.isCancelled());
       assertTrue(!cf.isCompletedExceptionally());
 
@@ -100,7 +101,7 @@ public class StateReceiverTest extends AbstractInfinispanTest {
       }
 
       stateReceiver.onDataRehash(createEventImpl(4, 4, Event.Type.DATA_REHASHED));
-      cf = stateReceiver.getAllReplicasForSegment(1);
+      cf = stateReceiver.getAllReplicasForSegment(1, hash);
       assertTrue(!cf.isCompletedExceptionally());
       assertTrue(!cf.isCancelled());
    }
@@ -108,7 +109,7 @@ public class StateReceiverTest extends AbstractInfinispanTest {
    public void testOldAndInvalidStateIgnored() {
       initTransferTaskMock(new CompletableFuture<>());
 
-      stateReceiver.getAllReplicasForSegment(0);
+      stateReceiver.getAllReplicasForSegment(0, hash);
       List<Address> sourceAddresses = new ArrayList<>(stateReceiver.getTransferTaskMap().keySet());
       Map<Object, Map<Address, InternalCacheEntry<Object, Object>>> receiverKeyMap = stateReceiver.getKeyReplicaMap();
       assertEquals(receiverKeyMap.size(), 0);
@@ -130,26 +131,21 @@ public class StateReceiverTest extends AbstractInfinispanTest {
       RpcManager rpcManager = mock(RpcManager.class);
 
       when(rpcManager.invokeRemotely(any(Collection.class), any(StateRequestCommand.class), any(RpcOptions.class)))
-            .thenAnswer(new Answer<Map<Address, Response>>() {
-               @Override
-               public Map<Address, Response> answer(InvocationOnMock invocation) {
-                  Collection<Address> recipients = (Collection<Address>) invocation.getArguments()[0];
-                  Address recipient = recipients.iterator().next();
-                  StateRequestCommand cmd = (StateRequestCommand) invocation.getArguments()[1];
-                  Map<Address, Response> results = new HashMap<>(1);
-                  if (cmd.getType().equals(StateRequestCommand.Type.START_CONSISTENCY_CHECK)
-                        || cmd.getType().equals(StateRequestCommand.Type.CANCEL_CONSISTENCY_CHECK)) {
-                     results.put(recipient, SuccessfulResponse.SUCCESSFUL_EMPTY_RESPONSE);
-                  }
-                  return results;
+            .thenAnswer(invocation -> {
+               Collection<Address> recipients = (Collection<Address>) invocation.getArguments()[0];
+               Address recipient = recipients.iterator().next();
+               StateRequestCommand cmd = (StateRequestCommand) invocation.getArguments()[1];
+               Map<Address, Response> results = new HashMap<>(1);
+               if (cmd.getType().equals(StateRequestCommand.Type.START_CONSISTENCY_CHECK)
+                     || cmd.getType().equals(StateRequestCommand.Type.CANCEL_CONSISTENCY_CHECK)) {
+                  results.put(recipient, SuccessfulResponse.SUCCESSFUL_EMPTY_RESPONSE);
                }
+               return results;
             });
 
-      when(rpcManager.getRpcOptionsBuilder(any(ResponseMode.class))).thenAnswer(new Answer<RpcOptionsBuilder>() {
-         public RpcOptionsBuilder answer(InvocationOnMock invocation) {
-            Object[] args = invocation.getArguments();
-            return new RpcOptionsBuilder(10000, TimeUnit.MILLISECONDS, (ResponseMode) args[0], DeliverOrder.PER_SENDER);
-         }
+      when(rpcManager.getRpcOptionsBuilder(any(ResponseMode.class))).thenAnswer(invocation -> {
+         Object[] args = invocation.getArguments();
+         return new RpcOptionsBuilder(10000, TimeUnit.MILLISECONDS, (ResponseMode) args[0], DeliverOrder.PER_SENDER);
       });
       ConfigurationBuilder cb = new ConfigurationBuilder();
       cb.clustering().clustering().cacheMode(CacheMode.DIST_SYNC);
@@ -157,9 +153,8 @@ public class StateReceiverTest extends AbstractInfinispanTest {
 
       StateReceiverImpl stateReceiver = new StateReceiverImpl();
       stateReceiver.init(cache, commandsFactory, dataContainer, rpcManager);
-      stateReceiver.onTopologyChanged(createEventImpl(1, 4, Event.Type.TOPOLOGY_CHANGED));
       stateReceiver.onDataRehash(createEventImpl(2, 4, Event.Type.DATA_REHASHED));
-
+      this.hash = createConsistentHash(4);
       this.stateReceiver = spy(stateReceiver);
    }
 

@@ -48,7 +48,7 @@ public class BasePartitionHandlingTest extends MultipleCacheManagersTest {
    protected int numMembersInCluster = 4;
    protected CacheMode cacheMode = CacheMode.DIST_SYNC;
    protected volatile Partition[] partitions;
-   protected boolean partitionHandling = true;
+   protected PartitionHandling partitionHandling = PartitionHandling.DENY_ALL;
 
    public BasePartitionHandlingTest() {
       this.cleanup = CleanupPhase.AFTER_METHOD;
@@ -57,9 +57,14 @@ public class BasePartitionHandlingTest extends MultipleCacheManagersTest {
    @Override
    protected void createCacheManagers() throws Throwable {
       ConfigurationBuilder dcc = cacheConfiguration();
-      dcc.clustering().cacheMode(cacheMode).partitionHandling().type(partitionHandling ? PartitionHandling.DENY_ALL : PartitionHandling.ALLOW_ALL);
+      dcc.clustering().cacheMode(cacheMode).partitionHandling().type(partitionHandling);
       createClusteredCaches(numMembersInCluster, dcc, new TransportFlags().withFD(true).withMerge(true));
       waitForClusterToForm();
+   }
+
+   protected BasePartitionHandlingTest partitionHandling(PartitionHandling partitionHandling) {
+      this.partitionHandling = partitionHandling;
+      return this;
    }
 
    protected ConfigurationBuilder cacheConfiguration() {
@@ -67,9 +72,17 @@ public class BasePartitionHandlingTest extends MultipleCacheManagersTest {
    }
 
    @Listener
-   static class ViewChangedHandler {
+   public static class ViewChangedHandler {
 
-      volatile boolean notified = false;
+      private volatile boolean notified = false;
+
+      public boolean isNotified() {
+         return notified;
+      }
+
+      public void setNotified(boolean notified) {
+         this.notified = notified;
+      }
 
       @ViewChanged
       public void viewChanged(ViewChangedEvent vce) {
@@ -264,7 +277,7 @@ public class BasePartitionHandlingTest extends MultipleCacheManagersTest {
       }
 
       public void assertDegradedMode() {
-         if (partitionHandling) {
+         if (partitionHandling != PartitionHandling.ALLOW_ALL) {
             assertAvailabilityMode(AvailabilityMode.DEGRADED_MODE);
          }
       }

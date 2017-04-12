@@ -2,7 +2,7 @@ package org.infinispan.configuration.cache;
 
 import org.infinispan.commons.configuration.attributes.AttributeDefinition;
 import org.infinispan.commons.configuration.attributes.AttributeSet;
-import org.infinispan.partitionhandling.MergePolicy;
+import org.infinispan.conflict.MergePolicy;
 import org.infinispan.partitionhandling.PartitionHandling;
 
 /**
@@ -18,8 +18,9 @@ public class PartitionHandlingConfiguration {
          .build();
    public static final AttributeDefinition<PartitionHandling> TYPE = AttributeDefinition.builder("type", PartitionHandling.ALLOW_ALL)
          .immutable().build();
-   public static final AttributeDefinition<MergePolicy> MERGE_POLICY = AttributeDefinition.builder("mergePolicy", MergePolicy.PRIMARY_ALWAYS)
+   public static final AttributeDefinition<MergePolicy> MERGE_POLICY = AttributeDefinition.builder("mergePolicy", MergePolicy.PREFERRED_ALWAYS)
          .immutable().build();
+   // TODO do we want to pass this as just a class? Can we do better i.e. ? extends EntryMergePolicy etc
    public static final AttributeDefinition<Class> MERGE_POLICY_CLASS = AttributeDefinition.builder("mergePolicyClass", null, Class.class)
          .immutable().build();
 

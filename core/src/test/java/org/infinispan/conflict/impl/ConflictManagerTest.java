@@ -32,6 +32,7 @@ import org.infinispan.notifications.Listener;
 import org.infinispan.notifications.cachelistener.annotation.DataRehashed;
 import org.infinispan.notifications.cachelistener.event.DataRehashedEvent;
 import org.infinispan.partitionhandling.BasePartitionHandlingTest;
+import org.infinispan.partitionhandling.PartitionHandling;
 import org.infinispan.remoting.inboundhandler.DeliverOrder;
 import org.infinispan.remoting.inboundhandler.PerCacheInboundInvocationHandler;
 import org.infinispan.remoting.inboundhandler.Reply;
@@ -52,7 +53,7 @@ public class ConflictManagerTest extends BasePartitionHandlingTest {
 
    public ConflictManagerTest() {
       this.cacheMode = CacheMode.DIST_SYNC;
-      this.partitionHandling = false;
+      this.partitionHandling = PartitionHandling.ALLOW_ALL;
    }
 
    @Override
@@ -140,7 +141,7 @@ public class ConflictManagerTest extends BasePartitionHandlingTest {
       int key = 1;
       Map<Address, InternalCacheValue<Object>> result1 = getAllVersions(0, key);
       Map<Address, InternalCacheValue<Object>> result2 = getAllVersions(0, key);
-      assertNotSame(result1, result2); // Assert that a different map is returned, i.e. a new CompleteableFuture was created
+      assertNotSame(result1, result2); // Assert that a different map is returned, i.e. a new CompletableFuture was created
       assertEquals(result1, result2); // Assert that returned values are still logically equivalent
    }
 

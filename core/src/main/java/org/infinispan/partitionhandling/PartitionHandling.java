@@ -2,7 +2,7 @@ package org.infinispan.partitionhandling;
 
 /**
  * @author Ryan Emerson
- * @since 9.0
+ * @since 9.1
  */
 public enum PartitionHandling {
    DENY_ALL, // If the partition does not have all owners for a given segment, both reads and writes are denied for all keys in that segment.

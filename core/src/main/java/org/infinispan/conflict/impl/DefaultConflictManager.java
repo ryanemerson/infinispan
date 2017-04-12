@@ -1,11 +1,15 @@
 package org.infinispan.conflict.impl;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Set;
 import java.util.Spliterators;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
@@ -14,16 +18,17 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import org.infinispan.Cache;
+import org.infinispan.AdvancedCache;
 import org.infinispan.commands.CommandsFactory;
 import org.infinispan.commands.read.GetCacheEntryCommand;
 import org.infinispan.commands.remote.ClusteredGetCommand;
 import org.infinispan.commons.CacheException;
 import org.infinispan.configuration.cache.ClusteringConfiguration;
-import org.infinispan.conflict.ConflictManager;
+import org.infinispan.container.entries.CacheEntry;
 import org.infinispan.container.entries.InternalCacheEntry;
 import org.infinispan.container.entries.InternalCacheValue;
 import org.infinispan.context.InvocationContext;
@@ -52,12 +57,12 @@ import org.infinispan.util.logging.LogFactory;
  * @author Ryan Emerson
  */
 @Listener(observation = Listener.Observation.BOTH)
-public class DefaultConflictManager<K, V> implements ConflictManager<K, V> {
+public class DefaultConflictManager<K, V> implements MergeConflictManager<K, V> {
 
    private static Log log = LogFactory.getLog(DefaultConflictManager.class);
 
    private AsyncInterceptorChain interceptorChain;
-   private Cache<K, V> cache;
+   private AdvancedCache<K, V> cache;
    private CommandsFactory commandsFactory;
    private InvocationContextFactory invocationContextFactory;
    private RpcManager rpcManager;
@@ -73,7 +78,7 @@ public class DefaultConflictManager<K, V> implements ConflictManager<K, V> {
 
    @Inject
    public void inject(AsyncInterceptorChain interceptorChain,
-                      Cache<K, V> cache,
+                      AdvancedCache<K, V> cache,
                       CommandsFactory commandsFactory,
                       InvocationContextFactory invocationContextFactory,
                       RpcManager rpcManager,
@@ -153,10 +158,56 @@ public class DefaultConflictManager<K, V> implements ConflictManager<K, V> {
 
    @Override
    public Stream<Map<Address, InternalCacheEntry<K, V>>> getConflicts() {
+      return getConflicts(writeConsistentHash);
+   }
+
+   @Override
+   public Stream<Map<Address, InternalCacheEntry<K, V>>> getConflicts(ConsistentHash hash) {
       if (stateConsumer.isStateTransferInProgress())
          throw log.getConflictsStateTransferInProgress(cacheName);
 
-      return StreamSupport.stream(new ReplicaSpliterator(), false).filter(filterConsistentEntries());
+      return StreamSupport.stream(new ReplicaSpliterator(hash), false).filter(filterConsistentEntries());
+   }
+
+   @Override
+   public void resolveConflicts() {
+      resolveConflicts(writeConsistentHash);
+   }
+
+   @Override
+   public void resolveConflicts(ConsistentHash mergeHash) {
+      // We always use the value of writeConsistentHash, as this is the old hash of the coordinator in the event of a merge
+      // and the current hash when a user attempts to resolve conflicts
+      Set<Address> preferredPartition = new HashSet<>(writeConsistentHash.getMembers());
+      getConflicts(mergeHash).forEach(conflictMap -> {
+         Collection<InternalCacheEntry<K, V>> entries = conflictMap.values();
+         K key = entries.iterator().next().getKey();
+         Address primaryReplica = writeConsistentHash.locatePrimaryOwner(key);
+
+         List<Address> preferredEntries = conflictMap.entrySet().stream()
+               .map(Map.Entry::getKey)
+               .filter(preferredPartition::contains)
+               .collect(Collectors.toList());
+
+         // If only one entry exists in the preferred partition, then use that entry
+         CacheEntry<K, V> preferredEntry;
+         if (preferredEntries.size() == 1) {
+            preferredEntry = conflictMap.remove(preferredEntries.get(0));
+         } else {
+            // If multiple conflicts exist in the preferred partition, then use primary replica from the preferred partition
+            // If not a merge, then also use primary as preferred entry
+            // Preferred is null if no entry exists in preferred partition
+            preferredEntry = conflictMap.remove(primaryReplica);
+         }
+
+         // TODO load entry merge policy and use!
+         CacheEntry<K, V> mergedEntry = merge(preferredEntry, new ArrayList<>(entries));
+         cache.replace(mergedEntry.getKey(), mergedEntry.getValue(), mergedEntry.getMetadata());
+      });
+   }
+
+   private CacheEntry<K, V> merge(CacheEntry<K, V> preferredEntry, List<CacheEntry<K, V>> otherEntries) {
+      return preferredEntry;
    }
 
    @Override
@@ -214,7 +265,7 @@ public class DefaultConflictManager<K, V> implements ConflictManager<K, V> {
                   SuccessfulResponse response = (SuccessfulResponse) entry.getValue();
                   versionsMap.put(entry.getKey(), (InternalCacheValue<V>) response.getResponseValue());
                } else {
-                  completableFuture.completeExceptionally(new CacheException(String.format("Unable to start key %s from %s: %s", key, entry.getKey(), entry.getValue())));
+                  completableFuture.completeExceptionally(new CacheException(String.format("Unable to retrieve key %s from %s: %s", key, entry.getKey(), entry.getValue())));
                }
             }
             completableFuture.complete(versionsMap);
@@ -229,18 +280,20 @@ public class DefaultConflictManager<K, V> implements ConflictManager<K, V> {
    // We could make this work in parallel, however if we are receiving multiple segments simultaneously there is the
    // potential for an OutOfMemoryError depending on the total number of cache entries
    private class ReplicaSpliterator extends Spliterators.AbstractSpliterator<Map<Address, InternalCacheEntry<K, V>>> {
+      private final ConsistentHash hash;
       private final int totalSegments;
       private int currentSegment = 0;
       private List<Map<Address, InternalCacheEntry<K, V>>> segmentEntries;
       private Iterator<Map<Address, InternalCacheEntry<K, V>>> iterator = Collections.emptyIterator();
 
-      ReplicaSpliterator() {
+      ReplicaSpliterator(ConsistentHash hash) {
          super(Long.MAX_VALUE, 0);
 
          if (!streamInProgress.compareAndSet(false, true))
             throw log.getConflictsAlreadyInProgress();
 
-         this.totalSegments = writeConsistentHash.getNumSegments();
+         this.hash = hash;
+         this.totalSegments = hash.getNumSegments();
       }
 
       @Override
@@ -252,7 +305,7 @@ public class DefaultConflictManager<K, V> implements ConflictManager<K, V> {
             }
 
             try {
-               segmentEntries = stateReceiver.getAllReplicasForSegment(currentSegment).get();
+               segmentEntries = stateReceiver.getAllReplicasForSegment(currentSegment, hash).get();
                iterator = segmentEntries.iterator();
                currentSegment++;
             } catch (InterruptedException e) {

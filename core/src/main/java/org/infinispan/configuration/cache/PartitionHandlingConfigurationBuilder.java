@@ -7,7 +7,7 @@ import static org.infinispan.configuration.cache.PartitionHandlingConfiguration.
 import org.infinispan.commons.configuration.Builder;
 import org.infinispan.commons.configuration.attributes.AttributeSet;
 import org.infinispan.configuration.global.GlobalConfiguration;
-import org.infinispan.partitionhandling.MergePolicy;
+import org.infinispan.conflict.MergePolicy;
 import org.infinispan.partitionhandling.PartitionHandling;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;

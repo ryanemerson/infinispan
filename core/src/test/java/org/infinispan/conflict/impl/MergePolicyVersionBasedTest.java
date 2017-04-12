@@ -1,4 +1,4 @@
-package org.infinispan.partitionhandling;
+package org.infinispan.conflict.impl;
 
 /**
  * @author Ryan Emerson

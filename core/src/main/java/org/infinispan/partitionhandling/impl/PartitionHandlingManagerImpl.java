@@ -276,7 +276,7 @@ public class PartitionHandlingManagerImpl implements PartitionHandlingManager {
          }
       }
       if (!missingKeys.isEmpty()) {
-         throw log.degradedModeKeysUnavailable(missingKeys);
+         throw log.degradedModeNoOwnersExist(missingKeys);
       }
    }
 

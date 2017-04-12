@@ -37,6 +37,13 @@ public interface ConflictManager<K, V> {
    Stream<Map<Address, InternalCacheEntry<K, V>>> getConflicts();
 
    /**
+    * Utilises {@link ConflictManager#getConflicts()} to discover conflicts between Key replicas and utilises the configured
+    * {@link EntryMergePolicy} to determine which entry should take precedence. The
+    * resulting {@link org.infinispan.container.entries.CacheEntry} is then applied on all replicas in the cluster.
+    */
+   void resolveConflicts();
+
+   /**
     * @return true if a state transfer is currently in progress.
     */
    boolean isStateTransferInProgress() throws Exception;
