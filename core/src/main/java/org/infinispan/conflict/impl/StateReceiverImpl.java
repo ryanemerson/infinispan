@@ -16,6 +16,7 @@ import org.infinispan.commons.logging.Log;
 import org.infinispan.commons.logging.LogFactory;
 import org.infinispan.container.DataContainer;
 import org.infinispan.container.entries.InternalCacheEntry;
+import org.infinispan.distribution.LocalizedCacheTopology;
 import org.infinispan.distribution.ch.ConsistentHash;
 import org.infinispan.factories.annotations.Inject;
 import org.infinispan.factories.annotations.Start;
@@ -104,7 +105,7 @@ public class StateReceiverImpl<K, V> implements StateReceiver<K, V> {
    }
 
    @Override
-   public CompletableFuture<List<Map<Address, InternalCacheEntry<K, V>>>> getAllReplicasForSegment(int segmentId, ConsistentHash hash) {
+   public CompletableFuture<List<Map<Address, InternalCacheEntry<K, V>>>> getAllReplicasForSegment(int segmentId, LocalizedCacheTopology topology) {
       synchronized (lock) {
          // TODO improve handling of concurrent invocations
          if (!segmentRequestFuture.isDone()) {
@@ -113,13 +114,13 @@ public class StateReceiverImpl<K, V> implements StateReceiver<K, V> {
          }
 
          this.segmentId = segmentId;
-         List<Address> replicas = hash.locateOwnersForSegment(segmentId);
+         List<Address> replicas = topology.getDistributionForSegment(segmentId).writeOwners();
          List<CompletableFuture<Void>> completableFutures = new ArrayList<>();
          for (Address replica : replicas) {
             if (replica.equals(rpcManager.getAddress())) {
                dataContainer.forEach(entry -> {
-                  K key = entry.getKey();
-                  if (hash.getSegment(key) == segmentId) {
+                  int keySegment = topology.getDistribution(entry.getKey()).segmentId();
+                  if (keySegment == segmentId) {
                      addKeyToReplicaMap(replica, entry);
                   }
                });

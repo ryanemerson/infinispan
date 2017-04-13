@@ -5,11 +5,9 @@ import static org.testng.AssertJUnit.assertTrue;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.infinispan.partitionhandling.BasePartitionHandlingTest;
 import org.infinispan.conflict.MergePolicy;
+import org.infinispan.partitionhandling.BasePartitionHandlingTest;
 import org.infinispan.partitionhandling.PartitionHandling;
-import org.infinispan.util.logging.Log;
-import org.infinispan.util.logging.LogFactory;
 
 /**
  * @author Ryan Emerson
@@ -17,10 +15,7 @@ import org.infinispan.util.logging.LogFactory;
  */
 public abstract class BaseMergePolicyTest extends BasePartitionHandlingTest {
 
-   private static Log log = LogFactory.getLog(BaseMergePolicyTest.class);
-   private static boolean trace = log.isTraceEnabled();
-
-   protected final MergePolicy mergePolicy;
+   private final MergePolicy mergePolicy;
 
    BaseMergePolicyTest(MergePolicy mergePolicy) {
       this.mergePolicy = mergePolicy;
@@ -39,7 +34,6 @@ public abstract class BaseMergePolicyTest extends BasePartitionHandlingTest {
          listeners.add(listener);
       }
 
-      log.trace("beforeSplit");
       beforeSplit();
       splitCluster(new int[]{0, 1}, new int[]{2, 3});
 

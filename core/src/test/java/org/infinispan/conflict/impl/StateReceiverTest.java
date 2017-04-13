@@ -28,9 +28,11 @@ import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.container.DataContainer;
 import org.infinispan.container.entries.ImmortalCacheEntry;
 import org.infinispan.container.entries.InternalCacheEntry;
+import org.infinispan.distribution.LocalizedCacheTopology;
 import org.infinispan.distribution.TestAddress;
 import org.infinispan.distribution.ch.ConsistentHash;
 import org.infinispan.distribution.ch.impl.DefaultConsistentHashFactory;
+import org.infinispan.distribution.ch.impl.HashFunctionPartitioner;
 import org.infinispan.notifications.cachelistener.event.Event;
 import org.infinispan.notifications.cachelistener.event.impl.EventImpl;
 import org.infinispan.remoting.inboundhandler.DeliverOrder;
@@ -45,11 +47,10 @@ import org.infinispan.statetransfer.InboundTransferTask;
 import org.infinispan.statetransfer.StateChunk;
 import org.infinispan.statetransfer.StateRequestCommand;
 import org.infinispan.test.AbstractInfinispanTest;
+import org.infinispan.topology.CacheTopology;
 import org.infinispan.topology.PersistentUUID;
 import org.infinispan.topology.PersistentUUIDManager;
 import org.infinispan.topology.PersistentUUIDManagerImpl;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -57,14 +58,14 @@ import org.testng.annotations.Test;
 public class StateReceiverTest extends AbstractInfinispanTest {
 
    private StateReceiverImpl<Object, Object> stateReceiver;
-   private ConsistentHash hash;
+   private LocalizedCacheTopology localizedCacheTopology;
 
    public void testGetReplicaException() throws Exception {
       CompletableFuture<Void> taskFuture = new CompletableFuture<>();
       taskFuture.completeExceptionally(new CacheException("Problem encountered retrieving state"));
       initTransferTaskMock(taskFuture);
 
-      CompletableFuture<List<Map<Address, InternalCacheEntry<Object, Object>>>> cf = stateReceiver.getAllReplicasForSegment(0, hash);
+      CompletableFuture<List<Map<Address, InternalCacheEntry<Object, Object>>>> cf = stateReceiver.getAllReplicasForSegment(0, localizedCacheTopology);
       try {
          cf.get();
          fail("Expected an ExecutionExceptions caused by a CacheException");
@@ -77,14 +78,14 @@ public class StateReceiverTest extends AbstractInfinispanTest {
    public void testConcurrentInvocationsOfRequestSegments() {
       initTransferTaskMock(new CompletableFuture<>());
 
-      stateReceiver.getAllReplicasForSegment(0, hash);
-      stateReceiver.getAllReplicasForSegment(1, hash);
+      stateReceiver.getAllReplicasForSegment(0, localizedCacheTopology);
+      stateReceiver.getAllReplicasForSegment(1, localizedCacheTopology);
    }
 
    public void testTopologyChangeDuringSegmentRequest() throws Exception {
       initTransferTaskMock(new CompletableFuture<>());
 
-      CompletableFuture<List<Map<Address, InternalCacheEntry<Object, Object>>>> cf = stateReceiver.getAllReplicasForSegment(0, hash);
+      CompletableFuture<List<Map<Address, InternalCacheEntry<Object, Object>>>> cf = stateReceiver.getAllReplicasForSegment(0, localizedCacheTopology);
       assertTrue(!cf.isCancelled());
       assertTrue(!cf.isCompletedExceptionally());
 
@@ -101,7 +102,7 @@ public class StateReceiverTest extends AbstractInfinispanTest {
       }
 
       stateReceiver.onDataRehash(createEventImpl(4, 4, Event.Type.DATA_REHASHED));
-      cf = stateReceiver.getAllReplicasForSegment(1, hash);
+      cf = stateReceiver.getAllReplicasForSegment(1, localizedCacheTopology);
       assertTrue(!cf.isCompletedExceptionally());
       assertTrue(!cf.isCancelled());
    }
@@ -109,7 +110,7 @@ public class StateReceiverTest extends AbstractInfinispanTest {
    public void testOldAndInvalidStateIgnored() {
       initTransferTaskMock(new CompletableFuture<>());
 
-      stateReceiver.getAllReplicasForSegment(0, hash);
+      stateReceiver.getAllReplicasForSegment(0, localizedCacheTopology);
       List<Address> sourceAddresses = new ArrayList<>(stateReceiver.getTransferTaskMap().keySet());
       Map<Object, Map<Address, InternalCacheEntry<Object, Object>>> receiverKeyMap = stateReceiver.getKeyReplicaMap();
       assertEquals(receiverKeyMap.size(), 0);
@@ -154,7 +155,7 @@ public class StateReceiverTest extends AbstractInfinispanTest {
       StateReceiverImpl stateReceiver = new StateReceiverImpl();
       stateReceiver.init(cache, commandsFactory, dataContainer, rpcManager);
       stateReceiver.onDataRehash(createEventImpl(2, 4, Event.Type.DATA_REHASHED));
-      this.hash = createConsistentHash(4);
+      this.localizedCacheTopology = createLocalizedCacheTopology(4);
       this.stateReceiver = spy(stateReceiver);
    }
 
@@ -180,6 +181,12 @@ public class StateReceiverTest extends AbstractInfinispanTest {
 
       DefaultConsistentHashFactory chf = new DefaultConsistentHashFactory();
       return chf.create(MurmurHash3.getInstance(), 2, 40, addresses, null);
+   }
+
+   private LocalizedCacheTopology createLocalizedCacheTopology(int numberOfNodes) {
+      ConsistentHash hash = createConsistentHash(numberOfNodes);
+      CacheTopology topology = new CacheTopology(-1,  -1, hash, null, hash.getMembers(), null);
+      return new LocalizedCacheTopology(CacheMode.DIST_SYNC, topology, new HashFunctionPartitioner(), hash.getMembers().get(0));
    }
 
    private EventImpl createEventImpl(int topologyId, int numberOfNodes, Event.Type type) {

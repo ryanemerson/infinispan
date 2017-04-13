@@ -174,6 +174,7 @@ public class BasePartitionHandlingTest extends MultipleCacheManagersTest {
 //         log.trace("Before installing new view: " + viewMembers);
 //         System.out.println("Before installing new view: " + viewMembers);
          MergeView mv = new MergeView(view1.get(0).getAddress(), (long)viewId.incrementAndGet(), allAddresses, allViews);
+         System.out.println(mv.getViewId());
          for (JChannel c : channels)
             ((GMS) c.getProtocolStack().findProtocol(GMS.class)).installView(mv);
          return allMembers;

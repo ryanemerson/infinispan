@@ -23,16 +23,11 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.infinispan.AdvancedCache;
 import org.infinispan.commands.ReplicableCommand;
 import org.infinispan.commons.CacheException;
 import org.infinispan.commons.util.CollectionFactory;
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.configuration.global.GlobalConfiguration;
-import org.infinispan.conflict.ConflictManager;
-import org.infinispan.conflict.ConflictManagerFactory;
-import org.infinispan.conflict.impl.DefaultConflictManager;
-import org.infinispan.conflict.impl.MergeConflictManager;
 import org.infinispan.executors.LimitedExecutor;
 import org.infinispan.factories.GlobalComponentRegistry;
 import org.infinispan.factories.annotations.ComponentName;
@@ -401,6 +396,8 @@ public class ClusterTopologyManagerImpl implements ClusterTopologyManager {
             log.tracef("Received new cluster view: %d, isCoordinator = %s, old status = %s", (Object) newViewId,
                   isCoordinator, clusterManagerStatus);
          }
+//         log.errorf("Received new cluster view: %d, isCoordinator = %s, old status = %s", (Object) newViewId,
+//               isCoordinator, clusterManagerStatus);
 
          if (!isCoordinator) {
             clusterManagerStatus = ClusterManagerStatus.REGULAR_MEMBER;

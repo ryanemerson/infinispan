@@ -28,7 +28,8 @@ public interface EntryMergePolicy<K, V> {
     *                       simply the primary owner of an entry
     *
     * @param otherEntries a {@link List} of all other {@link CacheEntry} associated with a given Key.
-    * @return the winning {@link CacheEntry} to be utilised across the cluster
+    * @return the winning {@link CacheEntry} to be utilised across the cluster, or null if all entries for a key should be
+    * removed.
     */
    CacheEntry<K, V> merge(CacheEntry<K, V> preferredEntry, List<CacheEntry<K, V>> otherEntries);
 }

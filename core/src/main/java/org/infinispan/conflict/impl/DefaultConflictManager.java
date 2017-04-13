@@ -27,14 +27,21 @@ import org.infinispan.commands.CommandsFactory;
 import org.infinispan.commands.read.GetCacheEntryCommand;
 import org.infinispan.commands.remote.ClusteredGetCommand;
 import org.infinispan.commons.CacheException;
+import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.ClusteringConfiguration;
+import org.infinispan.conflict.ConflictManager;
+import org.infinispan.conflict.EntryMergePolicy;
 import org.infinispan.container.entries.CacheEntry;
 import org.infinispan.container.entries.InternalCacheEntry;
 import org.infinispan.container.entries.InternalCacheValue;
 import org.infinispan.context.InvocationContext;
 import org.infinispan.context.InvocationContextFactory;
 import org.infinispan.context.impl.FlagBitSets;
+import org.infinispan.distribution.DistributionInfo;
+import org.infinispan.distribution.DistributionManager;
+import org.infinispan.distribution.LocalizedCacheTopology;
 import org.infinispan.distribution.ch.ConsistentHash;
+import org.infinispan.distribution.ch.KeyPartitioner;
 import org.infinispan.factories.annotations.Inject;
 import org.infinispan.factories.annotations.Start;
 import org.infinispan.interceptors.AsyncInterceptorChain;
@@ -50,6 +57,7 @@ import org.infinispan.remoting.rpc.RpcManager;
 import org.infinispan.remoting.rpc.RpcOptions;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.statetransfer.StateConsumer;
+import org.infinispan.topology.CacheTopology;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 
@@ -57,14 +65,17 @@ import org.infinispan.util.logging.LogFactory;
  * @author Ryan Emerson
  */
 @Listener(observation = Listener.Observation.BOTH)
-public class DefaultConflictManager<K, V> implements MergeConflictManager<K, V> {
+public class DefaultConflictManager<K, V> implements ConflictManager<K, V> {
 
    private static Log log = LogFactory.getLog(DefaultConflictManager.class);
 
    private AsyncInterceptorChain interceptorChain;
    private AdvancedCache<K, V> cache;
    private CommandsFactory commandsFactory;
+   private DistributionManager distributionManager;
+   private EntryMergePolicy<K, V> entryMergePolicy;
    private InvocationContextFactory invocationContextFactory;
+   private KeyPartitioner keyPartitioner;
    private RpcManager rpcManager;
    private StateConsumer stateConsumer;
    private StateReceiver<K, V> stateReceiver;
@@ -74,20 +85,26 @@ public class DefaultConflictManager<K, V> implements MergeConflictManager<K, V> 
    private final AtomicBoolean streamInProgress = new AtomicBoolean();
    private final Map<K, VersionRequest> versionRequestMap = new HashMap<>();
    private final Queue<VersionRequest> retryQueue = new ConcurrentLinkedQueue<>();
-   private volatile ConsistentHash writeConsistentHash;
+   private volatile LocalizedCacheTopology installedTopology;
 
    @Inject
    public void inject(AsyncInterceptorChain interceptorChain,
                       AdvancedCache<K, V> cache,
                       CommandsFactory commandsFactory,
+                      DistributionManager distributionManager,
+                      EntryMergePolicy<K, V> entryMergePolicy,
                       InvocationContextFactory invocationContextFactory,
+                      KeyPartitioner keyPartitioner,
                       RpcManager rpcManager,
                       StateConsumer stateConsumer,
                       StateReceiver<K, V> stateReceiver) {
       this.interceptorChain = interceptorChain;
       this.cache = cache;
       this.commandsFactory = commandsFactory;
+      this.distributionManager = distributionManager;
+      this.entryMergePolicy = entryMergePolicy;
       this.invocationContextFactory = invocationContextFactory;
+      this.keyPartitioner = keyPartitioner;
       this.rpcManager = rpcManager;
       this.stateConsumer = stateConsumer;
       this.stateReceiver = stateReceiver;
@@ -112,7 +129,7 @@ public class DefaultConflictManager<K, V> implements MergeConflictManager<K, V> 
    @TopologyChanged
    @SuppressWarnings("unused")
    public void onTopologyChanged(TopologyChangedEvent<K, V> event) {
-      this.writeConsistentHash = event.getConsistentHashAtEnd();
+      this.installedTopology = distributionManager.getCacheTopology();
    }
 
    @DataRehashed
@@ -158,31 +175,38 @@ public class DefaultConflictManager<K, V> implements MergeConflictManager<K, V> 
 
    @Override
    public Stream<Map<Address, InternalCacheEntry<K, V>>> getConflicts() {
-      return getConflicts(writeConsistentHash);
+      return getConflicts(installedTopology);
    }
 
-   @Override
-   public Stream<Map<Address, InternalCacheEntry<K, V>>> getConflicts(ConsistentHash hash) {
+   private Stream<Map<Address, InternalCacheEntry<K, V>>> getConflicts(LocalizedCacheTopology topology) {
       if (stateConsumer.isStateTransferInProgress())
          throw log.getConflictsStateTransferInProgress(cacheName);
 
-      return StreamSupport.stream(new ReplicaSpliterator(hash), false).filter(filterConsistentEntries());
+      return StreamSupport.stream(new ReplicaSpliterator(topology), false).filter(filterConsistentEntries());
    }
 
    @Override
    public void resolveConflicts() {
-      resolveConflicts(writeConsistentHash);
+      doResolveConflicts(installedTopology);
    }
 
-   @Override
    public void resolveConflicts(ConsistentHash mergeHash) {
-      // We always use the value of writeConsistentHash, as this is the old hash of the coordinator in the event of a merge
-      // and the current hash when a user attempts to resolve conflicts
-      Set<Address> preferredPartition = new HashSet<>(writeConsistentHash.getMembers());
-      getConflicts(mergeHash).forEach(conflictMap -> {
+      CacheMode mode = cache.getCacheConfiguration().clustering().cacheMode();
+      CacheTopology topology = new CacheTopology(-1,  -1, mergeHash, null, mergeHash.getMembers(), null);
+      LocalizedCacheTopology localizedCacheTopology = new LocalizedCacheTopology(mode, topology, keyPartitioner, rpcManager.getAddress());
+      doResolveConflicts(localizedCacheTopology);
+   }
+
+   private void doResolveConflicts(LocalizedCacheTopology topology) {
+      Set<Address> preferredPartition = getPreferredPartition(topology);
+
+      System.out.println("Topology: " + installedTopology);
+      System.out.println("PreferredPartition: " + preferredPartition);
+
+      getConflicts(topology).forEach(conflictMap -> {
          Collection<InternalCacheEntry<K, V>> entries = conflictMap.values();
          K key = entries.iterator().next().getKey();
-         Address primaryReplica = writeConsistentHash.locatePrimaryOwner(key);
+         Address primaryReplica = topology.getDistribution(key).primary();
 
          List<Address> preferredEntries = conflictMap.entrySet().stream()
                .map(Map.Entry::getKey)
@@ -200,14 +224,36 @@ public class DefaultConflictManager<K, V> implements MergeConflictManager<K, V> 
             preferredEntry = conflictMap.remove(primaryReplica);
          }
 
-         // TODO load entry merge policy and use!
-         CacheEntry<K, V> mergedEntry = merge(preferredEntry, new ArrayList<>(entries));
-         cache.replace(mergedEntry.getKey(), mergedEntry.getValue(), mergedEntry.getMetadata());
+         System.out.println("Preferred ENtry: " + preferredEntry);
+
+         CacheEntry<K, V> mergedEntry = entryMergePolicy.merge(preferredEntry, new ArrayList<>(entries));
+         updateCacheEntries(mergedEntry, null);
       });
    }
 
-   private CacheEntry<K, V> merge(CacheEntry<K, V> preferredEntry, List<CacheEntry<K, V>> otherEntries) {
-      return preferredEntry;
+   private Set<Address> getPreferredPartition(LocalizedCacheTopology topology) {
+      // If mergeHash is the same object as writeConsistentHash, no merge has occurred, so current members are used
+      Set<Address> currentPartition = new HashSet<>(installedTopology.getMembers());
+      if (topology == installedTopology)
+         return currentPartition;
+
+      Set<Address> joiningPartition = new HashSet<>(topology.getMembers());
+      joiningPartition.removeAll(currentPartition);
+
+      // Pick the larger partition, but if equal, always pick the partition that contains the transport's coordinator
+      if (joiningPartition.size() < currentPartition.size()) {
+         return currentPartition;
+      } else if (joiningPartition.size() > currentPartition.size()){
+         return joiningPartition;
+      } else {
+         Address coordinator = rpcManager.getTransport().getCoordinator();
+         return currentPartition.contains(coordinator) ? currentPartition : joiningPartition;
+      }
+   }
+
+   private void updateCacheEntries(CacheEntry<K,V> entry, Address primary) {
+      AsyncInterceptorChain ic = interceptorChain;
+      System.out.println(ic);
    }
 
    @Override
@@ -232,7 +278,8 @@ public class DefaultConflictManager<K, V> implements MergeConflictManager<K, V> 
       }
 
       void cancelRequestIfOutdated() {
-         if (rpcFuture != null && !completableFuture.isDone() && !keyOwners.equals(writeConsistentHash.locateOwners(key))) {
+         DistributionInfo distributionInfo = installedTopology.getDistribution(key);
+         if (rpcFuture != null && !completableFuture.isDone() && !keyOwners.equals(distributionInfo.writeOwners())) {
             rpcFuture = null;
             keyOwners.clear();
             if (rpcFuture.cancel(false))
@@ -241,7 +288,8 @@ public class DefaultConflictManager<K, V> implements MergeConflictManager<K, V> 
       }
 
       void start() {
-         keyOwners = writeConsistentHash.locateOwners(key);
+         DistributionInfo distributionInfo = installedTopology.getDistribution(key);
+         keyOwners = distributionInfo.writeOwners();
          final Map<Address, InternalCacheValue<V>> versionsMap = new HashMap<>();
          if (keyOwners.contains(localAddress)) {
             GetCacheEntryCommand cmd = commandsFactory.buildGetCacheEntryCommand(key, FlagBitSets.CACHE_MODE_LOCAL);
@@ -280,20 +328,20 @@ public class DefaultConflictManager<K, V> implements MergeConflictManager<K, V> 
    // We could make this work in parallel, however if we are receiving multiple segments simultaneously there is the
    // potential for an OutOfMemoryError depending on the total number of cache entries
    private class ReplicaSpliterator extends Spliterators.AbstractSpliterator<Map<Address, InternalCacheEntry<K, V>>> {
-      private final ConsistentHash hash;
+      private final LocalizedCacheTopology topology;
       private final int totalSegments;
       private int currentSegment = 0;
       private List<Map<Address, InternalCacheEntry<K, V>>> segmentEntries;
       private Iterator<Map<Address, InternalCacheEntry<K, V>>> iterator = Collections.emptyIterator();
 
-      ReplicaSpliterator(ConsistentHash hash) {
+      ReplicaSpliterator(LocalizedCacheTopology topology) {
          super(Long.MAX_VALUE, 0);
 
          if (!streamInProgress.compareAndSet(false, true))
             throw log.getConflictsAlreadyInProgress();
 
-         this.hash = hash;
-         this.totalSegments = hash.getNumSegments();
+         this.topology = topology;
+         this.totalSegments = topology.getWriteConsistentHash().getNumSegments();
       }
 
       @Override
@@ -305,7 +353,7 @@ public class DefaultConflictManager<K, V> implements MergeConflictManager<K, V> 
             }
 
             try {
-               segmentEntries = stateReceiver.getAllReplicasForSegment(currentSegment, hash).get();
+               segmentEntries = stateReceiver.getAllReplicasForSegment(currentSegment, topology).get();
                iterator = segmentEntries.iterator();
                currentSegment++;
             } catch (InterruptedException e) {

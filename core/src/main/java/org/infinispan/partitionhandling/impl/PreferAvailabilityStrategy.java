@@ -4,20 +4,13 @@ import static org.infinispan.util.logging.events.Messages.MESSAGES;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.infinispan.AdvancedCache;
-import org.infinispan.Cache;
 import org.infinispan.commons.util.InfinispanCollections;
 import org.infinispan.conflict.ConflictManagerFactory;
-import org.infinispan.conflict.impl.MergeConflictManager;
-import org.infinispan.container.entries.InternalCacheEntry;
+import org.infinispan.conflict.impl.DefaultConflictManager;
 import org.infinispan.distribution.ch.ConsistentHash;
 import org.infinispan.distribution.ch.ConsistentHashFactory;
 import org.infinispan.manager.EmbeddedCacheManager;
@@ -36,7 +29,7 @@ public class PreferAvailabilityStrategy implements AvailabilityStrategy {
    private final EmbeddedCacheManager cacheManager;
    private final EventLogManager eventLogManager;
    private final PersistentUUIDManager persistentUUIDManager;
-   private MergeConflictManager<Object, Object> conflictManager;
+   private DefaultConflictManager<Object, Object> conflictManager;
 
    public PreferAvailabilityStrategy(EmbeddedCacheManager cacheManager, EventLogManager eventLogManager, PersistentUUIDManager persistentUUIDManager) {
       this.cacheManager = cacheManager;
@@ -180,7 +173,7 @@ public class PreferAvailabilityStrategy implements AvailabilityStrategy {
    private void resolveConflicts(AvailabilityStrategyContext context, List<Address> newMembers, ConsistentHash existingHash) {
       if (conflictManager == null) {
          AdvancedCache<Object, Object> cache = cacheManager.getCache(context.getCacheName()).getAdvancedCache();
-         conflictManager = (MergeConflictManager) ConflictManagerFactory.get(cache);
+         conflictManager = (DefaultConflictManager) ConflictManagerFactory.get(cache);
       }
 
       // We need to use the same ConsistentHash generated during rebalance
