@@ -11,7 +11,6 @@ import org.infinispan.conflict.MergePolicy;
 import org.infinispan.container.entries.InternalCacheValue;
 import org.infinispan.context.Flag;
 import org.infinispan.distribution.MagicKey;
-import org.jgroups.util.Util;
 import org.testng.annotations.Test;
 
 /**
@@ -31,23 +30,18 @@ public class MergePolicyPreferredAlwaysTest extends BaseMergePolicyTest {
    void beforeSplit() {
       conflictKey = new MagicKey(cache(2), cache(0));
       cache(0).put(conflictKey, "BEFORE SPLIT");
-
    }
 
    @Override
    void duringSplit() {
       advancedCache(2).withFlags(Flag.CACHE_MODE_LOCAL).put(conflictKey, "DURING SPLIT");
-
-//      fork(() -> {
-//         Util.sleep(1000 * 5);
-//         System.out.println("OLD: " + cache(0).replace(conflictKey, "FUCK"));
-//      });
    }
 
    @Override
    void afterMerge() {
       Collection<InternalCacheValue> versions = conflictManager(0).getAllVersions(conflictKey).values();
       assertSameVersion(versions, 2, "BEFORE SPLIT");
+      assertEquals(0, conflictManager(0).getConflicts().count());
    }
 
    ConflictManager conflictManager(int index) {
@@ -55,7 +49,6 @@ public class MergePolicyPreferredAlwaysTest extends BaseMergePolicyTest {
    }
 
    void assertSameVersion(Collection<InternalCacheValue> versions, int expectedSize, Object expectedValue) {
-      System.out.println("VERSIONS: " + versions);
       assertNotNull(versions);
       assertEquals(expectedSize, versions.size());
       versions.stream().map(InternalCacheValue::getValue).forEach(v -> assertEquals(expectedValue, v));

@@ -24,9 +24,12 @@ import java.util.stream.StreamSupport;
 
 import org.infinispan.AdvancedCache;
 import org.infinispan.commands.CommandsFactory;
+import org.infinispan.commands.ReplicableCommand;
 import org.infinispan.commands.read.GetCacheEntryCommand;
 import org.infinispan.commands.remote.ClusteredGetCommand;
+import org.infinispan.commands.write.PutKeyValueCommand;
 import org.infinispan.commons.CacheException;
+import org.infinispan.commons.util.EnumUtil;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.ClusteringConfiguration;
 import org.infinispan.conflict.ConflictManager;
@@ -34,6 +37,7 @@ import org.infinispan.conflict.EntryMergePolicy;
 import org.infinispan.container.entries.CacheEntry;
 import org.infinispan.container.entries.InternalCacheEntry;
 import org.infinispan.container.entries.InternalCacheValue;
+import org.infinispan.context.Flag;
 import org.infinispan.context.InvocationContext;
 import org.infinispan.context.InvocationContextFactory;
 import org.infinispan.context.impl.FlagBitSets;
@@ -68,6 +72,7 @@ import org.infinispan.util.logging.LogFactory;
 public class DefaultConflictManager<K, V> implements ConflictManager<K, V> {
 
    private static Log log = LogFactory.getLog(DefaultConflictManager.class);
+   private static boolean trace = log.isTraceEnabled();
 
    private AsyncInterceptorChain interceptorChain;
    private AdvancedCache<K, V> cache;
@@ -187,21 +192,19 @@ public class DefaultConflictManager<K, V> implements ConflictManager<K, V> {
 
    @Override
    public void resolveConflicts() {
-      doResolveConflicts(installedTopology);
+      doResolveConflicts(installedTopology, null);
    }
 
-   public void resolveConflicts(ConsistentHash mergeHash) {
+   public void resolveConflicts(PartitionMergeInfo mergeInfo) {
       CacheMode mode = cache.getCacheConfiguration().clustering().cacheMode();
+      ConsistentHash mergeHash = mergeInfo.getMergeHash();
       CacheTopology topology = new CacheTopology(-1,  -1, mergeHash, null, mergeHash.getMembers(), null);
       LocalizedCacheTopology localizedCacheTopology = new LocalizedCacheTopology(mode, topology, keyPartitioner, rpcManager.getAddress());
-      doResolveConflicts(localizedCacheTopology);
+      doResolveConflicts(localizedCacheTopology, mergeInfo);
    }
 
-   private void doResolveConflicts(LocalizedCacheTopology topology) {
+   private void doResolveConflicts(LocalizedCacheTopology topology, PartitionMergeInfo mergeInfo) {
       Set<Address> preferredPartition = getPreferredPartition(topology);
-
-      System.out.println("Topology: " + installedTopology);
-      System.out.println("PreferredPartition: " + preferredPartition);
 
       getConflicts(topology).forEach(conflictMap -> {
          Collection<InternalCacheEntry<K, V>> entries = conflictMap.values();
@@ -224,17 +227,15 @@ public class DefaultConflictManager<K, V> implements ConflictManager<K, V> {
             preferredEntry = conflictMap.remove(primaryReplica);
          }
 
-         System.out.println("Preferred ENtry: " + preferredEntry);
-
          CacheEntry<K, V> mergedEntry = entryMergePolicy.merge(preferredEntry, new ArrayList<>(entries));
-         updateCacheEntries(mergedEntry, null);
+         updateCacheEntries(mergedEntry, topology, mergeInfo);
       });
    }
 
    private Set<Address> getPreferredPartition(LocalizedCacheTopology topology) {
       // If mergeHash is the same object as writeConsistentHash, no merge has occurred, so current members are used
       Set<Address> currentPartition = new HashSet<>(installedTopology.getMembers());
-      if (topology == installedTopology)
+      if (!isPartitionMerge(topology))
          return currentPartition;
 
       Set<Address> joiningPartition = new HashSet<>(topology.getMembers());
@@ -251,9 +252,41 @@ public class DefaultConflictManager<K, V> implements ConflictManager<K, V> {
       }
    }
 
-   private void updateCacheEntries(CacheEntry<K,V> entry, Address primary) {
-      AsyncInterceptorChain ic = interceptorChain;
-      System.out.println(ic);
+   private void updateCacheEntries(CacheEntry<K,V> entry, LocalizedCacheTopology topology, PartitionMergeInfo mergeInfo) {
+      // If no partitions, then just perform update as normal put command using the preferred entries metadata
+      if (!isPartitionMerge(topology)) {
+         cache.put(entry.getKey(), entry.getValue(), entry.getMetadata());
+         return;
+      }
+
+      // Here we update the local entries for all NEW owners as defined in the merged hash
+      // Entries that are no longer valid, i.e. an entry stored on a node which is no longer an owner, are removed during ST
+      // TODO? Possible optimisation is restrict the update below to the new primary owner and let ST handle the rest
+
+      DistributionInfo distributionInfo = topology.getDistribution(entry.getKey());
+      Set<Address> keyOwners = new HashSet<>(distributionInfo.writeOwners());
+      if (distributionInfo.isWriteOwner()) {
+         keyOwners.remove(rpcManager.getAddress());
+         long flags = EnumUtil.bitSetOf(Flag.CACHE_MODE_LOCAL, Flag.SKIP_OWNERSHIP_CHECK, Flag.SKIP_LOCKING);
+         PutKeyValueCommand cmd = commandsFactory.buildPutKeyValueCommand(entry.getKey(), entry.getValue(), entry.getMetadata(), flags);
+         InvocationContext ctx = invocationContextFactory.createNonTxInvocationContext();
+         interceptorChain.invoke(ctx, cmd);
+      }
+
+      Map<Address, ReplicableCommand> cmdMap = new HashMap<>();
+      for (Address address : keyOwners) {
+         int topologyId = mergeInfo.getTopologyId(address);
+         PutKeyValueCommand cmd = commandsFactory.buildPutKeyValueCommand(entry.getKey(), entry.getValue(), entry.getMetadata(), FlagBitSets.SKIP_OWNERSHIP_CHECK);
+         cmd.setTopologyId(topologyId); // Set to max stable topology id received for destination node
+         cmdMap.put(address, cmd);
+
+         if (trace) log.tracef("Putting entry for key %s at address %s with topology id %s", entry, address, topologyId);
+      }
+      rpcManager.invokeRemotely(cmdMap, rpcOptions);
+   }
+
+   private boolean isPartitionMerge(LocalizedCacheTopology topology) {
+      return topology == installedTopology;
    }
 
    @Override

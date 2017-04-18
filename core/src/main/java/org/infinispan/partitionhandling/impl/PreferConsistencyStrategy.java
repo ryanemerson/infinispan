@@ -3,9 +3,9 @@ package org.infinispan.partitionhandling.impl;
 import static org.infinispan.util.logging.events.Messages.MESSAGES;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.infinispan.commons.util.InfinispanCollections;
@@ -109,8 +109,7 @@ public class PreferConsistencyStrategy implements AvailabilityStrategy {
    }
 
    @Override
-   public void onPartitionMerge(AvailabilityStrategyContext context,
-         Collection<CacheStatusResponse> statusResponses) {
+   public void onPartitionMerge(AvailabilityStrategyContext context, Map<Address, CacheStatusResponse> statusResponseMap) {
       // Because of the majority check in onAbruptLeave, we assume that at most one partition was able to evolve
       // and install new cache topologies. The other(s) would have entered degraded mode, and they would keep
       // the original topology.
@@ -121,7 +120,7 @@ public class PreferConsistencyStrategy implements AvailabilityStrategy {
       CacheTopology maxActiveTopology = null;
       Set<CacheTopology> degradedTopologies = new HashSet<>();
       CacheTopology maxDegradedTopology = null;
-      for (CacheStatusResponse response : statusResponses) {
+      for (CacheStatusResponse response : statusResponseMap.values()) {
          CacheTopology partitionStableTopology = response.getStableTopology();
          if (partitionStableTopology == null) {
             // The node hasn't properly joined yet.

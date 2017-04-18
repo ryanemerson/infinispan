@@ -4,15 +4,17 @@ import static org.infinispan.util.logging.events.Messages.MESSAGES;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import org.infinispan.AdvancedCache;
 import org.infinispan.commons.util.InfinispanCollections;
 import org.infinispan.conflict.ConflictManagerFactory;
 import org.infinispan.conflict.impl.DefaultConflictManager;
+import org.infinispan.conflict.impl.PartitionMergeInfo;
 import org.infinispan.distribution.ch.ConsistentHash;
-import org.infinispan.distribution.ch.ConsistentHashFactory;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.partitionhandling.AvailabilityMode;
 import org.infinispan.remoting.transport.Address;
@@ -90,15 +92,18 @@ public class PreferAvailabilityStrategy implements AvailabilityStrategy {
    }
 
    @Override
-   public void onPartitionMerge(AvailabilityStrategyContext context, Collection<CacheStatusResponse> statusResponses) {
+   public void onPartitionMerge(AvailabilityStrategyContext context, Map<Address, CacheStatusResponse> statusResponseMap) {
       // Pick the biggest stable topology (i.e. the one with most members)
       CacheTopology maxStableTopology = null;
-      for (CacheStatusResponse response : statusResponses) {
-         CacheTopology stableTopology = response.getStableTopology();
+      Map<Address, CacheTopology> maxTopologyMap = new HashMap<>();
+      for (Map.Entry<Address, CacheStatusResponse> entry : statusResponseMap.entrySet()) {
+         CacheTopology stableTopology = entry.getValue().getStableTopology();
          if (stableTopology == null) {
             // The node hasn't properly joined yet.
             continue;
          }
+
+         maxTopologyMap.put(entry.getKey(), stableTopology);
          if (maxStableTopology == null || maxStableTopology.getMembers().size() < stableTopology.getMembers().size()) {
             maxStableTopology = stableTopology;
          }
@@ -106,6 +111,7 @@ public class PreferAvailabilityStrategy implements AvailabilityStrategy {
 
       // Now pick the biggest current topology derived from the biggest stable topology
       CacheTopology maxTopology = null;
+      Collection<CacheStatusResponse> statusResponses = statusResponseMap.values();
       for (CacheStatusResponse response : statusResponses) {
          CacheTopology stableTopology = response.getStableTopology();
          if (!Objects.equals(stableTopology, maxStableTopology))
@@ -143,8 +149,15 @@ public class PreferAvailabilityStrategy implements AvailabilityStrategy {
       // If we have more expected members than stable members, then we know that a split brain heal is occurring, so initiate
       // conflict resolution before a new merged topology is disseminated across the cluster
       List<Address> newMembers = context.getExpectedMembers();
-      if (maxStableTopology != null && newMembers.size() > maxStableTopology.getMembers().size())
-         resolveConflicts(context, newMembers, maxStableTopology.getCurrentCH());
+      if (maxStableTopology != null && newMembers.size() > maxStableTopology.getMembers().size()) {
+         if (conflictManager == null) {
+            AdvancedCache<Object, Object> cache = cacheManager.getCache(context.getCacheName()).getAdvancedCache();
+            conflictManager = (DefaultConflictManager) ConflictManagerFactory.get(cache);
+         }
+
+         PartitionMergeInfo mergeInfo = PartitionMergeInfo.create(context, maxStableTopology.getCurrentCH(), maxTopologyMap);
+         conflictManager.resolveConflicts(mergeInfo);
+      }
 
       // Increment the topology id so that it's bigger than any topology that might have been sent by the old
       // coordinator. +1 is enough because there nodes wait for the new JGroups view before answering the status
@@ -168,19 +181,6 @@ public class PreferAvailabilityStrategy implements AvailabilityStrategy {
 
       // Then start a rebalance with the merged members
       context.queueRebalance(newMembers);
-   }
-
-   private void resolveConflicts(AvailabilityStrategyContext context, List<Address> newMembers, ConsistentHash existingHash) {
-      if (conflictManager == null) {
-         AdvancedCache<Object, Object> cache = cacheManager.getCache(context.getCacheName()).getAdvancedCache();
-         conflictManager = (DefaultConflictManager) ConflictManagerFactory.get(cache);
-      }
-
-      // We need to use the same ConsistentHash generated during rebalance
-      ConsistentHashFactory chFactory = context.getJoinInfo().getConsistentHashFactory();
-      ConsistentHash updatedMembersCH = chFactory.updateMembers(existingHash, newMembers, context.getCapacityFactors());
-      ConsistentHash newCh = chFactory.rebalance(updatedMembersCH);
-      conflictManager.resolveConflicts(newCh);
    }
 
    @Override
