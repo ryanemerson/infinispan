@@ -1,16 +1,13 @@
 package org.infinispan.configuration.cache;
 
 import static org.infinispan.configuration.cache.PartitionHandlingConfiguration.MERGE_POLICY;
-import static org.infinispan.configuration.cache.PartitionHandlingConfiguration.MERGE_POLICY_CLASS;
 import static org.infinispan.configuration.cache.PartitionHandlingConfiguration.TYPE;
 
 import org.infinispan.commons.configuration.Builder;
 import org.infinispan.commons.configuration.attributes.AttributeSet;
 import org.infinispan.configuration.global.GlobalConfiguration;
-import org.infinispan.conflict.MergePolicy;
+import org.infinispan.conflict.EntryMergePolicy;
 import org.infinispan.partitionhandling.PartitionHandling;
-import org.infinispan.util.logging.Log;
-import org.infinispan.util.logging.LogFactory;
 /**
  * Controls how the cache handles partitioning and/or multiple node failures.
  *
@@ -18,8 +15,6 @@ import org.infinispan.util.logging.LogFactory;
  * @since 7.0
  */
 public class PartitionHandlingConfigurationBuilder extends AbstractClusteringConfigurationChildBuilder implements Builder<PartitionHandlingConfiguration> {
-
-   private static Log log = LogFactory.getLog(PartitionHandlingConfigurationBuilder.class);
 
    private final AttributeSet attributes;
 
@@ -42,13 +37,8 @@ public class PartitionHandlingConfigurationBuilder extends AbstractClusteringCon
       return this;
    }
 
-   public PartitionHandlingConfigurationBuilder mergePolicy(MergePolicy mergePolicy) {
+   public PartitionHandlingConfigurationBuilder mergePolicy(EntryMergePolicy mergePolicy) {
       attributes.attribute(MERGE_POLICY).set(mergePolicy);
-      return this;
-   }
-
-   public PartitionHandlingConfigurationBuilder mergePolicyClass(Class<?> clazz) {
-      attributes.attribute(MERGE_POLICY_CLASS).set(clazz);
       return this;
    }
 

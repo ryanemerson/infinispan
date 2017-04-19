@@ -58,11 +58,11 @@ import org.infinispan.configuration.global.ShutdownHookBehavior;
 import org.infinispan.configuration.global.ThreadPoolConfiguration;
 import org.infinispan.configuration.global.ThreadPoolConfigurationBuilder;
 import org.infinispan.configuration.global.TransportConfigurationBuilder;
+import org.infinispan.conflict.MergePolicies;
 import org.infinispan.eviction.EvictionStrategy;
 import org.infinispan.eviction.EvictionThreadPolicy;
 import org.infinispan.eviction.EvictionType;
 import org.infinispan.factories.threads.DefaultThreadFactory;
-import org.infinispan.conflict.MergePolicy;
 import org.infinispan.partitionhandling.PartitionHandling;
 import org.infinispan.persistence.cluster.ClusterLoader;
 import org.infinispan.persistence.file.SingleFileStore;
@@ -1263,11 +1263,13 @@ public class Parser implements ConfigurationParser {
                break;
             }
             case MERGE_POLICY: {
-               ph.mergePolicy(MergePolicy.valueOf(value.toUpperCase()));
+               if (Attribute.CUSTOM.getLocalName().equalsIgnoreCase(value))
+                  break;
+               ph.mergePolicy(MergePolicies.fromString(value));
                break;
             }
             case MERGE_POLICY_CLASS: {
-               ph.mergePolicyClass(Util.loadClass(value, holder.getClassLoader()));
+               ph.mergePolicy(Util.getInstance(value, holder.getClassLoader()));
                break;
             }
             default: {

@@ -2069,22 +2069,18 @@
     <xs:restriction base="xs:token">
       <xs:enumeration value="CUSTOM">
         <xs:annotation>
-          <xs:documentation>Utilise the custom EntryMergePolicy implementation provided via merge-policy-class.</xs:documentation>
+          <xs:documentation>Utilise the custom EntryMergePolicy implementation provided via merge-policy-class.
+            If this is specified without the accomanying merge-policy-class, then this defaults to ${PartitionHandling.mergePolicy}</xs:documentation>
         </xs:annotation>
       </xs:enumeration>
-      <xs:enumeration value="PRIMARY_ALWAYS">
+      <xs:enumeration value="PREFERRED_ALWAYS">
         <xs:annotation>
-          <xs:documentation>Always utilise the entry stored on a key's primary node.</xs:documentation>
+          <xs:documentation>Always utilise the entry located in the preferred partition.</xs:documentation>
         </xs:annotation>
       </xs:enumeration>
-      <xs:enumeration value="PRIMARY_NON_NULL">
+      <xs:enumeration value="PREFERRED_NON_NULL">
         <xs:annotation>
-          <xs:documentation>Utilise the entry stored on a key's primary node, unless it is null in which case utilise the first non-null entry from the backup nodes.</xs:documentation>
-        </xs:annotation>
-      </xs:enumeration>
-      <xs:enumeration value="VERSION_BASED">
-        <xs:annotation>
-          <xs:documentation>TODO</xs:documentation>
+          <xs:documentation>Utilise entries from the preferred partition if non-null, otherwise utilise entries from the other partition.</xs:documentation>
         </xs:annotation>
       </xs:enumeration>
     </xs:restriction>

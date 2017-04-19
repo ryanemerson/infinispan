@@ -44,7 +44,7 @@ import org.infinispan.jmx.CustomMBeanServerPropertiesTest;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.marshall.AdvancedExternalizerTest;
 import org.infinispan.marshall.TestObjectStreamMarshaller;
-import org.infinispan.conflict.MergePolicy;
+import org.infinispan.conflict.MergePolicies;
 import org.infinispan.partitionhandling.PartitionHandling;
 import org.infinispan.persistence.dummy.DummyInMemoryStoreConfiguration;
 import org.infinispan.test.AbstractInfinispanTest;
@@ -108,12 +108,12 @@ public class UnifiedXmlFileParsingTest extends AbstractInfinispanTest {
       PartitionHandlingConfiguration ph = cm.getCacheConfiguration("dist").clustering().partitionHandling();
       assertTrue(ph.enabled());
       assertEquals(PartitionHandling.ALLOW_READS, ph.getType());
-      assertEquals(MergePolicy.VERSION_BASED, ph.getMergePolicy());
+      assertEquals(MergePolicies.PREFERRED_NON_NULL, ph.getMergePolicy());
 
       ph = cm.getCacheConfiguration("repl").clustering().partitionHandling();
       assertFalse(ph.enabled());
       assertEquals(PartitionHandling.ALLOW_ALL, ph.getType());
-      assertEquals(MergePolicy.PREFERRED_ALWAYS, ph.getMergePolicy());
+      assertEquals(MergePolicies.PREFERRED_ALWAYS, ph.getMergePolicy());
    }
 
    private static void configurationCheck90(EmbeddedCacheManager cm) {

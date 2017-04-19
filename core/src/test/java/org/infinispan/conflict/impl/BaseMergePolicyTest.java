@@ -5,7 +5,8 @@ import static org.testng.AssertJUnit.assertTrue;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.infinispan.conflict.MergePolicy;
+import org.infinispan.conflict.EntryMergePolicy;
+import org.infinispan.conflict.MergePolicies;
 import org.infinispan.partitionhandling.BasePartitionHandlingTest;
 import org.infinispan.partitionhandling.PartitionHandling;
 
@@ -15,9 +16,9 @@ import org.infinispan.partitionhandling.PartitionHandling;
  */
 public abstract class BaseMergePolicyTest extends BasePartitionHandlingTest {
 
-   private final MergePolicy mergePolicy;
+   private final EntryMergePolicy mergePolicy;
 
-   BaseMergePolicyTest(MergePolicy mergePolicy) {
+   BaseMergePolicyTest(EntryMergePolicy mergePolicy) {
       this.mergePolicy = mergePolicy;
       this.partitionHandling = PartitionHandling.ALLOW_ALL;
    }

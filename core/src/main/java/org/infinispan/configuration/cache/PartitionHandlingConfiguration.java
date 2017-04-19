@@ -2,7 +2,8 @@ package org.infinispan.configuration.cache;
 
 import org.infinispan.commons.configuration.attributes.AttributeDefinition;
 import org.infinispan.commons.configuration.attributes.AttributeSet;
-import org.infinispan.conflict.MergePolicy;
+import org.infinispan.conflict.MergePolicies;
+import org.infinispan.conflict.EntryMergePolicy;
 import org.infinispan.partitionhandling.PartitionHandling;
 
 /**
@@ -18,14 +19,11 @@ public class PartitionHandlingConfiguration {
          .build();
    public static final AttributeDefinition<PartitionHandling> TYPE = AttributeDefinition.builder("type", PartitionHandling.ALLOW_ALL)
          .immutable().build();
-   public static final AttributeDefinition<MergePolicy> MERGE_POLICY = AttributeDefinition.builder("mergePolicy", MergePolicy.PREFERRED_ALWAYS)
-         .immutable().build();
-   // TODO do we want to pass this as just a class? Can we do better i.e. ? extends EntryMergePolicy etc
-   public static final AttributeDefinition<Class> MERGE_POLICY_CLASS = AttributeDefinition.builder("mergePolicyClass", null, Class.class)
-         .immutable().build();
+   public static final AttributeDefinition<EntryMergePolicy> MERGE_POLICY = AttributeDefinition.builder("mergePolicy",
+         MergePolicies.PREFERRED_ALWAYS, EntryMergePolicy.class).immutable().build();
 
    static AttributeSet attributeDefinitionSet() {
-      return new AttributeSet(PartitionHandlingConfiguration.class, ENABLED, TYPE, MERGE_POLICY, MERGE_POLICY_CLASS);
+      return new AttributeSet(PartitionHandlingConfiguration.class, ENABLED, TYPE, MERGE_POLICY);
    }
 
    private final AttributeSet attributes;
@@ -43,12 +41,8 @@ public class PartitionHandlingConfiguration {
       return attributes.attribute(TYPE).get();
    }
 
-   public MergePolicy getMergePolicy() {
+   public EntryMergePolicy getMergePolicy() {
       return attributes.attribute(MERGE_POLICY).get();
-   }
-
-   public Class<?> getMergePolicyClass() {
-      return attributes.attribute(MERGE_POLICY_CLASS).get();
    }
 
    public AttributeSet attributes() {
