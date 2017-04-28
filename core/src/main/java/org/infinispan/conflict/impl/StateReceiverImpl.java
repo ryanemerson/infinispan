@@ -59,6 +59,7 @@ public class StateReceiverImpl<K, V> implements StateReceiver<K, V> {
 
    private volatile int minTopologyId;
    private volatile int segmentId;
+   private volatile List<Address> replicaHosts = new ArrayList<>();
 
    @Inject
    public void init(Cache<K, V> cache,
@@ -116,12 +117,12 @@ public class StateReceiverImpl<K, V> implements StateReceiver<K, V> {
          }
 
          this.segmentId = segmentId;
-         List<Address> replicas = topology.getDistributionForSegment(segmentId).writeOwners();
+         this.replicaHosts = topology.getDistributionForSegment(segmentId).writeOwners();
 
-         if (trace) log.tracef("Attempting to receive replicas for segment %s from %s", segmentId, replicas);
+         if (trace) log.tracef("Attempting to receive replicas for segment %s from %s", segmentId, replicaHosts);
 
          List<CompletableFuture<Void>> completableFutures = new ArrayList<>();
-         for (Address replica : replicas) {
+         for (Address replica : replicaHosts) {
             if (replica.equals(rpcManager.getAddress())) {
                dataContainer.forEach(entry -> {
                   int keySegment = topology.getDistribution(entry.getKey()).segmentId();
@@ -219,7 +220,13 @@ public class StateReceiverImpl<K, V> implements StateReceiver<K, V> {
    }
 
    private void addKeyToReplicaMap(Address address, InternalCacheEntry<K, V> ice) {
-      keyReplicaMap.computeIfAbsent(ice.getKey(), k -> new HashMap<>()).put(address, ice);
+      // If a map doesn't already exist for a given key, then init a map that contains all hos with a NullValueEntry
+      // This is necessary to determine if a key is missing on a given host as it artificially introduces a conflict
+      keyReplicaMap.computeIfAbsent(ice.getKey(), k -> {
+         Map<Address, InternalCacheEntry<K, V>> map = new HashMap<>();
+         replicaHosts.forEach(a -> map.put(a, new NullValueEntry(ice.getKey())));
+         return map;
+      }).put(address, ice);
    }
 
    private boolean newSegmentOwners(DataRehashedEvent dataRehashedEvent) {

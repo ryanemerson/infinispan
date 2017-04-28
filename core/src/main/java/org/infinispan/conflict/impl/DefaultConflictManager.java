@@ -1,6 +1,5 @@
 package org.infinispan.conflict.impl;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -28,6 +27,7 @@ import org.infinispan.commands.ReplicableCommand;
 import org.infinispan.commands.read.GetCacheEntryCommand;
 import org.infinispan.commands.remote.ClusteredGetCommand;
 import org.infinispan.commands.write.PutKeyValueCommand;
+import org.infinispan.commands.write.RemoveCommand;
 import org.infinispan.commons.CacheException;
 import org.infinispan.commons.util.EnumUtil;
 import org.infinispan.configuration.cache.CacheMode;
@@ -55,6 +55,7 @@ import org.infinispan.notifications.cachelistener.event.DataRehashedEvent;
 import org.infinispan.notifications.cachelistener.event.TopologyChangedEvent;
 import org.infinispan.remoting.responses.Response;
 import org.infinispan.remoting.responses.SuccessfulResponse;
+import org.infinispan.remoting.responses.UnsuccessfulResponse;
 import org.infinispan.remoting.rpc.ResponseMode;
 import org.infinispan.remoting.rpc.RpcManager;
 import org.infinispan.remoting.rpc.RpcOptions;
@@ -72,6 +73,9 @@ public class DefaultConflictManager<K, V> implements ConflictManager<K, V> {
 
    private static Log log = LogFactory.getLog(DefaultConflictManager.class);
    private static boolean trace = log.isTraceEnabled();
+
+   private static final long localFlags = EnumUtil.bitSetOf(Flag.CACHE_MODE_LOCAL, Flag.SKIP_OWNERSHIP_CHECK, Flag.SKIP_LOCKING);
+   private static final long remoteFlags = EnumUtil.bitSetOf(Flag.IGNORE_RETURN_VALUES, Flag.SKIP_OWNERSHIP_CHECK);
 
    private AsyncInterceptorChain interceptorChain;
    private AdvancedCache<K, V> cache;
@@ -204,7 +208,10 @@ public class DefaultConflictManager<K, V> implements ConflictManager<K, V> {
       if (trace) log.tracef("Attempting to resolve conflicts.  All Members %s, Installed topology %s, Preferred Partition %s",
             mergeInfo.getMergeHash().getMembers(), installedTopology, preferredPartition);
 
-      getConflicts(topology).forEach(conflictMap -> {
+      int conflictsResolved = 0;
+      Iterator<Map<Address, InternalCacheEntry<K, V>>> it = getConflicts(topology).iterator();
+      while (it.hasNext()) {
+         Map<Address, InternalCacheEntry<K, V>> conflictMap = it.next();
          if (trace) log.tracef("Conflict detected %s", conflictMap);
 
          Collection<InternalCacheEntry<K, V>> entries = conflictMap.values();
@@ -230,9 +237,18 @@ public class DefaultConflictManager<K, V> implements ConflictManager<K, V> {
          if (trace) log.tracef("Applying EntryMergePolicy %s to PreferredEntry %s, otherEntries %s",
                entryMergePolicy.getClass(), preferredEntry, entries);
 
-         CacheEntry<K, V> mergedEntry = entryMergePolicy.merge(preferredEntry, new ArrayList<>(entries));
-         updateCacheEntries(mergedEntry, topology, mergeInfo);
-      });
+         CacheEntry<K, V> entry = preferredEntry instanceof NullValueEntry ? null : preferredEntry;
+         List<CacheEntry<K, V>> otherEntries = entries.stream().filter(e -> !(e instanceof NullValueEntry)).collect(Collectors.toList());
+         CacheEntry<K, V> mergedEntry = entryMergePolicy.merge(entry, otherEntries);
+         if (mergedEntry == null) {
+            removeCacheEntry(key, topology, mergeInfo);
+         } else {
+            updateCacheEntries(mergedEntry, topology, mergeInfo);
+         }
+         conflictsResolved++;
+      }
+
+      if (trace) log.tracef("Finished attempting to resolve %s conflicts", conflictsResolved);
    }
 
    private LocalizedCacheTopology createLocalizedTopology(ConsistentHash hash) {
@@ -280,8 +296,7 @@ public class DefaultConflictManager<K, V> implements ConflictManager<K, V> {
          if (trace) log.tracef("This node %s is a write owner for key %s so putting locally", rpcManager.getAddress(), entry.getKey());
 
          keyOwners.remove(rpcManager.getAddress());
-         long flags = EnumUtil.bitSetOf(Flag.CACHE_MODE_LOCAL, Flag.SKIP_OWNERSHIP_CHECK, Flag.SKIP_LOCKING);
-         PutKeyValueCommand cmd = commandsFactory.buildPutKeyValueCommand(entry.getKey(), entry.getValue(), entry.getMetadata(), flags);
+         PutKeyValueCommand cmd = commandsFactory.buildPutKeyValueCommand(entry.getKey(), entry.getValue(), entry.getMetadata(), localFlags);
          InvocationContext ctx = invocationContextFactory.createNonTxInvocationContext();
          interceptorChain.invoke(ctx, cmd);
       }
@@ -289,13 +304,55 @@ public class DefaultConflictManager<K, V> implements ConflictManager<K, V> {
       Map<Address, ReplicableCommand> cmdMap = new HashMap<>();
       for (Address address : keyOwners) {
          int topologyId = mergeInfo.getTopologyId(address);
-         PutKeyValueCommand cmd = commandsFactory.buildPutKeyValueCommand(entry.getKey(), entry.getValue(), entry.getMetadata(), FlagBitSets.SKIP_OWNERSHIP_CHECK);
+         PutKeyValueCommand cmd = commandsFactory.buildPutKeyValueCommand(entry.getKey(), entry.getValue(), entry.getMetadata(), remoteFlags);
          cmd.setTopologyId(topologyId); // Set to max stable topology id received for destination node
          cmdMap.put(address, cmd);
 
          if (trace) log.tracef("Putting entry for key %s at address %s with topology id %s", entry, address, topologyId);
       }
-      rpcManager.invokeRemotely(cmdMap, rpcOptions);
+
+      Map<Address, Response> responseMap = rpcManager.invokeRemotely(cmdMap, rpcOptions);
+      responseMap.entrySet().stream()
+            .filter(e -> !e.getValue().isSuccessful())
+            .forEach(e -> log.warnf("Unable to update %s with entry %s, due to %s", e.getKey(), entry,
+                  ((UnsuccessfulResponse) e.getValue()).getResponseValue()));
+   }
+
+   private void removeCacheEntry(K key, LocalizedCacheTopology topology, PartitionMergeInfo mergeInfo) {
+      if (trace) log.tracef("Removing key %s", key);
+
+      if (!isPartitionMerge(topology)) {
+         if (trace) log.tracef("No partition merge has occurred, removing key %s as normal cache operation", key);
+         cache.remove(key);
+         return;
+      }
+
+      DistributionInfo distributionInfo = topology.getDistribution(key);
+      Set<Address> keyOwners = new HashSet<>(distributionInfo.writeOwners());
+      if (distributionInfo.isWriteOwner()) {
+         if (trace) log.tracef("This node %s is a write owner for key %s so removing locally", rpcManager.getAddress(), key);
+
+         keyOwners.remove(rpcManager.getAddress());
+         RemoveCommand cmd = commandsFactory.buildRemoveCommand(key, null, localFlags);
+         InvocationContext ctx = invocationContextFactory.createNonTxInvocationContext();
+         interceptorChain.invoke(ctx, cmd);
+      }
+
+      Map<Address, ReplicableCommand> cmdMap = new HashMap<>();
+      for (Address address : keyOwners) {
+         int topologyId = mergeInfo.getTopologyId(address);
+         RemoveCommand cmd = commandsFactory.buildRemoveCommand(key, null, remoteFlags);
+         cmd.setTopologyId(topologyId); // Set to max stable topology id received for destination node
+         cmdMap.put(address, cmd);
+
+         if (trace) log.tracef("Removing key %s at address %s with topology id %s", key, address, topologyId);
+      }
+
+      Map<Address, Response> responseMap = rpcManager.invokeRemotely(cmdMap, rpcOptions);
+      responseMap.entrySet().stream()
+            .filter(e -> !e.getValue().isSuccessful())
+            .forEach(e -> log.warnf("Unable to remove entry %s from %s, due to %s", key, e.getKey(),
+                  ((UnsuccessfulResponse) e.getValue()).getResponseValue()));
    }
 
    private boolean isPartitionMerge(LocalizedCacheTopology topology) {
@@ -336,30 +393,38 @@ public class DefaultConflictManager<K, V> implements ConflictManager<K, V> {
       void start() {
          DistributionInfo distributionInfo = installedTopology.getDistribution(key);
          keyOwners = distributionInfo.writeOwners();
+
+         if (trace) log.tracef("Requesting all versions of key %s from owners %s", key, keyOwners);
+
          final Map<Address, InternalCacheValue<V>> versionsMap = new HashMap<>();
          if (keyOwners.contains(localAddress)) {
-            GetCacheEntryCommand cmd = commandsFactory.buildGetCacheEntryCommand(key, FlagBitSets.CACHE_MODE_LOCAL);
+            GetCacheEntryCommand cmd = commandsFactory.buildGetCacheEntryCommand(key, localFlags);
             InvocationContext ctx = invocationContextFactory.createNonTxInvocationContext();
             InternalCacheEntry<K, V> internalCacheEntry = (InternalCacheEntry<K, V>) interceptorChain.invoke(ctx, cmd);
+
             if (internalCacheEntry != null)
                versionsMap.put(localAddress, internalCacheEntry.toInternalCacheValue());
+//            InternalCacheValue<V> icv = internalCacheEntry == null ? null : internalCacheEntry.toInternalCacheValue();
+//            versionsMap.put(localAddress, icv);
          }
 
          ClusteredGetCommand cmd = commandsFactory.buildClusteredGetCommand(key, FlagBitSets.SKIP_OWNERSHIP_CHECK);
          rpcFuture = rpcManager.invokeRemotelyAsync(keyOwners, cmd, rpcOptions);
          rpcFuture.whenComplete((responseMap, exception) -> {
             if (exception != null) {
+               if (trace) log.tracef("Exception encountered when requesting all versions of key %s", key);
+
                String msg = String.format("%s encountered when trying to receive all versions of key '%s' on cache '%s'",
                      exception.getCause(), key, cacheName);
                completableFuture.completeExceptionally(new CacheException(msg, exception.getCause()));
             }
 
             for (Map.Entry<Address, Response> entry : responseMap.entrySet()) {
+               if (trace) log.tracef("Version request received response %s from %s", entry.getValue(), entry.getKey());
                if (entry.getValue() instanceof SuccessfulResponse) {
                   SuccessfulResponse response = (SuccessfulResponse) entry.getValue();
                   Object rspVal = response.getResponseValue();
-                  if (rspVal != null)
-                     versionsMap.put(entry.getKey(), (InternalCacheValue<V>) rspVal);
+                  versionsMap.put(entry.getKey(), (InternalCacheValue<V>) rspVal);
                } else {
                   completableFuture.completeExceptionally(new CacheException(String.format("Unable to retrieve key %s from %s: %s", key, entry.getKey(), entry.getValue())));
                }
@@ -402,8 +467,9 @@ public class DefaultConflictManager<K, V> implements ConflictManager<K, V> {
             }
 
             try {
-               if (trace) log.tracef("Attempting tor receive all replicas for segment %s with topology %s", currentSegment, topology);
+               if (trace) log.tracef("Attempting to receive all replicas for segment %s with topology %s", currentSegment, topology);
                segmentEntries = stateReceiver.getAllReplicasForSegment(currentSegment, topology).get();
+               if (trace) log.tracef("Segment %s entries received: %s", currentSegment, segmentEntries);
                iterator = segmentEntries.iterator();
                currentSegment++;
             } catch (InterruptedException e) {

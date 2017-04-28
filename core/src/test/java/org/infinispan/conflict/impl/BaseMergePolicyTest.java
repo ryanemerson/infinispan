@@ -5,19 +5,18 @@ import static org.testng.AssertJUnit.assertNotNull;
 import static org.testng.AssertJUnit.assertTrue;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import org.infinispan.conflict.ConflictManager;
 import org.infinispan.conflict.ConflictManagerFactory;
-import org.infinispan.conflict.EntryMergePolicy;
-import org.infinispan.conflict.MergePolicies;
 import org.infinispan.container.entries.InternalCacheValue;
 import org.infinispan.partitionhandling.BasePartitionHandlingTest;
 import org.infinispan.partitionhandling.PartitionHandling;
+import org.infinispan.remoting.transport.Address;
+import org.infinispan.test.TestingUtil;
 
 public abstract class BaseMergePolicyTest extends BasePartitionHandlingTest {
-
 
    BaseMergePolicyTest() {
       this.partitionHandling = PartitionHandling.ALLOW_ALL;
@@ -57,6 +56,7 @@ public abstract class BaseMergePolicyTest extends BasePartitionHandlingTest {
       assertTrue(clusterAndChFormed(1, 4));
       assertTrue(clusterAndChFormed(2, 4));
       assertTrue(clusterAndChFormed(3, 4));
+      TestingUtil.waitForRehashToComplete(caches());
 
       afterMerge();
    }
@@ -70,9 +70,12 @@ public abstract class BaseMergePolicyTest extends BasePartitionHandlingTest {
       return ConflictManagerFactory.get(advancedCache(index));
    }
 
-   protected void assertSameVersion(Collection<InternalCacheValue> versions, int expectedSize, Object expectedValue) {
-      assertNotNull(versions);
-      assertEquals(expectedSize, versions.size());
-      versions.stream().map(InternalCacheValue::getValue).forEach(v -> assertEquals(expectedValue, v));
+   protected void assertSameVersionAndNoConflicts(int cacheIndex, int numberOfVersions, Object key, Object expectedValue) {
+      ConflictManager cm = conflictManager(cacheIndex);
+      Map<Address, InternalCacheValue> versionMap = cm.getAllVersions(key);
+      assertNotNull(versionMap);
+      assertEquals("Versions: " + versionMap, numberOfVersions, versionMap.size());
+      versionMap.values().stream().map(InternalCacheValue::getValue).forEach(v -> assertEquals(expectedValue, v));
+      assertEquals(0, cm.getConflicts().count());
    }
 }

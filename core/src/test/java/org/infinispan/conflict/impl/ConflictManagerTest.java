@@ -4,7 +4,6 @@ import static org.infinispan.test.TestingUtil.wrapInboundInvocationHandler;
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertNotSame;
 import static org.testng.AssertJUnit.assertTrue;
-import static org.testng.AssertJUnit.fail;
 
 import java.util.ArrayList;
 import java.util.List;
