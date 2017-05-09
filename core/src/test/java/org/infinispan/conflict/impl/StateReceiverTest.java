@@ -185,13 +185,15 @@ public class StateReceiverTest extends AbstractInfinispanTest {
 
    private LocalizedCacheTopology createLocalizedCacheTopology(int numberOfNodes) {
       ConsistentHash hash = createConsistentHash(numberOfNodes);
-      CacheTopology topology = new CacheTopology(-1,  -1, hash, null, hash.getMembers(), null);
+      CacheTopology topology = new CacheTopology(-1,  -1, hash, null, CacheTopology.Phase.NO_REBALANCE, hash.getMembers(), null);
       return new LocalizedCacheTopology(CacheMode.DIST_SYNC, topology, new HashFunctionPartitioner(), hash.getMembers().get(0));
    }
 
    private EventImpl createEventImpl(int topologyId, int numberOfNodes, Event.Type type) {
       EventImpl event = EventImpl.createEvent(null, type);
-      event.setConsistentHashAtEnd(createConsistentHash(numberOfNodes));
+      ConsistentHash hash = createConsistentHash(numberOfNodes);
+      event.setReadConsistentHashAtEnd(hash);
+      event.setWriteConsistentHashAtEnd(hash);
       event.setNewTopologyId(topologyId);
       event.setPre(true);
       return event;

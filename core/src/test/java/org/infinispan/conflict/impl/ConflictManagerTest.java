@@ -215,7 +215,7 @@ public class ConflictManagerTest extends BasePartitionHandlingTest {
       waitForClusterToForm(CACHE_NAME);
       List<Address> members = getCache(0).getRpcManager().getMembers();
 
-      TestingUtil.waitForRehashToComplete(caches());
+      TestingUtil.waitForNoRebalance(caches());
       assertTrue(members.size() == 4);
    }
 
