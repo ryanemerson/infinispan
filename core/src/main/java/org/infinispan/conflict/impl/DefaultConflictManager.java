@@ -253,7 +253,8 @@ public class DefaultConflictManager<K, V> implements ConflictManager<K, V> {
 
    private LocalizedCacheTopology createLocalizedTopology(ConsistentHash hash) {
       CacheMode mode = cache.getCacheConfiguration().clustering().cacheMode();
-      CacheTopology topology = new CacheTopology(-1,  -1, hash, null, hash.getMembers(), null);
+      CacheTopology topology = new CacheTopology(-1, -1, hash, null,
+            CacheTopology.Phase.NO_REBALANCE, hash.getMembers(), null);
       return new LocalizedCacheTopology(mode, topology, keyPartitioner, rpcManager.getAddress());
    }
 

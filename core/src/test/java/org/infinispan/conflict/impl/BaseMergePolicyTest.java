@@ -56,7 +56,7 @@ public abstract class BaseMergePolicyTest extends BasePartitionHandlingTest {
       assertTrue(clusterAndChFormed(1, 4));
       assertTrue(clusterAndChFormed(2, 4));
       assertTrue(clusterAndChFormed(3, 4));
-      TestingUtil.waitForRehashToComplete(caches());
+      TestingUtil.waitForNoRebalance(caches());
 
       afterMerge();
    }
