@@ -190,9 +190,10 @@ public class CacheEventTest extends Arquillian {
       ConsistentHash mockOldHash = mock(ConsistentHash.class);
       ConsistentHash mockNewHash = mock(ConsistentHash.class);
       ConsistentHash mockUnionHash = mock(ConsistentHash.class);
+      CacheTopology.Phase mockPhase = mock(CacheTopology.Phase.class);
 
       //when
-      cache1Notifier.notifyDataRehashed(mockOldHash, mockNewHash, mockUnionHash, 0, true);
+      cache1Notifier.notifyDataRehashed(mockOldHash, mockNewHash, mockUnionHash, 0, true, mockPhase);
 
       //then
       ObserverAssertion.assertThat(cacheObserver, Cache1.class).hasDataRehashEvent(mockNewHash);
@@ -236,7 +237,7 @@ public class CacheEventTest extends Arquillian {
       CacheTopology mockCacheTopology = mock(CacheTopology.class);
 
       //when
-      cache1Notifier.notifyTopologyChanged(mockCacheTopology, mockCacheTopology, 0, true);
+      cache1Notifier.notifyTopologyChanged(mockCacheTopology, mockCacheTopology, 0, true, mockCacheTopology.getPhase());
 
       //then
       ObserverAssertion.assertThat(cacheObserver, Cache1.class).hasTopologyChangedEvent(0);

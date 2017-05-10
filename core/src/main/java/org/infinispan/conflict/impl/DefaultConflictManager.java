@@ -136,21 +136,24 @@ public class DefaultConflictManager<K, V> implements ConflictManager<K, V> {
    public void onTopologyChanged(TopologyChangedEvent<K, V> event) {
       // We have to manually create a LocalizedTopology here, as CacheNotifier::notifyTopologyChanged is called before
       // DistributionManager::setTopology and we always need to utilise the latest hash
-      this.installedTopology = createLocalizedTopology(event.getConsistentHashAtEnd());
+      this.installedTopology = createLocalizedTopology(event.getWriteConsistentHashAtEnd());
    }
 
    @DataRehashed
    @SuppressWarnings("unused")
    public void onDataRehashed(DataRehashedEvent<K, V> event) {
-      if (event.isPre()) {
+      if (event.isPre() && isStateTransferInProgress()) {
          // We know that a rehash is about to occur, so postpone all requests which are affected
          synchronized (versionRequestMap) {
             versionRequestMap.values().forEach(VersionRequest::cancelRequestIfOutdated);
          }
-      } else {
-         // Rehash has finished, so restart postponed requests
+      } else if (!event.isPre() && event.getPhase() == CacheTopology.Phase.READ_ALL_WRITE_ALL) {
+         this.installedTopology = createLocalizedTopology(event.getConsistentHashAtEnd());
+
+         // If phase is READ_ALL_WRITE_ALL, we know that ST has finished and that it is safe to retry postponed version requests
          VersionRequest request;
          while ((request = retryQueue.poll()) != null) {
+            if (trace) log.tracef("Retrying %s", request);
             request.start();
          }
       }
@@ -361,18 +364,22 @@ public class DefaultConflictManager<K, V> implements ConflictManager<K, V> {
    }
 
    @Override
-   public boolean isStateTransferInProgress() throws Exception {
+   public boolean isStateTransferInProgress() {
       return stateConsumer.isStateTransferInProgress();
    }
 
    private class VersionRequest {
       final K key;
+      final boolean postpone;
       final CompletableFuture<Map<Address, InternalCacheValue<V>>> completableFuture = new CompletableFuture<>();
       volatile CompletableFuture<Map<Address, Response>> rpcFuture;
-      volatile List<Address> keyOwners;
+      volatile Collection<Address> keyOwners;
 
       VersionRequest(K key, boolean postpone) {
          this.key = key;
+         this.postpone = postpone;
+
+         if (trace) log.tracef("Creating %s", this);
 
          if (postpone) {
             retryQueue.add(this);
@@ -382,46 +389,44 @@ public class DefaultConflictManager<K, V> implements ConflictManager<K, V> {
       }
 
       void cancelRequestIfOutdated() {
-         DistributionInfo distributionInfo = installedTopology.getDistribution(key);
-         if (rpcFuture != null && !completableFuture.isDone() && !keyOwners.equals(distributionInfo.writeOwners())) {
+         Collection<Address> latestOwners = installedTopology.getWriteOwners(key);
+         if (rpcFuture != null && !completableFuture.isDone() && !keyOwners.equals(latestOwners)) {
             rpcFuture = null;
             keyOwners.clear();
-            if (rpcFuture.cancel(false))
+            if (rpcFuture.cancel(false)) {
                retryQueue.add(this);
+
+               if (trace) log.tracef("Cancelling %s for nodes %s. New write owners %s", this, keyOwners, latestOwners);
+            }
          }
       }
 
       void start() {
-         DistributionInfo distributionInfo = installedTopology.getDistribution(key);
-         keyOwners = distributionInfo.writeOwners();
+         keyOwners = installedTopology.getWriteOwners(key);
 
-         if (trace) log.tracef("Requesting all versions of key %s from owners %s", key, keyOwners);
+         if (trace) log.tracef("Attempting %s from owners %s", this, keyOwners);
 
          final Map<Address, InternalCacheValue<V>> versionsMap = new HashMap<>();
          if (keyOwners.contains(localAddress)) {
             GetCacheEntryCommand cmd = commandsFactory.buildGetCacheEntryCommand(key, localFlags);
             InvocationContext ctx = invocationContextFactory.createNonTxInvocationContext();
             InternalCacheEntry<K, V> internalCacheEntry = (InternalCacheEntry<K, V>) interceptorChain.invoke(ctx, cmd);
-
-            if (internalCacheEntry != null)
-               versionsMap.put(localAddress, internalCacheEntry.toInternalCacheValue());
-//            InternalCacheValue<V> icv = internalCacheEntry == null ? null : internalCacheEntry.toInternalCacheValue();
-//            versionsMap.put(localAddress, icv);
+            InternalCacheValue<V> icv = internalCacheEntry == null ? null : internalCacheEntry.toInternalCacheValue();
+            versionsMap.put(localAddress, icv);
          }
 
          ClusteredGetCommand cmd = commandsFactory.buildClusteredGetCommand(key, FlagBitSets.SKIP_OWNERSHIP_CHECK);
          rpcFuture = rpcManager.invokeRemotelyAsync(keyOwners, cmd, rpcOptions);
          rpcFuture.whenComplete((responseMap, exception) -> {
             if (exception != null) {
-               if (trace) log.tracef("Exception encountered when requesting all versions of key %s", key);
+               if (trace) log.tracef("Exception encountered for %s", this);
 
-               String msg = String.format("%s encountered when trying to receive all versions of key '%s' on cache '%s'",
-                     exception.getCause(), key, cacheName);
+               String msg = String.format("%s encountered when attempting '%s' on cache '%s'", exception.getCause(), this, cacheName);
                completableFuture.completeExceptionally(new CacheException(msg, exception.getCause()));
             }
 
             for (Map.Entry<Address, Response> entry : responseMap.entrySet()) {
-               if (trace) log.tracef("Version request received response %s from %s", entry.getValue(), entry.getKey());
+               if (trace) log.tracef("%s received response %s from %s", this, entry.getValue(), entry.getKey());
                if (entry.getValue() instanceof SuccessfulResponse) {
                   SuccessfulResponse response = (SuccessfulResponse) entry.getValue();
                   Object rspVal = response.getResponseValue();
@@ -432,6 +437,14 @@ public class DefaultConflictManager<K, V> implements ConflictManager<K, V> {
             }
             completableFuture.complete(versionsMap);
          });
+      }
+
+      @Override
+      public String toString() {
+         return "VersionRequest{" +
+               "key=" + key +
+               ", postpone=" + postpone +
+               '}';
       }
    }
 

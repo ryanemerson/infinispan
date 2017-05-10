@@ -5,6 +5,7 @@ import java.util.stream.Stream;
 
 import org.infinispan.container.entries.InternalCacheEntry;
 import org.infinispan.container.entries.InternalCacheValue;
+import org.infinispan.distribution.DistributionInfo;
 import org.infinispan.factories.scopes.Scope;
 import org.infinispan.factories.scopes.Scopes;
 import org.infinispan.remoting.transport.Address;
@@ -22,6 +23,9 @@ public interface ConflictManager<K, V> {
     * If this method is invoked during state transfer it will block until rehashing has completed.  Similarly, if
     * state transfer is initiated during an invocation of this method and rehashing affects the segments of the provided
     * key, the initial requests for the entries versions are cancelled and re-attempted once state transfer has completed.
+    *
+    * This method utilises the addresses of the local {@link DistributionInfo#writeOwners()} to request values for a given key.
+    * If a value does not exist for a key at one of the addresses, then a null valued is mapped to said address.
     *
     * @param key the key for which associated entries are to be returned
     * @return a map of an address and it's associated CacheEntry
@@ -46,5 +50,5 @@ public interface ConflictManager<K, V> {
    /**
     * @return true if a state transfer is currently in progress.
     */
-   boolean isStateTransferInProgress() throws Exception;
+   boolean isStateTransferInProgress();
 }

@@ -8,6 +8,7 @@ import static org.testng.AssertJUnit.assertTrue;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -38,6 +39,7 @@ import org.infinispan.remoting.inboundhandler.Reply;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.statetransfer.StateResponseCommand;
 import org.infinispan.test.TestingUtil;
+import org.jgroups.util.Util;
 import org.testng.annotations.Test;
 
 @Test(groups = "functional", testName = "conflict.resolution.ConflictManagerTest")
@@ -90,7 +92,7 @@ public class ConflictManagerTest extends BasePartitionHandlingTest {
    }
 
    @Test(expectedExceptions = CacheException.class,
-         expectedExceptionsMessageRegExp = ".* encountered when trying to receive all versions .*")
+         expectedExceptionsMessageRegExp = ".* encountered when attempting '.*.' on cache '.*.'")
    public void testGetAllVersionsTimeout() throws Throwable {
       ConfigurationBuilder builder = getDefaultClusteredCacheConfig(CacheMode.DIST_SYNC);
       builder.clustering().remoteTimeout(5000).stateTransfer().fetchInMemoryState(true);
@@ -131,7 +133,7 @@ public class ConflictManagerTest extends BasePartitionHandlingTest {
       compareCacheValuesForKey(INCONSISTENT_VALUE_INCREMENT, true);
       introduceCacheConflicts();
       compareCacheValuesForKey(INCONSISTENT_VALUE_INCREMENT, false);
-      compareCacheValuesForKey(NULL_VALUE_FREQUENCY, true);
+      compareCacheValuesForKey(NULL_VALUE_FREQUENCY, false);
    }
 
    public void testConsecutiveInvocationOfAllVersionsForKey() throws Exception {
@@ -180,12 +182,16 @@ public class ConflictManagerTest extends BasePartitionHandlingTest {
       for (int i = 0; i < numMembersInCluster; i++)
          cacheVersions.add(getAllVersions(i, key));
 
-      int expectedValues = key % NULL_VALUE_FREQUENCY == 0 ? NUMBER_OF_OWNERS - 1 : NUMBER_OF_OWNERS;
+      boolean allowNullValues = key % NULL_VALUE_FREQUENCY == 0;
+      int expectedValues = allowNullValues ? NUMBER_OF_OWNERS - 1 : NUMBER_OF_OWNERS;
       for (Map<Address, InternalCacheValue<Object>> map : cacheVersions) {
-         assertEquals(map.toString(), expectedValues, map.keySet().size());
-         assertTrue("Version map contains null entries.", !map.values().contains(null));
+         assertEquals(map.toString(), NUMBER_OF_OWNERS, map.keySet().size());
+
+         if (!allowNullValues)
+            assertTrue("Version map contains null entries.", !map.values().contains(null));
 
          List<Object> values = map.values().stream()
+               .filter(Objects::nonNull)
                .map(InternalCacheValue::getValue)
                .collect(Collectors.toList());
          assertEquals(values.toString(), expectedValues, values.size());
@@ -193,21 +199,8 @@ public class ConflictManagerTest extends BasePartitionHandlingTest {
          if (expectEquality) {
             assertTrue("Inconsistent values returned, they should be the same", values.stream().allMatch(v -> v.equals(values.get(0))));
          } else {
-            assertTrue("Expected inconsistent values, but all values were equal", values.stream().distinct().count() > 1);
+            assertTrue("Expected inconsistent values, but all values were equal", map.values().stream().distinct().count() > 1);
          }
-      }
-
-      List<Object> uniqueValues = cacheVersions.stream()
-            .map(Map::values)
-            .flatMap(allValues -> allValues.stream()
-                  .map(InternalCacheValue::getValue))
-            .distinct()
-            .collect(Collectors.toList());
-
-      if (expectEquality) {
-         assertEquals(1, uniqueValues.size());
-      } else {
-         assertTrue("Only one version of Key/Value returned. Expected inconsistent values to be returned.", uniqueValues.size() > 1);
       }
    }
 
@@ -287,7 +280,7 @@ public class ConflictManagerTest extends BasePartitionHandlingTest {
       @DataRehashed
       @SuppressWarnings("unused")
       public void onDataRehashed(DataRehashedEvent event) {
-         isRehashInProgress.set(event.isPre());
+         isRehashInProgress.compareAndSet(false, true);
       }
    }
 }

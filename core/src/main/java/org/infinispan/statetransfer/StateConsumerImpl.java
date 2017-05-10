@@ -299,7 +299,7 @@ public class StateConsumerImpl implements StateConsumer {
          // response with a smaller topology id
          stateTransferTopologyId.compareAndSet(NO_STATE_TRANSFER_IN_PROGRESS, cacheTopology.getTopologyId());
          cacheNotifier.notifyDataRehashed(cacheTopology.getCurrentCH(), cacheTopology.getPendingCH(),
-                                          cacheTopology.getUnionCH(), cacheTopology.getTopologyId(), true);
+               cacheTopology.getUnionCH(), cacheTopology.getTopologyId(), true, cacheTopology.getPhase());
       }
 
       awaitTotalOrderTransactions(cacheTopology, startRebalance);
@@ -415,7 +415,7 @@ public class StateConsumerImpl implements StateConsumer {
                // if the coordinator changed, we might get two concurrent topology updates,
                // but we only want to notify the @DataRehashed listeners once
                cacheNotifier.notifyDataRehashed(previousReadCh, cacheTopology.getPendingCH(), previousWriteCh,
-                     cacheTopology.getTopologyId(), false);
+                     cacheTopology.getTopologyId(), false, cacheTopology.getPhase());
                if (trace) {
                   log.tracef("Unlock State Transfer in Progress for topology ID %s", cacheTopology.getTopologyId());
                }
