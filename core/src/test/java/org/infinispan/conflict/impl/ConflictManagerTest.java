@@ -6,6 +6,7 @@ import static org.testng.AssertJUnit.assertNotSame;
 import static org.testng.AssertJUnit.assertTrue;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -39,7 +40,6 @@ import org.infinispan.remoting.inboundhandler.Reply;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.statetransfer.StateResponseCommand;
 import org.infinispan.test.TestingUtil;
-import org.jgroups.util.Util;
 import org.testng.annotations.Test;
 
 @Test(groups = "functional", testName = "conflict.resolution.ConflictManagerTest")
@@ -155,12 +155,19 @@ public class ConflictManagerTest extends BasePartitionHandlingTest {
       introduceCacheConflicts();
       List<Map<Address, InternalCacheEntry<Object, Object>>> conflicts = getConflicts(cacheIndex).collect(Collectors.toList());
 
-      assertEquals((NUMBER_OF_CACHE_ENTRIES / NULL_VALUE_FREQUENCY), conflicts.size());
+      assertEquals(INCONSISTENT_VALUE_INCREMENT, conflicts.size());
       for (Map<Address, InternalCacheEntry<Object, Object>> map : conflicts) {
          assertEquals(NUMBER_OF_OWNERS, map.keySet().size());
-         List<Object> values = map.values().stream().map(InternalCacheEntry::getValue).distinct().collect(Collectors.toList());
-         assertEquals(NUMBER_OF_OWNERS, values.size());
-         assertTrue("Expected one of the conflicting string values to be 'INCONSISTENT'", values.contains("INCONSISTENT"));
+         Collection<InternalCacheEntry<Object, Object>> mapValues = map.values();
+         int key = (Integer) mapValues.stream().findAny().orElse(new NullValueEntry(-1)).getKey();
+         assertTrue(key > -1);
+         if (key % NULL_VALUE_FREQUENCY == 0) {
+            assertTrue(map.values().stream().anyMatch(entry -> entry instanceof NullValueEntry));
+         } else {
+            List<Object> icvs = map.values().stream().map(InternalCacheEntry::getValue).distinct().collect(Collectors.toList());
+            assertEquals(NUMBER_OF_OWNERS, icvs.size());
+            assertTrue("Expected one of the conflicting string values to be 'INCONSISTENT'", icvs.contains("INCONSISTENT"));
+         }
       }
    }
 
