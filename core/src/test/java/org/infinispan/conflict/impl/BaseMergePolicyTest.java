@@ -75,7 +75,11 @@ public abstract class BaseMergePolicyTest extends BasePartitionHandlingTest {
       Map<Address, InternalCacheValue> versionMap = cm.getAllVersions(key);
       assertNotNull(versionMap);
       assertEquals("Versions: " + versionMap, numberOfVersions, versionMap.size());
-      versionMap.values().stream().map(InternalCacheValue::getValue).forEach(v -> assertEquals(expectedValue, v));
+      for (InternalCacheValue icv : versionMap.values()) {
+         if (expectedValue != null)
+            assertNotNull(icv.getValue());
+         assertEquals(expectedValue, icv.getValue());
+      }
       assertEquals(0, cm.getConflicts().count());
    }
 }

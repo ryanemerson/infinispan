@@ -1,7 +1,6 @@
 package org.infinispan.conflict.impl;
 
 import org.infinispan.conflict.MergePolicies;
-import org.infinispan.context.Flag;
 import org.infinispan.distribution.MagicKey;
 import org.testng.annotations.Test;
 
@@ -24,7 +23,7 @@ public class MergePolicyPreferredNonNullTest extends BaseMergePolicyTest {
    @Override
    void duringSplit() {
       advancedCache(0).remove(conflictKey);
-      advancedCache(2).withFlags(Flag.CACHE_MODE_LOCAL).put(conflictKey, "DURING SPLIT");
+      advancedCache(2).put(conflictKey, "DURING SPLIT");
    }
 
    @Override

@@ -418,11 +418,12 @@ public class DefaultConflictManager<K, V> implements ConflictManager<K, V> {
          ClusteredGetCommand cmd = commandsFactory.buildClusteredGetCommand(key, FlagBitSets.SKIP_OWNERSHIP_CHECK);
          rpcFuture = rpcManager.invokeRemotelyAsync(keyOwners, cmd, rpcOptions);
          rpcFuture.whenComplete((responseMap, exception) -> {
-            if (exception != null) {
-               if (trace) log.tracef("Exception encountered for %s", this);
+            if (trace) log.tracef("%s received responseMap %s, exception %s", this, responseMap, exception);
 
+            if (exception != null) {
                String msg = String.format("%s encountered when attempting '%s' on cache '%s'", exception.getCause(), this, cacheName);
                completableFuture.completeExceptionally(new CacheException(msg, exception.getCause()));
+               return;
             }
 
             for (Map.Entry<Address, Response> entry : responseMap.entrySet()) {
@@ -433,6 +434,7 @@ public class DefaultConflictManager<K, V> implements ConflictManager<K, V> {
                   versionsMap.put(entry.getKey(), (InternalCacheValue<V>) rspVal);
                } else {
                   completableFuture.completeExceptionally(new CacheException(String.format("Unable to retrieve key %s from %s: %s", key, entry.getKey(), entry.getValue())));
+                  return;
                }
             }
             completableFuture.complete(versionsMap);
