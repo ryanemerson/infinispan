@@ -8,10 +8,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.ExecutionException;
 
 import org.infinispan.AdvancedCache;
-import org.infinispan.commons.CacheException;
 import org.infinispan.commons.util.InfinispanCollections;
 import org.infinispan.conflict.ConflictManagerFactory;
 import org.infinispan.conflict.impl.DefaultConflictManager;
@@ -158,7 +156,7 @@ public class PreferAvailabilityStrategy implements AvailabilityStrategy {
             conflictManager = (DefaultConflictManager) ConflictManagerFactory.get(cache);
          }
 
-         boolean resolveConflicts = cacheManager.getCacheConfiguration(context.getCacheName()).clustering().partitionHandling().getMergePolicy() != null;
+         boolean resolveConflicts = cacheManager.getCacheConfiguration(context.getCacheName()).clustering().partitionHandling().mergePolicy() != null;
          if (resolveConflicts) {
             PartitionMergeInfo mergeInfo = PartitionMergeInfo.create(context, maxStableTopology.getCurrentCH(), maxTopologyMap);
             conflictManager.resolveConflicts(mergeInfo);

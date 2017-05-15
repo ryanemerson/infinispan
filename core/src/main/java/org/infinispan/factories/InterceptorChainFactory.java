@@ -154,7 +154,7 @@ public class InterceptorChainFactory extends AbstractNamedCacheComponentFactory 
          if (transactionMode.isTransactional()) {
             interceptorChain.appendInterceptor(createInterceptor(new TransactionSynchronizerInterceptor(), TransactionSynchronizerInterceptor.class), false);
          }
-         if (configuration.clustering().partitionHandling().getType() != PartitionHandling.ALLOW_ALL) {
+         if (configuration.clustering().partitionHandling().whenSplit() != PartitionHandling.ALLOW_ALL) {
             interceptorChain.appendInterceptor(createInterceptor(new PartitionHandlingInterceptor(), PartitionHandlingInterceptor.class), false);
          }
       }

@@ -15,7 +15,7 @@ public class EntryMergePolicyFactory extends AbstractNamedCacheComponentFactory 
    @Override
    public <T> T construct(Class<T> componentType) {
       if (configuration.clustering().cacheMode().isClustered()) {
-         return componentType.cast(configuration.clustering().partitionHandling().getMergePolicy());
+         return componentType.cast(configuration.clustering().partitionHandling().mergePolicy());
       }
       return null;
    }

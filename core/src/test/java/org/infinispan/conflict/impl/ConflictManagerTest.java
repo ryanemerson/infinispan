@@ -61,7 +61,7 @@ public class ConflictManagerTest extends BasePartitionHandlingTest {
    protected void createCacheManagers() throws Throwable {
       super.createCacheManagers();
       ConfigurationBuilder builder = getDefaultClusteredCacheConfig(CacheMode.DIST_SYNC);
-      builder.clustering().partitionHandling().type(partitionHandling).mergePolicy(null).stateTransfer().fetchInMemoryState(true);
+      builder.clustering().partitionHandling().whenSplit(partitionHandling).mergePolicy(null).stateTransfer().fetchInMemoryState(true);
       defineConfigurationOnAllManagers(CACHE_NAME, builder);
    }
 
@@ -159,10 +159,10 @@ public class ConflictManagerTest extends BasePartitionHandlingTest {
       for (Map<Address, InternalCacheEntry<Object, Object>> map : conflicts) {
          assertEquals(NUMBER_OF_OWNERS, map.keySet().size());
          Collection<InternalCacheEntry<Object, Object>> mapValues = map.values();
-         int key = (Integer) mapValues.stream().findAny().orElse(new NullValueEntry(-1)).getKey();
+         int key = mapValues.stream().mapToInt(e -> (Integer) e.getKey()).findAny().orElse(-1);
          assertTrue(key > -1);
          if (key % NULL_VALUE_FREQUENCY == 0) {
-            assertTrue(map.values().stream().anyMatch(entry -> entry instanceof NullValueEntry));
+            assertTrue(map.values().stream().anyMatch(NullValueEntry.class::isInstance));
          } else {
             List<Object> icvs = map.values().stream().map(InternalCacheEntry::getValue).distinct().collect(Collectors.toList());
             assertEquals(NUMBER_OF_OWNERS, icvs.size());

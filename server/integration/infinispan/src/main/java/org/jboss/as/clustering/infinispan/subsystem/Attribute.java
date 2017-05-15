@@ -110,7 +110,6 @@ public enum Attribute {
     MAX_THREADS(ModelKeys.MAX_THREADS),
     MAX_TOTAL_CONNECTIONS(ModelKeys.MAX_TOTAL_CONNECTIONS),
     MERGE_POLICY(ModelKeys.MERGE_POLICY),
-    MERGE_POLICY_CLASS(ModelKeys.MERGE_POLICY_CLASS),
     MIN_THREADS(ModelKeys.MIN_THREADS),
     MODE(ModelKeys.MODE),
     MODIFICATION_QUEUE_SIZE(ModelKeys.MODIFICATION_QUEUE_SIZE),
@@ -171,6 +170,7 @@ public enum Attribute {
     TOTAL_ORDER_EXECUTOR(ModelKeys.TOTAL_ORDER_EXECUTOR),
     TYPE(ModelKeys.TYPE),
     WAIT_TIME(ModelKeys.WAIT_TIME),
+    WHEN_SPLIT(ModelKeys.WHEN_SPLIT),
     ;
 
     private final String name;

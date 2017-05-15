@@ -49,7 +49,7 @@ public class BasePartitionHandlingTest extends MultipleCacheManagersTest {
    protected int numMembersInCluster = 4;
    protected CacheMode cacheMode = CacheMode.DIST_SYNC;
    protected volatile Partition[] partitions;
-   protected PartitionHandling partitionHandling = PartitionHandling.DENY_ALL;
+   protected PartitionHandling partitionHandling = PartitionHandling.DENY_READ_WRITES;
    protected EntryMergePolicy mergePolicy = null;
 
    public BasePartitionHandlingTest() {
@@ -59,7 +59,7 @@ public class BasePartitionHandlingTest extends MultipleCacheManagersTest {
    @Override
    protected void createCacheManagers() throws Throwable {
       ConfigurationBuilder dcc = cacheConfiguration();
-      dcc.clustering().cacheMode(cacheMode).partitionHandling().type(partitionHandling).mergePolicy(mergePolicy);
+      dcc.clustering().cacheMode(cacheMode).partitionHandling().whenSplit(partitionHandling).mergePolicy(mergePolicy);
       createClusteredCaches(numMembersInCluster, dcc, new TransportFlags().withFD(true).withMerge(true));
       waitForClusterToForm();
    }

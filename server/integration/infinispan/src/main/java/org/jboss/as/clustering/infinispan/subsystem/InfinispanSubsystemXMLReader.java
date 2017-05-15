@@ -2408,20 +2408,16 @@ public final class InfinispanSubsystemXMLReader implements XMLElementReader<List
                if (namespace.since(Namespace.INFINISPAN_SERVER_9_1))
                   throw ParseUtils.unexpectedAttribute(reader, i);
 
-               PartitionHandling type = Boolean.valueOf(value) ? PartitionHandling.DENY_ALL : PartitionHandling.ALLOW_ALL;
-               PartitionHandlingConfigurationResource.TYPE.parseAndSetParameter(type.toString(), partitionHandling, reader);
+               PartitionHandling type = Boolean.valueOf(value) ? PartitionHandling.DENY_READ_WRITES : PartitionHandling.ALLOW_ALL;
+               PartitionHandlingConfigurationResource.WHEN_SPLIT.parseAndSetParameter(type.toString(), partitionHandling, reader);
                break;
             }
-            case TYPE: {
-               PartitionHandlingConfigurationResource.TYPE.parseAndSetParameter(value, partitionHandling, reader);
+            case WHEN_SPLIT: {
+               PartitionHandlingConfigurationResource.WHEN_SPLIT.parseAndSetParameter(value, partitionHandling, reader);
                break;
             }
             case MERGE_POLICY: {
                PartitionHandlingConfigurationResource.MERGE_POLICY.parseAndSetParameter(value, partitionHandling, reader);
-               break;
-            }
-            case MERGE_POLICY_CLASS: {
-               PartitionHandlingConfigurationResource.MERGE_POLICY_CLASS.parseAndSetParameter(value, partitionHandling, reader);
                break;
             }
             default: {

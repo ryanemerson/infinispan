@@ -18,7 +18,7 @@ public class TwoWaySplitAndMergeTest extends BasePartitionHandlingTest {
    @Override
    public Object[] factory() {
       return new Object[] {
-            new TwoWaySplitAndMergeTest().partitionHandling(PartitionHandling.DENY_ALL),
+            new TwoWaySplitAndMergeTest().partitionHandling(PartitionHandling.DENY_READ_WRITES),
             new TwoWaySplitAndMergeTest().partitionHandling(PartitionHandling.ALLOW_READS)
       };
    }
@@ -88,7 +88,7 @@ public class TwoWaySplitAndMergeTest extends BasePartitionHandlingTest {
       partition(0).assertKeyAvailableForRead(k0, 0);
       partition(1).assertKeyAvailableForRead(k2, 2);
 
-      if (partitionHandling == PartitionHandling.DENY_ALL) {
+      if (partitionHandling == PartitionHandling.DENY_READ_WRITES) {
          partition(0).assertKeysNotAvailableForRead(k1, k2, k3);
          partition(1).assertKeysNotAvailableForRead(k0, k1, k3);
       } else {

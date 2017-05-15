@@ -14,7 +14,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
@@ -1261,17 +1260,14 @@ public class Parser implements ConfigurationParser {
                ph.enabled(Boolean.valueOf(value));
                break;
             }
-            case TYPE: {
-               ph.type(PartitionHandling.valueOf(value.toUpperCase()));
+            case WHEN_SPLIT: {
+               ph.whenSplit(PartitionHandling.valueOf(value.toUpperCase()));
                break;
             }
             case MERGE_POLICY: {
-               if (Attribute.CUSTOM.getLocalName().equalsIgnoreCase(value)) {
-                  String customImp = ParseUtils.requireAttributes(reader, Attribute.MERGE_POLICY_CLASS.getLocalName())[0];
-                  ph.mergePolicy(Util.getInstance(customImp, holder.getClassLoader()));
-                  break;
-               }
-               ph.mergePolicy(MergePolicy.valueOf(value).impl);
+               MergePolicy mp = MergePolicy.fromString(value);
+               EntryMergePolicy mergePolicy = mp == MergePolicy.CUSTOM ? Util.getInstance(value, holder.getClassLoader()) : mp.impl;
+               ph.mergePolicy(mergePolicy);
                break;
             }
             default: {
@@ -2588,6 +2584,13 @@ public class Parser implements ConfigurationParser {
 
       public EntryMergePolicy getImpl() {
          return impl;
+      }
+
+      public static MergePolicy fromString(String str) {
+         for (MergePolicy mp : MergePolicy.values())
+            if (mp.name().equalsIgnoreCase(str))
+               return mp;
+         return CUSTOM;
       }
 
       public static MergePolicy fromConfiguration(EntryMergePolicy policy) {

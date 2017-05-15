@@ -17,7 +17,7 @@ public class PartitionHandlingManagerFactory extends AbstractNamedCacheComponent
    @Override
    @SuppressWarnings("unchecked")
    public <T> T construct(Class<T> componentType) {
-      if (configuration.clustering().partitionHandling().getType() != PartitionHandling.ALLOW_ALL) {
+      if (configuration.clustering().partitionHandling().whenSplit() != PartitionHandling.ALLOW_ALL) {
          if (configuration.clustering().cacheMode().isDistributed() ||
                configuration.clustering().cacheMode().isReplicated()) {
             return (T) new PartitionHandlingManagerImpl();

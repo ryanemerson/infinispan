@@ -463,7 +463,7 @@ public class StateConsumerImpl implements StateConsumer {
 
          PartitionHandlingConfiguration phConfig = configuration.clustering().partitionHandling();
          boolean wasMember = previousWriteCh != null && previousWriteCh.getMembers().contains(rpcManager.getAddress());
-         boolean deletePastMemberVals = wasMember && phConfig.getType() != PartitionHandling.ALLOW_ALL && phConfig.getMergePolicy() == null;
+         boolean deletePastMemberVals = wasMember && phConfig.whenSplit() != PartitionHandling.ALLOW_ALL && phConfig.mergePolicy() == null;
          // Any data for segments we do not own should be removed from data container and cache store
          // We need to discard data from all segments we don't own, not just those we previously owned,
          // when we lose membership (e.g. because there was a merge, the local partition was in degraded mode

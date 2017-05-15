@@ -53,12 +53,12 @@ public class PartitionHandlingConfigurationResource extends CacheConfigurationCh
                     .setDeprecated(Namespace.INFINISPAN_SERVER_9_1.getVersion())
                     .build();
 
-    static final SimpleAttributeDefinition TYPE =
-          new SimpleAttributeDefinitionBuilder(ModelKeys.TYPE, ModelType.STRING, true)
-                .setXmlName(Attribute.TYPE.getLocalName())
+    static final SimpleAttributeDefinition WHEN_SPLIT =
+          new SimpleAttributeDefinitionBuilder(ModelKeys.WHEN_SPLIT, ModelType.STRING, true)
+                .setXmlName(Attribute.WHEN_SPLIT.getLocalName())
                 .setAllowExpression(true)
                 .setFlags(AttributeAccess.Flag.RESTART_RESOURCE_SERVICES)
-                .setDefaultValue(new ModelNode().set(PartitionHandlingConfiguration.TYPE.getDefaultValue().name()))
+                .setDefaultValue(new ModelNode().set(PartitionHandlingConfiguration.WHEN_SPLIT.getDefaultValue().name()))
                 .build();
 
     static final SimpleAttributeDefinition MERGE_POLICY =
@@ -69,13 +69,7 @@ public class PartitionHandlingConfigurationResource extends CacheConfigurationCh
                 .setDefaultValue(new ModelNode().set(Parser.MergePolicy.PREFERRED_ALWAYS.toString()))
                 .build();
 
-    static final SimpleAttributeDefinition MERGE_POLICY_CLASS =
-          new SimpleAttributeDefinitionBuilder(ModelKeys.MERGE_POLICY_CLASS, ModelType.STRING, true)
-                .setXmlName(Attribute.ENABLED.getLocalName())
-                .setFlags(AttributeAccess.Flag.RESTART_RESOURCE_SERVICES)
-                .build();
-
-    static final AttributeDefinition[] ATTRIBUTES = {ENABLED, TYPE, MERGE_POLICY, MERGE_POLICY_CLASS};
+    static final AttributeDefinition[] ATTRIBUTES = {ENABLED, WHEN_SPLIT, MERGE_POLICY};
 
     public PartitionHandlingConfigurationResource(CacheConfigurationResource parent) {
         super(PATH, ModelKeys.PARTITION_HANDLING, parent, ATTRIBUTES);

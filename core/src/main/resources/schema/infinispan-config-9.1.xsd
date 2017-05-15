@@ -1185,19 +1185,14 @@
                       </xs:documentation>
                    </xs:annotation>
                 </xs:attribute>
-               <xs:attribute name="type" type="tns:partition-handling-type" default="${PartitionHandling.type}">
+               <xs:attribute name="when-split" type="tns:partition-handling-type" default="${PartitionHandling.whenSplit}">
                  <xs:annotation>
-                   <xs:documentation>The type of partition handling to utilise.</xs:documentation>
+                   <xs:documentation>The type of actions that are possible when a split brain scenario is encountered.</xs:documentation>
                  </xs:annotation>
                </xs:attribute>
                <xs:attribute name="merge-policy" type="tns:merge-policy" default="PREFERRED_ALWAYS">
                  <xs:annotation>
                    <xs:documentation>The entry merge policy which should be applied on partition merges.</xs:documentation>
-                 </xs:annotation>
-               </xs:attribute>
-               <xs:attribute name="merge-policy-class" type="xs:string" use="optional">
-                 <xs:annotation>
-                   <xs:documentation>The FQN of the custom EntryMergePolicy implementation.</xs:documentation>
                  </xs:annotation>
                </xs:attribute>
              </xs:complexType>
@@ -2047,7 +2042,7 @@
 
   <xs:simpleType name="partition-handling-type">
     <xs:restriction base="xs:token">
-      <xs:enumeration value="DENY_ALL">
+      <xs:enumeration value="DENY_READ_WRITES">
         <xs:annotation>
           <xs:documentation>If the partition does not have all owners for a given segment, both reads and writes are denied for all keys in that segment.</xs:documentation>
         </xs:annotation>
@@ -2066,13 +2061,11 @@
   </xs:simpleType>
 
   <xs:simpleType name="merge-policy">
+    <xs:union memberTypes="tns:merge-policy-defaults xs:string"/>
+  </xs:simpleType>
+
+  <xs:simpleType name="merge-policy-defaults">
     <xs:restriction base="xs:token">
-      <xs:enumeration value="CUSTOM">
-        <xs:annotation>
-          <xs:documentation>Utilise the custom EntryMergePolicy implementation provided via merge-policy-class.
-            If this is specified without the accomanying merge-policy-class, then this defaults to ${PartitionHandling.mergePolicy}</xs:documentation>
-        </xs:annotation>
-      </xs:enumeration>
       <xs:enumeration value="NONE">
         <xs:annotation>
           <xs:documentation>Do not attempt to resolve conflicts on merge.</xs:documentation>
