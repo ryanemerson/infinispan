@@ -194,23 +194,23 @@ public class Serializer extends AbstractStoreSerializer implements Configuration
       for (Entry<String, Configuration> configuration : holder.getConfigurations().entrySet()) {
          Configuration config = configuration.getValue();
          switch (config.clustering().cacheMode()) {
-         case LOCAL:
-            writeLocalCache(writer, configuration.getKey(), config);
-            break;
-         case DIST_ASYNC:
-         case DIST_SYNC:
-            writeDistributedCache(writer, configuration.getKey(), config);
-            break;
-         case INVALIDATION_ASYNC:
-         case INVALIDATION_SYNC:
-            writeInvalidationCache(writer, configuration.getKey(), config);
-            break;
-         case REPL_ASYNC:
-         case REPL_SYNC:
-            writeReplicatedCache(writer, configuration.getKey(), config);
-            break;
-         default:
-            break;
+            case LOCAL:
+               writeLocalCache(writer, configuration.getKey(), config);
+               break;
+            case DIST_ASYNC:
+            case DIST_SYNC:
+               writeDistributedCache(writer, configuration.getKey(), config);
+               break;
+            case INVALIDATION_ASYNC:
+            case INVALIDATION_SYNC:
+               writeInvalidationCache(writer, configuration.getKey(), config);
+               break;
+            case REPL_ASYNC:
+            case REPL_SYNC:
+               writeReplicatedCache(writer, configuration.getKey(), config);
+               break;
+            default:
+               break;
          }
          writeExtraConfiguration(writer, config.modules());
       }
@@ -415,8 +415,10 @@ public class Serializer extends AbstractStoreSerializer implements Configuration
       writeTransaction(writer, configuration);
       configuration.eviction().attributes().write(writer, Element.EVICTION.getLocalName());
       configuration.expiration().attributes().write(writer, Element.EXPIRATION.getLocalName());
-      if (configuration.compatibility().enabled()) configuration.compatibility().attributes().write(writer, Element.COMPATIBILITY.getLocalName());
-      if (configuration.storeAsBinary().enabled()) configuration.storeAsBinary().attributes().write(writer, Element.STORE_AS_BINARY.getLocalName());
+      if (configuration.compatibility().enabled())
+         configuration.compatibility().attributes().write(writer, Element.COMPATIBILITY.getLocalName());
+      if (configuration.storeAsBinary().enabled())
+         configuration.storeAsBinary().attributes().write(writer, Element.STORE_AS_BINARY.getLocalName());
       writePersistence(writer, configuration);
       configuration.versioning().attributes().write(writer, Element.VERSIONING.getLocalName());
       writeDataContainer(writer, configuration);
@@ -435,13 +437,11 @@ public class Serializer extends AbstractStoreSerializer implements Configuration
       AttributeSet attributes = partitionHandling.attributes();
       if (attributes.isModified()) {
          writer.writeStartElement(Element.PARTITION_HANDLING);
-         attributes.write(writer, PartitionHandlingConfiguration.TYPE, Attribute.TYPE);
-         EntryMergePolicy policyImpl = partitionHandling.getMergePolicy();
+         attributes.write(writer, PartitionHandlingConfiguration.WHEN_SPLIT, Attribute.WHEN_SPLIT);
+         EntryMergePolicy policyImpl = partitionHandling.mergePolicy();
          MergePolicy policy = MergePolicy.fromConfiguration(policyImpl);
-         writer.writeAttribute(Attribute.MERGE_POLICY, policy.toString());
-         if (policy == Parser.MergePolicy.CUSTOM) {
-            writer.writeAttribute(Attribute.MERGE_POLICY_CLASS, policyImpl.getClass().getName());
-         }
+         String output = policy == Parser.MergePolicy.CUSTOM ? policyImpl.getClass().getName() : policy.toString();
+         writer.writeAttribute(Attribute.MERGE_POLICY, output);
          writer.writeEndElement();
       }
    }
@@ -524,9 +524,10 @@ public class Serializer extends AbstractStoreSerializer implements Configuration
             ConfigurationFor configurationFor = configuration.getClass().getAnnotation(ConfigurationFor.class);
             if (configuration instanceof AbstractStoreConfiguration && configurationFor != null) {
                writer.writeComment("A serializer for the store configuration class " + configuration.getClass().getName() + " was not found. Using custom store mode");
-               AbstractStoreConfiguration asc = (AbstractStoreConfiguration)configuration;
+               AbstractStoreConfiguration asc = (AbstractStoreConfiguration) configuration;
                writeGenericStore(writer, configurationFor.value().getName(), asc);
-            } else throw new UnsupportedOperationException("Cannot serialize store configuration "+configuration.getClass().getName());
+            } else
+               throw new UnsupportedOperationException("Cannot serialize store configuration " + configuration.getClass().getName());
          } else {
             ConfigurationSerializer<StoreConfiguration> serializer;
             try {

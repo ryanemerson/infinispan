@@ -33,7 +33,7 @@ public class PartitionAwareClusterStreamManager<K> extends ClusterStreamManagerI
 
    @Inject
    public void init(Configuration configuration) {
-      this.partitionHandling = configuration.clustering().partitionHandling().getType();
+      this.partitionHandling = configuration.clustering().partitionHandling().whenSplit();
    }
 
    @Listener
@@ -115,6 +115,6 @@ public class PartitionAwareClusterStreamManager<K> extends ClusterStreamManagerI
    }
 
    private boolean isPartitionDegraded() {
-      return listener.currentMode != AvailabilityMode.AVAILABLE && partitionHandling == PartitionHandling.DENY_ALL;
+      return listener.currentMode != AvailabilityMode.AVAILABLE && partitionHandling == PartitionHandling.DENY_READ_WRITES;
    }
 }

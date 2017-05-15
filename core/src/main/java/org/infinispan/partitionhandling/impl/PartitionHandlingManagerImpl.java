@@ -24,7 +24,6 @@ import org.infinispan.distribution.DistributionManager;
 import org.infinispan.factories.annotations.Inject;
 import org.infinispan.factories.annotations.Start;
 import org.infinispan.notifications.cachelistener.CacheNotifier;
-import org.infinispan.partitionhandling.AvailabilityException;
 import org.infinispan.partitionhandling.AvailabilityMode;
 import org.infinispan.partitionhandling.PartitionHandling;
 import org.infinispan.remoting.inboundhandler.DeliverOrder;
@@ -85,7 +84,7 @@ public class PartitionHandlingManagerImpl implements PartitionHandlingManager {
    @Start
    public void start() {
       isVersioned = Configurations.isTxVersioned(configuration);
-      partitionHandling = configuration.clustering().partitionHandling().getType();
+      partitionHandling = configuration.clustering().partitionHandling().whenSplit();
    }
 
    @Override
@@ -283,7 +282,7 @@ public class PartitionHandlingManagerImpl implements PartitionHandlingManager {
    private boolean isOperationAllowed(boolean isWrite) {
       return availabilityMode == AvailabilityMode.AVAILABLE ||
             partitionHandling == PartitionHandling.ALLOW_ALL ||
-            (!isWrite && partitionHandling != PartitionHandling.DENY_ALL);
+            (!isWrite && partitionHandling != PartitionHandling.DENY_READ_WRITES);
    }
 
    private interface TransactionInfo {

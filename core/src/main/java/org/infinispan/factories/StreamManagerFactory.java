@@ -26,7 +26,7 @@ public class StreamManagerFactory extends AbstractNamedCacheComponentFactory imp
             return componentType.cast(new LocalStreamManagerImpl<>());
          }
          if (componentType.equals(ClusterStreamManager.class)) {
-            if (configuration.clustering().partitionHandling().getType() != PartitionHandling.ALLOW_ALL) {
+            if (configuration.clustering().partitionHandling().whenSplit() != PartitionHandling.ALLOW_ALL) {
                return componentType.cast(new PartitionAwareClusterStreamManager<>());
             } else {
                return componentType.cast(new ClusterStreamManagerImpl<>());

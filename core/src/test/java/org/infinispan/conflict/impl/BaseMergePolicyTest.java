@@ -37,13 +37,7 @@ public abstract class BaseMergePolicyTest extends BasePartitionHandlingTest {
       beforeSplit();
       splitCluster(new int[]{0, 1}, new int[]{2, 3});
 
-      eventually(() -> {
-         for (ViewChangedHandler l : listeners)
-            if (!l.isNotified()) return false;
-         return true;
-      });
-
-      eventuallyEquals(2, () -> advancedCache(0).getRpcManager().getTransport().getMembers().size());
+      eventually(() -> listeners.stream().allMatch(ViewChangedHandler::isNotified));
       eventually(() -> clusterAndChFormed(0, 2));
       eventually(() -> clusterAndChFormed(1, 2));
       eventually(() -> clusterAndChFormed(2, 2));

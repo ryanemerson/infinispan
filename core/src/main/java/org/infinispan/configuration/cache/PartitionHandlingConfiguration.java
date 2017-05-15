@@ -17,13 +17,13 @@ public class PartitionHandlingConfiguration {
    @Deprecated
    public static final AttributeDefinition<Boolean> ENABLED = AttributeDefinition.builder("enabled", false).immutable()
          .build();
-   public static final AttributeDefinition<PartitionHandling> TYPE = AttributeDefinition.builder("type", PartitionHandling.ALLOW_ALL)
+   public static final AttributeDefinition<PartitionHandling> WHEN_SPLIT = AttributeDefinition.builder("whenSplit", PartitionHandling.ALLOW_ALL)
          .immutable().build();
    public static final AttributeDefinition<EntryMergePolicy> MERGE_POLICY = AttributeDefinition.builder("mergePolicy",
          MergePolicies.PREFERRED_ALWAYS, EntryMergePolicy.class).immutable().build();
 
    static AttributeSet attributeDefinitionSet() {
-      return new AttributeSet(PartitionHandlingConfiguration.class, ENABLED, TYPE, MERGE_POLICY);
+      return new AttributeSet(PartitionHandlingConfiguration.class, ENABLED, WHEN_SPLIT, MERGE_POLICY);
    }
 
    private final AttributeSet attributes;
@@ -34,14 +34,14 @@ public class PartitionHandlingConfiguration {
 
    @Deprecated
    public boolean enabled() {
-      return getType() != PartitionHandling.ALLOW_ALL;
+      return whenSplit() != PartitionHandling.ALLOW_ALL;
    }
 
-   public PartitionHandling getType() {
-      return attributes.attribute(TYPE).get();
+   public PartitionHandling whenSplit() {
+      return attributes.attribute(WHEN_SPLIT).get();
    }
 
-   public EntryMergePolicy getMergePolicy() {
+   public EntryMergePolicy mergePolicy() {
       return attributes.attribute(MERGE_POLICY).get();
    }
 

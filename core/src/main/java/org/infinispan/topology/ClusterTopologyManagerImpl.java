@@ -422,7 +422,7 @@ public class ClusterTopologyManagerImpl implements ClusterTopologyManager {
          // (including the coordinator) before it starts on any node.
          AvailabilityStrategy availabilityStrategy;
          Configuration cacheConfiguration = cacheManager.getCacheConfiguration(cacheName);
-         PartitionHandling  partitionHandling = cacheConfiguration != null ? cacheConfiguration.clustering().partitionHandling().getType() : null;
+         PartitionHandling  partitionHandling = cacheConfiguration != null ? cacheConfiguration.clustering().partitionHandling().whenSplit() : null;
          if (partitionHandling != null && partitionHandling != PartitionHandling.ALLOW_ALL) {
             availabilityStrategy = new PreferConsistencyStrategy(eventLogManager, persistentUUIDManager);
          } else {

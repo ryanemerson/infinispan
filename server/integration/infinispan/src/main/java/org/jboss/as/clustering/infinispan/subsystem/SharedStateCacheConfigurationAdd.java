@@ -74,21 +74,20 @@ public abstract class SharedStateCacheConfigurationAdd extends ClusteredCacheCon
           PartitionHandlingConfigurationBuilder phBuilder = builder.clustering().partitionHandling();
           phBuilder.enabled(PartitionHandlingConfigurationResource.ENABLED.resolveModelAttribute(context, partitionHandling).asBoolean());
 
-          String phType = PartitionHandlingConfigurationResource.TYPE.resolveModelAttribute(context, partitionHandling).asString();
+          String phType = PartitionHandlingConfigurationResource.WHEN_SPLIT.resolveModelAttribute(context, partitionHandling).asString();
           if (phType != null)
-            phBuilder.type(PartitionHandling.valueOf(phType));
+            phBuilder.whenSplit(PartitionHandling.valueOf(phType));
 
           String policy = PartitionHandlingConfigurationResource.MERGE_POLICY.resolveModelAttribute(context, partitionHandling).asString();
-          Parser.MergePolicy mergePolicy = Parser.MergePolicy.valueOf(policy);
+          Parser.MergePolicy mergePolicy = Parser.MergePolicy.fromString(policy);
           if (mergePolicy != Parser.MergePolicy.CUSTOM) {
              phBuilder.mergePolicy(mergePolicy.getImpl());
           } else {
-             String policyImpl = PartitionHandlingConfigurationResource.MERGE_POLICY_CLASS.resolveModelAttribute(context, partitionHandling).asString();
              try {
-                EntryMergePolicy entryMergePolicy = (EntryMergePolicy) PartitionHandlingConfiguration.class.getClassLoader().loadClass(policyImpl).newInstance();
+                EntryMergePolicy entryMergePolicy = (EntryMergePolicy) PartitionHandlingConfiguration.class.getClassLoader().loadClass(policy).newInstance();
                 phBuilder.mergePolicy(entryMergePolicy);
              } catch (Exception e) {
-                throw InfinispanMessages.MESSAGES.invalidEntryMergePolicy(e, policyImpl);
+                throw InfinispanMessages.MESSAGES.invalidEntryMergePolicy(e, policy);
              }
           }
        }

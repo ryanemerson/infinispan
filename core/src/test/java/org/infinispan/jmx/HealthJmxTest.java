@@ -29,7 +29,7 @@ public class HealthJmxTest extends MultipleCacheManagersTest {
         ConfigurationBuilder cb = new ConfigurationBuilder();
         cb.clustering().cacheMode(CacheMode.DIST_SYNC)
                 .stateTransfer().awaitInitialTransfer(false)
-                .partitionHandling().type(PartitionHandling.DENY_ALL);
+                .partitionHandling().whenSplit(PartitionHandling.DENY_READ_WRITES);
         return cb;
     }
 

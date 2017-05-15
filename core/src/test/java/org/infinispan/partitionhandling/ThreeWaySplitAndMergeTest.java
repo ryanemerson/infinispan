@@ -22,7 +22,7 @@ public class ThreeWaySplitAndMergeTest extends BasePartitionHandlingTest {
    @Override
    public Object[] factory() {
       return new Object[] {
-            new ThreeWaySplitAndMergeTest().partitionHandling(PartitionHandling.DENY_ALL),
+            new ThreeWaySplitAndMergeTest().partitionHandling(PartitionHandling.DENY_READ_WRITES),
             new ThreeWaySplitAndMergeTest().partitionHandling(PartitionHandling.ALLOW_READS)
       };
    }
@@ -64,7 +64,7 @@ public class ThreeWaySplitAndMergeTest extends BasePartitionHandlingTest {
 
       //1. check key visibility in partition 0
       partition(0).assertKeyAvailableForRead(k0, 0);
-      if (partitionHandling == PartitionHandling.DENY_ALL) {
+      if (partitionHandling == PartitionHandling.DENY_READ_WRITES) {
          partition(0).assertKeysNotAvailableForRead(k1, k2, k3);
          partition(1).assertKeysNotAvailableForRead(k0, k1, k2, k3);
          partition(2).assertKeysNotAvailableForRead(k0, k1, k2, k3);
@@ -132,7 +132,7 @@ public class ThreeWaySplitAndMergeTest extends BasePartitionHandlingTest {
       assertEquals(new HashSet<>(advancedCache(p0.node(1)).getDistributionManager().getWriteConsistentHash().getMembers()), members);
       assertEquals(new HashSet<>(advancedCache(p1.node(0)).getDistributionManager().getWriteConsistentHash().getMembers()), members);
 
-      if (partitionHandling == PartitionHandling.DENY_ALL)
+      if (partitionHandling == PartitionHandling.DENY_READ_WRITES)
          partition(1).assertKeysNotAvailableForRead(k0, k1, k2, k3);
 
       members = new HashSet<>(Arrays.asList(new Address[]{address(0), address(1), address(2), address(3)}));

@@ -11,14 +11,12 @@ public class MergePolicyCustomTest extends BaseMergePolicyTest {
    MagicKey conflictKey;
 
    public MergePolicyCustomTest() {
-      super();
       this.mergePolicy = ((preferredEntry, otherEntries) -> TestInternalCacheEntryFactory.create(conflictKey, "Custom"));
    }
 
    @Override
    void beforeSplit() {
       conflictKey = new MagicKey(cache(2), cache(0));
-      System.out.println(advancedCache(0).getCacheConfiguration().clustering().partitionHandling().getMergePolicy());
       cache(0).put(conflictKey, "BEFORE SPLIT");
    }
 

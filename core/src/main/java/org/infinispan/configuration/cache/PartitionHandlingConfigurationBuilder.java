@@ -1,7 +1,7 @@
 package org.infinispan.configuration.cache;
 
 import static org.infinispan.configuration.cache.PartitionHandlingConfiguration.MERGE_POLICY;
-import static org.infinispan.configuration.cache.PartitionHandlingConfiguration.TYPE;
+import static org.infinispan.configuration.cache.PartitionHandlingConfiguration.WHEN_SPLIT;
 
 import org.infinispan.commons.configuration.Builder;
 import org.infinispan.commons.configuration.attributes.AttributeSet;
@@ -28,12 +28,12 @@ public class PartitionHandlingConfigurationBuilder extends AbstractClusteringCon
     */
    @Deprecated
    public PartitionHandlingConfigurationBuilder enabled(boolean enabled) {
-      type(enabled ? PartitionHandling.DENY_ALL : PartitionHandling.ALLOW_ALL);
+      whenSplit(enabled ? PartitionHandling.DENY_READ_WRITES : PartitionHandling.ALLOW_ALL);
       return this;
    }
 
-   public PartitionHandlingConfigurationBuilder type(PartitionHandling partitionHandling) {
-      attributes.attribute(TYPE).set(partitionHandling);
+   public PartitionHandlingConfigurationBuilder whenSplit(PartitionHandling partitionHandling) {
+      attributes.attribute(WHEN_SPLIT).set(partitionHandling);
       return this;
    }
 

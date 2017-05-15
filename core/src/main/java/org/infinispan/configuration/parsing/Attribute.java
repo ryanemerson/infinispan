@@ -78,7 +78,6 @@ public enum Attribute {
     MAX_THREADS("max-threads"),
     MBEAN_SERVER_LOOKUP("mbean-server-lookup"),
     MERGE_POLICY("merge-policy"),
-    MERGE_POLICY_CLASS("merge-policy-class"),
     MODE("mode"),
     NODE_NAME("node-name"),
     MODIFICATION_QUEUE_SIZE("modification-queue-size"),
@@ -155,6 +154,7 @@ public enum Attribute {
     VERSION("version"),
     VERSIONING_SCHEME("scheme"),
     WAIT_TIME("wait-time"),
+    WHEN_SPLIT("when-split"),
     WRITE_SKEW_CHECK("write-skew"),
     FRAGMENTATION_FACTOR("fragmentation-factor"),
     ;
