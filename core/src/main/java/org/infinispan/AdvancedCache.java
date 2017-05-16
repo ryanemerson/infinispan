@@ -544,7 +544,7 @@ public interface AdvancedCache<K, V> extends Cache<K, V> {
    /**
     * Manually change the availability of the cache.
     * Doesn't change anything if the cache is not clustered or {@link PartitionHandlingConfiguration#whenSplit() is set to
-    * {@link org.infinispan.partitionhandling.PartitionHandling#ALLOW_ALL}
+    * {@link org.infinispan.partitionhandling.PartitionHandling#ALLOW_READ_WRITES }
     */
    void setAvailability(AvailabilityMode availabilityMode);
 

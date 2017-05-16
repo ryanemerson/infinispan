@@ -28,7 +28,7 @@ public class PartitionHandlingConfigurationBuilder extends AbstractClusteringCon
     */
    @Deprecated
    public PartitionHandlingConfigurationBuilder enabled(boolean enabled) {
-      whenSplit(enabled ? PartitionHandling.DENY_READ_WRITES : PartitionHandling.ALLOW_ALL);
+      whenSplit(enabled ? PartitionHandling.DENY_READ_WRITES : PartitionHandling.ALLOW_READ_WRITES);
       return this;
    }
 

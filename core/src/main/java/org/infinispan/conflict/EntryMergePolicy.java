@@ -14,7 +14,7 @@ public interface EntryMergePolicy<K, V> {
    /**
     * This method is called by {@link ConflictManager#resolveConflicts()} for each conflict discovered to determine
     * which {@link CacheEntry} should be utilised. This merge policy is used when a user explicitly calls {@link ConflictManager#resolveConflicts()}
-    * as well as when a partition merge occurs with {@link PartitionHandling#ALLOW_ALL} set.
+    * as well as when a partition merge occurs with {@link PartitionHandling#ALLOW_READ_WRITES} set.
     *
     * In the event of a partition merge, we define the preferred partition as the partition whom's coordinator is coordinating
     * the current merge.

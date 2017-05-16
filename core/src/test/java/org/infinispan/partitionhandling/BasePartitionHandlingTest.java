@@ -279,7 +279,7 @@ public class BasePartitionHandlingTest extends MultipleCacheManagersTest {
       }
 
       public void assertDegradedMode() {
-         if (partitionHandling != PartitionHandling.ALLOW_ALL) {
+         if (partitionHandling != PartitionHandling.ALLOW_READ_WRITES) {
             assertAvailabilityMode(AvailabilityMode.DEGRADED_MODE);
          }
       }

@@ -17,7 +17,7 @@ public class PartitionHandlingConfiguration {
    @Deprecated
    public static final AttributeDefinition<Boolean> ENABLED = AttributeDefinition.builder("enabled", false).immutable()
          .build();
-   public static final AttributeDefinition<PartitionHandling> WHEN_SPLIT = AttributeDefinition.builder("whenSplit", PartitionHandling.ALLOW_ALL)
+   public static final AttributeDefinition<PartitionHandling> WHEN_SPLIT = AttributeDefinition.builder("whenSplit", PartitionHandling.ALLOW_READ_WRITES)
          .immutable().build();
    public static final AttributeDefinition<EntryMergePolicy> MERGE_POLICY = AttributeDefinition.builder("mergePolicy",
          MergePolicies.PREFERRED_ALWAYS, EntryMergePolicy.class).immutable().build();
@@ -34,7 +34,7 @@ public class PartitionHandlingConfiguration {
 
    @Deprecated
    public boolean enabled() {
-      return whenSplit() != PartitionHandling.ALLOW_ALL;
+      return whenSplit() != PartitionHandling.ALLOW_READ_WRITES;
    }
 
    public PartitionHandling whenSplit() {
