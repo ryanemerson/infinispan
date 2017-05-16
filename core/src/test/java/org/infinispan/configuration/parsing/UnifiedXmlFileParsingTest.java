@@ -112,7 +112,7 @@ public class UnifiedXmlFileParsingTest extends AbstractInfinispanTest {
 
       ph = cm.getCacheConfiguration("repl").clustering().partitionHandling();
       assertFalse(ph.enabled());
-      assertEquals(PartitionHandling.ALLOW_ALL, ph.whenSplit());
+      assertEquals(PartitionHandling.ALLOW_READ_WRITES, ph.whenSplit());
       assertEquals(MergePolicies.PREFERRED_ALWAYS, ph.mergePolicy());
    }
 

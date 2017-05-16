@@ -54,7 +54,7 @@ public class ConflictManagerTest extends BasePartitionHandlingTest {
 
    public ConflictManagerTest() {
       this.cacheMode = CacheMode.DIST_SYNC;
-      this.partitionHandling = PartitionHandling.ALLOW_ALL;
+      this.partitionHandling = PartitionHandling.ALLOW_READ_WRITES;
    }
 
    @Override

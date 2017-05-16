@@ -19,7 +19,7 @@ import org.infinispan.test.TestingUtil;
 public abstract class BaseMergePolicyTest extends BasePartitionHandlingTest {
 
    BaseMergePolicyTest() {
-      this.partitionHandling = PartitionHandling.ALLOW_ALL;
+      this.partitionHandling = PartitionHandling.ALLOW_READ_WRITES;
    }
 
    abstract void beforeSplit();
@@ -70,8 +70,10 @@ public abstract class BaseMergePolicyTest extends BasePartitionHandlingTest {
       assertNotNull(versionMap);
       assertEquals("Versions: " + versionMap, numberOfVersions, versionMap.size());
       for (InternalCacheValue icv : versionMap.values()) {
-         if (expectedValue != null)
+         if (expectedValue != null) {
+            assertNotNull(icv);
             assertNotNull(icv.getValue());
+         }
          assertEquals(expectedValue, icv.getValue());
       }
       assertEquals(0, cm.getConflicts().count());

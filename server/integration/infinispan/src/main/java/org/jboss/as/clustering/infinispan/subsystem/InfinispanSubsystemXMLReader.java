@@ -2489,7 +2489,7 @@ public final class InfinispanSubsystemXMLReader implements XMLElementReader<List
                if (namespace.since(Namespace.INFINISPAN_SERVER_9_1))
                   throw ParseUtils.unexpectedAttribute(reader, i);
 
-               PartitionHandling type = Boolean.valueOf(value) ? PartitionHandling.DENY_READ_WRITES : PartitionHandling.ALLOW_ALL;
+               PartitionHandling type = Boolean.valueOf(value) ? PartitionHandling.DENY_READ_WRITES : PartitionHandling.ALLOW_READ_WRITES;
                PartitionHandlingConfigurationResource.WHEN_SPLIT.parseAndSetParameter(type.toString(), partitionHandling, reader);
                break;
             }

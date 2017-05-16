@@ -281,7 +281,7 @@ public class PartitionHandlingManagerImpl implements PartitionHandlingManager {
 
    private boolean isOperationAllowed(boolean isWrite) {
       return availabilityMode == AvailabilityMode.AVAILABLE ||
-            partitionHandling == PartitionHandling.ALLOW_ALL ||
+            partitionHandling == PartitionHandling.ALLOW_READ_WRITES ||
             (!isWrite && partitionHandling != PartitionHandling.DENY_READ_WRITES);
    }
 
