@@ -127,6 +127,10 @@ public class CacheTopology {
     */
    public ConsistentHash getReadConsistentHash() {
       switch (phase) {
+         case CONFLICT_RESOLUTION:
+            assert pendingCH != null;
+            assert unionCH != null;
+            return currentCH;
          case NO_REBALANCE:
             assert pendingCH == null;
             assert unionCH == null;
@@ -264,6 +268,11 @@ public class CacheTopology {
        * Only currentCH should be set, this works as both readCH and writeCH
        */
       NO_REBALANCE,
+      /**
+       * Interim state between NO_REBALANCE -> READ_OLD_WRITE_ALL
+       * readCh is set locally using previous Topology (of said node) readCH, whilst writeCH contains all members after merge
+       */
+      CONFLICT_RESOLUTION,
       /**
        * Used during state transfer: readCH == currentCH, writeCH = unionCH
        */

@@ -422,15 +422,17 @@ public class ClusterTopologyManagerImpl implements ClusterTopologyManager {
          // (including the coordinator) before it starts on any node.
          AvailabilityStrategy availabilityStrategy;
          Configuration cacheConfiguration = cacheManager.getCacheConfiguration(cacheName);
+         boolean resolveConflictsOnMerge = cacheConfiguration.clustering().partitionHandling().mergePolicy() != null;
          PartitionHandling  partitionHandling = cacheConfiguration != null ? cacheConfiguration.clustering().partitionHandling().whenSplit() : null;
          if (partitionHandling != null && partitionHandling != PartitionHandling.ALLOW_READ_WRITES) {
             availabilityStrategy = new PreferConsistencyStrategy(eventLogManager, persistentUUIDManager);
          } else {
-            availabilityStrategy = new PreferAvailabilityStrategy(cacheManager, eventLogManager, persistentUUIDManager);
+            availabilityStrategy = new PreferAvailabilityStrategy(eventLogManager, persistentUUIDManager, resolveConflictsOnMerge);
          }
          Optional<GlobalStateManager> globalStateManager = cacheManager.getGlobalComponentRegistry().getOptionalComponent(GlobalStateManager.class);
          Optional<ScopedPersistentState> persistedState = globalStateManager.flatMap(gsm -> gsm.readScopedState(cacheName));
-         return new ClusterCacheStatus(cacheName, availabilityStrategy, this, transport, persistedState, persistentUUIDManager);
+         return new ClusterCacheStatus(cacheManager, cacheName, availabilityStrategy, this, transport,
+               persistedState, persistentUUIDManager, resolveConflictsOnMerge);
       });
    }
 

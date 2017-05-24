@@ -162,7 +162,7 @@ public class StateReceiverTest extends AbstractInfinispanTest {
    private void initTransferTaskMock(CompletableFuture<Void> completableFuture) {
       InboundTransferTask task = mock(InboundTransferTask.class);
       when(task.requestSegments()).thenReturn(completableFuture);
-      doReturn(task).when(stateReceiver).createTransferTask(any(Integer.class), any(Address.class));
+      doReturn(task).when(stateReceiver).createTransferTask(any(Integer.class), any(Address.class), any(CacheTopology.class));
    }
 
    private Collection<StateChunk> createStateChunks(Object key, Object value) {

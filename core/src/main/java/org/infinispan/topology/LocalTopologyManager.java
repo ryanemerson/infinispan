@@ -66,6 +66,11 @@ public interface LocalTopologyManager {
    void handleRebalance(String cacheName, CacheTopology cacheTopology, int viewId, Address sender) throws InterruptedException;
 
    /**
+    * Prepare for conflict resolution.
+    */
+   void handleConflictResolution(String cacheName, CacheTopology cacheTopology, int viewId, Address sender) throws InterruptedException;
+
+   /**
     * @return the current topology for a cache.
     */
    CacheTopology getCacheTopology(String cacheName);

@@ -52,6 +52,8 @@ public class CacheTopologyControlCommand implements ReplicableCommand {
       CH_UPDATE,
       // The coordinator is starting a rebalance operation.
       REBALANCE_START,
+      // The coordinator is starting to perform conflict resolution during merge
+      CONFLICT_RESOLUTION_START,
       // The coordinator is requesting information about the running caches.
       GET_STATUS,
       // Update the stable topology
@@ -205,6 +207,10 @@ public class CacheTopologyControlCommand implements ReplicableCommand {
             localTopologyManager.handleRebalance(cacheName, new CacheTopology(topologyId, rebalanceId, currentCH,
                   pendingCH, phase, actualMembers, persistentUUIDs), viewId, sender);
             return null;
+         case CONFLICT_RESOLUTION_START:
+            localTopologyManager.handleConflictResolution(cacheName, new CacheTopology(topologyId, rebalanceId, null,
+                  pendingCH, phase, actualMembers, persistentUUIDs), viewId, sender);
+            return null;
          case GET_STATUS:
             return localTopologyManager.handleStatusRequest(viewId);
          case SHUTDOWN_PERFORM:
@@ -291,6 +297,7 @@ public class CacheTopologyControlCommand implements ReplicableCommand {
             output.writeInt(viewId);
             output.writeInt(topologyId);
             return;
+         case CONFLICT_RESOLUTION_START:
          case CH_UPDATE:
             output.writeObject(sender);
             output.writeObject(currentCH);
@@ -358,6 +365,7 @@ public class CacheTopologyControlCommand implements ReplicableCommand {
             viewId = input.readInt();
             topologyId = input.readInt();
             return;
+         case CONFLICT_RESOLUTION_START:
          case CH_UPDATE:
             sender = (Address) input.readObject();
             currentCH = (ConsistentHash) input.readObject();
