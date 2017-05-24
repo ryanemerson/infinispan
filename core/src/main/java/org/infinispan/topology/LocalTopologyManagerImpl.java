@@ -256,19 +256,10 @@ public class LocalTopologyManagerImpl implements LocalTopologyManager, GlobalSta
    @Override
    public void handleTopologyUpdate(final String cacheName, final CacheTopology cacheTopology,
          final AvailabilityMode availabilityMode, final int viewId, final Address sender) throws InterruptedException {
-      if (!running) {
-         log.tracef("Ignoring consistent hash update %s for cache %s, the local cache manager is not running",
-               cacheTopology.getTopologyId(), cacheName);
+      if (ignoreTopologyUpdate(cacheName, cacheTopology))
          return;
-      }
 
       final LocalCacheStatus cacheStatus = runningCaches.get(cacheName);
-      if (cacheStatus == null) {
-         log.tracef("Ignoring consistent hash update %s for cache %s that doesn't exist locally",
-               cacheTopology.getTopologyId(), cacheName);
-         return;
-      }
-
       cacheStatus.getTopologyUpdatesExecutor().execute(() -> {
          try {
             doHandleTopologyUpdate(cacheName, cacheTopology, availabilityMode, viewId, sender, cacheStatus);
@@ -276,6 +267,21 @@ public class LocalTopologyManagerImpl implements LocalTopologyManager, GlobalSta
             log.topologyUpdateError(cacheName, t);
          }
       });
+   }
+
+   private boolean ignoreTopologyUpdate(final String cacheName, final CacheTopology cacheTopology) {
+      if (!running) {
+         log.tracef("Ignoring consistent hash update %s for cache %s, the local cache manager is not running",
+               cacheTopology.getTopologyId(), cacheName);
+         return true;
+      }
+
+      if (runningCaches.get(cacheName) == null) {
+         log.tracef("Ignoring consistent hash update %s for cache %s that doesn't exist locally",
+               cacheTopology.getTopologyId(), cacheName);
+         return true;
+      }
+      return false;
    }
 
    /**
@@ -337,7 +343,10 @@ public class LocalTopologyManagerImpl implements LocalTopologyManager, GlobalSta
          if (updateAvailabilityModeFirst && availabilityMode != null) {
             cacheStatus.getPartitionHandlingManager().setAvailabilityMode(availabilityMode);
          }
-         if ((existingTopology == null || existingTopology.getRebalanceId() != cacheTopology.getRebalanceId()) && unionCH != null) {
+
+         boolean startConflictResolution = cacheTopology.getPhase() == CacheTopology.Phase.CONFLICT_RESOLUTION;
+         if (!startConflictResolution && (existingTopology == null || existingTopology.getRebalanceId() != cacheTopology.getRebalanceId())
+               && unionCH != null) {
             // This CH_UPDATE command was sent after a REBALANCE_START command, but arrived first.
             // We will start the rebalance now and ignore the REBALANCE_START command when it arrives.
             log.tracef("This topology update has a pending CH, starting the rebalance now");
@@ -507,6 +516,29 @@ public class LocalTopologyManagerImpl implements LocalTopologyManager, GlobalSta
                cacheTopology.getActualMembers(), cacheTopology.getMembersPersistentUUIDs());
          handler.rebalance(newTopology);
       }
+   }
+
+   @Override
+   public void handleConflictResolution(String cacheName, CacheTopology cacheTopology, int viewId, Address sender) throws InterruptedException {
+      if (trace) log.tracef("Conflict resolution starting for cache %s, topology %s", cacheName, cacheTopology);
+      if (ignoreTopologyUpdate(cacheName, cacheTopology))
+         return;
+
+      assert cacheTopology.getPhase() == CacheTopology.Phase.CONFLICT_RESOLUTION;
+      assert cacheTopology.getReadConsistentHash() == null;
+      final LocalCacheStatus cacheStatus = runningCaches.get(cacheName);
+      cacheStatus.getTopologyUpdatesExecutor().execute(() -> {
+         try {
+            CacheTopology currentTopology = cacheStatus.getCurrentTopology();
+            CacheTopology newTopology = new CacheTopology(cacheTopology.getTopologyId(), cacheTopology.getRebalanceId(),
+                  currentTopology.getCurrentCH(), cacheTopology.getPendingCH(), cacheTopology.getPhase(),
+                  cacheTopology.getActualMembers(), cacheTopology.getMembersPersistentUUIDs());
+            updateCacheTopology(cacheName, newTopology, viewId, sender, cacheStatus);
+            cacheStatus.getHandler().updateConsistentHash(newTopology);
+         } catch (Throwable t) {
+            log.rebalanceStartError(cacheName, t);
+         }
+      });
    }
 
    @Override

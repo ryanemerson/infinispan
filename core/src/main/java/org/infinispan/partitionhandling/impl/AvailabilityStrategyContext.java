@@ -88,5 +88,5 @@ public interface AvailabilityStrategyContext {
     * Does not install the current topology on the cache members.
     */
    void updateTopologiesAfterMerge(CacheTopology currentTopology, CacheTopology stableTopology,
-         AvailabilityMode availabilityMode);
+         AvailabilityMode availabilityMode, boolean resolveConflicts);
 }

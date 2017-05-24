@@ -16,6 +16,7 @@ import org.infinispan.commons.logging.Log;
 import org.infinispan.commons.logging.LogFactory;
 import org.infinispan.container.DataContainer;
 import org.infinispan.container.entries.InternalCacheEntry;
+import org.infinispan.distribution.DistributionInfo;
 import org.infinispan.distribution.LocalizedCacheTopology;
 import org.infinispan.distribution.ch.ConsistentHash;
 import org.infinispan.factories.annotations.Inject;
@@ -27,6 +28,7 @@ import org.infinispan.remoting.rpc.RpcManager;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.statetransfer.InboundTransferTask;
 import org.infinispan.statetransfer.StateChunk;
+import org.infinispan.topology.CacheTopology;
 
 import net.jcip.annotations.GuardedBy;
 
@@ -119,7 +121,7 @@ public class StateReceiverImpl<K, V> implements StateReceiver<K, V> {
          this.segmentId = segmentId;
          this.replicaHosts = topology.getDistributionForSegment(segmentId).writeOwners();
 
-         if (trace) log.tracef("Attempting to receive replicas for segment %s from %s", segmentId, replicaHosts);
+         if (trace) log.tracef("Attempting to receive replicas for segment %s from %s with topology %s", segmentId, replicaHosts, topology);
 
          List<CompletableFuture<Void>> completableFutures = new ArrayList<>();
          for (Address replica : replicaHosts) {
@@ -131,7 +133,7 @@ public class StateReceiverImpl<K, V> implements StateReceiver<K, V> {
                   }
                });
             } else {
-               InboundTransferTask transferTask = createTransferTask(segmentId, replica);
+               InboundTransferTask transferTask = createTransferTask(segmentId, replica, topology);
                transferTaskMap.put(replica, transferTask);
                completableFutures.add(transferTask.requestSegments());
             }
@@ -190,8 +192,8 @@ public class StateReceiverImpl<K, V> implements StateReceiver<K, V> {
       return transferTaskMap;
    }
 
-   InboundTransferTask createTransferTask(int segmentId, Address source) {
-      return new InboundTransferTask(Collections.singleton(segmentId), source, rpcManager.getTopologyId(),
+   InboundTransferTask createTransferTask(int segmentId, Address source, CacheTopology topology) {
+      return new InboundTransferTask(Collections.singleton(segmentId), source, topology.getTopologyId(),
             rpcManager, commandsFactory, transferTimeout, cacheName, false);
    }
 

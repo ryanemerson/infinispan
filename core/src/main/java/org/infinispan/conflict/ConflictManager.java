@@ -51,4 +51,10 @@ public interface ConflictManager<K, V> {
     * @return true if a state transfer is currently in progress.
     */
    boolean isStateTransferInProgress();
+
+   /**
+    * @return true if conflict resolution is in progress. This can happen if the user has multiple threads interacting
+    * with the ConflictManager or if a Split-brain merge is ongoing
+    */
+   boolean isConflictResolutionInProgress();
 }

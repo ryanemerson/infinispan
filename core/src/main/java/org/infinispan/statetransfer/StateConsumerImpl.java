@@ -280,6 +280,7 @@ public class StateConsumerImpl implements StateConsumer {
    @Override
    public void onTopologyUpdate(final CacheTopology cacheTopology, final boolean isRebalance) {
       final boolean isMember = cacheTopology.getMembers().contains(rpcManager.getAddress());
+      final boolean startConflictResolution = !isRebalance && cacheTopology.getPhase() == CacheTopology.Phase.CONFLICT_RESOLUTION;
       if (trace) log.tracef("Received new topology for cache %s, isRebalance = %b, isMember = %b, topology = %s", cacheName, isRebalance, isMember, cacheTopology);
 
       if (!ownsData && isMember) {
@@ -292,7 +293,7 @@ public class StateConsumerImpl implements StateConsumer {
       // If a member leaves/crashes immediately after a rebalance was started, the new CH_UPDATE
       // command may be executed before the REBALANCE_START command, so it has to start the rebalance.
       boolean startRebalance = isRebalance;
-      if (!isRebalance) {
+      if (!isRebalance && !startConflictResolution) {
          if (cacheTopology.getPendingCH() != null && this.cacheTopology.getPendingCH() == null) {
             if (trace) log.tracef("Forcing startRebalance = true");
             startRebalance = true;
@@ -304,6 +305,11 @@ public class StateConsumerImpl implements StateConsumer {
          stateTransferTopologyId.compareAndSet(NO_STATE_TRANSFER_IN_PROGRESS, cacheTopology.getTopologyId());
          cacheNotifier.notifyDataRehashed(cacheTopology.getCurrentCH(), cacheTopology.getPendingCH(),
                cacheTopology.getUnionCH(), cacheTopology.getTopologyId(), true, cacheTopology.getPhase());
+      }
+
+      if (startConflictResolution) {
+         // This stops state being applied from a prior rebalance and also prevents tracking from being stopped
+         stateTransferTopologyId.set(NO_STATE_TRANSFER_IN_PROGRESS);
       }
 
       awaitTotalOrderTransactions(cacheTopology, startRebalance);
@@ -326,7 +332,10 @@ public class StateConsumerImpl implements StateConsumer {
       if (distributionManager != null) {
          distributionManager.setCacheTopology(cacheTopology);
       }
-      if (startRebalance) {
+
+      // We need to track changes so that user puts during conflict resolution are prioritised over MergePolicy updates
+      // Tracking is stopped once the subsequent rebalance completes
+      if (startRebalance || startConflictResolution) {
          if (trace) log.tracef("Start keeping track of keys for rebalance");
          commitManager.stopTrack(PUT_FOR_STATE_TRANSFER);
          commitManager.startTrack(PUT_FOR_STATE_TRANSFER);
@@ -337,7 +346,7 @@ public class StateConsumerImpl implements StateConsumer {
 
       try {
          // fetch transactions and data segments from other owners if this is enabled
-         if (isTransactional || isFetchEnabled) {
+         if (!startConflictResolution && (isTransactional || isFetchEnabled)) {
             Set<Integer> addedSegments;
             if (previousWriteCh == null) {
                // If we have any segments assigned in the initial CH, it means we are the first member.
@@ -472,6 +481,10 @@ public class StateConsumerImpl implements StateConsumer {
          // when this node is a member of the new topology, otherwise entries updated during conflict resolution can be
          // removed, resulting in only a subset of the owners hosting the resolved entry.
          Set<Integer> removedSegments;
+
+         // TODO update so that data is not removed on the initial CONFLICT_RESOLUTION topology
+         // Create Phase.CONFLICT_RESOLUTION and remove deletePastMemberVals variable
+
          if ((isMember || deletePastMemberVals) && cacheTopology.getPhase() == CacheTopology.Phase.NO_REBALANCE) {
             removedSegments = IntStream.range(0, newWriteCh.getNumSegments()).boxed().collect(Collectors.toSet());
             Set<Integer> newSegments = getOwnedSegments(newWriteCh);
@@ -966,7 +979,6 @@ public class StateConsumerImpl implements StateConsumer {
             interceptorChain.invoke(ctx, invalidateCmd);
 
             if (trace) log.tracef("Removed %d keys, data container now has %d keys", keysToRemove.size(), dataContainer.sizeIncludingExpired());
-            log.errorf("Removed %d keys, data container now has %d keys", keysToRemove.size(), dataContainer.sizeIncludingExpired());
          } catch (CacheException e) {
             log.failedToInvalidateKeys(e);
          }

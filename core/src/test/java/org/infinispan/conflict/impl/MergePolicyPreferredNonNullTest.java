@@ -1,5 +1,6 @@
 package org.infinispan.conflict.impl;
 
+import org.infinispan.AdvancedCache;
 import org.infinispan.conflict.MergePolicies;
 import org.infinispan.distribution.MagicKey;
 import org.testng.annotations.Test;
@@ -22,8 +23,9 @@ public class MergePolicyPreferredNonNullTest extends BaseMergePolicyTest {
 
    @Override
    void duringSplit() {
-      advancedCache(0).remove(conflictKey);
-      advancedCache(2).put(conflictKey, "DURING SPLIT");
+      AdvancedCache[] caches = new AdvancedCache[] {advancedCache(0), advancedCache(2)};
+      getCacheFromPreferredPartition(caches).remove(conflictKey);
+      getCacheFromNonPreferredPartition(caches).put(conflictKey, "DURING SPLIT");
    }
 
    @Override

@@ -1,5 +1,6 @@
 package org.infinispan.conflict.impl;
 
+import org.infinispan.AdvancedCache;
 import org.infinispan.context.Flag;
 import org.infinispan.distribution.MagicKey;
 import org.infinispan.test.fwk.TestInternalCacheEntryFactory;
@@ -22,7 +23,8 @@ public class MergePolicyCustomTest extends BaseMergePolicyTest {
 
    @Override
    void duringSplit() {
-      advancedCache(2).withFlags(Flag.CACHE_MODE_LOCAL).put(conflictKey, "DURING SPLIT");   }
+      AdvancedCache<Object, Object> cache = getCacheFromPreferredPartition(advancedCache(0), advancedCache(2));
+      cache.put(conflictKey, "DURING SPLIT");   }
 
    @Override
    void afterMerge() {

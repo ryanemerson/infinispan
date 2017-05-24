@@ -66,6 +66,11 @@ public abstract class AbstractControlledLocalTopologyManager implements LocalTop
    }
 
    @Override
+   public void handleConflictResolution(String cacheName, CacheTopology cacheTopology, int viewId, Address sender) throws InterruptedException {
+      // no-op
+   }
+
+   @Override
    public final CacheTopology getCacheTopology(String cacheName) {
       return delegate.getCacheTopology(cacheName);
    }

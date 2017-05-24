@@ -194,7 +194,7 @@ public class PreferConsistencyStrategy implements AvailabilityStrategy {
                mergedTopology.getCurrentCH(), null, CacheTopology.Phase.NO_REBALANCE, actualMembers,
                persistentUUIDManager.mapAddresses(actualMembers));
       }
-      context.updateTopologiesAfterMerge(mergedTopology, maxStableTopology, mergedAvailabilityMode);
+      context.updateTopologiesAfterMerge(mergedTopology, maxStableTopology, mergedAvailabilityMode, false);
 
       // Now check if the availability mode should change
       AvailabilityMode newAvailabilityMode = computeAvailabilityAfterMerge(context, maxStableTopology, actualMembers);
