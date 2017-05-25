@@ -2575,7 +2575,8 @@ public class Parser implements ConfigurationParser {
       CUSTOM(null),
       NONE(null),
       PREFERRED_ALWAYS(MergePolicies.PREFERRED_ALWAYS),
-      PREFERRED_NON_NULL(MergePolicies.PREFERRED_NON_NULL);
+      PREFERRED_NON_NULL(MergePolicies.PREFERRED_NON_NULL),
+      REMOVE_ALL(MergePolicies.REMOVE_ALL);
 
       private final EntryMergePolicy impl;
       MergePolicy(EntryMergePolicy policy) {
