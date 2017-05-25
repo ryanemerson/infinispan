@@ -1422,6 +1422,11 @@
                     <xs:documentation>Utilise entries from the preferred partition if non-null, otherwise utilise entries from the other partition.</xs:documentation>
                 </xs:annotation>
             </xs:enumeration>
+            <xs:enumeration value="REMOVE_ALL">
+                <xs:annotation>
+                    <xs:documentation>If a conflict is encountered for a given key, remove all versions of that key.</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
         </xs:restriction>
     </xs:simpleType>
 

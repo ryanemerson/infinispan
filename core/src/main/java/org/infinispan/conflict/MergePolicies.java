@@ -15,4 +15,6 @@ public class MergePolicies {
 
       return (CacheEntry) otherEntries.get(0);
    };
+
+   public static final EntryMergePolicy REMOVE_ALL = (preferredEntry, otherEntries) -> null;
 }
