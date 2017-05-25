@@ -1573,4 +1573,8 @@ public interface Log extends BasicLogger {
 
    @Message(value = "Keys '%s' are not available. No owners exist in this partition", id = 459)
    AvailabilityException degradedModeNoOwnersExist(Object key);
+
+   @LogMessage(level = WARN)
+   @Message(value = "Exception encountered when trying to resolve conflict on Keys '%s': %s", id = 460)
+   void exceptionDuringConflictResolution(Object key, Throwable t);
 }

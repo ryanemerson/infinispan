@@ -1,5 +1,6 @@
 package org.infinispan.conflict.impl;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -138,7 +139,6 @@ public class DefaultConflictManager<K, V> implements ConflictManager<K, V> {
       // We have to manually create a LocalizedTopology here, as CacheNotifier::notifyTopologyChanged is called before
       // DistributionManager::setTopology and we always need to utilise the latest hash
       if (trace) log.tracef("Installed new topology %s: %s", event.getNewTopologyId(), event.getWriteConsistentHashAtEnd());
-      if (trace) log.trace("DistributionManager topology: " + distributionManager.getCacheTopology());
       this.installedTopology = distributionManager.getCacheTopology();
    }
 
@@ -233,14 +233,14 @@ public class DefaultConflictManager<K, V> implements ConflictManager<K, V> {
       if (trace) log.tracef("Attempting to resolve conflicts.  All Members %s, Installed topology %s, Preferred Partition %s",
             topology.getMembers(), topology, preferredPartition);
 
-      int conflictsResolved = 0;
+      List<CompletableFuture<V>> completableFutures = new ArrayList<>();
       Iterator<Map<Address, InternalCacheEntry<K, V>>> it = getConflicts(topology).iterator();
       while (it.hasNext()) {
          Map<Address, InternalCacheEntry<K, V>> conflictMap = it.next();
          if (trace) log.tracef("Conflict detected %s", conflictMap);
 
          Collection<InternalCacheEntry<K, V>> entries = conflictMap.values();
-         K key = entries.iterator().next().getKey();
+         final K key = entries.iterator().next().getKey();
          Address primaryReplica = topology.getDistribution(key).primary();
 
          List<Address> preferredEntries = conflictMap.entrySet().stream()
@@ -265,17 +265,32 @@ public class DefaultConflictManager<K, V> implements ConflictManager<K, V> {
          CacheEntry<K, V> entry = preferredEntry instanceof NullValueEntry ? null : preferredEntry;
          List<CacheEntry<K, V>> otherEntries = entries.stream().filter(e -> !(e instanceof NullValueEntry)).collect(Collectors.toList());
          CacheEntry<K, V> mergedEntry = entryMergePolicy.merge(entry, otherEntries);
+
+         CompletableFuture<V> future;
          if (mergedEntry == null) {
             if (trace) log.tracef("Executing remove on conflict: key %s", key);
-            cache.remove(key);
+            future = cache.removeAsync(key);
          } else {
             if (trace) log.tracef("Executing update on conflict: key %s with entry %s", key, entry);
-            cache.put(key, mergedEntry.getValue(), mergedEntry.getMetadata());
+            future = cache.putAsync(key, mergedEntry.getValue(), mergedEntry.getMetadata());
          }
-         conflictsResolved++;
+         completableFutures.add(future);
+         future.exceptionally(t -> {
+            log.exceptionDuringConflictResolution(key, t);
+            return null;
+         });
       }
 
-      if (trace) log.tracef("Finished attempting to resolve %s conflicts", conflictsResolved);
+      // Wait for all conflict actions to complete before we return. This is necessary during merge to ensure that the rebalance
+      // does not start before conflict resolution completes
+      try {
+         CompletableFuture.allOf(completableFutures.toArray(new CompletableFuture[completableFutures.size()])).get();
+      } catch (InterruptedException e) {
+         Thread.currentThread().interrupt();
+         throw new CacheException(e);
+      } catch (ExecutionException | CancellationException e) {
+         throw new CacheException(e.getMessage(), e.getCause());
+      }
    }
 
    private LocalizedCacheTopology createLocalizedTopology(ConsistentHash hash) {
