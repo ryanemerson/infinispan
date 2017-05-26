@@ -1,6 +1,5 @@
 package org.infinispan.conflict.impl;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -10,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
-import java.util.Spliterators;
+import java.util.Spliterator;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -72,7 +71,6 @@ public class DefaultConflictManager<K, V> implements ConflictManager<K, V> {
    private static boolean trace = log.isTraceEnabled();
 
    private static final long localFlags = EnumUtil.bitSetOf(Flag.CACHE_MODE_LOCAL, Flag.SKIP_OWNERSHIP_CHECK, Flag.SKIP_LOCKING);
-   private static final long remoteFlags = EnumUtil.bitSetOf(Flag.CACHE_MODE_LOCAL, Flag.IGNORE_RETURN_VALUES);
 
    private AsyncInterceptorChain interceptorChain;
    private AdvancedCache<K, V> cache;
@@ -91,7 +89,6 @@ public class DefaultConflictManager<K, V> implements ConflictManager<K, V> {
    private final Map<K, VersionRequest> versionRequestMap = new HashMap<>();
    private final Queue<VersionRequest> retryQueue = new ConcurrentLinkedQueue<>();
    private volatile LocalizedCacheTopology installedTopology;
-   private volatile AtomicBoolean conflictResolutionInProgress = new AtomicBoolean();
 
    @Inject
    public void inject(AsyncInterceptorChain interceptorChain,
@@ -195,12 +192,21 @@ public class DefaultConflictManager<K, V> implements ConflictManager<K, V> {
       if (stateConsumer.isStateTransferInProgress())
          throw log.getConflictsStateTransferInProgress(cacheName);
 
-      return StreamSupport.stream(new ReplicaSpliterator(topology), false).filter(filterConsistentEntries());
+      if (!streamInProgress.compareAndSet(false, true))
+         throw log.getConflictsAlreadyInProgress();
+
+      try {
+         return StreamSupport
+               .stream(new ReplicaSpliterator(topology), false)
+               .filter(filterConsistentEntries());
+      } finally {
+         streamInProgress.compareAndSet(true, false);
+      }
    }
 
    @Override
    public boolean isConflictResolutionInProgress() {
-      return conflictResolutionInProgress.get();
+      return streamInProgress.get();
    }
 
    @Override
@@ -215,82 +221,74 @@ public class DefaultConflictManager<K, V> implements ConflictManager<K, V> {
       } else {
          localizedTopology = createLocalizedTopology(topology);
       }
-
-      if (conflictResolutionInProgress.compareAndSet(false, true)) {
-         try {
-            doResolveConflicts(localizedTopology);
-         } finally {
-            conflictResolutionInProgress.compareAndSet(true, false);
-         }
-      } else {
-         throw new CacheException("CONFLICT RESOLUTION ALREADY IN PROGRESS!");
-      }
+      doResolveConflicts(localizedTopology);
    }
 
-   private void doResolveConflicts(LocalizedCacheTopology topology) {
-      Set<Address> preferredPartition = new HashSet<>(topology.getCurrentCH().getMembers());
+   private void doResolveConflicts(final LocalizedCacheTopology topology) {
+      final Set<Address> preferredPartition = new HashSet<>(topology.getCurrentCH().getMembers());
 
       if (trace) log.tracef("Attempting to resolve conflicts.  All Members %s, Installed topology %s, Preferred Partition %s",
             topology.getMembers(), topology, preferredPartition);
 
-      List<CompletableFuture<V>> completableFutures = new ArrayList<>();
-      Iterator<Map<Address, InternalCacheEntry<K, V>>> it = getConflicts(topology).iterator();
-      while (it.hasNext()) {
-         Map<Address, InternalCacheEntry<K, V>> conflictMap = it.next();
-         if (trace) log.tracef("Conflict detected %s", conflictMap);
-
-         Collection<InternalCacheEntry<K, V>> entries = conflictMap.values();
-         final K key = entries.iterator().next().getKey();
-         Address primaryReplica = topology.getDistribution(key).primary();
-
-         List<Address> preferredEntries = conflictMap.entrySet().stream()
-               .map(Map.Entry::getKey)
-               .filter(preferredPartition::contains)
-               .collect(Collectors.toList());
-
-         // If only one entry exists in the preferred partition, then use that entry
-         CacheEntry<K, V> preferredEntry;
-         if (preferredEntries.size() == 1) {
-            preferredEntry = conflictMap.remove(preferredEntries.get(0));
-         } else {
-            // If multiple conflicts exist in the preferred partition, then use primary replica from the preferred partition
-            // If not a merge, then also use primary as preferred entry
-            // Preferred is null if no entry exists in preferred partition
-            preferredEntry = conflictMap.remove(primaryReplica);
-         }
-
-         if (trace) log.tracef("Applying EntryMergePolicy %s to PreferredEntry %s, otherEntries %s",
-               entryMergePolicy.getClass(), preferredEntry, entries);
-
-         CacheEntry<K, V> entry = preferredEntry instanceof NullValueEntry ? null : preferredEntry;
-         List<CacheEntry<K, V>> otherEntries = entries.stream().filter(e -> !(e instanceof NullValueEntry)).collect(Collectors.toList());
-         CacheEntry<K, V> mergedEntry = entryMergePolicy.merge(entry, otherEntries);
-
-         CompletableFuture<V> future;
-         if (mergedEntry == null) {
-            if (trace) log.tracef("Executing remove on conflict: key %s", key);
-            future = cache.removeAsync(key);
-         } else {
-            if (trace) log.tracef("Executing update on conflict: key %s with entry %s", key, entry);
-            future = cache.putAsync(key, mergedEntry.getValue(), mergedEntry.getMetadata());
-         }
-         completableFutures.add(future);
-         future.exceptionally(t -> {
-            log.exceptionDuringConflictResolution(key, t);
-            return null;
-         });
-      }
-
-      // Wait for all conflict actions to complete before we return. This is necessary during merge to ensure that the rebalance
-      // does not start before conflict resolution completes
+      List<CompletableFuture<V>> completableFutures =
+            getConflicts(topology)
+                  .map(conflictMap -> processConflict(conflictMap, topology, preferredPartition))
+                  .collect(Collectors.toList());
       try {
          CompletableFuture.allOf(completableFutures.toArray(new CompletableFuture[completableFutures.size()])).get();
       } catch (InterruptedException e) {
          Thread.currentThread().interrupt();
          throw new CacheException(e);
       } catch (ExecutionException | CancellationException e) {
+         stateReceiver.stop();
          throw new CacheException(e.getMessage(), e.getCause());
       }
+   }
+
+   private CompletableFuture<V> processConflict(Map<Address, InternalCacheEntry<K, V>> conflictMap,
+                                                LocalizedCacheTopology topology, Set<Address> preferredPartition) {
+      if (trace) log.tracef("Conflict detected %s", conflictMap);
+
+      Collection<InternalCacheEntry<K, V>> entries = conflictMap.values();
+      final K key = entries.iterator().next().getKey();
+      Address primaryReplica = topology.getDistribution(key).primary();
+
+      List<Address> preferredEntries = conflictMap.entrySet().stream()
+            .map(Map.Entry::getKey)
+            .filter(preferredPartition::contains)
+            .collect(Collectors.toList());
+
+      // If only one entry exists in the preferred partition, then use that entry
+      CacheEntry<K, V> preferredEntry;
+      if (preferredEntries.size() == 1) {
+         preferredEntry = conflictMap.remove(preferredEntries.get(0));
+      } else {
+         // If multiple conflicts exist in the preferred partition, then use primary replica from the preferred partition
+         // If not a merge, then also use primary as preferred entry
+         // Preferred is null if no entry exists in preferred partition
+         preferredEntry = conflictMap.remove(primaryReplica);
+      }
+
+      if (trace) log.tracef("Applying EntryMergePolicy %s to PreferredEntry %s, otherEntries %s",
+            entryMergePolicy.getClass(), preferredEntry, entries);
+
+      CacheEntry<K, V> entry = preferredEntry instanceof NullValueEntry ? null : preferredEntry;
+      List<CacheEntry<K, V>> otherEntries = entries.stream().filter(e -> !(e instanceof NullValueEntry)).collect(Collectors.toList());
+      CacheEntry<K, V> mergedEntry = entryMergePolicy.merge(entry, otherEntries);
+
+      CompletableFuture<V> future;
+      if (mergedEntry == null) {
+         if (trace) log.tracef("Executing remove on conflict: key %s", key);
+         future = cache.removeAsync(key);
+      } else {
+         if (trace) log.tracef("Executing update on conflict: key %s with entry %s", key, entry);
+         future = cache.putAsync(key, mergedEntry.getValue(), mergedEntry.getMetadata());
+      }
+      future.exceptionally(t -> {
+         log.exceptionDuringConflictResolution(key, t);
+         return null;
+      });
+      return future;
    }
 
    private LocalizedCacheTopology createLocalizedTopology(ConsistentHash hash) {
@@ -395,51 +393,67 @@ public class DefaultConflictManager<K, V> implements ConflictManager<K, V> {
       return map -> map.values().stream().distinct().limit(2).count() > 1 || map.values().isEmpty();
    }
 
-   // TODO make this work in parallel, to improve performance during merge with many entries
-   // We could make this work in parallel, however if we are receiving multiple segments simultaneously there is the
-   // potential for an OutOfMemoryError depending on the total number of cache entries
-   private class ReplicaSpliterator extends Spliterators.AbstractSpliterator<Map<Address, InternalCacheEntry<K, V>>> {
+   private class ReplicaSpliterator implements Spliterator<Map<Address, InternalCacheEntry<K, V>>> {
       private final LocalizedCacheTopology topology;
-      private final int totalSegments;
-      private int currentSegment = 0;
-      private List<Map<Address, InternalCacheEntry<K, V>>> segmentEntries;
+      private int totalSegments, currentSegment;
       private Iterator<Map<Address, InternalCacheEntry<K, V>>> iterator = Collections.emptyIterator();
 
       ReplicaSpliterator(LocalizedCacheTopology topology) {
-         super(Long.MAX_VALUE, 0);
+         this(topology, 0, topology.getWriteConsistentHash().getNumSegments());
+      }
 
-         if (!streamInProgress.compareAndSet(false, true))
-            throw log.getConflictsAlreadyInProgress();
-
+      ReplicaSpliterator(LocalizedCacheTopology topology, int currentSegment, int totalSegments) {
          this.topology = topology;
-         this.totalSegments = topology.getWriteConsistentHash().getNumSegments();
+         this.currentSegment = currentSegment;
+         this.totalSegments = totalSegments;
       }
 
       @Override
       public boolean tryAdvance(Consumer<? super Map<Address, InternalCacheEntry<K, V>>> action) {
          while (!iterator.hasNext()) {
-            if (currentSegment >= totalSegments) {
-               streamInProgress.compareAndSet(true, false);
+            if (currentSegment < totalSegments) {
+               try {
+                  if (trace)
+                     log.tracef("Attempting to receive all replicas for segment %s with topology %s", currentSegment, topology);
+                  List<Map<Address, InternalCacheEntry<K, V>>> segmentEntries = stateReceiver.getAllReplicasForSegment(currentSegment, topology).get();
+                  if (trace && !segmentEntries.isEmpty())
+                     log.tracef("Segment %s entries received: %s", currentSegment, segmentEntries);
+                  iterator = segmentEntries.iterator();
+                  currentSegment++;
+               } catch (InterruptedException e) {
+                  Thread.currentThread().interrupt();
+                  throw new CacheException(e);
+               } catch (ExecutionException | CancellationException e) {
+                  stateReceiver.stop();
+                  throw new CacheException(e.getMessage(), e.getCause());
+               }
+            } else {
                return false;
-            }
-
-            try {
-               if (trace) log.tracef("Attempting to receive all replicas for segment %s with topology %s", currentSegment, topology);
-               segmentEntries = stateReceiver.getAllReplicasForSegment(currentSegment, topology).get();
-               if (trace && !segmentEntries.isEmpty()) log.tracef("Segment %s entries received: %s", currentSegment, segmentEntries);
-               iterator = segmentEntries.iterator();
-               currentSegment++;
-            } catch (InterruptedException e) {
-               streamInProgress.compareAndSet(true, false);
-               Thread.currentThread().interrupt();
-               throw new CacheException(e);
-            } catch (ExecutionException | CancellationException e) {
-               streamInProgress.compareAndSet(true, false);
-               throw new CacheException(e.getMessage(), e.getCause());
             }
          }
          action.accept(iterator.next());
          return true;
+      }
+
+      @Override
+      public Spliterator<Map<Address, InternalCacheEntry<K, V>>> trySplit() {
+         int lo = currentSegment;
+         int mid = (lo + totalSegments) >>> 1;
+         if (lo < mid) {
+            currentSegment = mid;
+            return new ReplicaSpliterator(topology, lo, mid);
+         }
+         return null;
+      }
+
+      @Override
+      public long estimateSize() {
+         return Long.MAX_VALUE;
+      }
+
+      @Override
+      public int characteristics() {
+         return 0;
       }
    }
 }

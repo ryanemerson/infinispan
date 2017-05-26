@@ -74,14 +74,6 @@ public class StateReceiverTest extends AbstractInfinispanTest {
       }
    }
 
-   @Test(expectedExceptions = IllegalStateException.class)
-   public void testConcurrentInvocationsOfRequestSegments() {
-      initTransferTaskMock(new CompletableFuture<>());
-
-      stateReceiver.getAllReplicasForSegment(0, localizedCacheTopology);
-      stateReceiver.getAllReplicasForSegment(1, localizedCacheTopology);
-   }
-
    public void testTopologyChangeDuringSegmentRequest() throws Exception {
       initTransferTaskMock(new CompletableFuture<>());
 
@@ -110,15 +102,16 @@ public class StateReceiverTest extends AbstractInfinispanTest {
    public void testOldAndInvalidStateIgnored() {
       initTransferTaskMock(new CompletableFuture<>());
 
-      stateReceiver.getAllReplicasForSegment(0, localizedCacheTopology);
-      List<Address> sourceAddresses = new ArrayList<>(stateReceiver.getTransferTaskMap().keySet());
-      Map<Object, Map<Address, InternalCacheEntry<Object, Object>>> receiverKeyMap = stateReceiver.getKeyReplicaMap();
+      int segmentId = 0;
+      stateReceiver.getAllReplicasForSegment(segmentId, localizedCacheTopology);
+      List<Address> sourceAddresses = new ArrayList<>(stateReceiver.getTransferTaskMap(segmentId).keySet());
+      Map<Object, Map<Address, InternalCacheEntry<Object, Object>>> receiverKeyMap = stateReceiver.getKeyReplicaMap(segmentId);
       assertEquals(0, receiverKeyMap.size());
       stateReceiver.receiveState(sourceAddresses.get(0), 2, createStateChunks("Key1", "Value1"));
       assertEquals(1, receiverKeyMap.size());
       stateReceiver.receiveState(new TestAddress(5), 2, createStateChunks("Key2", "Value2"));
       assertEquals(1, receiverKeyMap.size());
-      stateReceiver.receiveState(sourceAddresses.get(1), 1, createStateChunks("Key2", "Value2"));
+      stateReceiver.receiveState(sourceAddresses.get(1), 1, new ArrayList<>());
       assertEquals(1, receiverKeyMap.size());
    }
 
