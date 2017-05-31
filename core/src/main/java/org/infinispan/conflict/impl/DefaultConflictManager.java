@@ -395,31 +395,31 @@ public class DefaultConflictManager<K, V> implements ConflictManager<K, V> {
 
    private class ReplicaSpliterator implements Spliterator<Map<Address, InternalCacheEntry<K, V>>> {
       private final LocalizedCacheTopology topology;
-      private int totalSegments, currentSegment;
+      private int totalSegments, nextSegment;
       private Iterator<Map<Address, InternalCacheEntry<K, V>>> iterator = Collections.emptyIterator();
 
       ReplicaSpliterator(LocalizedCacheTopology topology) {
          this(topology, 0, topology.getWriteConsistentHash().getNumSegments());
       }
 
-      ReplicaSpliterator(LocalizedCacheTopology topology, int currentSegment, int totalSegments) {
+      ReplicaSpliterator(LocalizedCacheTopology topology, int nextSegment, int totalSegments) {
          this.topology = topology;
-         this.currentSegment = currentSegment;
+         this.nextSegment = nextSegment;
          this.totalSegments = totalSegments;
       }
 
       @Override
       public boolean tryAdvance(Consumer<? super Map<Address, InternalCacheEntry<K, V>>> action) {
          while (!iterator.hasNext()) {
-            if (currentSegment < totalSegments) {
+            if (nextSegment < totalSegments) {
                try {
                   if (trace)
-                     log.tracef("Attempting to receive all replicas for segment %s with topology %s", currentSegment, topology);
-                  List<Map<Address, InternalCacheEntry<K, V>>> segmentEntries = stateReceiver.getAllReplicasForSegment(currentSegment, topology).get();
+                     log.tracef("Attempting to receive all replicas for segment %s with topology %s", nextSegment, topology);
+                  List<Map<Address, InternalCacheEntry<K, V>>> segmentEntries = stateReceiver.getAllReplicasForSegment(nextSegment, topology).get();
                   if (trace && !segmentEntries.isEmpty())
-                     log.tracef("Segment %s entries received: %s", currentSegment, segmentEntries);
+                     log.tracef("Segment %s entries received: %s", nextSegment, segmentEntries);
                   iterator = segmentEntries.iterator();
-                  currentSegment++;
+                  nextSegment++;
                } catch (InterruptedException e) {
                   Thread.currentThread().interrupt();
                   throw new CacheException(e);
@@ -437,10 +437,10 @@ public class DefaultConflictManager<K, V> implements ConflictManager<K, V> {
 
       @Override
       public Spliterator<Map<Address, InternalCacheEntry<K, V>>> trySplit() {
-         int lo = currentSegment;
-         int mid = (lo + totalSegments) >>> 1;
+         int lo = nextSegment;
+         int mid = ((lo + totalSegments) >>> 1) & ~1;
          if (lo < mid) {
-            currentSegment = mid;
+            nextSegment = mid;
             return new ReplicaSpliterator(topology, lo, mid);
          }
          return null;
@@ -453,7 +453,7 @@ public class DefaultConflictManager<K, V> implements ConflictManager<K, V> {
 
       @Override
       public int characteristics() {
-         return 0;
+         return DISTINCT | NONNULL;
       }
    }
 }
