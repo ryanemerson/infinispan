@@ -127,14 +127,11 @@ public class CacheTopology {
     */
    public ConsistentHash getReadConsistentHash() {
       switch (phase) {
-         case CONFLICT_RESOLUTION:
-            assert pendingCH != null;
-            assert unionCH != null;
-            return currentCH;
          case NO_REBALANCE:
             assert pendingCH == null;
             assert unionCH == null;
             return currentCH;
+         case CONFLICT_RESOLUTION:
          case READ_OLD_WRITE_ALL:
             assert pendingCH != null;
             assert unionCH != null;

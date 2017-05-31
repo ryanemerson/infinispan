@@ -86,7 +86,7 @@ public class StateReceiverImpl<K, V> implements StateReceiver<K, V> {
    }
 
    @Override
-   public CompletableFuture<List<Map<Address, InternalCacheEntry<K, V>>>> getAllReplicasForSegment(int segmentId, LocalizedCacheTopology topology) {
+   public synchronized CompletableFuture<List<Map<Address, InternalCacheEntry<K, V>>>> getAllReplicasForSegment(int segmentId, LocalizedCacheTopology topology) {
       return requestMap.computeIfAbsent(segmentId, id -> new SegmentRequest(id, topology)).requestState();
    }
 
