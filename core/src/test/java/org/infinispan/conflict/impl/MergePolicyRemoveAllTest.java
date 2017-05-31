@@ -31,9 +31,6 @@ public class MergePolicyRemoveAllTest extends BaseMergePolicyTest {
 
    @Override
    void afterMerge() {
-      assert cache(0).get(conflictKey) == null;
-      assert cache(1).get(conflictKey) == null;
-      assert cache(2).get(conflictKey) == null;
-      assert cache(3).get(conflictKey) == null;
+      assertCacheGet(conflictKey, null, 0, 1, 2, 3);
    }
 }

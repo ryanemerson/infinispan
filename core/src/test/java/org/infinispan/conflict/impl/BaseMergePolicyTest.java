@@ -25,6 +25,7 @@ import org.infinispan.topology.CacheStatusResponse;
 import org.infinispan.topology.CacheTopology;
 import org.infinispan.topology.LocalTopologyManager;
 import org.infinispan.topology.ManagerStatusResponse;
+import org.testng.annotations.Test;
 
 public abstract class BaseMergePolicyTest extends BasePartitionHandlingTest {
 
@@ -56,14 +57,18 @@ public abstract class BaseMergePolicyTest extends BasePartitionHandlingTest {
 
       duringSplit();
 
+      performMerge();
+
+      afterMerge();
+   }
+
+   protected void performMerge() {
       partition(0).merge(partition(1));
       assertTrue(clusterAndChFormed(0, 4));
       assertTrue(clusterAndChFormed(1, 4));
       assertTrue(clusterAndChFormed(2, 4));
       assertTrue(clusterAndChFormed(3, 4));
       TestingUtil.waitForNoRebalance(caches());
-
-      afterMerge();
    }
 
    protected <A, B> AdvancedCache<A, B> getCacheFromNonPreferredPartition(AdvancedCache... caches) {
@@ -116,6 +121,14 @@ public abstract class BaseMergePolicyTest extends BasePartitionHandlingTest {
       return statusResponse.getCaches().values();
    }
 
+   protected void assertCacheGet(Object key, Object value, int... caches) {
+      for (int index : caches) {
+         AdvancedCache cache = advancedCache(index);
+         String message = String.format("Key=%s, Value=%s, Cache Index=%s, Topology=%s", key, value, index, cache.getDistributionManager().getCacheTopology());
+         assertEquals(message, value, cache.get(key));
+      }
+   }
+
    protected boolean clusterAndChFormed(int cacheIndex, int memberCount) {
       return advancedCache(cacheIndex).getRpcManager().getTransport().getMembers().size() == memberCount &&
             advancedCache(cacheIndex).getDistributionManager().getWriteConsistentHash().getMembers().size() == memberCount;
@@ -131,12 +144,13 @@ public abstract class BaseMergePolicyTest extends BasePartitionHandlingTest {
       Map<Address, InternalCacheValue> versionMap = cm.getAllVersions(key);
       assertNotNull(versionMap);
       assertEquals("Versions: " + versionMap, numberOfVersions, versionMap.size());
+      String message = String.format("VersionMap: %s", versionMap);
       for (InternalCacheValue icv : versionMap.values()) {
          if (expectedValue != null) {
-            assertNotNull(icv);
-            assertNotNull(icv.getValue());
+            assertNotNull(message, icv);
+            assertNotNull(message, icv.getValue());
          }
-         assertEquals(expectedValue, icv.getValue());
+         assertEquals(message, expectedValue, icv.getValue());
       }
       assertEquals(0, cm.getConflicts().count());
    }

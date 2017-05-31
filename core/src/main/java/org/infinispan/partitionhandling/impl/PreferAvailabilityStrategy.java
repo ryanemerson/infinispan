@@ -31,7 +31,10 @@ public class PreferAvailabilityStrategy implements AvailabilityStrategy {
       int topologyId = ((Integer)t1.getTopologyId()).compareTo(t2.getTopologyId());
       if (topologyId != 0)
          return topologyId;
-      return t1.getCurrentCH().getRoutingTableAsString().compareTo(t2.getCurrentCH().getRoutingTableAsString());
+
+      String rt1 = t1.getCurrentCH().getRoutingTableAsString();
+      String rt2 = t2.getCurrentCH().getRoutingTableAsString();
+      return rt1.compareTo(rt2);
    };
 
    private static final Log log = LogFactory.getLog(PreferAvailabilityStrategy.class);
