@@ -14,6 +14,7 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Phaser;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -230,23 +231,14 @@ public class DefaultConflictManager<K, V> implements ConflictManager<K, V> {
       if (trace) log.tracef("Attempting to resolve conflicts.  All Members %s, Installed topology %s, Preferred Partition %s",
             topology.getMembers(), topology, preferredPartition);
 
-      List<CompletableFuture<V>> completableFutures =
-            getConflicts(topology)
-                  .map(conflictMap -> processConflict(conflictMap, topology, preferredPartition))
-                  .collect(Collectors.toList());
-      try {
-         CompletableFuture.allOf(completableFutures.toArray(new CompletableFuture[completableFutures.size()])).get();
-      } catch (InterruptedException e) {
-         Thread.currentThread().interrupt();
-         throw new CacheException(e);
-      } catch (ExecutionException | CancellationException e) {
-         stateReceiver.stop();
-         throw new CacheException(e.getMessage(), e.getCause());
-      }
+      final Phaser phaser = new Phaser(1);
+      getConflicts(topology).forEach(conflictMap -> processConflict(phaser, conflictMap, topology, preferredPartition));
+      phaser.arriveAndAwaitAdvance();
    }
 
-   private CompletableFuture<V> processConflict(Map<Address, InternalCacheEntry<K, V>> conflictMap,
+   private void processConflict(Phaser phaser, Map<Address, InternalCacheEntry<K, V>> conflictMap,
                                                 LocalizedCacheTopology topology, Set<Address> preferredPartition) {
+      phaser.register();
       if (trace) log.tracef("Conflict detected %s", conflictMap);
 
       Collection<InternalCacheEntry<K, V>> entries = conflictMap.values();
@@ -284,11 +276,11 @@ public class DefaultConflictManager<K, V> implements ConflictManager<K, V> {
          if (trace) log.tracef("Executing update on conflict: key %s with entry %s", key, entry);
          future = cache.putAsync(key, mergedEntry.getValue(), mergedEntry.getMetadata());
       }
-      future.exceptionally(t -> {
-         log.exceptionDuringConflictResolution(key, t);
-         return null;
+      future.whenComplete((responseMap, exception) -> {
+         phaser.arriveAndDeregister();
+         if (exception != null)
+            log.exceptionDuringConflictResolution(key, exception);
       });
-      return future;
    }
 
    private LocalizedCacheTopology createLocalizedTopology(ConsistentHash hash) {
