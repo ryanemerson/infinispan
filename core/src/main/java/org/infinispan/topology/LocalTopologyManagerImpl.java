@@ -16,6 +16,7 @@ import org.infinispan.Version;
 import org.infinispan.commands.ReplicableCommand;
 import org.infinispan.commons.CacheException;
 import org.infinispan.distribution.ch.ConsistentHash;
+import org.infinispan.distribution.ch.ConsistentHashFactory;
 import org.infinispan.eviction.PassivationManager;
 import org.infinispan.executors.LimitedExecutor;
 import org.infinispan.factories.ComponentRegistry;
@@ -321,21 +322,29 @@ public class LocalTopologyManagerImpl implements LocalTopologyManager, GlobalSta
             return false;
 
          ConsistentHash unionCH = null;
+         ConsistentHash currentCH = null;
          if (cacheTopology.getPendingCH() != null) {
-            if (cacheTopology.getPhase() == CacheTopology.Phase.READ_NEW_WRITE_ALL) {
-               // When removing members from topology, we have to make sure that the unionCH has
-               // owners from pendingCH (which is used as the readCH in this phase) before
-               // owners from currentCH, as primary owners must match in readCH and writeCH.
-               unionCH = cacheStatus.getJoinInfo().getConsistentHashFactory().union(
-                     cacheTopology.getPendingCH(), cacheTopology.getCurrentCH());
-            } else {
-               unionCH = cacheStatus.getJoinInfo().getConsistentHashFactory().union(
-                     cacheTopology.getCurrentCH(), cacheTopology.getPendingCH());
+            ConsistentHashFactory chf = cacheStatus.getJoinInfo().getConsistentHashFactory();
+            switch (cacheTopology.getPhase()) {
+               case READ_NEW_WRITE_ALL:
+                  // When removing members from topology, we have to make sure that the unionCH has
+                  // owners from pendingCH (which is used as the readCH in this phase) before
+                  // owners from currentCH, as primary owners must match in readCH and writeCH.
+                  unionCH = chf.union(cacheTopology.getPendingCH(), cacheTopology.getCurrentCH());
+                  currentCH = cacheTopology.getCurrentCH();
+                  break;
+//               case CONFLICT_RESOLUTION:
+//                  unionCH = chf.union(existingTopology.getWriteConsistentHash(), cacheTopology.getPendingCH());
+//                  currentCH = existingTopology.getCurrentCH();
+//                  break;
+               default:
+                  unionCH = chf.union(cacheTopology.getCurrentCH(), cacheTopology.getPendingCH());
+                  currentCH = cacheTopology.getCurrentCH();
             }
          }
 
          CacheTopology unionTopology = new CacheTopology(cacheTopology.getTopologyId(), cacheTopology.getRebalanceId(),
-               cacheTopology.getCurrentCH(), cacheTopology.getPendingCH(), unionCH, cacheTopology.getPhase(),
+               currentCH, cacheTopology.getPendingCH(), unionCH, cacheTopology.getPhase(),
                cacheTopology.getActualMembers(), persistentUUIDManager.mapAddresses(cacheTopology.getActualMembers()));
          unionTopology.logRoutingTableInformation();
 
@@ -516,29 +525,6 @@ public class LocalTopologyManagerImpl implements LocalTopologyManager, GlobalSta
                cacheTopology.getActualMembers(), cacheTopology.getMembersPersistentUUIDs());
          handler.rebalance(newTopology);
       }
-   }
-
-   @Override
-   public void handleConflictResolution(String cacheName, CacheTopology cacheTopology, int viewId, Address sender) throws InterruptedException {
-      if (trace) log.tracef("Conflict resolution starting for cache %s, topology %s", cacheName, cacheTopology);
-      if (ignoreTopologyUpdate(cacheName, cacheTopology))
-         return;
-
-      assert cacheTopology.getPhase() == CacheTopology.Phase.CONFLICT_RESOLUTION;
-      assert cacheTopology.getReadConsistentHash() == null;
-      final LocalCacheStatus cacheStatus = runningCaches.get(cacheName);
-      cacheStatus.getTopologyUpdatesExecutor().execute(() -> {
-         try {
-            CacheTopology currentTopology = cacheStatus.getCurrentTopology();
-            CacheTopology newTopology = new CacheTopology(cacheTopology.getTopologyId(), cacheTopology.getRebalanceId(),
-                  currentTopology.getCurrentCH(), cacheTopology.getPendingCH(), cacheTopology.getPhase(),
-                  cacheTopology.getActualMembers(), cacheTopology.getMembersPersistentUUIDs());
-            updateCacheTopology(cacheName, newTopology, viewId, sender, cacheStatus);
-            cacheStatus.getHandler().updateConsistentHash(newTopology);
-         } catch (Throwable t) {
-            log.rebalanceStartError(cacheName, t);
-         }
-      });
    }
 
    @Override

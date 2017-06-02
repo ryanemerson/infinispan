@@ -56,14 +56,18 @@ public abstract class BaseMergePolicyTest extends BasePartitionHandlingTest {
 
       duringSplit();
 
+      performMerge();
+
+      afterMerge();
+   }
+
+   protected void performMerge() {
       partition(0).merge(partition(1));
       assertTrue(clusterAndChFormed(0, 4));
       assertTrue(clusterAndChFormed(1, 4));
       assertTrue(clusterAndChFormed(2, 4));
       assertTrue(clusterAndChFormed(3, 4));
       TestingUtil.waitForNoRebalance(caches());
-
-      afterMerge();
    }
 
    protected <A, B> AdvancedCache<A, B> getCacheFromNonPreferredPartition(AdvancedCache... caches) {

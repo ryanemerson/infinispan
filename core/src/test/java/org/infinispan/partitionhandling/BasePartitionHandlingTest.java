@@ -215,6 +215,10 @@ public class BasePartitionHandlingTest extends MultipleCacheManagersTest {
       }
 
       public void merge(Partition partition) {
+         merge(partition, true);
+      }
+
+      public void merge(Partition partition, boolean waitForNoRebalance) {
          observeMembers(partition);
          partition.observeMembers(this);
          ArrayList<JChannel> view1 = new ArrayList<>(channels);
@@ -223,7 +227,7 @@ public class BasePartitionHandlingTest extends MultipleCacheManagersTest {
 //         System.out.println("view2 = " + printView(view2));
          partition.channels.stream().filter(c -> !channels.contains(c)).forEach(c -> channels.add(c));
          installMergeView(view1, view2);
-         waitForPartitionToForm();
+         waitForPartitionToForm(waitForNoRebalance);
          List<Partition> tmp = new ArrayList<>(Arrays.asList(BasePartitionHandlingTest.this.partitions));
          if (!tmp.remove(partition)) throw new AssertionError();
          BasePartitionHandlingTest.this.partitions = tmp.toArray(new Partition[tmp.size()]);
@@ -235,7 +239,7 @@ public class BasePartitionHandlingTest extends MultipleCacheManagersTest {
          return sb.insert(0, "[ ").append(" ]").toString();
       }
 
-      private void waitForPartitionToForm() {
+      private void waitForPartitionToForm(boolean waitForNoRebalance) {
          List<Cache<Object, Object>> caches = new ArrayList<>(getCaches(null));
          Iterator<Cache<Object, Object>> i = caches.iterator();
          while (i.hasNext()) {
@@ -244,8 +248,11 @@ public class BasePartitionHandlingTest extends MultipleCacheManagersTest {
          }
          Cache<Object, Object> cache = caches.get(0);
          TestingUtil.blockUntilViewsReceived(10000, caches);
-         if (cache.getCacheConfiguration().clustering().cacheMode().isClustered()) {
-            TestingUtil.waitForNoRebalance(caches);
+
+         if (waitForNoRebalance) {
+            if (cache.getCacheConfiguration().clustering().cacheMode().isClustered()) {
+               TestingUtil.waitForNoRebalance(caches);
+            }
          }
       }
 
