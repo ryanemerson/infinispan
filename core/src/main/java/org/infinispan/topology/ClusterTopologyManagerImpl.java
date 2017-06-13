@@ -115,7 +115,7 @@ public class ClusterTopologyManagerImpl implements ClusterTopologyManager {
    private final Condition clusterStateChanged = clusterManagerLock.newCondition();
 
 
-   public final ConcurrentMap<String, ClusterCacheStatus> cacheStatusMap = CollectionFactory.makeConcurrentMap();
+   private final ConcurrentMap<String, ClusterCacheStatus> cacheStatusMap = CollectionFactory.makeConcurrentMap();
    private ClusterViewListener viewListener;
 
    // The global rebalancing status
@@ -396,8 +396,6 @@ public class ClusterTopologyManagerImpl implements ClusterTopologyManager {
             log.tracef("Received new cluster view: %d, isCoordinator = %s, old status = %s", (Object) newViewId,
                   isCoordinator, clusterManagerStatus);
          }
-//         log.errorf("Received new cluster view: %d, isCoordinator = %s, old status = %s", (Object) newViewId,
-//               isCoordinator, clusterManagerStatus);
 
          if (!isCoordinator) {
             clusterManagerStatus = ClusterManagerStatus.REGULAR_MEMBER;

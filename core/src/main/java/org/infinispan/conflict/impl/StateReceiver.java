@@ -5,14 +5,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
-import org.infinispan.container.entries.InternalCacheEntry;
+import org.infinispan.container.entries.CacheEntry;
 import org.infinispan.distribution.LocalizedCacheTopology;
-import org.infinispan.distribution.ch.ConsistentHash;
 import org.infinispan.factories.scopes.Scope;
 import org.infinispan.factories.scopes.Scopes;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.statetransfer.StateChunk;
-import org.infinispan.topology.CacheTopology;
 
 /**
  * @author Ryan Emerson
@@ -34,7 +32,7 @@ public interface StateReceiver<K, V> {
     *
     * @throws IllegalStateException if this method is invoked whilst a previous request for Replicas is still executing
     */
-   CompletableFuture<List<Map<Address, InternalCacheEntry<K, V>>>> getAllReplicasForSegment(int segmentId, LocalizedCacheTopology topology);
+   CompletableFuture<List<Map<Address, CacheEntry<K, V>>>> getAllReplicasForSegment(int segmentId, LocalizedCacheTopology topology);
 
    void receiveState(Address sender, int topologyId, Collection<StateChunk> stateChunks);
 }

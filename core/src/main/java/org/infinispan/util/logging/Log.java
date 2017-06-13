@@ -1577,7 +1577,7 @@ public interface Log extends BasicLogger {
    @Message(value = "Fine grained maps require explict transaction or auto-commit enabled", id = 460)
    IllegalStateException atomicFineGrainedNeedsExplicitTxOrAutoCommit();
 
-   @Message(value = "ConflictResolutionaManager.getConflicts() already in progress", id = 461)
+   @Message(value = "ConflictManager.getConflicts() already in progress", id = 461)
    IllegalStateException getConflictsAlreadyInProgress();
 
    @Message(value = "Unable to retrieve conflicts as StateTransfer is currently in progress for cache '%s'", id = 462)

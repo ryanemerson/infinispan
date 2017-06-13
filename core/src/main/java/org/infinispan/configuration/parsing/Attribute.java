@@ -37,7 +37,6 @@ public enum Attribute {
     CONFIGURATION("configuration"),
     CONSISTENT_HASH_FACTORY("consistent-hash-factory"),
     CORE_THREADS("core-threads"),
-    CUSTOM("custom"),
     DATA_CONTAINER("data-container"),
     DEFAULT_CACHE("default-cache"),
     ENABLED("enabled"),

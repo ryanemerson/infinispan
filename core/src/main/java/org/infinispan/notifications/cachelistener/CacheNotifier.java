@@ -98,9 +98,9 @@ public interface CacheNotifier<K, V> extends ClassLoaderAwareFilteringListenable
     */
    void notifyTransactionRegistered(GlobalTransaction globalTransaction, boolean isOriginLocal);
 
-   void notifyDataRehashed(ConsistentHash oldCH, ConsistentHash newCH, ConsistentHash unionCH, int newTopologyId, boolean pre, CacheTopology.Phase phase);
+   void notifyDataRehashed(ConsistentHash oldCH, ConsistentHash newCH, ConsistentHash unionCH, int newTopologyId, boolean pre);
 
-   void notifyTopologyChanged(CacheTopology oldTopology, CacheTopology newTopology, int newTopologyId, boolean pre, CacheTopology.Phase phase);
+   void notifyTopologyChanged(CacheTopology oldTopology, CacheTopology newTopology, int newTopologyId, boolean pre);
 
    void notifyPartitionStatusChanged(AvailabilityMode mode, boolean pre);
 

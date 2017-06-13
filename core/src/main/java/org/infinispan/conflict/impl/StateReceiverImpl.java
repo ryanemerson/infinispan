@@ -16,7 +16,8 @@ import org.infinispan.commons.CacheException;
 import org.infinispan.commons.logging.Log;
 import org.infinispan.commons.logging.LogFactory;
 import org.infinispan.container.DataContainer;
-import org.infinispan.container.entries.InternalCacheEntry;
+import org.infinispan.container.entries.CacheEntry;
+import org.infinispan.container.entries.NullCacheEntry;
 import org.infinispan.distribution.LocalizedCacheTopology;
 import org.infinispan.factories.annotations.Inject;
 import org.infinispan.factories.annotations.Start;
@@ -36,8 +37,8 @@ import org.infinispan.topology.CacheTopology;
 @Listener
 public class StateReceiverImpl<K, V> implements StateReceiver<K, V> {
 
-   private static Log log = LogFactory.getLog(StateReceiverImpl.class);
-   private static boolean trace = log.isTraceEnabled();
+   private static final Log log = LogFactory.getLog(StateReceiverImpl.class);
+   private static final boolean trace = log.isTraceEnabled();
 
    private String cacheName;
    private Cache<K, V> cache;
@@ -86,7 +87,7 @@ public class StateReceiverImpl<K, V> implements StateReceiver<K, V> {
    }
 
    @Override
-   public synchronized CompletableFuture<List<Map<Address, InternalCacheEntry<K, V>>>> getAllReplicasForSegment(int segmentId, LocalizedCacheTopology topology) {
+   public synchronized CompletableFuture<List<Map<Address, CacheEntry<K, V>>>> getAllReplicasForSegment(int segmentId, LocalizedCacheTopology topology) {
       return requestMap.computeIfAbsent(segmentId, id -> new SegmentRequest(id, topology)).requestState();
    }
 
@@ -107,7 +108,7 @@ public class StateReceiverImpl<K, V> implements StateReceiver<K, V> {
       request.receiveState(sender, topologyId, stateChunks);
    }
 
-   Map<K, Map<Address, InternalCacheEntry<K, V>>> getKeyReplicaMap(int segmentId) {
+   Map<K, Map<Address, CacheEntry<K, V>>> getKeyReplicaMap(int segmentId) {
       return requestMap.get(segmentId).keyReplicaMap;
    }
 
@@ -124,9 +125,9 @@ public class StateReceiverImpl<K, V> implements StateReceiver<K, V> {
       final int segmentId;
       final LocalizedCacheTopology topology;
       final List<Address> replicaHosts;
-      final Map<K, Map<Address, InternalCacheEntry<K, V>>> keyReplicaMap = new HashMap<>();
+      final Map<K, Map<Address, CacheEntry<K, V>>> keyReplicaMap = new HashMap<>();
       final Map<Address, InboundTransferTask> transferTaskMap = new HashMap<>();
-      volatile CompletableFuture<List<Map<Address, InternalCacheEntry<K, V>>>> future;
+      volatile CompletableFuture<List<Map<Address, CacheEntry<K, V>>>> future;
 
       SegmentRequest(int segmentId, LocalizedCacheTopology topology) {
          this.segmentId = segmentId;
@@ -134,7 +135,7 @@ public class StateReceiverImpl<K, V> implements StateReceiver<K, V> {
          this.replicaHosts = topology.getDistributionForSegment(segmentId).writeOwners();
       }
 
-      synchronized CompletableFuture<List<Map<Address, InternalCacheEntry<K, V>>>> requestState() {
+      synchronized CompletableFuture<List<Map<Address, CacheEntry<K, V>>>> requestState() {
          assert future == null;
          if (trace) log.tracef("Attempting to receive replicas for segment %s from %s with topology %s", segmentId, replicaHosts, topology);
 
@@ -156,7 +157,7 @@ public class StateReceiverImpl<K, V> implements StateReceiver<K, V> {
          future = CompletableFuture
                .allOf(completableFutures.toArray(new CompletableFuture[completableFutures.size()]))
                .thenApply(aVoid -> {
-                  List<Map<Address, InternalCacheEntry<K, V>>> retVal = keyReplicaMap.entrySet().stream()
+                  List<Map<Address, CacheEntry<K, V>>> retVal = keyReplicaMap.entrySet().stream()
                         .map(Map.Entry::getValue)
                         .collect(Collectors.toList());
                   keyReplicaMap.clear();
@@ -182,7 +183,7 @@ public class StateReceiverImpl<K, V> implements StateReceiver<K, V> {
             return;
          }
 
-         InboundTransferTask transferTask = transferTaskMap.remove(sender);
+         InboundTransferTask transferTask = transferTaskMap.get(sender);
          if (transferTask == null) {
             if (trace)
                log.tracef("State received for an unknown request. No record of a state request exists for node %s", sender);
@@ -191,8 +192,12 @@ public class StateReceiverImpl<K, V> implements StateReceiver<K, V> {
 
          if (trace) log.tracef("State chunks received from %s, with topologyId %s, statechunks %s", sender, topologyId, stateChunks);
          for (StateChunk chunk : stateChunks) {
+            boolean isLastChunk = chunk.isLastChunk();
             chunk.getCacheEntries().forEach(ice -> addKeyToReplicaMap(sender, ice));
-            transferTask.onStateReceived(chunk.getSegmentId(), chunk.isLastChunk());
+            transferTask.onStateReceived(chunk.getSegmentId(), isLastChunk);
+
+            if (isLastChunk)
+               transferTaskMap.remove(sender);
          }
       }
 
@@ -208,12 +213,12 @@ public class StateReceiverImpl<K, V> implements StateReceiver<K, V> {
          requestMap.remove(segmentId);
       }
 
-      void addKeyToReplicaMap(Address address, InternalCacheEntry<K, V> ice) {
+      void addKeyToReplicaMap(Address address, CacheEntry<K, V> ice) {
          // If a map doesn't already exist for a given key, then init a map that contains all hos with a NullValueEntry
          // This is necessary to determine if a key is missing on a given host as it artificially introduces a conflict
          keyReplicaMap.computeIfAbsent(ice.getKey(), k -> {
-            Map<Address, InternalCacheEntry<K, V>> map = new HashMap<>();
-            replicaHosts.forEach(a -> map.put(a, new NullValueEntry(ice.getKey())));
+            Map<Address, CacheEntry<K, V>> map = new HashMap<>();
+            replicaHosts.forEach(a -> map.put(a, NullCacheEntry.getInstance()));
             return map;
          }).put(address, ice);
       }

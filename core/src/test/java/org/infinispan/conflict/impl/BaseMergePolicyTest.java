@@ -25,7 +25,6 @@ import org.infinispan.topology.CacheStatusResponse;
 import org.infinispan.topology.CacheTopology;
 import org.infinispan.topology.LocalTopologyManager;
 import org.infinispan.topology.ManagerStatusResponse;
-import org.testng.annotations.Test;
 
 public abstract class BaseMergePolicyTest extends BasePartitionHandlingTest {
 

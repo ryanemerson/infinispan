@@ -2,7 +2,6 @@ package org.infinispan.conflict.impl;
 
 import org.infinispan.AdvancedCache;
 import org.infinispan.conflict.MergePolicies;
-import org.infinispan.context.Flag;
 import org.infinispan.distribution.MagicKey;
 import org.testng.annotations.Test;
 

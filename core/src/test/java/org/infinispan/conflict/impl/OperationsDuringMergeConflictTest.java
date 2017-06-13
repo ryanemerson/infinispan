@@ -4,7 +4,6 @@ import static org.infinispan.test.TestingUtil.extractGlobalComponent;
 import static org.infinispan.test.TestingUtil.replaceComponent;
 import static org.infinispan.test.TestingUtil.wrapInboundInvocationHandler;
 import static org.infinispan.topology.CacheTopology.Phase.READ_OLD_WRITE_ALL;
-import static org.testng.AssertJUnit.assertEquals;
 
 import java.util.List;
 import java.util.concurrent.CountDownLatch;

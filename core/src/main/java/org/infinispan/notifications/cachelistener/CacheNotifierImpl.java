@@ -650,7 +650,7 @@ public final class CacheNotifierImpl<K, V> extends AbstractListenerImpl<Event<K,
    }
 
    @Override
-   public void notifyDataRehashed(ConsistentHash oldCH, ConsistentHash newCH, ConsistentHash unionCH, int newTopologyId, boolean pre, CacheTopology.Phase phase) {
+   public void notifyDataRehashed(ConsistentHash oldCH, ConsistentHash newCH, ConsistentHash unionCH, int newTopologyId, boolean pre) {
       if (!dataRehashedListeners.isEmpty()) {
          EventImpl<K, V> e = EventImpl.createEvent(cache, DATA_REHASHED);
          e.setPre(pre);
@@ -660,13 +660,12 @@ public final class CacheNotifierImpl<K, V> extends AbstractListenerImpl<Event<K,
          e.setWriteConsistentHashAtEnd(newCH);
          e.setUnionConsistentHash(unionCH);
          e.setNewTopologyId(newTopologyId);
-         e.setPhase(phase);
          for (CacheEntryListenerInvocation<K, V> listener : dataRehashedListeners) listener.invoke(e);
       }
    }
 
    @Override
-   public void notifyTopologyChanged(CacheTopology oldTopology, CacheTopology newTopology, int newTopologyId, boolean pre, CacheTopology.Phase phase) {
+   public void notifyTopologyChanged(CacheTopology oldTopology, CacheTopology newTopology, int newTopologyId, boolean pre) {
       if (!topologyChangedListeners.isEmpty()) {
          EventImpl<K, V> e = EventImpl.createEvent(cache, TOPOLOGY_CHANGED);
          e.setPre(pre);
@@ -677,7 +676,6 @@ public final class CacheNotifierImpl<K, V> extends AbstractListenerImpl<Event<K,
          e.setReadConsistentHashAtEnd(newTopology.getReadConsistentHash());
          e.setWriteConsistentHashAtEnd(newTopology.getWriteConsistentHash());
          e.setNewTopologyId(newTopologyId);
-         e.setPhase(phase);
          for (CacheEntryListenerInvocation<K, V> listener : topologyChangedListeners) listener.invoke(e);
       }
    }

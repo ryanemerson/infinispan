@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
-import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
@@ -32,30 +31,23 @@ import org.infinispan.commands.read.GetCacheEntryCommand;
 import org.infinispan.commands.remote.ClusteredGetCommand;
 import org.infinispan.commons.CacheException;
 import org.infinispan.commons.util.EnumUtil;
-import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.ClusteringConfiguration;
-import org.infinispan.conflict.ConflictManager;
 import org.infinispan.conflict.EntryMergePolicy;
 import org.infinispan.container.entries.CacheEntry;
 import org.infinispan.container.entries.InternalCacheEntry;
 import org.infinispan.container.entries.InternalCacheValue;
+import org.infinispan.container.entries.NullCacheEntry;
 import org.infinispan.context.Flag;
 import org.infinispan.context.InvocationContext;
 import org.infinispan.context.InvocationContextFactory;
 import org.infinispan.context.impl.FlagBitSets;
 import org.infinispan.distribution.DistributionManager;
 import org.infinispan.distribution.LocalizedCacheTopology;
-import org.infinispan.distribution.ch.ConsistentHash;
-import org.infinispan.distribution.ch.KeyPartitioner;
 import org.infinispan.factories.annotations.ComponentName;
 import org.infinispan.factories.annotations.Inject;
 import org.infinispan.factories.annotations.Start;
 import org.infinispan.interceptors.AsyncInterceptorChain;
 import org.infinispan.notifications.Listener;
-import org.infinispan.notifications.cachelistener.annotation.DataRehashed;
-import org.infinispan.notifications.cachelistener.annotation.TopologyChanged;
-import org.infinispan.notifications.cachelistener.event.DataRehashedEvent;
-import org.infinispan.notifications.cachelistener.event.TopologyChangedEvent;
 import org.infinispan.remoting.responses.Response;
 import org.infinispan.remoting.responses.SuccessfulResponse;
 import org.infinispan.remoting.rpc.ResponseMode;
@@ -71,7 +63,7 @@ import org.infinispan.util.logging.LogFactory;
  * @author Ryan Emerson
  */
 @Listener(observation = Listener.Observation.BOTH)
-public class DefaultConflictManager<K, V> implements ConflictManager<K, V> {
+public class DefaultConflictManager<K, V> implements InternalConflictManager<K, V> {
 
    private static Log log = LogFactory.getLog(DefaultConflictManager.class);
    private static boolean trace = log.isTraceEnabled();
@@ -85,7 +77,6 @@ public class DefaultConflictManager<K, V> implements ConflictManager<K, V> {
    private EntryMergePolicy<K, V> entryMergePolicy;
    private ExecutorService stateTransferExecutor;
    private InvocationContextFactory invocationContextFactory;
-   private KeyPartitioner keyPartitioner;
    private RpcManager rpcManager;
    private StateConsumer stateConsumer;
    private StateReceiver<K, V> stateReceiver;
@@ -105,7 +96,6 @@ public class DefaultConflictManager<K, V> implements ConflictManager<K, V> {
                       EntryMergePolicy<K, V> entryMergePolicy,
                       @ComponentName(STATE_TRANSFER_EXECUTOR) ExecutorService stateTransferExecutor,
                       InvocationContextFactory invocationContextFactory,
-                      KeyPartitioner keyPartitioner,
                       RpcManager rpcManager,
                       StateConsumer stateConsumer,
                       StateReceiver<K, V> stateReceiver) {
@@ -116,7 +106,6 @@ public class DefaultConflictManager<K, V> implements ConflictManager<K, V> {
       this.entryMergePolicy = entryMergePolicy;
       this.stateTransferExecutor = stateTransferExecutor;
       this.invocationContextFactory = invocationContextFactory;
-      this.keyPartitioner = keyPartitioner;
       this.rpcManager = rpcManager;
       this.stateConsumer = stateConsumer;
       this.stateReceiver = stateReceiver;
@@ -128,6 +117,7 @@ public class DefaultConflictManager<K, V> implements ConflictManager<K, V> {
       this.cache.addListener(this);
       this.cacheName = cache.getName();
       this.localAddress = rpcManager.getAddress();
+      this.installedTopology = distributionManager.getCacheTopology();
 
       initRpcOptions();
       cache.getCacheConfiguration().clustering()
@@ -139,32 +129,25 @@ public class DefaultConflictManager<K, V> implements ConflictManager<K, V> {
       this.rpcOptions = rpcManager.getRpcOptionsBuilder(ResponseMode.SYNCHRONOUS_IGNORE_LEAVERS).build();
    }
 
-   @TopologyChanged
-   @SuppressWarnings("unused")
-   public void onTopologyChanged(TopologyChangedEvent<K, V> event) {
-      // We have to manually create a LocalizedTopology here, as CacheNotifier::notifyTopologyChanged is called before
-      // DistributionManager::setTopology and we always need to utilise the latest hash
-      if (trace) log.tracef("Installed new topology %s: %s", event.getNewTopologyId(), event.getWriteConsistentHashAtEnd());
-      this.installedTopology = distributionManager.getCacheTopology();
+   @Override
+   public void onTopologyUpdate(LocalizedCacheTopology cacheTopology) {
+      this.installedTopology = cacheTopology;
+      if (trace) log.tracef("Installed new topology %s: %s", cacheTopology.getTopologyId(), cacheTopology);
    }
 
-   @DataRehashed
-   @SuppressWarnings("unused")
-   public void onDataRehashed(DataRehashedEvent<K, V> event) {
-      if (event.isPre() && isStateTransferInProgress()) {
-         // We know that a rehash is about to occur, so postpone all requests which are affected
-         synchronized (versionRequestMap) {
-            versionRequestMap.values().forEach(VersionRequest::cancelRequestIfOutdated);
-         }
-      } else if (!event.isPre() && event.getPhase() == CacheTopology.Phase.READ_ALL_WRITE_ALL) {
-         this.installedTopology = createLocalizedTopology(event.getConsistentHashAtEnd());
+   @Override
+   public void cancelVersionRequests() {
+      synchronized (versionRequestMap) {
+         versionRequestMap.values().forEach(VersionRequest::cancelRequestIfOutdated);
+      }
+   }
 
-         // If phase is READ_ALL_WRITE_ALL, we know that ST has finished and that it is safe to retry postponed version requests
-         VersionRequest request;
-         while ((request = retryQueue.poll()) != null) {
-            if (trace) log.tracef("Retrying %s", request);
-            request.start();
-         }
+   @Override
+   public void restartVersionRequests() {
+      VersionRequest request;
+      while ((request = retryQueue.poll()) != null) {
+         if (trace) log.tracef("Retrying %s", request);
+         request.start();
       }
    }
 
@@ -193,11 +176,11 @@ public class DefaultConflictManager<K, V> implements ConflictManager<K, V> {
    }
 
    @Override
-   public Stream<Map<Address, InternalCacheEntry<K, V>>> getConflicts() {
+   public Stream<Map<Address, CacheEntry<K, V>>> getConflicts() {
       return getConflicts(installedTopology);
    }
 
-   private Stream<Map<Address, InternalCacheEntry<K, V>>> getConflicts(LocalizedCacheTopology topology) {
+   private Stream<Map<Address, CacheEntry<K, V>>> getConflicts(LocalizedCacheTopology topology) {
       if (stateConsumer.isStateTransferInProgress())
          throw log.getConflictsStateTransferInProgress(cacheName);
 
@@ -223,12 +206,13 @@ public class DefaultConflictManager<K, V> implements ConflictManager<K, V> {
       resolveConflicts(installedTopology);
    }
 
+   @Override
    public void resolveConflicts(CacheTopology topology) {
       LocalizedCacheTopology localizedTopology;
       if (topology instanceof LocalizedCacheTopology) {
          localizedTopology = (LocalizedCacheTopology) topology;
       } else {
-         localizedTopology = createLocalizedTopology(topology);
+         localizedTopology = distributionManager.createLocalizedCacheTopology(topology);
       }
       doResolveConflicts(localizedTopology);
    }
@@ -244,13 +228,13 @@ public class DefaultConflictManager<K, V> implements ConflictManager<K, V> {
       phaser.arriveAndAwaitAdvance();
    }
 
-   private void processConflict(Phaser phaser, Map<Address, InternalCacheEntry<K, V>> conflictMap,
+   private void processConflict(Phaser phaser, Map<Address, CacheEntry<K, V>> conflictMap,
                                                 LocalizedCacheTopology topology, Set<Address> preferredPartition) {
       stateTransferExecutor.execute(() -> {
          phaser.register();
          if (trace) log.tracef("Conflict detected %s", conflictMap);
 
-         Collection<InternalCacheEntry<K, V>> entries = conflictMap.values();
+         Collection<CacheEntry<K, V>> entries = conflictMap.values();
          final K key = entries.iterator().next().getKey();
          Address primaryReplica = topology.getDistribution(key).primary();
 
@@ -273,8 +257,8 @@ public class DefaultConflictManager<K, V> implements ConflictManager<K, V> {
          if (trace) log.tracef("Applying EntryMergePolicy %s to PreferredEntry %s, otherEntries %s",
                entryMergePolicy.getClass(), preferredEntry, entries);
 
-         CacheEntry<K, V> entry = preferredEntry instanceof NullValueEntry ? null : preferredEntry;
-         List<CacheEntry<K, V>> otherEntries = entries.stream().filter(e -> !(e instanceof NullValueEntry)).collect(Collectors.toList());
+         CacheEntry<K, V> entry = preferredEntry instanceof NullCacheEntry ? null : preferredEntry;
+         List<CacheEntry<K, V>> otherEntries = entries.stream().filter(e -> !(e instanceof NullCacheEntry)).collect(Collectors.toList());
          CacheEntry<K, V> mergedEntry = entryMergePolicy.merge(entry, otherEntries);
 
          CompletableFuture<V> future;
@@ -291,17 +275,6 @@ public class DefaultConflictManager<K, V> implements ConflictManager<K, V> {
                log.exceptionDuringConflictResolution(key, exception);
          });
       });
-   }
-
-   private LocalizedCacheTopology createLocalizedTopology(ConsistentHash hash) {
-      CacheTopology topology = new CacheTopology(-1, -1, hash, null,
-            CacheTopology.Phase.NO_REBALANCE, hash.getMembers(), null);
-      return createLocalizedTopology(topology);
-   }
-
-   private LocalizedCacheTopology createLocalizedTopology(CacheTopology topology) {
-      CacheMode mode = cache.getCacheConfiguration().clustering().cacheMode();
-      return new LocalizedCacheTopology(mode, topology, keyPartitioner, rpcManager.getAddress());
    }
 
    @Override
@@ -343,6 +316,11 @@ public class DefaultConflictManager<K, V> implements ConflictManager<K, V> {
       }
 
       void start() {
+         // TODO figure out if we can just use the CacheTopology.getPendingCh with segment id for a key instead of creating a mock LocalizedCacheTopology
+         // cacheTopology.getSegment(key)
+         //  cacheTopology.getPendingCH().locateOwnersForSegment();
+         // It should be fine, as keyPartitoner should not change during runtime, so we're basically using a non stored version of what is
+         // in a localized topology
          keyOwners = installedTopology.getWriteOwners(key);
 
          if (trace) log.tracef("Attempting %s from owners %s", this, keyOwners);
@@ -391,15 +369,15 @@ public class DefaultConflictManager<K, V> implements ConflictManager<K, V> {
       }
    }
 
-   private Predicate<? super Map<Address, InternalCacheEntry<K, V>>> filterConsistentEntries() {
+   private Predicate<? super Map<Address, CacheEntry<K, V>>> filterConsistentEntries() {
       return map -> map.values().stream().distinct().limit(2).count() > 1 || map.values().isEmpty();
    }
 
-   private class ReplicaSpliterator extends Spliterators.AbstractSpliterator<Map<Address, InternalCacheEntry<K, V>>> {
+   private class ReplicaSpliterator extends Spliterators.AbstractSpliterator<Map<Address, CacheEntry<K, V>>> {
       private final LocalizedCacheTopology topology;
       private final int totalSegments;
       private int nextSegment = 0;
-      private Iterator<Map<Address, InternalCacheEntry<K, V>>> iterator = Collections.emptyIterator();
+      private Iterator<Map<Address, CacheEntry<K, V>>> iterator = Collections.emptyIterator();
 
       ReplicaSpliterator(LocalizedCacheTopology topology) {
          super(Long.MAX_VALUE, DISTINCT | NONNULL);
@@ -409,13 +387,13 @@ public class DefaultConflictManager<K, V> implements ConflictManager<K, V> {
 
 
       @Override
-      public boolean tryAdvance(Consumer<? super Map<Address, InternalCacheEntry<K, V>>> action) {
+      public boolean tryAdvance(Consumer<? super Map<Address, CacheEntry<K, V>>> action) {
          while (!iterator.hasNext()) {
             if (nextSegment < totalSegments) {
                try {
                   if (trace)
                      log.tracef("Attempting to receive all replicas for segment %s with topology %s", nextSegment, topology);
-                  List<Map<Address, InternalCacheEntry<K, V>>> segmentEntries = stateReceiver.getAllReplicasForSegment(nextSegment, topology).get();
+                  List<Map<Address, CacheEntry<K, V>>> segmentEntries = stateReceiver.getAllReplicasForSegment(nextSegment, topology).get();
                   if (trace && !segmentEntries.isEmpty())
                      log.tracef("Segment %s entries received: %s", nextSegment, segmentEntries);
                   iterator = segmentEntries.iterator();

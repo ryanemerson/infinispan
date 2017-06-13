@@ -7,7 +7,6 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertTrue;
-import static org.testng.AssertJUnit.fail;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -16,7 +15,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import org.infinispan.Cache;
@@ -26,6 +24,7 @@ import org.infinispan.commons.hash.MurmurHash3;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.container.DataContainer;
+import org.infinispan.container.entries.CacheEntry;
 import org.infinispan.container.entries.ImmortalCacheEntry;
 import org.infinispan.container.entries.InternalCacheEntry;
 import org.infinispan.distribution.LocalizedCacheTopology;
@@ -47,6 +46,7 @@ import org.infinispan.statetransfer.InboundTransferTask;
 import org.infinispan.statetransfer.StateChunk;
 import org.infinispan.statetransfer.StateRequestCommand;
 import org.infinispan.test.AbstractInfinispanTest;
+import org.infinispan.test.Exceptions;
 import org.infinispan.topology.CacheTopology;
 import org.infinispan.topology.PersistentUUID;
 import org.infinispan.topology.PersistentUUIDManager;
@@ -65,33 +65,21 @@ public class StateReceiverTest extends AbstractInfinispanTest {
       taskFuture.completeExceptionally(new CacheException("Problem encountered retrieving state"));
       initTransferTaskMock(taskFuture);
 
-      CompletableFuture<List<Map<Address, InternalCacheEntry<Object, Object>>>> cf = stateReceiver.getAllReplicasForSegment(0, localizedCacheTopology);
-      try {
-         cf.get();
-         fail("Expected an ExecutionExceptions caused by a CacheException");
-      } catch (ExecutionException e) {
-         assertTrue("Expected an ExecutionExceptions caused by a CacheException.", e.getCause() instanceof CacheException);
-      }
+      CompletableFuture<List<Map<Address, CacheEntry<Object, Object>>>> cf = stateReceiver.getAllReplicasForSegment(0, localizedCacheTopology);
+      Exceptions.expectExecutionException(CacheException.class, cf);
    }
 
    public void testTopologyChangeDuringSegmentRequest() throws Exception {
       initTransferTaskMock(new CompletableFuture<>());
 
-      CompletableFuture<List<Map<Address, InternalCacheEntry<Object, Object>>>> cf = stateReceiver.getAllReplicasForSegment(0, localizedCacheTopology);
+      CompletableFuture<List<Map<Address, CacheEntry<Object, Object>>>> cf = stateReceiver.getAllReplicasForSegment(0, localizedCacheTopology);
       assertTrue(!cf.isCancelled());
       assertTrue(!cf.isCompletedExceptionally());
 
       // Reduce #nodes to less than numowners to force hash change
       stateReceiver.onDataRehash(createEventImpl(4, 1, Event.Type.DATA_REHASHED));
       assertTrue(cf.isCompletedExceptionally());
-      try {
-         cf.get();
-         fail("Expected the CompletableFuture to fail with CacheException");
-      } catch (ExecutionException e) {
-         assertTrue(e.getCause() instanceof CacheException);
-      } catch (InterruptedException e) {
-         fail(String.format("Unexpected exception from CompletableFuture: %s", e));
-      }
+      Exceptions.expectExecutionException(CacheException.class, cf);
 
       stateReceiver.onDataRehash(createEventImpl(4, 4, Event.Type.DATA_REHASHED));
       cf = stateReceiver.getAllReplicasForSegment(1, localizedCacheTopology);
@@ -105,7 +93,7 @@ public class StateReceiverTest extends AbstractInfinispanTest {
       int segmentId = 0;
       stateReceiver.getAllReplicasForSegment(segmentId, localizedCacheTopology);
       List<Address> sourceAddresses = new ArrayList<>(stateReceiver.getTransferTaskMap(segmentId).keySet());
-      Map<Object, Map<Address, InternalCacheEntry<Object, Object>>> receiverKeyMap = stateReceiver.getKeyReplicaMap(segmentId);
+      Map<Object, Map<Address, CacheEntry<Object, Object>>> receiverKeyMap = stateReceiver.getKeyReplicaMap(segmentId);
       assertEquals(0, receiverKeyMap.size());
       stateReceiver.receiveState(sourceAddresses.get(0), 2, createStateChunks("Key1", "Value1"));
       assertEquals(1, receiverKeyMap.size());

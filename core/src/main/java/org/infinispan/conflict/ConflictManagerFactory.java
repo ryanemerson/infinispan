@@ -1,8 +1,7 @@
 package org.infinispan.conflict;
 
-import java.util.Objects;
-
 import org.infinispan.AdvancedCache;
+import org.infinispan.conflict.impl.InternalConflictManager;
 import org.infinispan.security.AuthorizationManager;
 import org.infinispan.security.AuthorizationPermission;
 
@@ -21,9 +20,9 @@ final public class ConflictManagerFactory {
          authzManager.checkPermission(AuthorizationPermission.ALL_WRITE);
       }
 
-      return Objects.requireNonNull(cache, "Cache cannot be null")
+      return cache
             .getAdvancedCache()
             .getComponentRegistry()
-            .getComponent(ConflictManager.class);
+            .getComponent(InternalConflictManager.class);
    }
 }

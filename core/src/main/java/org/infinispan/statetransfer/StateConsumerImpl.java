@@ -43,6 +43,7 @@ import org.infinispan.commons.util.concurrent.ConcurrentHashSet;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.configuration.cache.PartitionHandlingConfiguration;
+import org.infinispan.conflict.impl.InternalConflictManager;
 import org.infinispan.container.DataContainer;
 import org.infinispan.container.entries.InternalCacheEntry;
 import org.infinispan.context.InvocationContext;
@@ -50,8 +51,8 @@ import org.infinispan.context.InvocationContextFactory;
 import org.infinispan.context.impl.TxInvocationContext;
 import org.infinispan.distexec.DistributedCallable;
 import org.infinispan.distribution.DistributionInfo;
-import org.infinispan.distribution.TriangleOrderManager;
 import org.infinispan.distribution.DistributionManager;
+import org.infinispan.distribution.TriangleOrderManager;
 import org.infinispan.distribution.ch.ConsistentHash;
 import org.infinispan.distribution.ch.KeyPartitioner;
 import org.infinispan.executors.LimitedExecutor;
@@ -134,6 +135,7 @@ public class StateConsumerImpl implements StateConsumer {
    private TriangleOrderManager triangleOrderManager;
    private DistributionManager distributionManager;
    private KeyPartitioner keyPartitioner;
+   private InternalConflictManager conflictManager;
 
    private volatile CacheTopology cacheTopology;
 
@@ -214,7 +216,8 @@ public class StateConsumerImpl implements StateConsumer {
                     CommitManager commitManager,
                     CommandAckCollector commandAckCollector,
                     TriangleOrderManager triangleOrderManager,
-                    DistributionManager distributionManager, KeyPartitioner keyPartitioner) {
+                    DistributionManager distributionManager, KeyPartitioner keyPartitioner,
+                    InternalConflictManager conflictManager) {
       this.cache = cache;
       this.cacheName = cache.getName();
       this.stateTransferExecutor = stateTransferExecutor;
@@ -238,6 +241,7 @@ public class StateConsumerImpl implements StateConsumer {
       this.triangleOrderManager = triangleOrderManager;
       this.distributionManager = distributionManager;
       this.keyPartitioner = keyPartitioner;
+      this.conflictManager = conflictManager;
 
       isInvalidationMode = configuration.clustering().cacheMode().isInvalidation();
 
@@ -303,8 +307,9 @@ public class StateConsumerImpl implements StateConsumer {
          // Only update the rebalance topology id when starting the rebalance, as we're going to ignore any state
          // response with a smaller topology id
          stateTransferTopologyId.compareAndSet(NO_STATE_TRANSFER_IN_PROGRESS, cacheTopology.getTopologyId());
+         conflictManager.cancelVersionRequests();
          cacheNotifier.notifyDataRehashed(cacheTopology.getCurrentCH(), cacheTopology.getPendingCH(),
-               cacheTopology.getUnionCH(), cacheTopology.getTopologyId(), true, cacheTopology.getPhase());
+               cacheTopology.getUnionCH(), cacheTopology.getTopologyId(), true);
       }
 
       if (startConflictResolution) {
@@ -331,6 +336,7 @@ public class StateConsumerImpl implements StateConsumer {
       triangleOrderManager.updateCacheTopology(cacheTopology);
       if (distributionManager != null) {
          distributionManager.setCacheTopology(cacheTopology);
+         conflictManager.onTopologyUpdate(distributionManager.getCacheTopology());
       }
 
       // We need to track changes so that user puts during conflict resolution are prioritised over MergePolicy updates
@@ -428,7 +434,8 @@ public class StateConsumerImpl implements StateConsumer {
                // if the coordinator changed, we might get two concurrent topology updates,
                // but we only want to notify the @DataRehashed listeners once
                cacheNotifier.notifyDataRehashed(previousReadCh, cacheTopology.getPendingCH(), previousWriteCh,
-                     cacheTopology.getTopologyId(), false, cacheTopology.getPhase());
+                     cacheTopology.getTopologyId(), false);
+
                if (trace) {
                   log.tracef("Unlock State Transfer in Progress for topology ID %s", cacheTopology.getTopologyId());
                }
@@ -481,10 +488,6 @@ public class StateConsumerImpl implements StateConsumer {
          // when this node is a member of the new topology, otherwise entries updated during conflict resolution can be
          // removed, resulting in only a subset of the owners hosting the resolved entry.
          Set<Integer> removedSegments;
-
-         // TODO update so that data is not removed on the initial CONFLICT_RESOLUTION topology
-         // Create Phase.CONFLICT_RESOLUTION and remove deletePastMemberVals variable
-
          if ((isMember || deletePastMemberVals) && cacheTopology.getPhase() == CacheTopology.Phase.NO_REBALANCE) {
             removedSegments = IntStream.range(0, newWriteCh.getNumSegments()).boxed().collect(Collectors.toSet());
             Set<Integer> newSegments = getOwnedSegments(newWriteCh);
@@ -496,6 +499,7 @@ public class StateConsumerImpl implements StateConsumer {
                Thread.currentThread().interrupt();
                throw new CacheException(e);
             }
+            conflictManager.restartVersionRequests();
          }
       }
    }

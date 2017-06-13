@@ -3,7 +3,7 @@ package org.infinispan.conflict;
 import java.util.Map;
 import java.util.stream.Stream;
 
-import org.infinispan.container.entries.InternalCacheEntry;
+import org.infinispan.container.entries.CacheEntry;
 import org.infinispan.container.entries.InternalCacheValue;
 import org.infinispan.distribution.DistributionInfo;
 import org.infinispan.factories.scopes.Scope;
@@ -34,11 +34,11 @@ public interface ConflictManager<K, V> {
    Map<Address, InternalCacheValue<V>> getAllVersions(K key);
 
    /**
-    * @return a stream of Map<Address, InternalCacheValue>> for all conflicts detected throughout this cache.
+    * @return a stream of Map<Address, CacheEntry>> for all conflicts detected throughout this cache.
     * @throws org.infinispan.commons.CacheException if state transfer is initiated while checking for conflicts.
     * @throws IllegalStateException if called whilst state transfer is in progress.
     */
-   Stream<Map<Address, InternalCacheEntry<K, V>>> getConflicts();
+   Stream<Map<Address, CacheEntry<K, V>>> getConflicts();
 
    /**
     * Utilises {@link ConflictManager#getConflicts()} to discover conflicts between Key replicas and utilises the configured

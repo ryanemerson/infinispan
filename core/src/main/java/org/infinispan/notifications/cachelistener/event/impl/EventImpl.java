@@ -25,7 +25,6 @@ import org.infinispan.notifications.cachelistener.event.TransactionCompletedEven
 import org.infinispan.notifications.cachelistener.event.TransactionRegisteredEvent;
 import org.infinispan.partitionhandling.AvailabilityMode;
 import org.infinispan.remoting.transport.Address;
-import org.infinispan.topology.CacheTopology;
 import org.infinispan.transaction.xa.GlobalTransaction;
 
 import net.jcip.annotations.NotThreadSafe;
@@ -57,7 +56,6 @@ public class EventImpl<K, V> implements CacheEntryActivatedEvent, CacheEntryCrea
    private boolean created;
    private boolean commandRetried;
    private AvailabilityMode mode;
-   private CacheTopology.Phase phase;
 
    public EventImpl() {
    }
@@ -274,7 +272,6 @@ public class EventImpl<K, V> implements CacheEntryActivatedEvent, CacheEntryCrea
                ", writeConsistentHashAtEnd=" + writeConsistentHashAtEnd +
                ", unionConsistentHash=" + unionConsistentHash +
                ", newTopologyId=" + newTopologyId +
-               ", phase=" + phase +
                '}';
       return "EventImpl{" +
             "type=" + type +
@@ -348,14 +345,6 @@ public class EventImpl<K, V> implements CacheEntryActivatedEvent, CacheEntryCrea
 
    public void setAvailabilityMode(AvailabilityMode mode) {
       this.mode = mode;
-   }
-
-   public CacheTopology.Phase getPhase() {
-      return phase;
-   }
-
-   public void setPhase(CacheTopology.Phase phase) {
-      this.phase = phase;
    }
 
    @Override

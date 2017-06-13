@@ -25,10 +25,11 @@ import org.infinispan.commons.CacheException;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.conflict.ConflictManagerFactory;
-import org.infinispan.container.entries.InternalCacheEntry;
+import org.infinispan.container.entries.CacheEntry;
 import org.infinispan.container.entries.InternalCacheValue;
+import org.infinispan.container.entries.NullCacheEntry;
 import org.infinispan.context.Flag;
-import org.infinispan.distribution.ch.ConsistentHash;
+import org.infinispan.distribution.LocalizedCacheTopology;
 import org.infinispan.notifications.Listener;
 import org.infinispan.notifications.cachelistener.annotation.DataRehashed;
 import org.infinispan.notifications.cachelistener.event.DataRehashedEvent;
@@ -153,18 +154,18 @@ public class ConflictManagerTest extends BasePartitionHandlingTest {
       final int cacheIndex = numMembersInCluster - 1;
       assertEquals(0, getConflicts(cacheIndex).count());
       introduceCacheConflicts();
-      List<Map<Address, InternalCacheEntry<Object, Object>>> conflicts = getConflicts(cacheIndex).collect(Collectors.toList());
+      List<Map<Address, CacheEntry<Object, Object>>> conflicts = getConflicts(cacheIndex).collect(Collectors.toList());
 
       assertEquals(INCONSISTENT_VALUE_INCREMENT, conflicts.size());
-      for (Map<Address, InternalCacheEntry<Object, Object>> map : conflicts) {
+      for (Map<Address, CacheEntry<Object, Object>> map : conflicts) {
          assertEquals(NUMBER_OF_OWNERS, map.keySet().size());
-         Collection<InternalCacheEntry<Object, Object>> mapValues = map.values();
-         int key = mapValues.stream().mapToInt(e -> (Integer) e.getKey()).findAny().orElse(-1);
+         Collection<CacheEntry<Object, Object>> mapValues = map.values();
+         int key = mapValues.stream().filter(e -> !(e instanceof NullCacheEntry)).mapToInt(e -> (Integer) e.getKey()).findAny().orElse(-1);
          assertTrue(key > -1);
          if (key % NULL_VALUE_FREQUENCY == 0) {
-            assertTrue(map.values().stream().anyMatch(NullValueEntry.class::isInstance));
+            assertTrue(map.values().stream().anyMatch(NullCacheEntry.class::isInstance));
          } else {
-            List<Object> icvs = map.values().stream().map(InternalCacheEntry::getValue).distinct().collect(Collectors.toList());
+            List<Object> icvs = map.values().stream().map(CacheEntry::getValue).distinct().collect(Collectors.toList());
             assertEquals(NUMBER_OF_OWNERS, icvs.size());
             assertTrue("Expected one of the conflicting string values to be 'INCONSISTENT'", icvs.contains("INCONSISTENT"));
          }
@@ -172,9 +173,9 @@ public class ConflictManagerTest extends BasePartitionHandlingTest {
    }
 
    private void introduceCacheConflicts() {
-      ConsistentHash hash = getCache(0).getDistributionManager().getConsistentHash();
+      LocalizedCacheTopology topology = getCache(0).getDistributionManager().getCacheTopology();
       for (int i = 0; i < NUMBER_OF_CACHE_ENTRIES; i += INCONSISTENT_VALUE_INCREMENT) {
-         Address primary = hash.locatePrimaryOwner(i);
+         Address primary = topology.getDistribution(i).primary();
          AdvancedCache<Object, Object> primaryCache = manager(primary).getCache(CACHE_NAME).getAdvancedCache().withFlags(Flag.CACHE_MODE_LOCAL);
 
          if (i % NULL_VALUE_FREQUENCY == 0)
@@ -233,7 +234,7 @@ public class ConflictManagerTest extends BasePartitionHandlingTest {
       return advancedCache(index, CACHE_NAME);
    }
 
-   private Stream<Map<Address, InternalCacheEntry<Object, Object>>> getConflicts(int index) {
+   private Stream<Map<Address, CacheEntry<Object, Object>>> getConflicts(int index) {
       return ConflictManagerFactory.get(getCache(index)).getConflicts();
    }
 
