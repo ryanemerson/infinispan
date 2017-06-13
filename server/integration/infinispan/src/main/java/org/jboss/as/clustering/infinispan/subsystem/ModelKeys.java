@@ -185,6 +185,7 @@ public class ModelKeys {
     static final String PLAIN = "plain";
     static final String PREFIX = "prefix";
     static final String PRELOAD = "preload";
+    static final String PRELOAD_ONLY = "preload-only";
     static final String PROPERTY = "property";
     static final String PROPERTIES = "properties";
     static final String PROTOCOL_VERSION = "protocol-version";

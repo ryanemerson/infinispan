@@ -88,6 +88,11 @@ public class CustomStoreConfigurationBuilder implements StoreConfigurationBuilde
    }
 
    @Override
+   public Object preloadOnly(boolean b) {
+      return null;
+   }
+
+   @Override
    public Object shared(boolean b) {
       return null;
    }

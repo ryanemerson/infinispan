@@ -15,11 +15,12 @@ import org.testng.annotations.Test;
 @Test(groups = {"unit", "smoke"}, testName = "persistence.JpaStoreFunctionalTest")
 public class JpaStoreFunctionalTest extends BaseStoreFunctionalTest {
    @Override
-   protected PersistenceConfigurationBuilder createCacheStoreConfig(PersistenceConfigurationBuilder persistence, boolean preload) {
+   protected PersistenceConfigurationBuilder createCacheStoreConfig(PersistenceConfigurationBuilder persistence, boolean preload, boolean preloadOnly) {
       persistence.addStore(JpaStoreConfigurationBuilder.class)
             .persistenceUnitName("org.infinispan.persistence.jpa")
             .entityClass(KeyValueEntity.class)
             .preload(preload)
+            .preloadOnly(preloadOnly)
             .create();
       return persistence;
    }

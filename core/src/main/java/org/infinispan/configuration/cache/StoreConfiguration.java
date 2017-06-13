@@ -54,6 +54,8 @@ public interface StoreConfiguration {
 
    boolean preload();
 
+   boolean preloadOnly();
+
    boolean shared();
 
    boolean transactional();

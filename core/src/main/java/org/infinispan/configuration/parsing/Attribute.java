@@ -91,6 +91,7 @@ public enum Attribute {
     PERSISTENCE_EXECUTOR("persistence-executor"),
     POSITION("position"),
     PRELOAD("preload"),
+    PRELOAD_ONLY("preload-only"),
     PRIORITY("priority"),
     PURGE("purge"),
     @Deprecated

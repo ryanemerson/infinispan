@@ -1369,22 +1369,27 @@ public class TestingUtil {
       return new InternalMetadataImpl(metadata(lifespan, maxIdle), now, now);
    }
 
-
+   @SuppressWarnings("unchecked")
    public static <T extends CacheLoader<K, V>, K, V>  T getFirstLoader(Cache<K, V> cache) {
       PersistenceManagerImpl persistenceManager = (PersistenceManagerImpl) extractComponent(cache, PersistenceManager.class);
-      //noinspection unchecked
+      if (persistenceManager.getAllLoaders().isEmpty())
+         return null;
       return (T) persistenceManager.getAllLoaders().get(0);
    }
 
    @SuppressWarnings("unchecked")
    public static <T extends CacheWriter<K, V>, K, V> T getFirstWriter(Cache<K, V> cache) {
       PersistenceManagerImpl persistenceManager = (PersistenceManagerImpl) extractComponent(cache, PersistenceManager.class);
+      if (persistenceManager.getAllWriters().isEmpty())
+         return null;
       return (T) persistenceManager.getAllWriters().get(0);
    }
 
    @SuppressWarnings("unchecked")
    public static <T extends CacheWriter<K, V>, K, V> T getFirstTxWriter(Cache<K, V> cache) {
       PersistenceManagerImpl persistenceManager = (PersistenceManagerImpl) extractComponent(cache, PersistenceManager.class);
+      if (persistenceManager.getAllTxWriters().isEmpty())
+         return null;
       return (T) persistenceManager.getAllTxWriters().get(0);
    }
 

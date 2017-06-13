@@ -81,7 +81,7 @@ public class BaseStoreConfigurationResource extends BaseLoaderConfigurationResou
 
     static final AttributeDefinition[] BASE_STORE_ATTRIBUTES = {PASSIVATION, FETCH_STATE, PURGE, READ_ONLY, SINGLETON};
     /* Note this has loader attributes as well */
-    static final AttributeDefinition[] BASE_STORE_PARAMETERS = {SHARED, PRELOAD, PASSIVATION, FETCH_STATE, PURGE, READ_ONLY, SINGLETON, PROPERTIES};
+    static final AttributeDefinition[] BASE_STORE_PARAMETERS = {SHARED, PRELOAD, PRELOAD_ONLY, PASSIVATION, FETCH_STATE, PURGE, READ_ONLY, SINGLETON, PROPERTIES};
 
     public BaseStoreConfigurationResource(PathElement path, String resourceKey, CacheConfigurationResource parent, AttributeDefinition[] attributes) {
         super(path, resourceKey, parent, Util.arrayConcat(BASE_STORE_ATTRIBUTES, attributes));

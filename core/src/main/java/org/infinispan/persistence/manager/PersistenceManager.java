@@ -27,7 +27,7 @@ public interface PersistenceManager extends Lifecycle {
    /**
     * Loads the data from the external store into memory during cache startup.
     */
-   public void preload();
+   void preload();
 
    /**
     * Marks the given storage as disabled.
@@ -67,7 +67,7 @@ public interface PersistenceManager extends Lifecycle {
 
    int size();
 
-   public static enum AccessMode {
+   enum AccessMode {
       /**
        * The operation is performed in all {@link org.infinispan.persistence.spi.CacheWriter} or {@link
        * org.infinispan.persistence.spi.CacheLoader}

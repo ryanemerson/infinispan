@@ -12,19 +12,21 @@ public class AbstractStoreConfiguration implements StoreConfiguration {
    public static final AttributeDefinition<Boolean> PURGE_ON_STARTUP = AttributeDefinition.builder("purgeOnStartup", false).immutable().xmlName("purge").build();
    public static final AttributeDefinition<Boolean> IGNORE_MODIFICATIONS = AttributeDefinition.builder("ignoreModifications", false).immutable().xmlName("read-only").build();
    public static final AttributeDefinition<Boolean> PRELOAD = AttributeDefinition.builder("preload", false).immutable().build();
+   public static final AttributeDefinition<Boolean> PRELOAD_ONLY = AttributeDefinition.builder("preloadOnly", false).immutable().build();
    public static final AttributeDefinition<Boolean> SHARED = AttributeDefinition.builder("shared", false).immutable().build();
    public static final AttributeDefinition<Boolean> TRANSACTIONAL = AttributeDefinition.builder("transactional", false).immutable().build();
    public static final AttributeDefinition<TypedProperties> PROPERTIES = AttributeDefinition.builder("properties", null, TypedProperties.class)
          .initializer(() -> new TypedProperties()).autoPersist(false).immutable().build();
 
    public static AttributeSet attributeDefinitionSet() {
-      return new AttributeSet(AbstractStoreConfiguration.class, FETCH_PERSISTENT_STATE, PURGE_ON_STARTUP, IGNORE_MODIFICATIONS, PRELOAD, SHARED, TRANSACTIONAL, PROPERTIES);
+      return new AttributeSet(AbstractStoreConfiguration.class, FETCH_PERSISTENT_STATE, PURGE_ON_STARTUP, IGNORE_MODIFICATIONS, PRELOAD, PRELOAD_ONLY, SHARED, TRANSACTIONAL, PROPERTIES);
    }
 
    private final Attribute<Boolean> fetchPersistentState;
    private final Attribute<Boolean> purgeOnStartup;
    private final Attribute<Boolean> ignoreModifications;
    private final Attribute<Boolean> preload;
+   private final Attribute<Boolean> preloadOnly;
    private final Attribute<Boolean> shared;
    private final Attribute<Boolean> transactional;
    private final Attribute<TypedProperties> properties;
@@ -44,6 +46,7 @@ public class AbstractStoreConfiguration implements StoreConfiguration {
       attributes.attribute(FETCH_PERSISTENT_STATE).set(fetchPersistentState);
       attributes.attribute(IGNORE_MODIFICATIONS).set(ignoreModifications);
       attributes.attribute(PRELOAD).set(preload);
+      attributes.attribute(PRELOAD_ONLY).set(false);
       attributes.attribute(SHARED).set(shared);
       attributes.attribute(TRANSACTIONAL).set(false);
       attributes.attribute(PROPERTIES).set(TypedProperties.toTypedProperties(properties));
@@ -54,6 +57,7 @@ public class AbstractStoreConfiguration implements StoreConfiguration {
       this.purgeOnStartup = attributes.attribute(PURGE_ON_STARTUP);
       this.ignoreModifications = attributes.attribute(IGNORE_MODIFICATIONS);
       this.preload = attributes.attribute(PRELOAD);
+      this.preloadOnly = attributes.attribute(PRELOAD_ONLY);
       this.shared = attributes.attribute(SHARED);
       this.transactional = attributes.attribute(TRANSACTIONAL);
       this.properties = attributes.attribute(PROPERTIES);
@@ -68,6 +72,7 @@ public class AbstractStoreConfiguration implements StoreConfiguration {
       this.purgeOnStartup = attributes.attribute(PURGE_ON_STARTUP);
       this.ignoreModifications = attributes.attribute(IGNORE_MODIFICATIONS);
       this.preload = attributes.attribute(PRELOAD);
+      this.preloadOnly = attributes.attribute(PRELOAD_ONLY);
       this.shared = attributes.attribute(SHARED);
       this.transactional = attributes.attribute(TRANSACTIONAL);
       this.properties = attributes.attribute(PROPERTIES);
@@ -136,6 +141,11 @@ public class AbstractStoreConfiguration implements StoreConfiguration {
    @Override
    public boolean preload() {
       return preload.get();
+   }
+
+   @Override
+   public boolean preloadOnly() {
+      return preloadOnly.get();
    }
 
    @Override

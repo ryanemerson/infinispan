@@ -3,6 +3,7 @@ package org.infinispan.configuration.cache;
 import static org.infinispan.configuration.cache.AbstractStoreConfiguration.FETCH_PERSISTENT_STATE;
 import static org.infinispan.configuration.cache.AbstractStoreConfiguration.IGNORE_MODIFICATIONS;
 import static org.infinispan.configuration.cache.AbstractStoreConfiguration.PRELOAD;
+import static org.infinispan.configuration.cache.AbstractStoreConfiguration.PRELOAD_ONLY;
 import static org.infinispan.configuration.cache.AbstractStoreConfiguration.PROPERTIES;
 import static org.infinispan.configuration.cache.AbstractStoreConfiguration.PURGE_ON_STARTUP;
 import static org.infinispan.configuration.cache.AbstractStoreConfiguration.SHARED;
@@ -161,6 +162,12 @@ public abstract class AbstractStoreConfigurationBuilder<T extends StoreConfigura
       return self();
    }
 
+   @Override
+   public S preloadOnly(boolean b) {
+      attributes.attribute(PRELOAD_ONLY).set(b);
+      return self();
+   }
+
    /**
     * {@inheritDoc}
     */
@@ -198,6 +205,7 @@ public abstract class AbstractStoreConfigurationBuilder<T extends StoreConfigura
       boolean fetchPersistentState = attributes.attribute(FETCH_PERSISTENT_STATE).get();
       boolean purgeOnStartup = attributes.attribute(PURGE_ON_STARTUP).get();
       boolean preload = attributes.attribute(PRELOAD).get();
+      boolean preloadOnly = attributes.attribute(PRELOAD_ONLY).get();
       boolean transactional = attributes.attribute(TRANSACTIONAL).get();
       ConfigurationBuilder builder = getBuilder();
 
@@ -208,6 +216,10 @@ public abstract class AbstractStoreConfigurationBuilder<T extends StoreConfigura
       if (fetchPersistentState && attributes.attribute(FETCH_PERSISTENT_STATE).isModified() &&
             clustering().cacheMode().isInvalidation()) {
          throw log.attributeNotAllowedInInvalidationMode(FETCH_PERSISTENT_STATE.name());
+      }
+
+      if (preloadOnly) {
+
       }
 
       if (shared && !preload && builder.indexing().enabled()

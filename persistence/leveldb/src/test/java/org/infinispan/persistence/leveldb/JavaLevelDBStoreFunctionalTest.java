@@ -19,8 +19,8 @@ public class JavaLevelDBStoreFunctionalTest extends LevelDBStoreFunctionalTest {
    public static final int EXPIRATION_TIMEOUT = 3000;
 
    @Override
-   protected PersistenceConfigurationBuilder createCacheStoreConfig(PersistenceConfigurationBuilder loaders, boolean preload) {
-      super.createStoreBuilder(loaders).implementationType(LevelDBStoreConfiguration.ImplementationType.JAVA).preload(preload);
+   protected PersistenceConfigurationBuilder createCacheStoreConfig(PersistenceConfigurationBuilder loaders, boolean preload, boolean preloadOnly) {
+      super.createStoreBuilder(loaders).implementationType(LevelDBStoreConfiguration.ImplementationType.JAVA).preload(preload).preloadOnly(preloadOnly);
       return loaders;
    }
 

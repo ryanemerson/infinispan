@@ -53,13 +53,21 @@ public class UnitTestDatabaseManager {
       }
    }
 
+   public static ConnectionFactoryConfigurationBuilder<?> configureTestConnectionFactory(AbstractJdbcStoreConfigurationBuilder<?, ?> store) {
+      return configureUniqueConnectionFactory(store, extractTestName());
+   }
+
    public static ConnectionFactoryConfigurationBuilder<?> configureUniqueConnectionFactory(AbstractJdbcStoreConfigurationBuilder<?, ?> store) {
+      return configureUniqueConnectionFactory(store, extractTestName() + userIndex.incrementAndGet());
+   }
+
+   public static ConnectionFactoryConfigurationBuilder<?> configureUniqueConnectionFactory(AbstractJdbcStoreConfigurationBuilder<?, ?> store, String dbName) {
       switch (dt) {
       case H2:
          return store
             .connectionPool()
                .driverClass(org.h2.Driver.class)
-               .connectionUrl(String.format("jdbc:h2:mem:%s;DB_CLOSE_DELAY=-1", extractTestName() + userIndex.incrementAndGet()))
+               .connectionUrl(String.format("jdbc:h2:mem:%s;DB_CLOSE_DELAY=-1", dbName))
                .username("sa");
       case MYSQL:
          return store

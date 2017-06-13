@@ -46,6 +46,11 @@ public abstract class AbstractStoreConfigurationChildBuilder<S> extends Abstract
    }
 
    @Override
+   public S preloadOnly(boolean b) {
+      return (S)builder.preloadOnly(b);
+   }
+
+   @Override
    public S shared(boolean b) {
       return (S)builder.shared(b);
    }

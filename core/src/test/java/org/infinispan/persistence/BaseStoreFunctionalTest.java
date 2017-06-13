@@ -20,13 +20,17 @@ import org.infinispan.commons.util.ByRef;
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.configuration.cache.PersistenceConfigurationBuilder;
+import org.infinispan.configuration.cache.StoreConfiguration;
 import org.infinispan.container.DataContainer;
 import org.infinispan.container.entries.InternalCacheEntry;
+import org.infinispan.context.Flag;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.marshall.core.ExternalPojo;
 import org.infinispan.marshall.core.MarshalledEntry;
+import org.infinispan.persistence.factory.CacheStoreFactoryRegistry;
 import org.infinispan.persistence.manager.PersistenceManager;
 import org.infinispan.persistence.manager.PersistenceManagerStub;
+import org.infinispan.persistence.spi.CacheLoader;
 import org.infinispan.persistence.spi.PersistenceException;
 import org.infinispan.test.SingleCacheManagerTest;
 import org.infinispan.test.TestingUtil;
@@ -42,7 +46,11 @@ import org.testng.annotations.Test;
 @Test(groups = {"unit", "smoke"}, testName = "persistence.BaseStoreFunctionalTest")
 public abstract class BaseStoreFunctionalTest extends SingleCacheManagerTest {
 
-   protected abstract PersistenceConfigurationBuilder createCacheStoreConfig(PersistenceConfigurationBuilder persistence, boolean preload);
+   protected abstract PersistenceConfigurationBuilder createCacheStoreConfig(PersistenceConfigurationBuilder persistence, boolean preload, boolean preloadOnly);
+
+   protected PersistenceConfigurationBuilder createCacheStoreConfig(PersistenceConfigurationBuilder persistence, boolean preload) {
+      return createCacheStoreConfig(persistence, preload, false);
+   }
 
    protected Object wrap(String key, String value) {
       return value;
@@ -142,6 +150,55 @@ public abstract class BaseStoreFunctionalTest extends SingleCacheManagerTest {
       assertEquals(new Pojo(2), cache.get("k2"));
       assertEquals(new Pojo(3), cache.get("k3"));
       assertEquals(new Pojo(4), cache.get("k4"));
+   }
+
+   public void testPreloadOnly() {
+      ConfigurationBuilder cb = TestCacheManagerFactory.getDefaultCacheConfiguration(false);
+      createCacheStoreConfig(cb.persistence(), false);
+      cacheManager.defineConfiguration("testPreloadOnlyInitCache", cb.build());
+
+      Cache<String, Pojo> cache = cacheManager.getCache("testPreloadOnlyInitCache");
+      cache.start();
+      CacheLoader loader = TestingUtil.getFirstLoader(cache);
+      cache.put("k1", new Pojo(1));
+      assertTrue(loader.contains("k1"));
+      cache.stop();
+
+      CacheStoreFactoryRegistry registry = new ExistingLoaderInstanceRegistry(loader);
+      TestingUtil.replaceComponent(cacheManager, CacheStoreFactoryRegistry.class, registry, true);
+      cache = cacheManager.getCache("testPreloadOnlyInitCache");
+
+      cache.start();
+      assertNull(TestingUtil.getCacheLoader(cache));
+      assertTrue(loader.contains("k1"));
+      assertEquals(1, cache.size());
+      assertEquals(new Pojo(1), cache.getAdvancedCache().withFlags(Flag.SKIP_CACHE_LOAD).get("k1"));
+      assertEquals(new Pojo(1), cache.get("k1"));
+      cache.stop();
+   }
+
+   private class ExistingLoaderInstanceRegistry extends CacheStoreFactoryRegistry {
+
+      private final CacheLoader loaderInstance;
+
+      ExistingLoaderInstanceRegistry(CacheLoader loaderInstance) {
+         this.loaderInstance = loaderInstance;
+      }
+
+      @Override
+      public Object createInstance(StoreConfiguration storeConfiguration) {
+         return loaderInstance;
+      }
+
+      @Override
+      public StoreConfiguration processStoreConfiguration(StoreConfiguration storeConfiguration) {
+         ConfigurationBuilder cb = TestCacheManagerFactory.getDefaultCacheConfiguration(false);
+         createCacheStoreConfig(cb.persistence(), true, true);
+         StoreConfiguration sc = cb.build().persistence().stores().get(0);
+         assertTrue(sc.preload());
+         assertTrue(sc.preloadOnly());
+         return sc;
+      }
    }
 
    public static class Pojo implements Serializable, ExternalPojo {

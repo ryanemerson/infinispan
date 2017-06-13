@@ -1352,6 +1352,11 @@
         <xs:documentation>If true, when the cache starts, data stored in the cache store will be pre-loaded into memory. This is particularly useful when data in the cache store will be needed immediately after startup and you want to avoid cache operations being delayed as a result of loading this data lazily. Can be used to provide a 'warm-cache' on startup, however there is a performance penalty as startup time is affected by this process.</xs:documentation>
       </xs:annotation>
     </xs:attribute>
+    <xs:attribute name="preload-only" type="xs:boolean" default="${AbstractStore.preloadOnly}">
+      <xs:annotation>
+        <xs:documentation>If true, this cache store is shutdown immediately after preloading completes.</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
   </xs:complexType>
 
   <xs:complexType name="cluster-loader">
@@ -1392,6 +1397,11 @@
     <xs:attribute name="preload" type="xs:boolean" default="${AbstractStore.preload}">
       <xs:annotation>
         <xs:documentation>If true, when the cache starts, data stored in the cache store will be pre-loaded into memory. This is particularly useful when data in the cache store will be needed immediately after startup and you want to avoid cache operations being delayed as a result of loading this data lazily. Can be used to provide a 'warm-cache' on startup, however there is a performance penalty as startup time is affected by this process.</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="preload-only" type="xs:boolean" default="${AbstractStore.preloadOnly}">
+      <xs:annotation>
+        <xs:documentation>If true, this cache store is shutdown immediately after preloading completes.</xs:documentation>
       </xs:annotation>
     </xs:attribute>
     <xs:attribute name="fetch-state" type="xs:boolean" default="${AbstractStore.fetchPersistentState}">

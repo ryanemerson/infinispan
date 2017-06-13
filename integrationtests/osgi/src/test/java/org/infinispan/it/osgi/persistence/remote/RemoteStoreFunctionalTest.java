@@ -42,11 +42,12 @@ public class RemoteStoreFunctionalTest extends BaseStoreFunctionalTest {
    }
 
    @Override
-   protected PersistenceConfigurationBuilder createCacheStoreConfig(PersistenceConfigurationBuilder persistence, boolean preload) {
+   protected PersistenceConfigurationBuilder createCacheStoreConfig(PersistenceConfigurationBuilder persistence, boolean preload, boolean preloadOnly) {
       persistence
             .addStore(RemoteStoreConfigurationBuilder.class)
             .remoteCacheName(CACHE_NAME)
             .preload(preload)
+            .preloadOnly(preloadOnly)
             .addServer()
             .host("localhost")
             .port(11222);

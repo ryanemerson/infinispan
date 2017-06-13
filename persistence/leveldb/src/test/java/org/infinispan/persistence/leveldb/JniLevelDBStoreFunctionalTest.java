@@ -13,9 +13,10 @@ import org.testng.annotations.Test;
 public class JniLevelDBStoreFunctionalTest extends LevelDBStoreFunctionalTest {
 
    @Override
-   protected PersistenceConfigurationBuilder createCacheStoreConfig(PersistenceConfigurationBuilder p, boolean preload) {
+   protected PersistenceConfigurationBuilder createCacheStoreConfig(PersistenceConfigurationBuilder p, boolean preload, boolean preloadOnly) {
       super.createStoreBuilder(p)
             .preload(preload)
+            .preloadOnly(preloadOnly)
             .implementationType(LevelDBStoreConfiguration.ImplementationType.JNI);
       return p;
    }

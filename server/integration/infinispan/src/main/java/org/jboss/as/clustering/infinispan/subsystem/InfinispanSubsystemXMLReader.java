@@ -2033,6 +2033,10 @@ public final class InfinispanSubsystemXMLReader implements XMLElementReader<List
                 BaseLoaderConfigurationResource.PRELOAD.parseAndSetParameter(value, loader, reader);
                 break;
             }
+            case PRELOAD_ONLY: {
+                BaseLoaderConfigurationResource.PRELOAD_ONLY.parseAndSetParameter(value, loader, reader);
+                break;
+            }
             default: {
                 throw ParseUtils.unexpectedAttribute(reader, index);
             }
@@ -2053,6 +2057,10 @@ public final class InfinispanSubsystemXMLReader implements XMLElementReader<List
             }
             case PRELOAD: {
                 BaseStoreConfigurationResource.PRELOAD.parseAndSetParameter(value, store, reader);
+                break;
+            }
+            case PRELOAD_ONLY: {
+                BaseLoaderConfigurationResource.PRELOAD_ONLY.parseAndSetParameter(value, store, reader);
                 break;
             }
             case PASSIVATION: {

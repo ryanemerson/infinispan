@@ -61,9 +61,10 @@ public class RocksDBStoreFunctionalTest extends BaseStoreFunctionalTest {
    }
 
    @Override
-   protected PersistenceConfigurationBuilder createCacheStoreConfig(PersistenceConfigurationBuilder p, boolean preload) {
+   protected PersistenceConfigurationBuilder createCacheStoreConfig(PersistenceConfigurationBuilder p, boolean preload, boolean preloadOnly) {
       createStoreBuilder(p)
-            .preload(preload);
+            .preload(preload)
+            .preloadOnly(preloadOnly);
       return p;
    }
 

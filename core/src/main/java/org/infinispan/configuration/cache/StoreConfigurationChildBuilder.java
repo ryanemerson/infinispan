@@ -55,6 +55,11 @@ public interface StoreConfigurationChildBuilder<S> extends ConfigurationChildBui
    S preload(boolean b);
 
    /**
+    * If true, this cache store is shutdown immediately after preloading completes.
+    */
+   S preloadOnly(boolean b);
+
+   /**
     * This setting should be set to true when multiple cache instances share the same cache store
     * (e.g., multiple nodes in a cluster using a JDBC-based CacheStore pointing to the same, shared
     * database.) Setting this to true avoids multiple cache instances writing the same modification

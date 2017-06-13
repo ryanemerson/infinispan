@@ -67,6 +67,14 @@ public class PersistenceConfiguration {
       return false;
    }
 
+   public Boolean preloadOnly() {
+      for (StoreConfiguration c : stores) {
+         if (c.preloadOnly())
+            return true;
+      }
+      return false;
+   }
+
    public boolean usingStores() {
       return !stores.isEmpty();
    }

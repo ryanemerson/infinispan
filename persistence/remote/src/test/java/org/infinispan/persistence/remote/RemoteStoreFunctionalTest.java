@@ -25,13 +25,14 @@ public class RemoteStoreFunctionalTest extends BaseStoreFunctionalTest {
 
 
    @Override
-   protected PersistenceConfigurationBuilder createCacheStoreConfig(PersistenceConfigurationBuilder persistence, boolean preload) {
+   protected PersistenceConfigurationBuilder createCacheStoreConfig(PersistenceConfigurationBuilder persistence, boolean preload, boolean preloadOnly) {
       localCacheManager = TestCacheManagerFactory.createCacheManager(hotRodCacheConfiguration());
       hrServer = HotRodClientTestingUtil.startHotRodServer(localCacheManager);
       persistence
          .addStore(RemoteStoreConfigurationBuilder.class)
             .remoteCacheName(BasicCacheContainer.DEFAULT_CACHE_NAME)
             .preload(preload)
+            .preloadOnly(preloadOnly)
             .addServer()
                .host("localhost")
                .port(hrServer.getPort());

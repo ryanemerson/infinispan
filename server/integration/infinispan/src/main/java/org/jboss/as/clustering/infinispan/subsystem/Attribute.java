@@ -125,6 +125,7 @@ public enum Attribute {
     PERMISSIONS(ModelKeys.PERMISSIONS),
     PREFIX(ModelKeys.PREFIX),
     PRELOAD(ModelKeys.PRELOAD),
+    PRELOAD_ONLY(ModelKeys.PRELOAD_ONLY),
     PROTOCOL_VERSION(ModelKeys.PROTOCOL_VERSION),
     PURGE(ModelKeys.PURGE),
     @Deprecated

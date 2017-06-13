@@ -39,6 +39,11 @@ public class CustomStoreConfigurationWithoutBuilder implements StoreConfiguratio
    }
 
    @Override
+   public boolean preloadOnly() {
+      return false;
+   }
+
+   @Override
    public boolean shared() {
       return false;
    }

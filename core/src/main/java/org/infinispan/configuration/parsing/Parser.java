@@ -77,6 +77,8 @@ import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 import org.kohsuke.MetaInfServices;
 
+import com.sun.org.apache.xpath.internal.operations.Bool;
+
 /**
  * This class implements the parser for Infinispan/AS7/EAP/JDG schema files
  *
@@ -2265,6 +2267,10 @@ public class Parser implements ConfigurationParser {
          }
          case PRELOAD: {
             storeBuilder.preload(Boolean.parseBoolean(value));
+            break;
+         }
+         case PRELOAD_ONLY: {
+            storeBuilder.preloadOnly(Boolean.parseBoolean(value));
             break;
          }
          case FETCH_STATE: {

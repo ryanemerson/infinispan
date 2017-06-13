@@ -236,9 +236,11 @@ public class PersistenceManagerImpl implements PersistenceManager {
       if (!enabled)
          return;
       AdvancedCacheLoader preloadCl = null;
+      StoreConfiguration config = null;
 
       for (CacheLoader l : loaders) {
-         if (configMap.get(l).preload()) {
+         config = configMap.get(l);
+         if (config.preload() || config.preloadOnly()) {
             if (!(l instanceof AdvancedCacheLoader)) {
                throw new PersistenceException("Cannot preload from cache loader '" + l.getClass().getName()
                                                     + "' as it doesn't implement '" + AdvancedCacheLoader.class.getName() + "'");
@@ -254,7 +256,6 @@ public class PersistenceManagerImpl implements PersistenceManager {
 
       long start = timeService.time();
 
-
       final long maxEntries = getMaxEntries();
       final AtomicInteger loadedEntries = new AtomicInteger(0);
       final AdvancedCache<Object, Object> flaggedCache = getCacheForStateInsertion();
@@ -267,6 +268,13 @@ public class PersistenceManagerImpl implements PersistenceManager {
                null; //the downcast will go away with ISPN-3460
          preloadKey(flaggedCache, me.getKey(), me.getValue(), metadata);
       }, new WithinThreadExecutor(), true, true);
+
+      // Remove and stop CacheLoader if preload-only
+      if (config.preloadOnly()) {
+         loaders.remove(preloadCl);
+         if (preloadCl instanceof CacheWriter)
+            nonTxWriters.remove(preloadCl);
+      }
 
       log.debugf("Preloaded %s keys in %s", loadedEntries, Util.prettyPrintTime(timeService.timeDuration(start, MILLISECONDS)));
    }

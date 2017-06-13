@@ -43,11 +43,12 @@ public class SingleFileStoreFunctionalTest extends BaseStoreFunctionalTest {
    }
 
    @Override
-   protected PersistenceConfigurationBuilder createCacheStoreConfig(PersistenceConfigurationBuilder persistence, boolean preload) {
+   protected PersistenceConfigurationBuilder createCacheStoreConfig(PersistenceConfigurationBuilder persistence, boolean preload, boolean preloadOnly) {
       persistence
          .addSingleFileStore()
          .location(tmpDirectory)
-         .preload(preload);
+         .preload(preload)
+         .preloadOnly(preloadOnly);
       return persistence;
    }
 

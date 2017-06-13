@@ -17,11 +17,11 @@ public class DummyInMemoryStoreFunctionalTest extends BaseStoreFunctionalTest {
    }
 
    @Override
-   protected PersistenceConfigurationBuilder createCacheStoreConfig(PersistenceConfigurationBuilder persistence, boolean preload) {
+   protected PersistenceConfigurationBuilder createCacheStoreConfig(PersistenceConfigurationBuilder persistence, boolean preload, boolean preloadOnly) {
       persistence
          .addStore(DummyInMemoryStoreConfigurationBuilder.class)
             .storeName(getClass().getName())
-            .purgeOnStartup(false).preload(preload);
+            .purgeOnStartup(false).preload(preload).preloadOnly(preloadOnly);
       return persistence;
    }
 

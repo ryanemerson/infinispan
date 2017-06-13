@@ -49,6 +49,13 @@ public class BaseLoaderConfigurationResource extends CacheConfigurationChildReso
                     .setFlags(AttributeAccess.Flag.RESTART_RESOURCE_SERVICES)
                     .setDefaultValue(new ModelNode().set(false))
                     .build();
+    static final SimpleAttributeDefinition PRELOAD_ONLY =
+          new SimpleAttributeDefinitionBuilder(ModelKeys.PRELOAD_ONLY, ModelType.BOOLEAN, true)
+                .setXmlName(Attribute.PRELOAD_ONLY.getLocalName())
+                .setAllowExpression(true)
+                .setFlags(AttributeAccess.Flag.RESTART_RESOURCE_SERVICES)
+                .setDefaultValue(new ModelNode().set(false))
+                .build();
     static final SimpleAttributeDefinition SHARED =
             new SimpleAttributeDefinitionBuilder(ModelKeys.SHARED, ModelType.BOOLEAN, true)
                     .setXmlName(Attribute.SHARED.getLocalName())
@@ -71,8 +78,8 @@ public class BaseLoaderConfigurationResource extends CacheConfigurationChildReso
             setAllowNull(true).
             build();
 
-    static final AttributeDefinition[] BASE_LOADER_ATTRIBUTES = {SHARED, PRELOAD};
-    static final AttributeDefinition[] BASE_LOADER_PARAMETERS = {SHARED, PRELOAD, PROPERTIES};
+    static final AttributeDefinition[] BASE_LOADER_ATTRIBUTES = {SHARED, PRELOAD, PRELOAD_ONLY};
+    static final AttributeDefinition[] BASE_LOADER_PARAMETERS = {SHARED, PRELOAD, PRELOAD_ONLY, PROPERTIES};
 
     // operations
     private static final OperationDefinition RESET_LOADER_STATISTICS =

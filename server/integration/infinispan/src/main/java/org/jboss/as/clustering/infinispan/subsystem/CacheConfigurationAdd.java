@@ -909,6 +909,10 @@ public abstract class CacheConfigurationAdd extends AbstractAddStepHandler imple
       if (preload != null && preload.isDefined()) {
          storeConfigurationBuilder.preload(preload.asBoolean());
       }
+      ModelNode preloadOnly = store.get(ModelKeys.PRELOAD_ONLY);
+      if (preloadOnly != null && preloadOnly.isDefined()) {
+          storeConfigurationBuilder.preloadOnly(preloadOnly.asBoolean());
+      }
       ModelNode fetchState = store.get(ModelKeys.FETCH_STATE);
       if (fetchState != null && fetchState.isDefined()) {
          storeConfigurationBuilder.fetchPersistentState(fetchState.asBoolean());
