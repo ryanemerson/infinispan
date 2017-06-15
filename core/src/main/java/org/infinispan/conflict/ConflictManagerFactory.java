@@ -21,7 +21,6 @@ final public class ConflictManagerFactory {
       }
 
       return cache
-            .getAdvancedCache()
             .getComponentRegistry()
             .getComponent(InternalConflictManager.class);
    }

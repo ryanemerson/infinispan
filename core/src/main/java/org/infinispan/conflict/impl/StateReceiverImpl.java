@@ -127,7 +127,7 @@ public class StateReceiverImpl<K, V> implements StateReceiver<K, V> {
       final List<Address> replicaHosts;
       final Map<K, Map<Address, CacheEntry<K, V>>> keyReplicaMap = new HashMap<>();
       final Map<Address, InboundTransferTask> transferTaskMap = new HashMap<>();
-      volatile CompletableFuture<List<Map<Address, CacheEntry<K, V>>>> future;
+      CompletableFuture<List<Map<Address, CacheEntry<K, V>>>> future;
 
       SegmentRequest(int segmentId, LocalizedCacheTopology topology) {
          this.segmentId = segmentId;

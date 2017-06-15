@@ -26,6 +26,8 @@ import org.infinispan.util.logging.events.EventLogManager;
 public class PreferAvailabilityStrategy implements AvailabilityStrategy {
 
    public static final Comparator<CacheStatusResponse> RESPONSE_COMPARATOR = (s1, s2) -> {
+      if (s2 == null)
+         return -1;
       CacheTopology t1 = s1.getCacheTopology();
       CacheTopology t2 = s2.getCacheTopology();
       int topologyId = ((Integer)t1.getTopologyId()).compareTo(t2.getTopologyId());

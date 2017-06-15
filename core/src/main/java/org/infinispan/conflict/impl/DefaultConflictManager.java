@@ -48,8 +48,11 @@ import org.infinispan.factories.annotations.Inject;
 import org.infinispan.factories.annotations.Start;
 import org.infinispan.interceptors.AsyncInterceptorChain;
 import org.infinispan.notifications.Listener;
+import org.infinispan.remoting.responses.CacheNotFoundResponse;
 import org.infinispan.remoting.responses.Response;
 import org.infinispan.remoting.responses.SuccessfulResponse;
+import org.infinispan.remoting.responses.UnsuccessfulResponse;
+import org.infinispan.remoting.responses.UnsureResponse;
 import org.infinispan.remoting.rpc.ResponseMode;
 import org.infinispan.remoting.rpc.RpcManager;
 import org.infinispan.remoting.rpc.RpcOptions;
@@ -93,7 +96,6 @@ public class DefaultConflictManager<K, V> implements InternalConflictManager<K, 
                       AdvancedCache<K, V> cache,
                       CommandsFactory commandsFactory,
                       DistributionManager distributionManager,
-                      EntryMergePolicy<K, V> entryMergePolicy,
                       @ComponentName(STATE_TRANSFER_EXECUTOR) ExecutorService stateTransferExecutor,
                       InvocationContextFactory invocationContextFactory,
                       RpcManager rpcManager,
@@ -103,7 +105,6 @@ public class DefaultConflictManager<K, V> implements InternalConflictManager<K, 
       this.cache = cache;
       this.commandsFactory = commandsFactory;
       this.distributionManager = distributionManager;
-      this.entryMergePolicy = entryMergePolicy;
       this.stateTransferExecutor = stateTransferExecutor;
       this.invocationContextFactory = invocationContextFactory;
       this.rpcManager = rpcManager;
@@ -118,6 +119,7 @@ public class DefaultConflictManager<K, V> implements InternalConflictManager<K, 
       this.cacheName = cache.getName();
       this.localAddress = rpcManager.getAddress();
       this.installedTopology = distributionManager.getCacheTopology();
+      this.entryMergePolicy = cache.getCacheConfiguration().clustering().partitionHandling().mergePolicy();
 
       initRpcOptions();
       cache.getCacheConfiguration().clustering()
@@ -187,13 +189,9 @@ public class DefaultConflictManager<K, V> implements InternalConflictManager<K, 
       if (!streamInProgress.compareAndSet(false, true))
          throw log.getConflictsAlreadyInProgress();
 
-      try {
-         return StreamSupport
-               .stream(new ReplicaSpliterator(topology), false)
-               .filter(filterConsistentEntries());
-      } finally {
-         streamInProgress.compareAndSet(true, false);
-      }
+      return StreamSupport
+            .stream(new ReplicaSpliterator(topology), false)
+            .filter(filterConsistentEntries());
    }
 
    @Override
@@ -220,17 +218,12 @@ public class DefaultConflictManager<K, V> implements InternalConflictManager<K, 
    private void doResolveConflicts(final LocalizedCacheTopology topology) {
       final Set<Address> preferredPartition = new HashSet<>(topology.getCurrentCH().getMembers());
 
-      if (trace) log.tracef("Attempting to resolve conflicts.  All Members %s, Installed topology %s, Preferred Partition %s",
-            topology.getMembers(), topology, preferredPartition);
+      if (trace)
+         log.tracef("Attempting to resolve conflicts.  All Members %s, Installed topology %s, Preferred Partition %s",
+               topology.getMembers(), topology, preferredPartition);
 
       final Phaser phaser = new Phaser(1);
-      getConflicts(topology).forEach(conflictMap -> processConflict(phaser, conflictMap, topology, preferredPartition));
-      phaser.arriveAndAwaitAdvance();
-   }
-
-   private void processConflict(Phaser phaser, Map<Address, CacheEntry<K, V>> conflictMap,
-                                                LocalizedCacheTopology topology, Set<Address> preferredPartition) {
-      stateTransferExecutor.execute(() -> {
+      getConflicts(topology).forEach(conflictMap -> stateTransferExecutor.execute(() -> {
          phaser.register();
          if (trace) log.tracef("Conflict detected %s", conflictMap);
 
@@ -274,7 +267,8 @@ public class DefaultConflictManager<K, V> implements InternalConflictManager<K, 
             if (exception != null)
                log.exceptionDuringConflictResolution(key, exception);
          });
-      });
+      }));
+      phaser.arriveAndAwaitAdvance();
    }
 
    @Override
@@ -316,12 +310,8 @@ public class DefaultConflictManager<K, V> implements InternalConflictManager<K, 
       }
 
       void start() {
-         // TODO figure out if we can just use the CacheTopology.getPendingCh with segment id for a key instead of creating a mock LocalizedCacheTopology
-         // cacheTopology.getSegment(key)
-         //  cacheTopology.getPendingCH().locateOwnersForSegment();
-         // It should be fine, as keyPartitoner should not change during runtime, so we're basically using a non stored version of what is
-         // in a localized topology
-         keyOwners = installedTopology.getWriteOwners(key);
+         LocalizedCacheTopology topology = installedTopology;
+         keyOwners = topology.getWriteOwners(key);
 
          if (trace) log.tracef("Attempting %s from owners %s", this, keyOwners);
 
@@ -331,10 +321,13 @@ public class DefaultConflictManager<K, V> implements InternalConflictManager<K, 
             InvocationContext ctx = invocationContextFactory.createNonTxInvocationContext();
             InternalCacheEntry<K, V> internalCacheEntry = (InternalCacheEntry<K, V>) interceptorChain.invoke(ctx, cmd);
             InternalCacheValue<V> icv = internalCacheEntry == null ? null : internalCacheEntry.toInternalCacheValue();
-            versionsMap.put(localAddress, icv);
+            synchronized (versionsMap) {
+               versionsMap.put(localAddress, icv);
+            }
          }
 
          ClusteredGetCommand cmd = commandsFactory.buildClusteredGetCommand(key, FlagBitSets.SKIP_OWNERSHIP_CHECK);
+         cmd.setTopologyId(topology.getTopologyId());
          rpcFuture = rpcManager.invokeRemotelyAsync(keyOwners, cmd, rpcOptions);
          rpcFuture.whenComplete((responseMap, exception) -> {
             if (trace) log.tracef("%s received responseMap %s, exception %s", this, responseMap, exception);
@@ -347,10 +340,19 @@ public class DefaultConflictManager<K, V> implements InternalConflictManager<K, 
 
             for (Map.Entry<Address, Response> entry : responseMap.entrySet()) {
                if (trace) log.tracef("%s received response %s from %s", this, entry.getValue(), entry.getKey());
-               if (entry.getValue() instanceof SuccessfulResponse) {
-                  SuccessfulResponse response = (SuccessfulResponse) entry.getValue();
+               Response rsp = entry.getValue();
+               if (rsp instanceof SuccessfulResponse) {
+                  SuccessfulResponse response = (SuccessfulResponse) rsp;
                   Object rspVal = response.getResponseValue();
-                  versionsMap.put(entry.getKey(), (InternalCacheValue<V>) rspVal);
+                  synchronized (versionsMap) {
+                     versionsMap.put(entry.getKey(), (InternalCacheValue<V>) rspVal);
+                  }
+               } else if(rsp instanceof UnsureResponse) {
+                  log.debugf("Received UnsureResponse, restarting request %s", this);
+                  this.start();
+                  return;
+               } else if (rsp instanceof CacheNotFoundResponse) {
+                  if (trace) log.tracef("Ignoring CacheNotFoundResponse: %s", rsp);
                } else {
                   completableFuture.completeExceptionally(new CacheException(String.format("Unable to retrieve key %s from %s: %s", key, entry.getKey(), entry.getValue())));
                   return;
@@ -399,6 +401,7 @@ public class DefaultConflictManager<K, V> implements InternalConflictManager<K, 
                   iterator = segmentEntries.iterator();
                   nextSegment++;
                } catch (InterruptedException e) {
+                  stateReceiver.stop();
                   Thread.currentThread().interrupt();
                   throw new CacheException(e);
                } catch (ExecutionException | CancellationException e) {
@@ -406,6 +409,7 @@ public class DefaultConflictManager<K, V> implements InternalConflictManager<K, 
                   throw new CacheException(e.getMessage(), e.getCause());
                }
             } else {
+               streamInProgress.compareAndSet(true, false);
                return false;
             }
          }

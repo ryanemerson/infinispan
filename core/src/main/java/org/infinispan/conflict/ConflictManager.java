@@ -34,9 +34,12 @@ public interface ConflictManager<K, V> {
    Map<Address, InternalCacheValue<V>> getAllVersions(K key);
 
    /**
+    * Returns a stream of conflicts detected in the cluster. This is a lazily-loaded stream which searches for conflicts
+    * by sequentially fetching cache segments from their respective owner nodes.  If a rebalance is initiated whilst the
+    * stream is fetching a cache segment, then a CacheException is thrown when executing the stream.
+    *
     * @return a stream of Map<Address, CacheEntry>> for all conflicts detected throughout this cache.
-    * @throws org.infinispan.commons.CacheException if state transfer is initiated while checking for conflicts.
-    * @throws IllegalStateException if called whilst state transfer is in progress.
+    * @throws IllegalStateException if called whilst a previous conflicts stream is still executing or state transfer is in progress.
     */
    Stream<Map<Address, CacheEntry<K, V>>> getConflicts();
 
@@ -54,7 +57,7 @@ public interface ConflictManager<K, V> {
 
    /**
     * @return true if conflict resolution is in progress. This can happen if the user has multiple threads interacting
-    * with the ConflictManager or if a Split-brain merge is ongoing
+    * with the ConflictManager or if a Split-brain merge is in progress.
     */
    boolean isConflictResolutionInProgress();
 }
