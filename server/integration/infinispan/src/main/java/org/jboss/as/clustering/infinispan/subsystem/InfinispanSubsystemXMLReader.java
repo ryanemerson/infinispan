@@ -322,7 +322,7 @@ public final class InfinispanSubsystemXMLReader implements XMLElementReader<List
                 }
                 case PERSISTENCE_THREAD_POOL: {
                     if (namespace.since(Namespace.INFINISPAN_SERVER_8_0)) {
-                        this.parseThreadPool(ThreadPoolResource.PERSISTENCE, reader, containerAddress, operations);
+                        this.parseScheduledThreadPool(ScheduledThreadPoolResource.PERSISTENCE, reader, containerAddress, operations);
                         break;
                     }
                 }

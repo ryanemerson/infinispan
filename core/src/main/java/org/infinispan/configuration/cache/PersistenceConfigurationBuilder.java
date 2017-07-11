@@ -1,5 +1,8 @@
 package org.infinispan.configuration.cache;
 
+import static org.infinispan.configuration.cache.PersistenceConfiguration.AVAILABILITY_INTERVAL;
+import static org.infinispan.configuration.cache.PersistenceConfiguration.CONNECTION_ATTEMPTS;
+import static org.infinispan.configuration.cache.PersistenceConfiguration.CONNECTION_INTERVAL;
 import static org.infinispan.configuration.cache.PersistenceConfiguration.PASSIVATION;
 
 import java.lang.reflect.Constructor;
@@ -32,6 +35,21 @@ public class PersistenceConfigurationBuilder extends AbstractConfigurationChildB
 
    public PersistenceConfigurationBuilder passivation(boolean b) {
       attributes.attribute(PASSIVATION).set(b);
+      return this;
+   }
+
+   public PersistenceConfigurationBuilder availabilityInterval(int interval) {
+      attributes.attribute(AVAILABILITY_INTERVAL).set(interval);
+      return this;
+   }
+
+   public PersistenceConfigurationBuilder connectionAttempts(int attempts) {
+      attributes.attribute(CONNECTION_ATTEMPTS).set(attempts);
+      return this;
+   }
+
+   public PersistenceConfigurationBuilder connectionInterval(int interval) {
+      attributes.attribute(CONNECTION_INTERVAL).set(interval);
       return this;
    }
 
