@@ -95,11 +95,6 @@
         </dependency>
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-core</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-api</artifactId>
             <scope>test</scope>
         </dependency>
@@ -1492,7 +1487,7 @@
                                 <stripVersion>true</stripVersion>
                                 <artifactItems>
                                     <artifactItem>
-                                        <groupId>${project.groupId}</groupId>
+                                        <groupId>org.infinispan.server</groupId>
                                         <artifactId>infinispan-server-build</artifactId>
                                         <type>zip</type>
                                         <overWrite>true</overWrite>

@@ -4,17 +4,14 @@
    <subsystems>
       <subsystem>logging.xml</subsystem>
       <subsystem>deployment-scanner.xml</subsystem>
-      <subsystem>datasources.xml</subsystem>
       <subsystem supplement="auth">infinispan-core.xml</subsystem>
       <subsystem supplement="auth">infinispan-endpoint.xml</subsystem>
+      <subsystem>infinispan-datasources.xml</subsystem>
       <subsystem>io.xml</subsystem>
-      <subsystem>jca.xml</subsystem>
-      <subsystem>jdr.xml</subsystem>
       <subsystem>jmx.xml</subsystem>
       <subsystem>naming.xml</subsystem>
       <subsystem>remoting.xml</subsystem>
       <subsystem>security.xml</subsystem>
       <subsystem>security-manager.xml</subsystem>
-      <subsystem>transactions.xml</subsystem>
    </subsystems>
 </config>

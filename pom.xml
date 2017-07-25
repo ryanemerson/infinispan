@@ -278,12 +278,12 @@
       <version.mysql.driver>5.1.19</version.mysql.driver>
       <version.oauth.core>20090531</version.oauth.core>
       <version.org.jboss.naming>5.0.6.CR1</version.org.jboss.naming>
+      <version.org.infinispan.infinispan-management-console>9.2.0.Alpha1</version.org.infinispan.infinispan-management-console>
       <version.org.picketbox>4.0.20.Final</version.org.picketbox>
       <version.org.wildfly>10.1.0.Final</version.org.wildfly>
       <version.org.wildfly.arquillian>1.0.2.Final</version.org.wildfly.arquillian>
       <version.org.wildfly.build-tools>1.1.6.Final</version.org.wildfly.build-tools>
-      <version.org.wildfly.cli>1.0.1.Final</version.org.wildfly.cli>
-      <version.org.wildfly.core>2.2.0.Final</version.org.wildfly.core>
+      <version.org.wildfly.core>3.0.8.Final</version.org.wildfly.core>
       <version.org.wildfly.maven-plugin>1.1.0.Final</version.org.wildfly.maven-plugin>
       <version.osgi>4.3.1</version.osgi>
       <version.pax.exam>4.11.0</version.pax.exam>
@@ -310,415 +310,473 @@
    <dependencyManagement>
       <dependencies>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-bom</artifactId>
             <version>${project.version}</version>
             <type>pom</type>
             <scope>import</scope>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-cachestore-jdbc</artifactId>
             <version>${project.version}</version>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-cachestore-jpa</artifactId>
             <version>${project.version}</version>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-cachestore-remote</artifactId>
             <version>${project.version}</version>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-cachestore-rest</artifactId>
             <version>${project.version}</version>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-persistence-cli</artifactId>
             <version>${project.version}</version>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-cachestore-leveldb</artifactId>
             <version>${project.version}</version>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-cachestore-rocksdb</artifactId>
             <version>${project.version}</version>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-cdi-common</artifactId>
             <version>${project.version}</version>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-cdi-embedded</artifactId>
             <version>${project.version}</version>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-cdi-remote</artifactId>
             <version>${project.version}</version>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-client-hotrod</artifactId>
             <version>${project.version}</version>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-cli-client</artifactId>
             <version>${project.version}</version>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-cli-interpreter</artifactId>
             <version>${project.version}</version>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-clustered-counter</artifactId>
             <version>${project.version}</version>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-commons</artifactId>
             <version>${project.version}</version>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
+            <artifactId>infinispan-commons-test</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
+         </dependency>
+         <dependency>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-commons-test</artifactId>
             <version>${project.version}</version>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-compatibility-mode-it</artifactId>
             <version>${project.version}</version>
             <type>test-jar</type>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-core</artifactId>
             <version>${project.version}</version>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-cloud</artifactId>
             <version>${project.version}</version>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-marshaller-tests</artifactId>
             <version>${project.version}</version>
             <type>test-jar</type>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-marshaller-kryo</artifactId>
             <version>${project.version}</version>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-marshaller-kryo-bundle</artifactId>
             <version>${project.version}</version>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-marshaller-protostuff</artifactId>
             <version>${project.version}</version>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-marshaller-protostuff-bundle</artifactId>
             <version>${project.version}</version>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-osgi</artifactId>
             <version>${project.version}</version>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-persistence-soft-index</artifactId>
             <version>${project.version}</version>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-lucene-directory</artifactId>
             <version>${project.version}</version>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-directory-provider</artifactId>
             <version>${project.version}</version>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-query</artifactId>
             <version>${project.version}</version>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-query</artifactId>
             <classifier>tests</classifier>
             <version>${project.version}</version>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-query-dsl</artifactId>
             <version>${project.version}</version>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-objectfilter</artifactId>
             <version>${project.version}</version>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-remote-query-client</artifactId>
             <version>${project.version}</version>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-remote-query-server</artifactId>
             <version>${project.version}</version>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-scripting</artifactId>
             <version>${project.version}</version>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-server-core</artifactId>
             <version>${project.version}</version>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-server-hotrod</artifactId>
             <version>${project.version}</version>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-server-memcached</artifactId>
             <version>${project.version}</version>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-server-rest</artifactId>
             <version>${project.version}</version>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-server-websocket</artifactId>
             <version>${project.version}</version>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-server-router</artifactId>
             <version>${project.version}</version>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-spring4-common</artifactId>
             <version>${project.version}</version>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-spring4-remote</artifactId>
             <version>${project.version}</version>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-spring4-embedded</artifactId>
             <version>${project.version}</version>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-tasks</artifactId>
             <version>${project.version}</version>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-tasks-api</artifactId>
             <version>${project.version}</version>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-tools</artifactId>
             <version>${project.version}</version>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-tree</artifactId>
             <version>${project.version}</version>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-jcache</artifactId>
             <version>${project.version}</version>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-jcache-commons</artifactId>
             <version>${project.version}</version>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-jcache-remote</artifactId>
             <version>${project.version}</version>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-hibernate-cache</artifactId>
             <version>${project.version}</version>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}.server</groupId>
+            <groupId>org.infinispan</groupId>
+            <artifactId>infinispan-management-console</artifactId>
+            <version>${version.org.infinispan.infinispan-management-console}</version>
+         </dependency>
+         <dependency>
+            <groupId>org.infinispan</groupId>
+            <artifactId>infinispan-security-integrationtests</artifactId>
+            <version>${project.version}</version>
+            <classifier>tests</classifier>
+            <scope>test</scope>
+         </dependency>
+         <dependency>
+            <groupId>org.infinispan.server</groupId>
+            <artifactId>infinispan-server-build</artifactId>
+            <version>${project.version}</version>
+            <type>pom</type>
+         </dependency>
+         <dependency>
+            <groupId>org.infinispan.server</groupId>
+            <artifactId>infinispan-server-build</artifactId>
+            <version>${project.version}</version>
+            <type>zip</type>
+         </dependency>
+         <dependency>
+            <groupId>org.infinispan.server</groupId>
+            <artifactId>infinispan-server-cli</artifactId>
+            <version>${project.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>org.infinispan.server</groupId>
             <artifactId>infinispan-server-commons</artifactId>
             <version>${project.version}</version>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}.server</groupId>
+            <groupId>org.infinispan.server</groupId>
+            <artifactId>infinispan-server-commons</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
+         </dependency>
+         <dependency>
+            <groupId>org.infinispan.server</groupId>
+            <artifactId>infinispan-server-datasources</artifactId>
+            <version>${project.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>org.infinispan.server</groupId>
             <artifactId>infinispan-server-endpoints</artifactId>
             <version>${project.version}</version>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}.server</groupId>
+            <groupId>org.infinispan.server</groupId>
             <artifactId>infinispan-server-event-logger</artifactId>
             <version>${project.version}</version>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}.server</groupId>
+            <groupId>org.infinispan.server</groupId>
             <artifactId>infinispan-server-infinispan</artifactId>
             <version>${project.version}</version>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}.server</groupId>
+            <groupId>org.infinispan.server</groupId>
+            <artifactId>infinispan-server-infinispan</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
+         </dependency>
+         <dependency>
+            <groupId>org.infinispan.server</groupId>
             <artifactId>infinispan-server-jgroups</artifactId>
             <version>${project.version}</version>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan.server</groupId>
+            <artifactId>infinispan-server-jgroups</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
+         </dependency>
+         <dependency>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-cachestore-jdbc</artifactId>
             <version>${project.version}</version>
             <type>test-jar</type>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-cachestore-jpa</artifactId>
             <version>${project.version}</version>
             <type>test-jar</type>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-cdi-common</artifactId>
             <version>${project.version}</version>
             <type>test-jar</type>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-cdi-remote</artifactId>
             <version>${project.version}</version>
             <type>test-jar</type>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-cdi-embedded</artifactId>
             <version>${project.version}</version>
             <type>test-jar</type>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-client-hotrod</artifactId>
             <version>${project.version}</version>
             <type>test-jar</type>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-core</artifactId>
             <version>${project.version}</version>
             <type>test-jar</type>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-lucene-directory</artifactId>
             <version>${project.version}</version>
             <type>test-jar</type>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-scripting</artifactId>
             <version>${project.version}</version>
             <type>test-jar</type>
             <scope>test</scope>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-server-core</artifactId>
             <version>${project.version}</version>
             <type>test-jar</type>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-server-hotrod</artifactId>
             <version>${project.version}</version>
             <type>test-jar</type>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-server-memcached</artifactId>
             <version>${project.version}</version>
             <type>test-jar</type>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-server-rest</artifactId>
             <version>${project.version}</version>
             <type>test-jar</type>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-jcache-remote</artifactId>
             <version>${project.version}</version>
             <type>test-jar</type>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-spring4-common</artifactId>
             <version>${project.version}</version>
             <type>test-jar</type>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-spring4-remote</artifactId>
             <version>${project.version}</version>
             <type>test-jar</type>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-spring4-embedded</artifactId>
             <version>${project.version}</version>
             <type>test-jar</type>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-embedded</artifactId>
             <version>${project.version}</version>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-embedded-query</artifactId>
             <version>${project.version}</version>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-remote</artifactId>
             <version>${project.version}</version>
          </dependency>
@@ -1343,6 +1401,11 @@
             <version>${version.mockito_dep.hamcrest}</version>
          </dependency>
          <dependency>
+            <groupId>org.hibernate.common</groupId>
+            <artifactId>hibernate-commons-annotations</artifactId>
+            <version>${version.hibernate_dep.hibernate-commons-annotations}</version>
+         </dependency>
+         <dependency>
             <groupId>org.jboss</groupId>
             <artifactId>jboss-common-core</artifactId>
             <version>${version.jboss.common.core}</version>
@@ -1361,7 +1424,7 @@
             <scope>test</scope>
          </dependency>
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-cli</artifactId>
             <version>${project.version}</version>
          </dependency>
@@ -1620,7 +1683,7 @@
                   <dependency>
                      <groupId>org.wildfly.core</groupId>
                      <artifactId>wildfly-cli</artifactId>
-                     <version>${version.org.wildfly.cli}</version>
+                     <version>${version.org.wildfly.core}</version>
                      <exclusions>
                         <exclusion>
                            <groupId>sun.jdk</groupId>

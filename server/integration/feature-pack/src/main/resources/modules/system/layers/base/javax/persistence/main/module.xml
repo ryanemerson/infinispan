@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module xmlns="urn:jboss:module:1.3" name="javax.persistence.api">
+    <dependencies>
+        <!-- PersistenceUnitInfo needs javax.sql.DataSource -->
+        <module name="javax.api" export="true"/>
+    </dependencies>
+
+    <resources>
+        <artifact name="${org.hibernate.javax.persistence:hibernate-jpa-2.1-api}"/>
+    </resources>
+</module>

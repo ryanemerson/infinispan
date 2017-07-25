@@ -44,7 +44,7 @@ public class EndpointSubsystemRootResource extends SimpleResourceDefinition {
 
     private final boolean runtimeRegistration;
 
-    public EndpointSubsystemRootResource(boolean runtimeRegistration) {
+    EndpointSubsystemRootResource(boolean runtimeRegistration) {
         super(PathElement.pathElement(SUBSYSTEM, Constants.SUBSYSTEM_NAME),
                 EndpointExtension.getResourceDescriptionResolver(Constants.SUBSYSTEM_NAME),
                 EndpointSubsystemAdd.INSTANCE,
@@ -97,14 +97,10 @@ public class EndpointSubsystemRootResource extends SimpleResourceDefinition {
 
     @Override
     public void registerChildren(ManagementResourceRegistration resourceRegistration) {
-        resourceRegistration.registerSubModel(new HotRodConnectorResource(isRuntimeRegistration()));
-        resourceRegistration.registerSubModel(new MemcachedConnectorResource(isRuntimeRegistration()));
-        resourceRegistration.registerSubModel(new RestConnectorResource(isRuntimeRegistration()));
-        resourceRegistration.registerSubModel(new WebSocketConnectorResource(isRuntimeRegistration()));
+        resourceRegistration.registerSubModel(new HotRodConnectorResource(runtimeRegistration));
+        resourceRegistration.registerSubModel(new MemcachedConnectorResource(runtimeRegistration));
+        resourceRegistration.registerSubModel(new RestConnectorResource(runtimeRegistration));
+        resourceRegistration.registerSubModel(new WebSocketConnectorResource(runtimeRegistration));
         resourceRegistration.registerSubModel(new RouterConnectorResource());
-    }
-
-    public boolean isRuntimeRegistration() {
-        return runtimeRegistration;
     }
 }

@@ -23,6 +23,7 @@
       <module>jgroups</module>
       <module>infinispan</module>
       <module>endpoint</module>
+      <module>datasources</module>
       <module>cli</module>
       <module>feature-pack</module>
       <module>licenses</module>

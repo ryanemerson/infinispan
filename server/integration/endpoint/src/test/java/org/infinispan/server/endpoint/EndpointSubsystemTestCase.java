@@ -21,26 +21,12 @@
  */
 package org.infinispan.server.endpoint;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ADD;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DESCRIBE;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP_ADDR;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.SUBSYSTEM;
-
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 
 import org.infinispan.server.commons.subsystem.ClusteringSubsystemTest;
 import org.infinispan.server.endpoint.subsystem.EndpointExtension;
-import org.jboss.as.controller.PathAddress;
 import org.jboss.as.controller.PathElement;
-import org.jboss.as.subsystem.test.KernelServices;
-import org.jboss.as.subsystem.test.ModelDescriptionValidator.ValidationConfiguration;
-import org.jboss.dmr.ModelNode;
-import org.junit.Assert;
-import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
@@ -55,15 +41,8 @@ import org.junit.runners.Parameterized.Parameters;
 @RunWith(value = Parameterized.class)
 public class EndpointSubsystemTestCase extends ClusteringSubsystemTest {
 
-   private final String xsdPath;
-   private final int operations;
-   private final String[] templates;
-
    public EndpointSubsystemTestCase(String xmlFile, int operations, String xsdPath, String[] templates) {
-      super(Constants.SUBSYSTEM_NAME, new EndpointExtension(), xmlFile);
-      this.operations = operations;
-      this.xsdPath = xsdPath;
-      this.templates = templates;
+      super(Constants.SUBSYSTEM_NAME, operations, xsdPath, new EndpointExtension(), xmlFile, templates);
    }
 
    @Parameters
@@ -78,112 +57,7 @@ public class EndpointSubsystemTestCase extends ClusteringSubsystemTest {
    }
 
    @Override
-   protected String getSubsystemXsdPath() throws Exception {
-      return xsdPath;
-   }
-
-   @Override
-   protected String[] getSubsystemTemplatePaths() throws IOException {
-      return templates;
-   }
-
-   @Override
-   public void testSchemaOfSubsystemTemplates() throws Exception {
-      // TODO: implement once the schema validator supports supplements
-   }
-
-   @Override
-   protected ValidationConfiguration getModelValidationConfiguration() {
-      // use this configuration to report any exceptional cases for DescriptionProviders
-      return new ValidationConfiguration();
-   }
-
-   /**
-    * Tests that the xml is parsed into the correct operations
-    */
-   @Test
-   public void testParseSubsystem() throws Exception {
-      // Parse the subsystem xml into operations
-      List<ModelNode> operations = super.parse(getSubsystemXml());
-
-      /*
-       * // print the operations System.out.println("List of operations"); for (ModelNode op :
-       * operations) { System.out.println("operation = " + op.toString()); }
-       */
-
-      // Check that we have the expected number of operations
-      // one for each resource instance
-      Assert.assertEquals(this.operations, operations.size());
-
-      // Check that each operation has the correct content
-      ModelNode addSubsystem = operations.get(0);
-      Assert.assertEquals(ADD, addSubsystem.get(OP).asString());
-      PathAddress addr = PathAddress.pathAddress(addSubsystem.get(OP_ADDR));
-      Assert.assertEquals(1, addr.size());
-      PathElement element = addr.getElement(0);
-      Assert.assertEquals(SUBSYSTEM, element.getKey());
-      Assert.assertEquals(getMainSubsystemName(), element.getValue());
-   }
-
-   /**
-    * Test that the model created from the xml looks as expected
-    */
-   @Test
-   public void testInstallIntoController() throws Exception {
-      // Parse the subsystem xml and install into the controller
-      KernelServices services = createKernelServicesBuilder(null).setSubsystemXml(getSubsystemXml()).build();
-
-      // Read the whole model and make sure it looks as expected
-      ModelNode model = services.readWholeModel();
-
-      //System.out.println("model = " + model.asString());
-
-      Assert.assertTrue(model.get(SUBSYSTEM).hasDefined(getMainSubsystemName()));
-   }
-
-   /**
-    * Starts a controller with a given subsystem xml and then checks that a second controller
-    * started with the xml marshalled from the first one results in the same model
-    */
-   @Test
-   public void testParseAndMarshalModel() throws Exception {
-      // Parse the subsystem xml and install into the first controller
-
-      KernelServices servicesA = createKernelServicesBuilder(null).setSubsystemXml(getSubsystemXml()).build();
-
-      // Get the model and the persisted xml from the first controller
-      ModelNode modelA = servicesA.readWholeModel();
-      String marshalled = servicesA.getPersistedSubsystemXml();
-
-      // Install the persisted xml from the first controller into a second controller
-      KernelServices servicesB = createKernelServicesBuilder(null).setSubsystemXml(marshalled).build();
-      ModelNode modelB = servicesB.readWholeModel();
-
-      // Make sure the models from the two controllers are identical
-      super.compare(modelA, modelB);
-   }
-
-   /**
-    * Starts a controller with the given subsystem xml and then checks that a second controller
-    * started with the operations from its describe action results in the same model
-    */
-   @Test
-   public void testDescribeHandler() throws Exception {
-      // Parse the subsystem xml and install into the first controller
-      KernelServices servicesA = createKernelServicesBuilder(null).setSubsystemXml(getSubsystemXml()).build();
-      // Get the model and the describe operations from the first controller
-      ModelNode modelA = servicesA.readWholeModel();
-      ModelNode describeOp = new ModelNode();
-      describeOp.get(OP).set(DESCRIBE);
-      describeOp.get(OP_ADDR).set(PathAddress.pathAddress(PathElement.pathElement(SUBSYSTEM, getMainSubsystemName())).toModelNode());
-      List<ModelNode> operations = checkResultAndGetContents(servicesA.executeOperation(describeOp)).asList();
-
-      // Install the describe options from the first controller into a second controller
-      KernelServices servicesB = createKernelServicesBuilder(null).setBootOperations(operations).build();
-      ModelNode modelB = servicesB.readWholeModel();
-
-      // Make sure the models from the two controllers are identical
-      super.compare(modelA, modelB);
-
+   protected PathElement getSubsystemPath() {
+      return Constants.SUBSYSTEM_PATH;
    }
 }
