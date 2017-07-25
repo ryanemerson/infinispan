@@ -19,8 +19,8 @@
 
        <!-- Feature Pack dependencies -->
        <dependency>
-            <groupId>org.wildfly</groupId>
-            <artifactId>wildfly-feature-pack</artifactId>
+            <groupId>org.wildfly.core</groupId>
+            <artifactId>wildfly-core-feature-pack</artifactId>
             <type>zip</type>
             <exclusions>
                 <exclusion>

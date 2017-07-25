@@ -57,7 +57,6 @@ import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.ServiceTarget;
 import org.jboss.msc.value.InjectedValue;
 import org.jboss.msc.value.Value;
-import org.jboss.tm.XAResourceRecoveryRegistry;
 
 /**
  * Base class for cache add handlers
@@ -245,16 +244,11 @@ public abstract class CacheAdd extends AbstractAddStepHandler implements Restart
     private static class CacheDependencies implements CacheService.Dependencies {
 
         private final Value<EmbeddedCacheManager> container;
-        private final InjectedValue<XAResourceRecoveryRegistry> recoveryRegistry = new InjectedValue<>();
         private final InjectedValue<DeployedCacheStoreFactory> deployedCacheStoreFactory = new InjectedValue<>();
         private final InjectedValue<ServerTaskRegistry> deployedTaskRegistry = new InjectedValue<>();
 
         CacheDependencies(Value<EmbeddedCacheManager> container) {
             this.container = container;
-        }
-
-        Injector<XAResourceRecoveryRegistry> getRecoveryRegistryInjector() {
-            return this.recoveryRegistry;
         }
 
         public InjectedValue<DeployedCacheStoreFactory> getDeployedCacheStoreFactoryInjector() {
@@ -272,11 +266,6 @@ public abstract class CacheAdd extends AbstractAddStepHandler implements Restart
         @Override
         public EmbeddedCacheManager getCacheContainer() {
             return this.container.getValue();
-        }
-
-        @Override
-        public XAResourceRecoveryRegistry getRecoveryRegistry() {
-            return this.recoveryRegistry.getOptionalValue();
         }
 
         @Override
