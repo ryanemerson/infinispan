@@ -17,7 +17,7 @@
    <dependencies>
       <dependency>
          <groupId>${project.groupId}</groupId>
-         <artifactId>infinispan-embedded</artifactId>
+         <artifactId>infinispan-core</artifactId>
       </dependency>
       <dependency>
          <groupId>com.martiansoftware</groupId>
