@@ -32,8 +32,6 @@ import org.jboss.as.controller.extension.ExtensionRegistryType;
 import org.jboss.as.controller.registry.ManagementResourceRegistration;
 import org.jboss.as.controller.registry.Resource;
 import org.jboss.as.subsystem.test.AdditionalInitialization;
-import org.jboss.as.txn.subsystem.TransactionExtension;
-
 
 /**
  * Initializer for subsystem dependencies
@@ -63,7 +61,6 @@ public class InfinispanSubsystemDependenciesInitialization extends AdditionalIni
     protected void initializeExtraSubystemsAndModel(ExtensionRegistry registry, Resource root,
             ManagementResourceRegistration registration) {
         initializeJGroupsSubsystem(registry, root, registration);
-        initializeTxnSubsystem(registry, root, registration);
     }
 
     private void initializeJGroupsSubsystem(ExtensionRegistry registry, Resource root,
@@ -83,11 +80,5 @@ public class InfinispanSubsystemDependenciesInitialization extends AdditionalIni
         Resource transport = Resource.Factory.create();
         transport.getModel().get("type").set("TCP");
         stack.registerChild(PathElement.pathElement(ModelKeys.TRANSPORT, ModelKeys.TRANSPORT_NAME), transport);
-    }
-
-    private void initializeTxnSubsystem(ExtensionRegistry registry, Resource root,
-            ManagementResourceRegistration registration) {
-        new TransactionExtension()
-                .initialize(registry.getExtensionContext("transactions", registration, ExtensionRegistryType.MASTER));
     }
 }
