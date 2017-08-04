@@ -427,8 +427,20 @@
         </dependency>
 
         <dependency>
+            <groupId>gnu.getopt</groupId>
+            <artifactId>java-getopt</artifactId>
+            <version>${version.gnu.getopt}</version>
+        </dependency>
+
+        <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-all</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>joda-time</groupId>
+            <artifactId>joda-time</artifactId>
+            <version>${version.org.joda.time}</version>
         </dependency>
 
         <dependency>
@@ -443,8 +455,56 @@
         </dependency>
 
         <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>${version.org.apache.httpcomponents}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>commons-logging</groupId>
+                    <artifactId>commons-logging</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpcore</artifactId>
+            <version>${version.org.apache.httpcomponents}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpcore-nio</artifactId>
+            <version>${version.org.apache.httpcomponents}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpasyncclient</artifactId>
+            <version>${version.org.apache.httpcomponents}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpmime</artifactId>
+            <version>${version.org.apache.httpcomponents}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.james</groupId>
+            <artifactId>apache-mime4j</artifactId>
+            <version>${version.org.apache.james}</version>
+        </dependency>
+
+        <dependency>
             <groupId>org.apache.lucene</groupId>
             <artifactId>lucene-analyzers-common</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-backward-codecs</artifactId>
+            <version>${version.lucene}</version>
         </dependency>
 
         <dependency>
@@ -460,6 +520,12 @@
         <dependency>
             <groupId>org.apache.lucene</groupId>
             <artifactId>lucene-memory</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-misc</artifactId>
+            <version>${version.lucene}</version>
         </dependency>
 
         <dependency>
@@ -490,8 +556,56 @@
         </dependency>
 
         <dependency>
+            <groupId>org.apache.avro</groupId>
+            <artifactId>avro</artifactId>
+            <version>${version.org.apache.avro}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.thoughtworks.paranamer</groupId>
+                    <artifactId>paranamer</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.xerial.snappy</groupId>
+                    <artifactId>snappy-java</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.commons</groupId>
+                    <artifactId>commons-compress</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-api</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
             <groupId>org.apache.lucene</groupId>
             <artifactId>lucene-grouping</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.codehaus.jackson</groupId>
+            <artifactId>jackson-core-asl</artifactId>
+            <version>${version.org.codehaus.jackson}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.codehaus.jackson</groupId>
+            <artifactId>jackson-mapper-asl</artifactId>
+            <version>${version.org.codehaus.jackson}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.hibernate.common</groupId>
+            <artifactId>hibernate-commons-annotations</artifactId>
+            <version>${version.org.hibernate.commons.annotations}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
@@ -544,6 +658,12 @@
         </dependency>
 
         <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>${version.com.google.guava}</version>
+        </dependency>
+
+        <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
         </dependency>
@@ -577,6 +697,18 @@
         </dependency>
 
         <dependency>
+            <groupId>org.jboss.spec.javax.xml.bind</groupId>
+            <artifactId>jboss-jaxb-api_2.2_spec</artifactId>
+            <version>${version.org.jboss.spec.javax.xml.bind.jboss-jaxb-api_2.2_spec}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jboss.spec.javax.transaction</groupId>
+            <artifactId>jboss-transaction-api_1.2_spec</artifactId>
+            <version>1.0.0.Final</version>
+        </dependency>
+
+        <dependency>
             <groupId>org.rocksdb</groupId>
             <artifactId>rocksdbjni</artifactId>
             <exclusions>
@@ -594,6 +726,18 @@
                 <exclusion>
                     <groupId>*</groupId>
                     <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>jcl-over-slf4j</artifactId>
+            <version>${version.org.slf4j}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-api</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>

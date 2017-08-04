@@ -10,8 +10,7 @@
    </resources>
 
    <dependencies>
-      <module name="javax.api" />
-      <module name="javax.transaction.api" />
+      <module name="javaee.api" />
       <module name="org.apache.xerces" services="import" />
       <module name="org.infinispan" />
       <!-- Netty is exported by server core -->

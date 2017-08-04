@@ -22,6 +22,8 @@
 
 package org.jboss.as.clustering.infinispan.subsystem;
 
+import javax.transaction.xa.XAResource;
+
 import org.infinispan.Cache;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.persistence.factory.CacheStoreFactory;
@@ -32,6 +34,8 @@ import org.jboss.logging.Logger;
 import org.jboss.msc.service.Service;
 import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StopContext;
+import org.jboss.tm.XAResourceRecovery;
+import org.jboss.tm.XAResourceRecoveryRegistry;
 
 /**
  * @author Paul Ferraro
@@ -44,11 +48,13 @@ public class CacheService<K, V> implements Service<Cache<K, V>> {
     private final String configurationName;
 
     private volatile Cache<K, V> cache;
+    private volatile XAResourceRecovery recovery;
 
     private static final Logger log = Logger.getLogger(CacheService.class.getPackage().getName());
 
     public interface Dependencies {
         EmbeddedCacheManager getCacheContainer();
+        XAResourceRecoveryRegistry getRecoveryRegistry();
         CacheStoreFactory getDeployedCacheStoreFactory();
         ServerTaskRegistry getDeployedTaskRegistry();
     }
@@ -79,14 +85,55 @@ public class CacheService<K, V> implements Service<Cache<K, V>> {
 
         this.cache = SecurityActions.startCache(container, this.name, this.configurationName);
 
+        XAResourceRecoveryRegistry recoveryRegistry = this.dependencies.getRecoveryRegistry();
+        if (recoveryRegistry != null) {
+            this.recovery = new InfinispanXAResourceRecovery(this.name, container);
+            recoveryRegistry.addXAResourceRecovery(this.recovery);
+        }
         log.debugf("%s cache started", this.name);
     }
 
     @Override
     public void stop(StopContext context) {
         if ((this.cache != null) && this.cache.getStatus().allowInvocations()) {
+            if (this.recovery != null) {
+                this.dependencies.getRecoveryRegistry().removeXAResourceRecovery(this.recovery);
+            }
+
             SecurityActions.stopCache(cache);
             log.debugf("%s cache stopped", this.name);
+        }
+    }
+
+    static class InfinispanXAResourceRecovery implements XAResourceRecovery {
+        private final String cacheName;
+        private final EmbeddedCacheManager container;
+
+        InfinispanXAResourceRecovery(String cacheName, EmbeddedCacheManager container) {
+            this.cacheName = cacheName;
+            this.container = container;
+        }
+
+        @Override
+        public XAResource[] getXAResources() {
+            return new XAResource[] { this.container.getCache(this.cacheName).getAdvancedCache().getXAResource() };
+        }
+
+        @Override
+        public int hashCode() {
+            return this.container.getCacheManagerConfiguration().globalJmxStatistics().cacheManagerName().hashCode() ^ this.cacheName.hashCode();
+        }
+
+        @Override
+        public boolean equals(Object object) {
+            if ((object == null) || !(object instanceof InfinispanXAResourceRecovery)) return false;
+            InfinispanXAResourceRecovery recovery = (InfinispanXAResourceRecovery) object;
+            return this.container.getCacheManagerConfiguration().globalJmxStatistics().cacheManagerName().equals(recovery.container.getCacheManagerConfiguration().globalJmxStatistics().cacheManagerName()) && this.cacheName.equals(recovery.cacheName);
+        }
+
+        @Override
+        public String toString() {
+            return container.getCacheManagerConfiguration().globalJmxStatistics().cacheManagerName() + "." + this.cacheName;
         }
     }
 }
