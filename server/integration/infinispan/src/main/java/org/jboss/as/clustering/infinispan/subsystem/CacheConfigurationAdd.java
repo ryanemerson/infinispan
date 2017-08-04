@@ -101,6 +101,7 @@ import org.jboss.as.network.OutboundSocketBinding;
 import org.jboss.as.server.ServerEnvironment;
 import org.jboss.as.server.Services;
 import org.jboss.as.server.moduleservice.ServiceModuleLoader;
+import org.jboss.as.txn.service.TxnServices;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.Property;
 import org.jboss.logging.Logger;
@@ -292,7 +293,7 @@ public abstract class CacheConfigurationAdd extends AbstractAddStepHandler imple
         if (config.invocationBatching().enabled()) {
             cacheConfigurationDependencies.getTransactionManagerInjector().inject(BatchModeTransactionManager.getInstance());
         } else if (config.transaction().transactionMode() == org.infinispan.transaction.TransactionMode.TRANSACTIONAL) {
-            /*configBuilder.addDependency(
+            configBuilder.addDependency(
                     TxnServices.JBOSS_TXN_TRANSACTION_MANAGER,
                     TransactionManager.class,
                     cacheConfigurationDependencies.getTransactionManagerInjector()
@@ -303,7 +304,7 @@ public abstract class CacheConfigurationAdd extends AbstractAddStepHandler imple
                         TransactionSynchronizationRegistry.class,
                         cacheConfigurationDependencies.getTransactionSynchronizationRegistryInjector()
                 );
-            }*/
+            }
         }
 
         // add in any additional dependencies resulting from ModelNode parsing

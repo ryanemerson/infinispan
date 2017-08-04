@@ -36,13 +36,22 @@
       <version.apache.ds>2.0.0-M16</version.apache.ds>
       <version.com.github.relaxng.relaxngDatatype>2011.1</version.com.github.relaxng.relaxngDatatype>
       <version.com.github.ben-manes.caffeine>2.4.0</version.com.github.ben-manes.caffeine>
+      <version.com.google.guava>20.0</version.com.google.guava>
       <version.com.thoughtworks.paranamer>2.3</version.com.thoughtworks.paranamer>
       <version.commons.logging>1.1.1</version.commons.logging>
+      <version.gnu.getopt>1.0.13</version.gnu.getopt>
       <version.net.jcip.annotations>1.0</version.net.jcip.annotations>
+      <version.org.apache.avro>1.7.6</version.org.apache.avro>
+      <version.org.apache.httpcomponents>4.1.2</version.org.apache.httpcomponents>
+      <version.org.apache.james>0.6</version.org.apache.james>
+      <version.org.codehaus.jackson>1.9.13</version.org.codehaus.jackson>
+      <version.org.hibernate.commons.annotations>5.0.1.Final</version.org.hibernate.commons.annotations>
       <version.org.jboss.jandex>2.0.0.Final</version.org.jboss.jandex>
       <version.org.jboss.jbossts.jbossjts>4.16.2.Final</version.org.jboss.jbossts.jbossjts>
       <version.org.jboss.marshalling.jboss-marshalling>2.0.0.Beta3</version.org.jboss.marshalling.jboss-marshalling>
       <version.org.jboss.modules>1.4.3.Final</version.org.jboss.modules>
+      <version.org.jboss.spec.javax.xml.bind.jboss-jaxb-api_2.2_spec>1.0.4.Final</version.org.jboss.spec.javax.xml.bind.jboss-jaxb-api_2.2_spec>
+      <version.org.joda.time>2.9.7</version.org.joda.time>
       <version.junit>4.11</version.junit>
       <version.org.infinispan.infinispan-management-console>9.2.0.Alpha1</version.org.infinispan.infinispan-management-console>
       <version.org.infinispan.arquillian.container>1.2.0.Beta2</version.org.infinispan.arquillian.container>
