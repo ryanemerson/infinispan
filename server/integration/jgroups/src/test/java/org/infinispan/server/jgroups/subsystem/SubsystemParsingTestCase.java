@@ -21,7 +21,6 @@
 */
 package org.infinispan.server.jgroups.subsystem;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
@@ -29,17 +28,12 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import javax.xml.stream.XMLStreamException;
-
-import org.infinispan.server.commons.controller.Operations;
 import org.infinispan.server.commons.subsystem.ClusteringSubsystemTest;
 import org.jboss.as.controller.PathAddress;
+import org.jboss.as.controller.PathElement;
 import org.jboss.as.controller.descriptions.ModelDescriptionConstants;
 import org.jboss.as.controller.operations.common.Util;
-import org.jboss.as.subsystem.test.AdditionalInitialization;
 import org.jboss.as.subsystem.test.KernelServices;
-import org.jboss.as.subsystem.test.KernelServicesBuilder;
-import org.jboss.as.subsystem.test.ModelDescriptionValidator.ValidationConfiguration;
 import org.jboss.dmr.ModelNode;
 import org.junit.Assert;
 import org.junit.Test;
@@ -58,15 +52,10 @@ import org.junit.runners.Parameterized.Parameters;
 @RunWith(value = Parameterized.class)
 public class SubsystemParsingTestCase extends ClusteringSubsystemTest {
 
-    private final int expectedOperationCount;
-    private final String xsdPath;
-    private final String[] templates;
 
     public SubsystemParsingTestCase(JGroupsSchema schema, int expectedOperationCount, String xsdPath, String[] templates) {
-        super(JGroupsExtension.SUBSYSTEM_NAME, new JGroupsExtension(), schema.format("subsystem-%s-%d_%d.xml").replaceAll(":", "_"));
-        this.expectedOperationCount = expectedOperationCount;
-        this.xsdPath = xsdPath;
-        this.templates = templates;
+        super(JGroupsExtension.SUBSYSTEM_NAME, expectedOperationCount, xsdPath, new JGroupsExtension(),
+              schema.format("subsystem-%s-%d_%d.xml").replaceAll(":", "_"), templates);
     }
 
     @Parameters
@@ -81,48 +70,16 @@ public class SubsystemParsingTestCase extends ClusteringSubsystemTest {
     }
 
     @Override
-    protected String getSubsystemXsdPath() throws Exception {
-        return xsdPath;
-    }
-
-    @Override
-    protected String[] getSubsystemTemplatePaths() throws IOException {
-        return templates;
-    }
-
-    @Override
-    public void testSchemaOfSubsystemTemplates() throws Exception {
-        // TODO: implement once the schema validator supports supplements
-    }
-
-    private KernelServices buildKernelServices() throws Exception {
-        return this.buildKernelServices(this.getSubsystemXml());
-    }
-
-    private KernelServices buildKernelServices(String xml) throws Exception {
-        return this.createKernelServicesBuilder(xml).build();
-    }
-
-    private KernelServicesBuilder createKernelServicesBuilder() {
-        return this.createKernelServicesBuilder(AdditionalInitialization.MANAGEMENT);
-    }
-
-    private KernelServicesBuilder createKernelServicesBuilder(String xml) throws XMLStreamException {
-        return this.createKernelServicesBuilder().setSubsystemXml(xml);
-    }
-
-    @Override
-    protected ValidationConfiguration getModelValidationConfiguration() {
-        // use this configuration to report any exceptional cases for DescriptionProviders
-        return new ValidationConfiguration();
+    protected PathElement getSubsystemPath() {
+        return JGroupsSubsystemResourceDefinition.PATH;
     }
 
     /*
-     *  Create a collection of resources in the test which are not removed by a "remove" command
-     *   (i.e. all resources of form /subsystem=jgroups/stack=maximal/protocol=*)
-     *
-     *   The list includes protocol layers used in all configuration examples.
-     */
+         *  Create a collection of resources in the test which are not removed by a "remove" command
+         *   (i.e. all resources of form /subsystem=jgroups/stack=maximal/protocol=*)
+         *
+         *   The list includes protocol layers used in all configuration examples.
+         */
     @Override
     protected Set<PathAddress> getIgnoredChildResourcesForRemovalTest() {
         String[] protocols = { "UDP", "TCP", "MPING", "MERGE2", "FD_SOCK", "FD", "VERIFY_SUSPECT", "BARRIER",
@@ -139,56 +96,6 @@ public class SubsystemParsingTestCase extends ClusteringSubsystemTest {
         }
 
         return addresses;
-    }
-
-    /**
-     * Tests that the xml is parsed into the correct operations
-     */
-    @Test
-    public void testParseSubsystem() throws Exception {
-        // Parse the subsystem xml into operations
-        List<ModelNode> operations = super.parse(getSubsystemXml());
-
-        // Check that we have the expected number of operations
-        // one for each resource instance
-        Assert.assertEquals(this.expectedOperationCount, operations.size());
-    }
-
-    /**
-     * Starts a controller with a given subsystem xml and then checks that a second controller
-     * started with the xml marshalled from the first one results in the same model
-     */
-    @Test
-    public void testParseAndMarshalModel() throws Exception {
-        KernelServices services = this.buildKernelServices();
-
-        // Get the model and the persisted xml from the first controller
-        ModelNode modelA = services.readWholeModel();
-        String marshalled = services.getPersistedSubsystemXml();
-        ModelNode modelB = this.buildKernelServices(marshalled).readWholeModel();
-
-        // Make sure the models from the two controllers are identical
-        super.compare(modelA, modelB);
-    }
-
-    /**
-     * Starts a controller with the given subsystem xml and then checks that a second controller
-     * started with the operations from its describe action results in the same model
-     */
-    @Test
-    public void testDescribeHandler() throws Exception {
-        KernelServices servicesA = this.buildKernelServices();
-        // Get the model and the describe operations from the first controller
-        ModelNode modelA = servicesA.readWholeModel();
-        ModelNode operation = Operations.createDescribeOperation(PathAddress.pathAddress(JGroupsSubsystemResourceDefinition.PATH));
-        List<ModelNode> operations = checkResultAndGetContents(servicesA.executeOperation(operation)).asList();
-
-        // Install the describe options from the first controller into a second controller
-        KernelServices servicesB = this.createKernelServicesBuilder().setBootOperations(operations).build();
-        ModelNode modelB = servicesB.readWholeModel();
-
-        // Make sure the models from the two controllers are identical
-        super.compare(modelA, modelB);
     }
 
     @Test

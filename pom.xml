@@ -280,8 +280,7 @@
       <version.org.wildfly>10.1.0.Final</version.org.wildfly>
       <version.org.wildfly.arquillian>1.0.2.Final</version.org.wildfly.arquillian>
       <version.org.wildfly.build-tools>1.1.6.Final</version.org.wildfly.build-tools>
-      <version.org.wildfly.cli>1.0.1.Final</version.org.wildfly.cli>
-      <version.org.wildfly.core>2.2.0.Final</version.org.wildfly.core>
+      <version.org.wildfly.core>3.0.8.Final</version.org.wildfly.core>
       <version.org.wildfly.maven-plugin>1.1.0.Final</version.org.wildfly.maven-plugin>
       <version.osgi>4.3.1</version.osgi>
       <version.pax.exam>4.11.0</version.pax.exam>
@@ -1613,7 +1612,7 @@
                   <dependency>
                      <groupId>org.wildfly.core</groupId>
                      <artifactId>wildfly-cli</artifactId>
-                     <version>${version.org.wildfly.cli}</version>
+                     <version>${version.org.wildfly.core}</version>
                      <exclusions>
                         <exclusion>
                            <groupId>sun.jdk</groupId>

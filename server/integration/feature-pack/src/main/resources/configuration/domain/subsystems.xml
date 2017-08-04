@@ -3,18 +3,15 @@
 <config>
    <subsystems name="clustered">
       <subsystem>infinispan-logging.xml</subsystem>
-      <subsystem>datasources.xml</subsystem>
       <subsystem>io.xml</subsystem>
       <subsystem supplement="clustered">infinispan-core.xml</subsystem>
       <subsystem supplement="clustered">infinispan-endpoint.xml</subsystem>
+      <subsystem>infinispan-datasources.xml</subsystem>
       <subsystem>infinispan-jgroups.xml</subsystem>
-      <subsystem>jca.xml</subsystem>
-      <subsystem>jdr.xml</subsystem>
       <subsystem supplement="domain">jmx.xml</subsystem>
       <subsystem>naming.xml</subsystem>
       <subsystem>remoting.xml</subsystem>
       <subsystem>security.xml</subsystem>
       <subsystem>security-manager.xml</subsystem>
-      <subsystem>transactions.xml</subsystem>
    </subsystems>
 </config>

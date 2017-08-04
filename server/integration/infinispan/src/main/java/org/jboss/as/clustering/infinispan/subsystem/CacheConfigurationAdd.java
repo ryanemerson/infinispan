@@ -290,19 +290,6 @@ public abstract class CacheConfigurationAdd extends AbstractAddStepHandler imple
         }
         if (config.invocationBatching().enabled()) {
             cacheConfigurationDependencies.getTransactionManagerInjector().inject(BatchModeTransactionManager.getInstance());
-        } else if (config.transaction().transactionMode() == org.infinispan.transaction.TransactionMode.TRANSACTIONAL) {
-            /*configBuilder.addDependency(
-                    TxnServices.JBOSS_TXN_TRANSACTION_MANAGER,
-                    TransactionManager.class,
-                    cacheConfigurationDependencies.getTransactionManagerInjector()
-            );
-            if (config.transaction().useSynchronization()) {
-                configBuilder.addDependency(
-                        TxnServices.JBOSS_TXN_SYNCHRONIZATION_REGISTRY,
-                        TransactionSynchronizationRegistry.class,
-                        cacheConfigurationDependencies.getTransactionSynchronizationRegistryInjector()
-                );
-            }*/
         }
 
         // add in any additional dependencies resulting from ModelNode parsing
