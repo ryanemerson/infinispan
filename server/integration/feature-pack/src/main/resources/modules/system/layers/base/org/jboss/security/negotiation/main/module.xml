@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module xmlns="urn:jboss:module:1.3" name="org.jboss.security.negotiation">
+    <properties>
+        <property name="jboss.api" value="private"/>
+    </properties>
+
+    <resources>
+        <artifact name="${org.jboss.security:jboss-negotiation-common}"/>
+        <artifact name="${org.jboss.security:jboss-negotiation-extras}"/>
+        <!--<artifact name="${org.jboss.security:jboss-negotiation-ntlm}"/>-->
+        <artifact name="${org.jboss.security:jboss-negotiation-spnego}"/>
+    </resources>
+
+    <dependencies>
+        <module name="io.undertow.core" />
+        <module name="javax.api"/>
+        <module name="javax.servlet.api"/>
+        <!--<module name="org.jboss.as.web-common"/>-->
+        <module name="org.jboss.logging"/>
+        <module name="org.picketbox"/>
+        <module name="sun.jdk"/>
+        <module name="ibm.jdk"/>
+    </dependencies>
+</module>
