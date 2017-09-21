@@ -4,13 +4,10 @@
    <subsystems>
       <subsystem>infinispan-logging.xml</subsystem>
       <subsystem>deployment-scanner.xml</subsystem>
-      <subsystem>datasources.xml</subsystem>
       <subsystem supplement="clustered">infinispan-core.xml</subsystem>
       <subsystem supplement="clustered">infinispan-endpoint.xml</subsystem>
       <subsystem>cloud-jgroups.xml</subsystem>
       <subsystem>io.xml</subsystem>
-      <subsystem>jca.xml</subsystem>
-      <subsystem>jdr.xml</subsystem>
       <subsystem>jmx.xml</subsystem>
       <subsystem>naming.xml</subsystem>
       <subsystem>remoting.xml</subsystem>
