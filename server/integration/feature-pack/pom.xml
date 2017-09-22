@@ -789,6 +789,18 @@
         </dependency>
 
         <dependency>
+            <groupId>org.jboss.sasl</groupId>
+            <artifactId>jboss-sasl</artifactId>
+            <version>${version.org.jboss.sasl}</version>T
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
             <groupId>org.jboss.security</groupId>
             <artifactId>jboss-negotiation-common</artifactId>
             <version>${version.org.jboss.security.jboss-negotiation}</version>
