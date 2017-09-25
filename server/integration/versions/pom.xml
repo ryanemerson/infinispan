@@ -39,6 +39,7 @@
       <version.com.github.ben-manes.caffeine>2.4.0</version.com.github.ben-manes.caffeine>
       <version.com.google.guava>20.0</version.com.google.guava>
       <version.com.thoughtworks.paranamer>2.3</version.com.thoughtworks.paranamer>
+      <version.com.zaxxer.HikariCP>2.4.6</version.com.zaxxer.HikariCP>
       <version.commons.cli>1.2</version.commons.cli>
       <version.commons.logging>1.1.1</version.commons.logging>
       <version.gnu.getopt>1.0.13</version.gnu.getopt>

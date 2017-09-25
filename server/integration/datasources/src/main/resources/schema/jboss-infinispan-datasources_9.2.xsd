@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="urn:infinispan:server:datasources:9.2" xmlns="urn:infinispan:server:datasources:9.2"
+           elementFormDefault="qualified">
+
+    <xs:element name="subsystem" type="subsystemType"/>
+
+    <xs:complexType name="subsystemType">
+        <xs:all>
+            <xs:element name="datasources" type="datasourcesType"/>
+        </xs:all>
+    </xs:complexType>
+
+    <xs:complexType name="datasourcesType">
+        <xs:sequence>
+            <xs:choice minOccurs="0" maxOccurs="unbounded">
+                <xs:element name="datasource" type="datasourceType">
+                    <xs:annotation>
+                        <xs:documentation>
+                            <![CDATA[[
+                Specifies a non-XA datasource, using local transactions
+               ]]>
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:element>
+            </xs:choice>
+            <xs:element name="drivers" type="driversType"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="datasourceType" mixed="false">
+        <xs:sequence>
+            <xs:element name="connection-url" type="xs:token">
+                <xs:annotation>
+                    <xs:documentation>
+                        <![CDATA[[
+              The JDBC driver connection URL Ex: <connection-url>jdbc:hsqldb:hsql://localhost:1701</connection-url>
+             ]]>
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="driver-class" type="xs:token" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>
+                        <![CDATA[[
+              The fully qualifed name of the JDBC driver class Ex: <driver-class>org.hsqldb.jdbcDriver</driver-class>
+             ]]>
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="datasource-class" type="xs:token" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>
+                        <![CDATA[[
+              The fully qualifed name of the JDBC datasource class Ex: <datasource-class>org.h2.jdbcx.JdbcDataSource</datasource-class>
+             ]]>
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="driver" type="xs:token" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>
+                        <![CDATA[[
+              An unique reference to the classloader module which contains the JDBC driver
+              The accepted format is driverName#majorVersion.minorVersion
+             ]]>
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="connection-property" type="connection-propertyType" minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation>
+                        <![CDATA[[
+              The connection-property element allows you to pass in arbitrary connection
+              properties to the Driver.connect(url, props) method. Each connection-property
+              specifies a string name/value pair with the property name coming from the
+              name attribute and the value coming from the element content. Ex:
+              <connection-property name="char.encoding">UTF-8</connection-property>
+             ]]>
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="connection-propertyType" mixed="true">
+        <xs:attribute name="name" use="required" type="xs:token" />
+    </xs:complexType>
+
+    <xs:complexType name="driverType">
+        <xs:sequence>
+            <xs:element name="driver-class" type="xs:token" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>
+                        <![CDATA[[
+              The fully qualifed name of the JDBC driver class Ex: <driver-class>org.hsqldb.jdbcDriver</driver-class>
+             ]]>
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="name" type="xs:token" use="required">
+            <xs:annotation>
+                <xs:documentation>
+                    <![CDATA[[
+            Specifies the symbolic name of this driver used to reference this driver
+           ]]>
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="module" type="xs:token">
+            <xs:annotation>
+                <xs:documentation>
+                    <![CDATA[[
+            Specifies the name of AS7 module providing this driver.
+           ]]>
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="major-version" type="xs:int">
+            <xs:annotation>
+                <xs:documentation>
+                    <![CDATA[[
+            Specifies the major version of this driver. If the major and minor versions are omitted the first available
+            Driver in module will be used.
+           ]]>
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="minor-verion" type="xs:int">
+            <xs:annotation>
+                <xs:documentation>
+                    <![CDATA[[
+            Specifies the minor version of this driver. If the major and minor versions are omitted the first available
+            Driver in module will be used.
+           ]]>
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+
+    <xs:complexType name="driversType">
+        <xs:sequence>
+            <xs:element name="driver" type="driverType" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+</xs:schema>

@@ -8,7 +8,9 @@ import org.infinispan.configuration.global.GlobalConfiguration;
  *
  * @author Tristan Tarrant
  * @since 5.2
+ * @deprecated 9.2
  */
+@Deprecated
 public class ManagedConnectionFactoryConfigurationBuilder<S extends AbstractJdbcStoreConfigurationBuilder<?, S>> extends AbstractJdbcStoreConfigurationChildBuilder<S>
       implements ConnectionFactoryConfigurationBuilder<ManagedConnectionFactoryConfiguration> {
 

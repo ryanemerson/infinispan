@@ -24,6 +24,7 @@ import org.jboss.as.controller.ExtensionContext;
 import org.jboss.as.controller.ModelVersion;
 import org.jboss.as.controller.SubsystemRegistration;
 import org.jboss.as.controller.descriptions.ResourceDescriptionResolver;
+import org.jboss.as.controller.descriptions.StandardResourceDescriptionResolver;
 import org.jboss.as.controller.parsing.ExtensionParsingContext;
 import org.kohsuke.MetaInfServices;
 
@@ -39,9 +40,8 @@ public class EndpointExtension implements Extension {
    private static final String RESOURCE_NAME = EndpointExtension.class.getPackage().getName() + ".LocalDescriptions";
 
    static ResourceDescriptionResolver getResourceDescriptionResolver(String keyPrefix) {
-      return new SharedResourceDescriptionResolver(keyPrefix, RESOURCE_NAME, EndpointExtension.class.getClassLoader(), true, true, null);
-  }
-
+      return new StandardResourceDescriptionResolver(keyPrefix, RESOURCE_NAME, EndpointExtension.class.getClassLoader(), true, true);
+   }
 
    @Override
    public final void initialize(ExtensionContext context) {

@@ -431,6 +431,18 @@
         </dependency>
 
         <dependency>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+            <version>${version.com.zaxxer.HikariCP}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
             <groupId>gnu.getopt</groupId>
             <artifactId>java-getopt</artifactId>
             <version>${version.gnu.getopt}</version>

@@ -1,0 +1,81 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+   <modelVersion>4.0.0</modelVersion>
+
+   <parent>
+      <groupId>org.infinispan.server</groupId>
+      <artifactId>infinispan-server-versions</artifactId>
+      <version>9.2.0-SNAPSHOT</version>
+      <relativePath>../versions/pom.xml</relativePath>
+   </parent>
+
+   <artifactId>infinispan-server-datasources</artifactId>
+   <name>Infinispan Server - Datasources Subsystem</name>
+   <description>Infinispan Server - Datasources Subsystem</description>
+
+   <dependencies>
+
+      <dependency>
+         <groupId>org.jboss.msc</groupId>
+         <artifactId>jboss-msc</artifactId>
+      </dependency>
+
+      <dependency>
+         <groupId>org.wildfly.core</groupId>
+         <artifactId>wildfly-server</artifactId>
+      </dependency>
+
+      <dependency>
+         <groupId>org.kohsuke.metainf-services</groupId>
+         <artifactId>metainf-services</artifactId>
+         <optional>true</optional>
+      </dependency>
+
+      <dependency>
+         <groupId>org.jboss.logging</groupId>
+         <artifactId>jboss-logging-processor</artifactId>
+         <scope>provided</scope>
+         <optional>true</optional>
+      </dependency>
+
+      <dependency>
+         <groupId>junit</groupId>
+         <artifactId>junit</artifactId>
+         <scope>test</scope>
+      </dependency>
+
+      <dependency>
+         <groupId>org.wildfly.core</groupId>
+         <artifactId>wildfly-subsystem-test</artifactId>
+         <type>pom</type>
+         <scope>test</scope>
+      </dependency>
+
+      <dependency>
+         <groupId>org.infinispan.server</groupId>
+         <artifactId>infinispan-server-commons</artifactId>
+         <scope>test</scope>
+         <type>test-jar</type>
+      </dependency>
+   </dependencies>
+
+   <profiles>
+      <profile>
+         <id>smoke</id>
+         <build>
+            <plugins>
+               <plugin>
+                  <groupId>org.apache.maven.plugins</groupId>
+                  <artifactId>maven-surefire-plugin</artifactId>
+                  <executions>
+                     <execution>
+                        <id>default-test</id>
+                        <phase>none</phase>
+                     </execution>
+                  </executions>
+               </plugin>
+            </plugins>
+         </build>
+      </profile>
+   </profiles>
+</project>
