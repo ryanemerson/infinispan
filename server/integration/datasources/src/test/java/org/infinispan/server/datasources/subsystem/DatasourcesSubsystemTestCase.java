@@ -22,8 +22,8 @@ public class DatasourcesSubsystemTestCase extends ClusteringSubsystemTest {
    @Parameterized.Parameters
    public static Collection<Object[]> data() {
       Object[][] data = new Object[][] {
-            { "endpoint-9.0.xml", 38, "schema/wildfly-datasources_4_0.xsd", new String[] { "/subsystem-templates/infinispan-datasources.xml"} },
-            { "datasources-9.2.xml", 38, "schema/jboss-infinispan-datasources_9_2.xsd", new String[] { "/subsystem-templates/infinispan-datasources.xml"} },
+            { "wildfly-datasources-4.0.xml", 38, "schema/wildfly-datasources_4_0.xsd", new String[] { "subsystem-templates/infinispan-datasources.xml"} },
+            { "datasources-9.2.xml", 38, "schema/jboss-infinispan-datasources_9_2.xsd", new String[] { "subsystem-templates/infinispan-datasources.xml"} },
       };
       return Arrays.asList(data);
    }

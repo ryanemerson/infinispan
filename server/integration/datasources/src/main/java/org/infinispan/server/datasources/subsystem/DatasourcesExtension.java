@@ -1,7 +1,5 @@
 package org.infinispan.server.datasources.subsystem;
 
-import static org.jboss.as.server.controller.descriptions.ServerDescriptions.RESOURCE_NAME;
-
 import org.jboss.as.controller.Extension;
 import org.jboss.as.controller.ExtensionContext;
 import org.jboss.as.controller.SubsystemRegistration;
@@ -17,6 +15,7 @@ import org.kohsuke.MetaInfServices;
 @MetaInfServices
 class DatasourcesExtension implements Extension {
    static final String SUBSYSTEM_NAME = "datagrid-infinispan-datasources";
+   private static final String RESOURCE_NAME = DatasourcesExtension.class.getPackage().getName() + ".LocalDescriptions";
 
    static ResourceDescriptionResolver getResourceDescriptionResolver(String keyPrefix) {
       return new StandardResourceDescriptionResolver(keyPrefix, RESOURCE_NAME, DatasourcesExtension.class.getClassLoader(), true, true);
