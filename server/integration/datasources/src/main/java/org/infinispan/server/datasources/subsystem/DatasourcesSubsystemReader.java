@@ -140,7 +140,7 @@ class DatasourcesSubsystemReader implements XMLStreamConstants, XMLElementReader
          Element element = Element.forName(reader.getLocalName());
          String value = element != Element.SECURITY ? reader.getElementText() : null;
          switch (element) {
-            case CONNECTION_PROPERTIES:
+            case CONNECTION_PROPERTY:
                // TODO
             case CONNECTION_URL:
                DatasourceResource.CONNECTION_URL.parseAndSetParameter(value, datasource, reader);

@@ -56,7 +56,7 @@ class ModelKeys {
 
    static final String DRIVER_XA_DATASOURCE_CLASS_NAME_NAME = "driver-xa-datasource-class-name";
 
-   static final String CONNECTION_PROPERTIES = "connection-properties";
+   static final String CONNECTION_PROPERTY = "connection-property";
 
    static final String CONNECTION_PROPERTY_VALUE_NAME = "value";
 
