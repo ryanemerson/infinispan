@@ -6,6 +6,7 @@
       <subsystem>deployment-scanner.xml</subsystem>
       <subsystem supplement="clustered">infinispan-core.xml</subsystem>
       <subsystem supplement="clustered">infinispan-endpoint.xml</subsystem>
+      <subsystem>infinispan-datasources.xml</subsystem>
       <subsystem supplement="auth">infinispan-jgroups.xml</subsystem>
       <subsystem>io.xml</subsystem>
       <subsystem>jmx.xml</subsystem>

@@ -328,6 +328,12 @@
 
          <dependency>
             <groupId>${project.groupId}</groupId>
+            <artifactId>infinispan-server-datasources</artifactId>
+            <version>${project.version}</version>
+         </dependency>
+
+         <dependency>
+            <groupId>${project.groupId}</groupId>
             <artifactId>infinispan-server-endpoints</artifactId>
             <version>${project.version}</version>
          </dependency>

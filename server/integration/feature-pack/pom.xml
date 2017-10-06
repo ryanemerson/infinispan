@@ -329,6 +329,17 @@
 
         <dependency>
             <groupId>org.infinispan.server</groupId>
+            <artifactId>infinispan-server-datasources</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>org.infinispan.server</groupId>
             <artifactId>infinispan-server-endpoints</artifactId>
             <exclusions>
                 <exclusion>
