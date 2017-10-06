@@ -23,7 +23,7 @@ import org.jboss.msc.service.ServiceController;
  * @author Ryan Emerson
  * @since 9.2
  */
-public class DriverOperationHandlers {
+public class JdbcDriverOperationHandlers {
 
    static final OperationStepHandler GET_DRIVER = (context, operation) -> {
       ParametersValidator validator = new ParametersValidator();

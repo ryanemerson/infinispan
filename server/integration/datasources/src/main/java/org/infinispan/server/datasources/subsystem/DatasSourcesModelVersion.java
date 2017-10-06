@@ -6,16 +6,16 @@ import org.jboss.as.controller.ModelVersion;
  * @author Ryan Emerson
  * @since 9.2
  */
-enum DatasourcesModelVersion {
+enum DatasSourcesModelVersion {
 
-   VERSION_1_0_0(1, 0, 0);
+   VERSION_1_0(1, 0);
 
-   static final DatasourcesModelVersion CURRENT = VERSION_1_0_0;
+   static final DatasSourcesModelVersion CURRENT = VERSION_1_0;
 
    private final ModelVersion version;
 
-   DatasourcesModelVersion(int major, int minor, int micro) {
-      this.version = ModelVersion.create(major, minor, micro);
+   DatasSourcesModelVersion(int major, int minor) {
+      this.version = ModelVersion.create(major, minor);
    }
 
    public ModelVersion getVersion() {

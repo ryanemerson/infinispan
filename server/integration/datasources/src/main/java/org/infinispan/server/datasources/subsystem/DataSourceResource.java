@@ -16,10 +16,10 @@ import org.jboss.dmr.ModelType;
  * @author Ryan Emerson
  * @since 9.2
  */
-class DatasourceResource {
+class DataSourceResource {
 
    private static final SensitivityClassification DS_SECURITY =
-         new SensitivityClassification(DatasourcesExtension.SUBSYSTEM_NAME, "data-source-security", false, true, true);
+         new SensitivityClassification(DataSourcesExtension.SUBSYSTEM_NAME, "data-source-security", false, true, true);
    private static final SensitiveTargetAccessConstraintDefinition DS_SECURITY_DEF = new SensitiveTargetAccessConstraintDefinition(DS_SECURITY);
 
    static SimpleAttributeDefinition CONNECTION_URL = new SimpleAttributeDefinitionBuilder(ModelKeys.CONNECTION_URL, ModelType.STRING, false)
@@ -56,7 +56,7 @@ class DatasourceResource {
          })
          .build();
 
-   public static SimpleAttributeDefinition PASSWORD = new SimpleAttributeDefinitionBuilder(ModelKeys.PASSWORD, ModelType.STRING)
+   static SimpleAttributeDefinition PASSWORD = new SimpleAttributeDefinitionBuilder(ModelKeys.PASSWORD, ModelType.STRING)
          .setAllowExpression(true)
          .setAllowNull(true)
          .setRequires(ModelKeys.USERNAME)
@@ -75,11 +75,24 @@ class DatasourceResource {
          .setAllowExpression(true)
          .build();
 
-   public static SimpleAttributeDefinition USERNAME = new SimpleAttributeDefinitionBuilder(ModelKeys.USERNAME, ModelType.STRING)
+   static SimpleAttributeDefinition USERNAME = new SimpleAttributeDefinitionBuilder(ModelKeys.USERNAME, ModelType.STRING)
          .setAllowExpression(true)
          .setAllowNull(true)
          .addAccessConstraint(SensitiveTargetAccessConstraintDefinition.CREDENTIAL)
          .addAccessConstraint(DS_SECURITY_DEF)
          .build();
+
+   static final SimpleAttributeDefinition[] DATASOURCE_ATTRIBUTE = new SimpleAttributeDefinition[]{CONNECTION_URL,
+         JdbcDriverResource.DATASOURCE_CLASS,
+         JdbcDriverResource.DRIVER_CLASS,
+         DRIVER,
+         JNDI_NAME,
+//         NEW_CONNECTION_SQL,
+//         TODO add pool attributes and Tx isolation
+         PASSWORD,
+         STATISTICS_ENABLED,
+         USE_JAVA_CONTEXT,
+         USERNAME,
+   };
 
 }

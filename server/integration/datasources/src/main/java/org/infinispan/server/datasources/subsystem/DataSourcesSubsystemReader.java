@@ -43,10 +43,10 @@ import org.jboss.staxmapper.XMLExtendedStreamReader;
  * @author Ryan Emerson
  * @since 9.2
  */
-class DatasourcesSubsystemReader implements XMLStreamConstants, XMLElementReader<List<ModelNode>> {
+class DataSourcesSubsystemReader implements XMLStreamConstants, XMLElementReader<List<ModelNode>> {
    private final Namespace namespace;
 
-   DatasourcesSubsystemReader(Namespace namespace) {
+   DataSourcesSubsystemReader(Namespace namespace) {
       this.namespace = namespace;
    }
 
@@ -54,10 +54,11 @@ class DatasourcesSubsystemReader implements XMLStreamConstants, XMLElementReader
    public void readElement(final XMLExtendedStreamReader reader, final List<ModelNode> operations)
          throws XMLStreamException {
 
-      PathAddress subsystemAddress = PathAddress.pathAddress(DatasourcesSubsystemRootResource.PATH);
+      PathAddress subsystemAddress = PathAddress.pathAddress(DataSourcesSubsystemRootDefinition.PATH);
       ModelNode subsystem = Util.createAddOperation(subsystemAddress);
       operations.add(subsystem);
 
+      reader.discardRemainder();
       while (reader.hasNext() && (reader.nextTag() != XMLStreamConstants.END_ELEMENT)) {
          Element element = Element.forName(reader.getLocalName());
          switch (element) {
@@ -105,17 +106,17 @@ class DatasourcesSubsystemReader implements XMLStreamConstants, XMLElementReader
          Attribute attribute = Attribute.forName(reader.getAttributeLocalName(i));
          switch (attribute) {
             case JNDI_NAME:
-               DatasourceResource.JNDI_NAME.parseAndSetParameter(value, datasource, reader);
+               DataSourceResource.JNDI_NAME.parseAndSetParameter(value, datasource, reader);
                break;
             case POOL_NAME:
                poolName = value;
                break;
             case STATISTICS_ENABLED:
-               DatasourceResource.STATISTICS_ENABLED.parseAndSetParameter(value, datasource, reader);
+               DataSourceResource.STATISTICS_ENABLED.parseAndSetParameter(value, datasource, reader);
                break;
             case USE_JAVA_CONTEXT:
                if (value != null)
-                  DatasourceResource.USE_JAVA_CONTEXT.parseAndSetParameter(value, datasource, reader);
+                  DataSourceResource.USE_JAVA_CONTEXT.parseAndSetParameter(value, datasource, reader);
                break;
             // Ignored deprecated attributes
             case CONNECTABLE:
@@ -143,16 +144,16 @@ class DatasourcesSubsystemReader implements XMLStreamConstants, XMLElementReader
             case CONNECTION_PROPERTY:
                // TODO
             case CONNECTION_URL:
-               DatasourceResource.CONNECTION_URL.parseAndSetParameter(value, datasource, reader);
+               DataSourceResource.CONNECTION_URL.parseAndSetParameter(value, datasource, reader);
                break;
             case DRIVER_CLASS:
-               DatasourceResource.DRIVER.parseAndSetParameter(value, datasource, reader);
+               DataSourceResource.DRIVER.parseAndSetParameter(value, datasource, reader);
                break;
             case DATASOURCE_CLASS:
                JdbcDriverResource.DATASOURCE_CLASS.parseAndSetParameter(value, datasource, reader);
                break;
             case DRIVER:
-               DatasourceResource.DRIVER.parseAndSetParameter(value, datasource, reader);
+               DataSourceResource.DRIVER.parseAndSetParameter(value, datasource, reader);
                break;
             case POOL:
                // TODO parse these as HikariProperties
@@ -193,10 +194,10 @@ class DatasourcesSubsystemReader implements XMLStreamConstants, XMLElementReader
          String value = reader.getElementText();
          switch (element) {
             case USERNAME:
-               DatasourceResource.USERNAME.parseAndSetParameter(value, operation, reader);
+               DataSourceResource.USERNAME.parseAndSetParameter(value, operation, reader);
                break;
             case PASSWORD:
-               DatasourceResource.PASSWORD.parseAndSetParameter(value, operation, reader);
+               DataSourceResource.PASSWORD.parseAndSetParameter(value, operation, reader);
                break;
             case SECURITY_DOMAIN:
             case REAUTH_PLUGIN:

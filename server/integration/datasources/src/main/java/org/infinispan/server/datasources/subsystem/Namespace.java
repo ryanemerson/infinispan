@@ -8,7 +8,7 @@ import org.jboss.as.controller.ModelVersion;
  */
 public enum Namespace {
    // must be first
-   UNKNOWN(null, 0, 0),
+   UNKNOWN("", 0, 0),
    WILDFLY_DATASOURCES_4_0("jboss:domain:datasources", 4, 0),
    INFINISPAN_DATASOURCES_9_2("infinispan:server:datasources", 9, 2);
    private static final String URN_PATTERN = "urn:%s:%d.%d";

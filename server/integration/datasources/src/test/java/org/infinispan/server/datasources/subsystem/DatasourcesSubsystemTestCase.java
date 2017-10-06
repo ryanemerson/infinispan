@@ -16,7 +16,7 @@ import org.junit.runners.Parameterized;
 public class DatasourcesSubsystemTestCase extends ClusteringSubsystemTest {
 
    public DatasourcesSubsystemTestCase(String xmlFile, int operations, String xsdPath, String[] templates) {
-      super(DatasourcesExtension.SUBSYSTEM_NAME, operations, xsdPath, new DatasourcesExtension(), xmlFile, templates);
+      super(DataSourcesExtension.SUBSYSTEM_NAME, operations, xsdPath, new DataSourcesExtension(), xmlFile, templates);
    }
 
    @Parameterized.Parameters
@@ -30,6 +30,6 @@ public class DatasourcesSubsystemTestCase extends ClusteringSubsystemTest {
 
    @Override
    protected PathElement getSubsystemPath() {
-      return DatasourcesSubsystemRootResource.PATH;
+      return DataSourcesSubsystemRootDefinition.PATH;
    }
 }

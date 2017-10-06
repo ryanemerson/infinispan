@@ -1,8 +1,8 @@
 package org.infinispan.server.datasources.subsystem;
 
 import static org.infinispan.server.datasources.DatasourcesLogger.ROOT_LOGGER;
-import static org.infinispan.server.datasources.subsystem.JdbcDriverResource.DRIVER_CLASS;
 import static org.infinispan.server.datasources.subsystem.JdbcDriverResource.DATASOURCE_CLASS;
+import static org.infinispan.server.datasources.subsystem.JdbcDriverResource.DRIVER_CLASS;
 import static org.infinispan.server.datasources.subsystem.JdbcDriverResource.MAJOR_VERSION;
 import static org.infinispan.server.datasources.subsystem.JdbcDriverResource.MINOR_VERSION;
 import static org.infinispan.server.datasources.subsystem.JdbcDriverResource.MODULE_SLOT;
@@ -34,17 +34,19 @@ import org.jboss.msc.service.ServiceTarget;
 public class JdbcDriverAdd extends AbstractAddStepHandler {
     static final JdbcDriverAdd INSTANCE = new JdbcDriverAdd();
 
-    protected void populateModel(ModelNode operation, ModelNode model) throws OperationFailedException {
+    @Override
+    public void populateModel(ModelNode operation, ModelNode model) throws OperationFailedException {
         final ModelNode address = operation.require(OP_ADDR);
         final String driverName = PathAddress.pathAddress(address).getLastElement().getValue();
 
-        for (AttributeDefinition attribute : JdbcDriverResource.JDBC_DRIVER_ATTRIBUTES) {
+        for (AttributeDefinition attribute : JdbcDriverResource.JDBC_DRIVER_ATTRIBUTES)
             attribute.validateAndSet(operation, model);
-        }
+
         model.get(NAME.getName()).set(driverName);//this shouldn't be here anymore
     }
 
-    protected void performRuntime(OperationContext context, ModelNode operation, ModelNode model) throws OperationFailedException {
+    @Override
+    public void performRuntime(OperationContext context, ModelNode operation, ModelNode model) throws OperationFailedException {
         final ModelNode address = operation.require(OP_ADDR);
         final String driverName = PathAddress.pathAddress(address).getLastElement().getValue();
         if (operation.get(NAME.getName()).isDefined() && !driverName.equals(operation.get(NAME.getName()).asString())) {
@@ -96,9 +98,9 @@ public class JdbcDriverAdd extends AbstractAddStepHandler {
                                            final Integer majorVersion, final Integer minorVersion, final String dataSourceClassName) throws IllegalStateException {
         final int majorVer = driver.getMajorVersion();
         final int minorVer = driver.getMinorVersion();
+
         if ((majorVersion != null && majorVersion != majorVer) || (minorVersion != null && minorVersion != minorVer))
             throw ROOT_LOGGER.driverVersionMismatch();
-
 
         final boolean compliant = driver.jdbcCompliant();
         if (compliant) {
@@ -109,12 +111,10 @@ public class JdbcDriverAdd extends AbstractAddStepHandler {
         InstalledDriver driverMetadata = new InstalledDriver(driverName, moduleId, driver.getClass().getName(),
                 dataSourceClassName, majorVer, minorVer, compliant);
         DriverService driverService = new DriverService(driverMetadata, driver);
-        final ServiceBuilder<Driver> builder = target.addService(ServiceName.JBOSS.append("jdbc-driver", driverName.replaceAll("\\.", "_")), driverService)
+        final ServiceBuilder<Driver> builder = target.addService(ServiceName.JBOSS.append(ModelKeys.JDBC_DRIVER, driverName.replaceAll("\\.", "_")), driverService)
                 .addDependency(JdbcDriverResource.JDBC_DRIVER_REGISTRY_SERVICE, DriverRegistry.class,
                         driverService.getDriverRegistryServiceInjector())
                 .setInitialMode(ServiceController.Mode.ACTIVE);
         builder.install();
     }
-
-
 }

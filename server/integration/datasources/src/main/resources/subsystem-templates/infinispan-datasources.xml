@@ -9,7 +9,7 @@
       <replacement placeholder="@@default-cache-container@@" attributeValue="local" />
       <replacement placeholder="DATASOURCES">
          <datasources>
-            <datasource jndi-name="java:jboss/datasources/ExampleDS" pool-name="ExampleDS" enabled="true" use-java-context="true">
+            <datasource jndi-name="java:jboss/datasources/ExampleDS" pool-name="ExampleDS">
                <connection-url>jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE</connection-url>
                <driver>h2</driver>
                <security>
@@ -19,7 +19,7 @@
             </datasource>
             <drivers>
                <driver name="h2" module="com.h2database.h2">
-                  <xa-datasource-class>org.h2.jdbcx.JdbcDataSource</xa-datasource-class>
+                  <datasource-class>org.h2.jdbcx.JdbcDataSource</datasource-class>
                </driver>
             </drivers>
          </datasources>
