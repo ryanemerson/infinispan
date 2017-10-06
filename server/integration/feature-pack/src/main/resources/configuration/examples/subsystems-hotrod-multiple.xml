@@ -13,6 +13,5 @@
       <subsystem>remoting.xml</subsystem>
       <subsystem>security.xml</subsystem>
       <subsystem>security-manager.xml</subsystem>
-      <subsystem>transactions.xml</subsystem>
    </subsystems>
 </config>
