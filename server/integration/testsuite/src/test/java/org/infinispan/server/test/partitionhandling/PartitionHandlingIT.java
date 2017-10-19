@@ -28,6 +28,7 @@ import java.util.Set;
 
 import static org.infinispan.server.test.util.ITestUtils.eventually;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
 /**
@@ -46,6 +47,7 @@ public class PartitionHandlingIT {
    final static String ALLOW_READS_CACHE = "allowreads";
    final static String ALLOW_READS_CACHE_2_OWNERS = "allowreads_2owners";
    final static String ALLOW_READ_WRITES_CACHE = "allowreadwrites";
+   final static String REMOVE_ALL_CACHE = "removeall";
 
    private PartitionHandlingController partitionHandlingController;
 
@@ -186,6 +188,37 @@ public class PartitionHandlingIT {
       assertEquals("value2", allowReadWritesCache3.get(server1OwnedKey));
 
       healCluster();
+   }
+
+   @Test
+   public void testRemoveAllEntryMergePolicy() throws InterruptedException {
+      eventually(() -> assertNoRebalance(REMOVE_ALL_CACHE, server1, server2, server3), 10000);
+      RemoteCacheManager cacheManager = ITestUtils.createInternalCacheManager(server2);
+      RemoteCache<Object, Object> cache = cacheManager.getCache(REMOVE_ALL_CACHE);
+
+      String server1OwnedKey = getKeyOwnedByNode(server1Address, cacheManager, cache);
+      String server3OwnedKey = getKeyOwnedByNode(server3Address, cacheManager, cache);
+
+      cache.put(server1OwnedKey, "value");
+      cache.put(server3OwnedKey, "value");
+
+      partitionCluster();
+      eventually(() -> assertNoRebalance(REMOVE_ALL_CACHE, server1, server2), 10000);
+      eventually(() -> assertNoRebalance(REMOVE_ALL_CACHE, server3), 10000);
+
+      RemoteCache<Object, Object> removeAllCache1 = ITestUtils.createInternalCacheManager(server1).getCache(REMOVE_ALL_CACHE);
+      RemoteCache<Object, Object> removeAllCache3 = ITestUtils.createInternalCacheManager(server3).getCache(REMOVE_ALL_CACHE);
+
+      removeAllCache1.put(server1OwnedKey, "value1");
+      removeAllCache1.put(server3OwnedKey, "value1");
+      removeAllCache3.put(server1OwnedKey, "value3");
+      removeAllCache3.put(server3OwnedKey, "value3");
+
+      healCluster();
+      eventually(() -> assertNoRebalance(REMOVE_ALL_CACHE, server1, server2, server3), 10000);
+
+      assertNull(cache.get(server1OwnedKey));
+      assertNull(cache.get(server3OwnedKey));
    }
 
    /**
