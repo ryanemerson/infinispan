@@ -49,6 +49,7 @@ public class PreferAvailabilityStrategy implements AvailabilityStrategy {
    };
 
    private static final Log log = LogFactory.getLog(PreferAvailabilityStrategy.class);
+   private static final boolean trace = log.isTraceEnabled();
    private final EventLogManager eventLogManager;
    private final PersistentUUIDManager persistentUUIDManager;
    private final LostDataCheck lostDataCheck;
@@ -63,11 +64,15 @@ public class PreferAvailabilityStrategy implements AvailabilityStrategy {
 
    @Override
    public void onJoin(AvailabilityStrategyContext context, Address joiner) {
+      if (trace) log.tracef("(cache=%s) onJoin joiner=%s", context.getCacheName(), joiner);
+
       context.queueRebalance(context.getExpectedMembers());
    }
 
    @Override
    public void onGracefulLeave(AvailabilityStrategyContext context, Address leaver) {
+      if (trace) log.tracef("(cache=%s) onGracefulLeave leave=%s", context.getCacheName(), leaver);
+
       CacheTopology currentTopology = context.getCurrentTopology();
       List<Address> newMembers = new ArrayList<>(currentTopology.getMembers());
       newMembers.remove(leaver);
@@ -87,6 +92,8 @@ public class PreferAvailabilityStrategy implements AvailabilityStrategy {
 
    @Override
    public void onClusterViewChange(AvailabilityStrategyContext context, List<Address> clusterMembers) {
+      if (trace) log.tracef("(cache=%s) onClusterViewChange newMembers=%s", context.getCacheName(), clusterMembers);
+
       CacheTopology currentTopology = context.getCurrentTopology();
       List<Address> newMembers = new ArrayList<>(currentTopology.getMembers());
       if (!newMembers.retainAll(clusterMembers)) {
@@ -115,6 +122,8 @@ public class PreferAvailabilityStrategy implements AvailabilityStrategy {
 
    @Override
    public void onPartitionMerge(AvailabilityStrategyContext context, Map<Address, CacheStatusResponse> statusResponseMap) {
+      if (trace) log.tracef("(cache=%s) onPartitionMerge statusResponseMap=%s", context.getCacheName(), statusResponseMap);
+
       // We must first sort the response list here, to ensure that the maxTopology is chosen deterministically in the
       // event that multiple topologies exist with the same number of members.
       List<CacheStatusResponse> statusResponses = statusResponseMap.values().stream()
@@ -178,6 +187,10 @@ public class PreferAvailabilityStrategy implements AvailabilityStrategy {
       CacheTopology mergedTopology = null;
       List<Address> newMembers = context.getExpectedMembers();
       boolean resolveConflicts = resolveConflictsOnMerge && isSplitBrainHealing(context, maxTopology, maxStableTopology);
+
+      if (trace) log.tracef("(cache=%s) maxTopologyId=%d, maxRebalanceId=%d, resolveConflicts=%s", context.getCacheName(),
+            maxTopologyId, maxRebalanceId, resolveConflicts);
+
       if (maxTopology != null) {
          // If we are required to resolveConflicts, then we utilise the CH of the expected members. This is necessary
          // so that during conflict resolution, writes go to all owners
@@ -192,6 +205,7 @@ public class PreferAvailabilityStrategy implements AvailabilityStrategy {
                   maxTopology.getCurrentCH(), null, CacheTopology.Phase.NO_REBALANCE, maxTopology.getActualMembers(),
                   persistentUUIDManager.mapAddresses(maxTopology.getActualMembers()));
          }
+         if (trace) log.tracef("(cache=%s) mergedTopology=%s", context.getCacheName(), mergedTopology);
       }
 
       context.updateTopologiesAfterMerge(mergedTopology, maxStableTopology, null, resolveConflicts);
