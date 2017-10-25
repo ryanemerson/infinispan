@@ -482,7 +482,6 @@
         <dependency>
             <groupId>joda-time</groupId>
             <artifactId>joda-time</artifactId>
-            <version>${version.org.joda.time}</version>
         </dependency>
 
         <dependency>
@@ -566,7 +565,6 @@
         <dependency>
             <groupId>org.apache.lucene</groupId>
             <artifactId>lucene-backward-codecs</artifactId>
-            <version>${version.lucene}</version>
         </dependency>
 
         <dependency>
@@ -587,7 +585,6 @@
         <dependency>
             <groupId>org.apache.lucene</groupId>
             <artifactId>lucene-misc</artifactId>
-            <version>${version.lucene}</version>
         </dependency>
 
         <dependency>
@@ -820,7 +817,6 @@
         <dependency>
             <groupId>org.jboss.security</groupId>
             <artifactId>jboss-negotiation-common</artifactId>
-            <version>${version.org.jboss.security.jboss-negotiation}</version>
             <exclusions>
                 <exclusion>
                     <groupId>*</groupId>
@@ -832,7 +828,6 @@
         <dependency>
             <groupId>org.jboss.security</groupId>
             <artifactId>jboss-negotiation-extras</artifactId>
-            <version>${version.org.jboss.security.jboss-negotiation}</version>
             <!--Without explicitly defining 'compile' scope it defaults to 'test' for some reason -->
             <scope>compile</scope>
             <exclusions>
@@ -846,7 +841,6 @@
         <dependency>
             <groupId>org.jboss.security</groupId>
             <artifactId>jboss-negotiation-ntlm</artifactId>
-            <version>${version.org.jboss.security.jboss-negotiation}</version>
             <exclusions>
                 <exclusion>
                     <groupId>*</groupId>
@@ -858,7 +852,6 @@
         <dependency>
             <groupId>org.jboss.security</groupId>
             <artifactId>jboss-negotiation-spnego</artifactId>
-            <version>${version.org.jboss.security.jboss-negotiation}</version>
             <exclusions>
                 <exclusion>
                     <groupId>*</groupId>
@@ -870,73 +863,41 @@
         <dependency>
             <groupId>org.jboss.spec.javax.annotation</groupId>
             <artifactId>jboss-annotations-api_1.2_spec</artifactId>
-            <version>${version.org.jboss.spec.javax.annotation.jboss-annotations-api_1.2_spec}</version>
         </dependency>
 
         <dependency>
             <groupId>org.jboss.spec.javax.el</groupId>
             <artifactId>jboss-el-api_3.0_spec</artifactId>
-            <version>${version.org.jboss.spec.javax.el.jboss-el-api_3.0_spec}</version>
         </dependency>
 
         <dependency>
             <groupId>org.jboss.spec.javax.enterprise.concurrent</groupId>
             <artifactId>jboss-concurrency-api_1.0_spec</artifactId>
-            <version>${version.org.jboss.spec.javax.enterprise.concurrent.jboss-concurrency-api_1.0_spec}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.jboss.spec.javax.resource</groupId>
-            <artifactId>jboss-connector-api_1.7_spec</artifactId>
-            <version>${version.org.jboss.spec.javax.resource.jboss-connector-api_1.7_spec}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.jboss.spec.javax.security.jacc</groupId>
-            <artifactId>jboss-jacc-api_1.5_spec</artifactId>
-            <version>${version.org.jboss.spec.javax.security.jacc.jboss-jacc-api_1.5_spec}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.jboss.spec.javax.security.auth.message</groupId>
-            <artifactId>jboss-jaspi-api_1.1_spec</artifactId>
-            <version>${version.org.jboss.spec.javax.security.auth.message.jboss-jaspi-api_1.1_spec}</version>
         </dependency>
 
         <dependency>
             <groupId>org.jboss.spec.javax.servlet</groupId>
             <artifactId>jboss-servlet-api_3.1_spec</artifactId>
-            <version>${version.org.jboss.spec.javax.xml.servlet.jboss.servlet.api_3.1_spec}</version>
         </dependency>
 
         <dependency>
             <groupId>org.jboss.spec.javax.transaction</groupId>
             <artifactId>jboss-transaction-api_1.2_spec</artifactId>
-            <version>${version.org.jboss.spec.javax.transactions.jboss.transaction.api_1.2_spec}</version>
         </dependency>
 
         <dependency>
             <groupId>org.jboss.spec.javax.xml.bind</groupId>
             <artifactId>jboss-jaxb-api_2.2_spec</artifactId>
-            <version>${version.org.jboss.spec.javax.xml.bind.jboss.jaxb.api_2.2_spec}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.jboss</groupId>
-            <artifactId>jboss-transaction-spi</artifactId>
-            <version>${version.org.jboss.jboss-transaction-spi}</version>
         </dependency>
 
         <dependency>
             <groupId>org.jboss.weld</groupId>
             <artifactId>weld-api</artifactId>
-            <version>${version.org.jboss.weld.weld-api}</version>
         </dependency>
 
         <dependency>
             <groupId>org.jboss.weld</groupId>
             <artifactId>weld-core-impl</artifactId>
-            <version>${version.org.jboss.weld.weld}</version>
             <exclusions>
                 <exclusion>
                     <groupId>*</groupId>
@@ -948,19 +909,16 @@
         <dependency>
             <groupId>org.jboss.weld</groupId>
             <artifactId>weld-spi</artifactId>
-            <version>${version.org.jboss.weld.weld-api}</version>
         </dependency>
 
         <dependency>
             <groupId>org.jsoup</groupId>
             <artifactId>jsoup</artifactId>
-            <version>${version.org.jsoup}</version>
         </dependency>
 
         <dependency>
             <groupId>org.wildfly</groupId>
             <artifactId>wildfly-naming</artifactId>
-            <version>${version.org.wildfly}</version>
             <exclusions>
                 <exclusion>
                     <groupId>*</groupId>
@@ -994,7 +952,6 @@
         <dependency>
             <groupId>org.picketbox</groupId>
             <artifactId>picketbox</artifactId>
-            <version>${version.org.picketbox}</version>
             <exclusions>
                 <exclusion>
                     <groupId>*</groupId>
@@ -1006,7 +963,6 @@
         <dependency>
             <groupId>org.picketbox</groupId>
             <artifactId>picketbox-infinispan</artifactId>
-            <version>${version.org.picketbox}</version>
             <exclusions>
                 <exclusion>
                     <groupId>*</groupId>
@@ -1018,7 +974,6 @@
         <dependency>
             <groupId>org.picketbox</groupId>
             <artifactId>picketbox-commons</artifactId>
-            <version>${version.org.picketbox.commons}</version>
             <exclusions>
                 <exclusion>
                     <groupId>*</groupId>
@@ -1052,7 +1007,6 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>jcl-over-slf4j</artifactId>
-            <version>${version.org.slf4j}</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.slf4j</groupId>
