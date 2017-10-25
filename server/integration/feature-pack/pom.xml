@@ -415,7 +415,6 @@
         <dependency>
             <groupId>com.fasterxml</groupId>
             <artifactId>classmate</artifactId>
-            <version>${version.com.fasterxml.classmate}</version>
         </dependency>
 
         <dependency>
@@ -452,7 +451,6 @@
         <dependency>
             <groupId>com.zaxxer</groupId>
             <artifactId>HikariCP</artifactId>
-            <version>${version.com.zaxxer.HikariCP}</version>
             <exclusions>
                 <exclusion>
                     <groupId>*</groupId>
@@ -464,7 +462,6 @@
         <dependency>
             <groupId>gnu.getopt</groupId>
             <artifactId>java-getopt</artifactId>
-            <version>${version.gnu.getopt}</version>
         </dependency>
 
         <dependency>
@@ -502,13 +499,11 @@
         <dependency>
             <groupId>commons-cli</groupId>
             <artifactId>commons-cli</artifactId>
-            <version>${version.commons.cli}</version>
         </dependency>
 
         <dependency>
             <groupId>javax.enterprise</groupId>
             <artifactId>cdi-api</artifactId>
-            <version>${version.javax.enterprise}</version>
             <exclusions>
                 <exclusion>
                     <artifactId>*</artifactId>
@@ -525,13 +520,11 @@
         <dependency>
             <groupId>javax.validation</groupId>
             <artifactId>validation-api</artifactId>
-            <version>${version.javax.validation}</version>
         </dependency>
 
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
-            <version>${version.org.apache.httpcomponents}</version>
             <exclusions>
                 <exclusion>
                     <groupId>commons-logging</groupId>
@@ -543,31 +536,26 @@
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpcore</artifactId>
-            <version>${version.org.apache.httpcomponents}</version>
         </dependency>
 
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpcore-nio</artifactId>
-            <version>${version.org.apache.httpcomponents}</version>
         </dependency>
 
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpasyncclient</artifactId>
-            <version>${version.org.apache.httpcomponents}</version>
         </dependency>
 
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpmime</artifactId>
-            <version>${version.org.apache.httpcomponents}</version>
         </dependency>
 
         <dependency>
             <groupId>org.apache.james</groupId>
             <artifactId>apache-mime4j</artifactId>
-            <version>${version.org.apache.james}</version>
         </dependency>
 
         <dependency>
@@ -632,7 +620,6 @@
         <dependency>
             <groupId>org.apache.avro</groupId>
             <artifactId>avro</artifactId>
-            <version>${version.org.apache.avro}</version>
             <exclusions>
                 <exclusion>
                     <groupId>com.thoughtworks.paranamer</groupId>
@@ -661,19 +648,16 @@
         <dependency>
             <groupId>org.codehaus.jackson</groupId>
             <artifactId>jackson-core-asl</artifactId>
-            <version>${version.org.codehaus.jackson}</version>
         </dependency>
 
         <dependency>
             <groupId>org.codehaus.jackson</groupId>
             <artifactId>jackson-mapper-asl</artifactId>
-            <version>${version.org.codehaus.jackson}</version>
         </dependency>
 
         <dependency>
             <groupId>org.glassfish</groupId>
             <artifactId>javax.el-impl</artifactId>
-            <version>${version.org.glassfish.javax.el}</version>
             <exclusions>
                 <exclusion>
                     <groupId>*</groupId>
@@ -685,13 +669,11 @@
         <dependency>
             <groupId>org.glassfish</groupId>
             <artifactId>javax.enterprise.concurrent</artifactId>
-            <version>${version.org.glassfish.javax.enterprise.concurrent}</version>
         </dependency>
 
         <dependency>
             <groupId>org.hibernate.common</groupId>
             <artifactId>hibernate-commons-annotations</artifactId>
-            <version>${version.org.hibernate.commons.annotations}</version>
             <exclusions>
                 <exclusion>
                     <groupId>*</groupId>
@@ -736,7 +718,6 @@
         <dependency>
             <groupId>org.hibernate.javax.persistence</groupId>
             <artifactId>hibernate-jpa-2.1-api</artifactId>
-            <version>${version.org.hibernate.javax.persistence.hibernate-jpa-2.1-api}</version>
         </dependency>
 
         <dependency>
@@ -769,7 +750,6 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>${version.com.google.guava}</version>
         </dependency>
 
         <dependency>
@@ -791,7 +771,6 @@
         <dependency>
             <groupId>org.jboss</groupId>
             <artifactId>jboss-remote-naming</artifactId>
-            <version>${version.org.jboss.remote-naming}</version>
             <exclusions>
                 <exclusion>
                     <groupId>*</groupId>
@@ -808,7 +787,6 @@
         <dependency>
             <groupId>org.jboss.marshalling</groupId>
             <artifactId>jboss-marshalling-river</artifactId>
-            <version>${version.org.jboss.marshalling.jboss-marshalling}</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.jboss.marshalling</groupId>
@@ -820,7 +798,6 @@
         <dependency>
             <groupId>org.jboss.metadata</groupId>
             <artifactId>jboss-metadata-common</artifactId>
-            <version>${version.org.jboss.metadata}</version>
             <exclusions>
                 <exclusion>
                     <groupId>*</groupId>
@@ -832,7 +809,6 @@
         <dependency>
             <groupId>org.jboss.sasl</groupId>
             <artifactId>jboss-sasl</artifactId>
-            <version>${version.org.jboss.sasl}</version>
             <exclusions>
                 <exclusion>
                     <groupId>*</groupId>
