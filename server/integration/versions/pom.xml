@@ -9,7 +9,9 @@
       <relativePath>../../pom.xml</relativePath>
    </parent>
 
+   <groupId>org.infinispan.server</groupId>
    <artifactId>infinispan-server-versions</artifactId>
+   <version>9.2.0-SNAPSHOT</version>
    <packaging>pom</packaging>
 
    <name>Infinispan Server - BOM</name>
@@ -32,6 +34,7 @@
       <version.org.apache.james>0.6</version.org.apache.james>
       <version.org.glassfish.javax.el>3.0.1-b08-jbossorg-1</version.org.glassfish.javax.el>
       <version.org.glassfish.javax.enterprise.concurrent>1.0</version.org.glassfish.javax.enterprise.concurrent>
+      <version.org.jboss.metadata>10.0.2.Final</version.org.jboss.metadata>
       <version.org.jboss.remote-naming>2.0.4.Final</version.org.jboss.remote-naming>
       <version.org.jboss.sasl>1.0.5.Final</version.org.jboss.sasl>
       <version.org.jboss.security.jboss-negotiation>3.0.2.Final</version.org.jboss.security.jboss-negotiation>
@@ -371,76 +374,76 @@
          </dependency>
 
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan.server</groupId>
             <artifactId>infinispan-server-cli</artifactId>
             <version>${project.version}</version>
          </dependency>
 
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan.server</groupId>
             <artifactId>infinispan-server-commons</artifactId>
             <version>${project.version}</version>
          </dependency>
 
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan.server</groupId>
             <artifactId>infinispan-server-commons</artifactId>
             <version>${project.version}</version>
             <type>test-jar</type>
          </dependency>
 
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan.server</groupId>
             <artifactId>infinispan-server-event-logger</artifactId>
             <version>${project.version}</version>
          </dependency>
 
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan.server</groupId>
             <artifactId>infinispan-server-jgroups</artifactId>
             <version>${project.version}</version>
          </dependency>
 
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan.server</groupId>
             <artifactId>infinispan-server-jgroups</artifactId>
             <version>${project.version}</version>
             <type>test-jar</type>
          </dependency>
 
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan.server</groupId>
             <artifactId>infinispan-server-infinispan</artifactId>
             <version>${project.version}</version>
          </dependency>
 
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan.server</groupId>
             <artifactId>infinispan-server-infinispan</artifactId>
             <version>${project.version}</version>
             <type>test-jar</type>
          </dependency>
 
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan.server</groupId>
             <artifactId>infinispan-server-common</artifactId>
             <version>${project.version}</version>
          </dependency>
 
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan.server</groupId>
             <artifactId>infinispan-server-datasources</artifactId>
             <version>${project.version}</version>
          </dependency>
 
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan.server</groupId>
             <artifactId>infinispan-server-endpoints</artifactId>
             <version>${project.version}</version>
          </dependency>
 
          <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.infinispan.server</groupId>
             <artifactId>infinispan-server-feature-pack</artifactId>
             <version>${project.version}</version>
             <type>zip</type>
@@ -690,7 +693,7 @@
          <dependency>
             <groupId>org.hibernate.common</groupId>
             <artifactId>hibernate-commons-annotations</artifactId>
-            <version>${version.org.hibernate.commons.annotations}</version>
+            <version>${version.hibernate_dep.hibernate-commons-annotations}</version>
             <exclusions>
                <exclusion>
                   <groupId>*</groupId>
@@ -833,9 +836,7 @@
             <artifactId>commons-lang3</artifactId>
             <version>${version.commonslang3}</version>
          </dependency>
-
       </dependencies>
-
    </dependencyManagement>
 
    <build>

@@ -431,6 +431,7 @@
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
+            <!--<version>${version.h2.database}</version>-->
         </dependency>
 
         <dependency>

@@ -38,7 +38,9 @@ public class DataSourcesExtension implements Extension {
 
    @Override
    public void initializeParsers(ExtensionParsingContext context) {
-      for (Namespace namespace : Namespace.values())
-         context.setSubsystemXmlMapping(SUBSYSTEM_NAME, namespace.toString(), DataSourcesSubsystemReader::new);
+      for (Namespace namespace : Namespace.values()) {
+         DataSourcesSubsystemReader dsReader = new DataSourcesSubsystemReader();
+         context.setSubsystemXmlMapping(SUBSYSTEM_NAME, namespace.toString(), dsReader);
+      }
    }
 }
