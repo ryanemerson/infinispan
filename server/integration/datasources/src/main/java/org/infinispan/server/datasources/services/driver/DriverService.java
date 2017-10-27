@@ -5,10 +5,8 @@ import static org.infinispan.server.datasources.DatasourcesLogger.ROOT_LOGGER;
 import java.sql.Driver;
 
 import org.infinispan.server.datasources.services.driver.registry.DriverRegistry;
-import org.infinispan.server.datasources.subsystem.ModelKeys;
 import org.jboss.msc.inject.Injector;
 import org.jboss.msc.service.Service;
-import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;

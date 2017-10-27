@@ -10,7 +10,6 @@ import static org.infinispan.server.datasources.subsystem.JdbcDriverResource.MOD
 import static org.infinispan.server.datasources.subsystem.JdbcDriverResource.NAME;
 
 import org.infinispan.server.datasources.DatasourcesLogger;
-import org.infinispan.server.datasources.services.driver.DriverService;
 import org.infinispan.server.datasources.services.driver.InstalledDriver;
 import org.infinispan.server.datasources.services.driver.registry.DriverRegistry;
 import org.infinispan.server.datasources.services.driver.registry.DriverRegistryService;
