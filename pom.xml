@@ -241,7 +241,7 @@
       <version.jboss.remotingjmx>2.0.1.Final</version.jboss.remotingjmx>
       <version.jboss.sasl>1.0.5.Final</version.jboss.sasl>
       <version.jboss.spec>1.0.2.Final</version.jboss.spec>
-      <version.jboss.xnio>3.2.2.Final</version.jboss.xnio>
+      <version.jboss.xnio>3.5.4.Final</version.jboss.xnio>
       <version.jbossjta>5.0.4.Final</version.jbossjta>
       <version.jcipannotations>1.0</version.jcipannotations>
       <version.jetty.http.client>9.4.5.v20170502</version.jetty.http.client>

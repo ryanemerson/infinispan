@@ -49,14 +49,14 @@
       <version.org.jboss.weld.api>2.3.SP2</version.org.jboss.weld.api>
       <version.joda.time>2.9.7</version.joda.time>
       <version.org.jsoup>1.8.3</version.org.jsoup>
-      <version.org.infinispan.arquillian.container>1.2.0.Beta2</version.org.infinispan.arquillian.container>
+      <version.org.infinispan.arquillian.container>1.2.0-SNAPSHOT</version.org.infinispan.arquillian.container>
       <version.org.infinispan.server-build.old>8.2.7.Final</version.org.infinispan.server-build.old>
       <version.org.slf4j>1.7.2</version.org.slf4j>
       <version.org.apache.logging.log4j>2.3</version.org.apache.logging.log4j>
 
       <!-- WildFly dependencies -->
       <version.org.wildfly>10.1.0.Final</version.org.wildfly>
-      <version.org.wildfly.arquillian>1.1.0.Beta1</version.org.wildfly.arquillian>
+      <version.org.wildfly.arquillian>2.1.0.Final</version.org.wildfly.arquillian>
       <version.org.wildfly.core>3.0.8.Final</version.org.wildfly.core>
       <version.org.wildfly.build-tools>1.2.2.Final</version.org.wildfly.build-tools>
       <!-- Infinispan Server dependencies -->
