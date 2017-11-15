@@ -4,6 +4,7 @@ import org.jboss.as.controller.AttributeDefinition;
 import org.jboss.as.controller.OperationStepHandler;
 import org.jboss.as.controller.PathElement;
 import org.jboss.as.controller.ReloadRequiredWriteAttributeHandler;
+import org.jboss.as.controller.SimpleAttributeDefinition;
 import org.jboss.as.controller.SimpleAttributeDefinitionBuilder;
 import org.jboss.as.controller.registry.AttributeAccess;
 import org.jboss.as.controller.registry.ManagementResourceRegistration;
@@ -22,21 +23,21 @@ public class StrongCounterConfigurationResource extends CounterConfigurationReso
 
    public static final PathElement PATH = PathElement.pathElement(ModelKeys.STRONG_COUNTER);
 
-   static final AttributeDefinition LOWER_BOUND = 
+   static final SimpleAttributeDefinition LOWER_BOUND =
          new SimpleAttributeDefinitionBuilder(ModelKeys.LOWER_BOUND, ModelType.LONG, true)
          .setXmlName(Attribute.LOWER_BOUND.getLocalName())
          .setAllowExpression(false)
          .setFlags(AttributeAccess.Flag.RESTART_RESOURCE_SERVICES)
          .build();
 
-   static final AttributeDefinition UPPER_BOUND = 
+   static final SimpleAttributeDefinition UPPER_BOUND =
          new SimpleAttributeDefinitionBuilder(ModelKeys.UPPER_BOUND, ModelType.LONG, true)
          .setXmlName(Attribute.UPPER_BOUND.getLocalName())
          .setAllowExpression(false)
          .setFlags(AttributeAccess.Flag.RESTART_RESOURCE_SERVICES)
          .build();
 
-   static final AttributeDefinition[] STRONG_ATTRIBUTES = { LOWER_BOUND, UPPER_BOUND };
+   static final SimpleAttributeDefinition[] STRONG_ATTRIBUTES = { LOWER_BOUND, UPPER_BOUND };
      
    public StrongCounterConfigurationResource(ResolvePathHandler resolvePathHandler, boolean runtimeRegistration) {
       super(StrongCounterConfigurationResource.PATH, 

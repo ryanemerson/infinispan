@@ -159,14 +159,14 @@ public class InfinispanSubsystemXMLWriter implements XMLElementWriter<SubsystemM
 
                 ModelNode configurations = container.get(ModelKeys.CONFIGURATIONS, ModelKeys.CONFIGURATIONS_NAME);
 
-                // counters
-                processCounterConfigurations(writer, configurations);
-
                 // write any existent cache types
                 processCacheConfiguration(writer, container, configurations, ModelKeys.LOCAL_CACHE);
                 processCacheConfiguration(writer, container, configurations, ModelKeys.INVALIDATION_CACHE);
                 processCacheConfiguration(writer, container, configurations, ModelKeys.REPLICATED_CACHE);
                 processCacheConfiguration(writer, container, configurations, ModelKeys.DISTRIBUTED_CACHE);
+
+                // counters
+                processCounterConfigurations(writer, configurations);
 
                 writer.writeEndElement();
             }

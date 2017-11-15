@@ -4,10 +4,12 @@ import org.jboss.as.controller.AttributeDefinition;
 import org.jboss.as.controller.OperationStepHandler;
 import org.jboss.as.controller.PathElement;
 import org.jboss.as.controller.ReloadRequiredWriteAttributeHandler;
+import org.jboss.as.controller.SimpleAttributeDefinition;
 import org.jboss.as.controller.SimpleAttributeDefinitionBuilder;
 import org.jboss.as.controller.registry.AttributeAccess;
 import org.jboss.as.controller.registry.ManagementResourceRegistration;
 import org.jboss.as.controller.services.path.ResolvePathHandler;
+import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
 
 /**
@@ -22,9 +24,12 @@ public class WeakCounterConfigurationResource extends CounterConfigurationResour
 
    public static final PathElement PATH = PathElement.pathElement(ModelKeys.WEAK_COUNTER);
 
-   static final AttributeDefinition CONCURRENCY = new SimpleAttributeDefinitionBuilder(ModelKeys.CONCURRENCY,
-         ModelType.INT, true).setXmlName(Attribute.CONCURRENCY.getLocalName()).setAllowExpression(false)
-               .setFlags(AttributeAccess.Flag.RESTART_RESOURCE_SERVICES).build();
+   static final SimpleAttributeDefinition CONCURRENCY = new SimpleAttributeDefinitionBuilder(ModelKeys.CONCURRENCY,
+         ModelType.INT, true)
+           .setXmlName(Attribute.CONCURRENCY.getLocalName())
+           .setAllowExpression(false)
+           .setDefaultValue(new ModelNode().set(64))
+           .setFlags(AttributeAccess.Flag.RESTART_RESOURCE_SERVICES).build();
 
    static final AttributeDefinition[] WEAK_ATTRIBUTES = { CONCURRENCY };
 

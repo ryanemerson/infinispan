@@ -1,5 +1,7 @@
 package org.jboss.as.clustering.infinispan.subsystem;
 
+import org.infinispan.counter.configuration.CounterManagerConfigurationBuilder;
+import org.infinispan.counter.configuration.Reliability;
 import org.jboss.as.controller.AttributeDefinition;
 import org.jboss.as.controller.PathElement;
 import org.jboss.as.controller.ReloadRequiredRemoveStepHandler;
@@ -9,6 +11,7 @@ import org.jboss.as.controller.SimpleResourceDefinition;
 import org.jboss.as.controller.registry.AttributeAccess;
 import org.jboss.as.controller.registry.ManagementResourceRegistration;
 import org.jboss.as.controller.services.path.ResolvePathHandler;
+import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
 
 /**
@@ -20,16 +23,13 @@ import org.jboss.dmr.ModelType;
 public class CacheContainerCountersResource extends SimpleResourceDefinition {
     static final PathElement PATH = PathElement.pathElement(ModelKeys.COUNTERS, ModelKeys.COUNTERS_NAME);
 
-    //TODO Could not find these definitions anywhere in counter API
-    private static final String AVAILABLE = "AVAILABLE";
-    private static final String CONSISTENT = "CONSISTENT";
-
     //atributes
     static final SimpleAttributeDefinition RELIABILITY = new SimpleAttributeDefinitionBuilder(ModelKeys.RELIABILITY,
             ModelType.STRING, false)
             .setXmlName(Attribute.RELIABILITY.getLocalName())
             .setAllowExpression(false)
-            .setAllowedValues(AVAILABLE.toString(), CONSISTENT.toString())
+            .setAllowedValues(Reliability.AVAILABLE.toString(), Reliability.CONSISTENT.toString())
+            .setDefaultValue(new ModelNode().set(CounterManagerConfigurationBuilder.defaultConfiguration().reliability().toString()))
             .setFlags(AttributeAccess.Flag.RESTART_RESOURCE_SERVICES)
             .build();
 
@@ -38,6 +38,7 @@ public class CacheContainerCountersResource extends SimpleResourceDefinition {
             .setXmlName(Attribute.NUM_OWNERS.getLocalName())
             .setAllowExpression(false)
             .setFlags(AttributeAccess.Flag.RESTART_RESOURCE_SERVICES)
+            .setDefaultValue(new ModelNode().set(CounterManagerConfigurationBuilder.defaultConfiguration().numOwners()))
             .build();
 
 

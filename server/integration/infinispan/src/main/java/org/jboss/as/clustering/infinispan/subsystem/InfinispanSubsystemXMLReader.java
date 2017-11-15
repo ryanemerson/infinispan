@@ -421,27 +421,24 @@ public final class InfinispanSubsystemXMLReader implements XMLElementReader<List
             String value = reader.getAttributeValue(i);
             Attribute attribute = Attribute.forName(reader.getAttributeLocalName(i));
             switch (attribute) {
-                case INITIAL_VALUE: {
-                    ((SimpleAttributeDefinition) StrongCounterConfigurationResource.INITIAL_VALUE)
-                            .parseAndSetParameter(value, counter, reader);
-                    break;
-                }
-                case NAME: {
-                    ((SimpleAttributeDefinition) StrongCounterConfigurationResource.COUNTER_NAME)
-                            .parseAndSetParameter(value, counter, reader);
-                    strongCounterAddress = strongCounterAddress.append(StrongCounterConfigurationResource.PATH.getKey(),
-                            value);
-                    counter.get(OP_ADDR).set(strongCounterAddress.toModelNode());
-                    break;
-                }
-                case STORAGE: {
-                    ((SimpleAttributeDefinition) StrongCounterConfigurationResource.STORAGE).parseAndSetParameter(value,
-                            counter, reader);
-                    break;
-                }
-                default: {
-                    throw ParseUtils.unexpectedAttribute(reader, i);
-                }
+            case INITIAL_VALUE: {
+                StrongCounterConfigurationResource.INITIAL_VALUE.parseAndSetParameter(value, counter, reader);
+                break;
+            }
+            case NAME: {
+                StrongCounterConfigurationResource.COUNTER_NAME.parseAndSetParameter(value, counter, reader);
+                strongCounterAddress = strongCounterAddress.append(StrongCounterConfigurationResource.PATH.getKey(),
+                        value);
+                counter.get(OP_ADDR).set(strongCounterAddress.toModelNode());
+                break;
+            }
+            case STORAGE: {
+                StrongCounterConfigurationResource.STORAGE.parseAndSetParameter(value, counter, reader);
+                break;
+            }
+            default: {
+                throw ParseUtils.unexpectedAttribute(reader, i);
+            }
             }
         }
 
@@ -477,12 +474,12 @@ public final class InfinispanSubsystemXMLReader implements XMLElementReader<List
             Attribute attribute = Attribute.forName(reader.getAttributeLocalName(i));
             switch (attribute) {
                 case INITIAL_VALUE: {
-                    ((SimpleAttributeDefinition) WeakCounterConfigurationResource.INITIAL_VALUE).parseAndSetParameter(value,
+                    WeakCounterConfigurationResource.INITIAL_VALUE.parseAndSetParameter(value,
                             counter, reader);
                     break;
                 }
                 case NAME: {
-                    ((SimpleAttributeDefinition) WeakCounterConfigurationResource.COUNTER_NAME).parseAndSetParameter(value,
+                    WeakCounterConfigurationResource.COUNTER_NAME.parseAndSetParameter(value,
                             counter, reader);
                     weakCountersAddress = weakCountersAddress.append(WeakCounterConfigurationResource.PATH.getKey(),
                             value);
@@ -490,12 +487,12 @@ public final class InfinispanSubsystemXMLReader implements XMLElementReader<List
                     break;
                 }
                 case STORAGE: {
-                    ((SimpleAttributeDefinition) WeakCounterConfigurationResource.STORAGE).parseAndSetParameter(value,
+                    WeakCounterConfigurationResource.STORAGE.parseAndSetParameter(value,
                             counter, reader);
                     break;
                 }
                 case CONCURRENCY: {
-                    ((SimpleAttributeDefinition) WeakCounterConfigurationResource.CONCURRENCY).parseAndSetParameter(value,
+                    WeakCounterConfigurationResource.CONCURRENCY.parseAndSetParameter(value,
                             counter, reader);
                     break;
                 }
@@ -516,20 +513,18 @@ public final class InfinispanSubsystemXMLReader implements XMLElementReader<List
             String value = reader.getAttributeValue(i);
             Attribute attribute = Attribute.forName(reader.getAttributeLocalName(i));
             switch (attribute) {
-                case VALUE: {
-                    if (element.equals(Element.LOWER_BOUND)) {
-                        ((SimpleAttributeDefinition) StrongCounterConfigurationResource.LOWER_BOUND)
-                                .parseAndSetParameter(value, counter, reader);
-                    }
-                    if (element.equals(Element.UPPER_BOUND)) {
-                        ((SimpleAttributeDefinition) StrongCounterConfigurationResource.UPPER_BOUND)
-                                .parseAndSetParameter(value, counter, reader);
-                    }
-                    break;
+            case VALUE: {
+                if (element.equals(Element.LOWER_BOUND)) {
+                    StrongCounterConfigurationResource.LOWER_BOUND.parseAndSetParameter(value, counter, reader);
                 }
-                default: {
-                    throw ParseUtils.unexpectedAttribute(reader, i);
+                if (element.equals(Element.UPPER_BOUND)) {
+                    StrongCounterConfigurationResource.UPPER_BOUND.parseAndSetParameter(value, counter, reader);
                 }
+                break;
+            }
+            default: {
+                throw ParseUtils.unexpectedAttribute(reader, i);
+            }
             }
         }
         while (reader.hasNext() && (reader.nextTag() != XMLStreamConstants.END_ELEMENT)) {

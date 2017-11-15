@@ -17,6 +17,7 @@ import org.jboss.as.controller.OperationStepHandler;
 import org.jboss.as.controller.PathAddress;
 import org.jboss.as.controller.PathElement;
 import org.jboss.as.controller.ReloadRequiredWriteAttributeHandler;
+import org.jboss.as.controller.SimpleAttributeDefinition;
 import org.jboss.as.controller.SimpleAttributeDefinitionBuilder;
 import org.jboss.as.controller.SimpleResourceDefinition;
 import org.jboss.as.controller.descriptions.ResourceDescriptionResolver;
@@ -37,29 +38,31 @@ import org.jboss.dmr.ModelType;
 public class CounterConfigurationResource extends SimpleResourceDefinition {
 
    //atributes
-   static final AttributeDefinition COUNTER_NAME = new SimpleAttributeDefinitionBuilder(ModelKeys.NAME,
+   static final SimpleAttributeDefinition COUNTER_NAME = new SimpleAttributeDefinitionBuilder(ModelKeys.NAME,
          ModelType.STRING, false)
          .setXmlName(Attribute.NAME.getLocalName())
          .setAllowExpression(false)
          .setFlags(AttributeAccess.Flag.RESTART_RESOURCE_SERVICES)
          .build();
 
-   static final AttributeDefinition STORAGE = new SimpleAttributeDefinitionBuilder(ModelKeys.STORAGE, 
+   static final SimpleAttributeDefinition STORAGE = new SimpleAttributeDefinitionBuilder(ModelKeys.STORAGE,
          ModelType.STRING, false)
          .setXmlName(Attribute.STORAGE.getLocalName())
          .setAllowExpression(false)
          .setFlags(AttributeAccess.Flag.RESTART_RESOURCE_SERVICES)
          .setAllowedValues(Storage.VOLATILE.toString(), Storage.PERSISTENT.toString())
+         .setDefaultValue(new ModelNode().set(Storage.VOLATILE.toString()))
          .build();
 
-   static final AttributeDefinition INITIAL_VALUE = new SimpleAttributeDefinitionBuilder(ModelKeys.INITIAL_VALUE,
+   static final SimpleAttributeDefinition INITIAL_VALUE = new SimpleAttributeDefinitionBuilder(ModelKeys.INITIAL_VALUE,
          ModelType.LONG, true)
          .setXmlName(Attribute.INITIAL_VALUE.getLocalName())
          .setAllowExpression(false)
          .setFlags(AttributeAccess.Flag.RESTART_RESOURCE_SERVICES)
+         .setDefaultValue(new ModelNode().set(0))
          .build();
 
-   static final AttributeDefinition VALUE = new SimpleAttributeDefinitionBuilder(ModelKeys.VALUE,
+   static final SimpleAttributeDefinition VALUE = new SimpleAttributeDefinitionBuilder(ModelKeys.VALUE,
          ModelType.LONG, true)
          .setXmlName(Attribute.VALUE.getLocalName())
          .setAllowExpression(false)
