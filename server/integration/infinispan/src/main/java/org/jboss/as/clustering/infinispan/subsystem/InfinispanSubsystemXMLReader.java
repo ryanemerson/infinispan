@@ -31,6 +31,7 @@ import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -212,8 +213,16 @@ public final class InfinispanSubsystemXMLReader implements XMLElementReader<List
         container.get(OP_ADDR).set(containerAddress.toModelNode());
         operations.put(containerAddress, container);
 
+        PathAddress countersAddress = containerAddress.append(CacheContainerCountersResource.PATH);
+        operations.put(countersAddress, Util.getEmptyOperation(ADD, countersAddress.toModelNode()));
+
+
         PathAddress configurationsAddress = containerAddress.append(CacheContainerConfigurationsResource.PATH);
         operations.put(configurationsAddress, Util.getEmptyOperation(ADD, configurationsAddress.toModelNode()));
+
+
+        PathAddress countersConfigurationAddress = configurationsAddress.append(CacheContainerCountersConfigurationResource.PATH);
+        operations.put(countersConfigurationAddress, Util.getEmptyOperation(ADD, countersConfigurationAddress.toModelNode()));
 
         Stream.of(ThreadPoolResource.values()).forEach(
                 pool -> operations.put(containerAddress.append(pool.getPathElement()), Util.createAddOperation(containerAddress.append(pool.getPathElement())))
@@ -349,7 +358,12 @@ public final class InfinispanSubsystemXMLReader implements XMLElementReader<List
                         break;
                     }
                 }
-
+                case COUNTERS: {
+                   if (namespace.since(Namespace.INFINISPAN_SERVER_9_2)) {
+                       this.parseCounters(reader, countersAddress, countersConfigurationAddress, operations);
+                       break;
+                   }
+                }
                 default: {
                     throw ParseUtils.unexpectedElement(reader);
                 }
@@ -357,7 +371,173 @@ public final class InfinispanSubsystemXMLReader implements XMLElementReader<List
         }
     }
 
-    private void parseGlobalState(XMLExtendedStreamReader reader, PathAddress containerAddress,
+    private void parseCounters(XMLExtendedStreamReader reader, PathAddress countersAddress, PathAddress countersConfigurationAddress,
+            Map<PathAddress, ModelNode> operations) throws XMLStreamException {
+
+        ModelNode counters = operations.get(countersAddress);
+        for (int i = 0; i < reader.getAttributeCount(); i++) {
+            String value = reader.getAttributeValue(i);
+            Attribute attribute = Attribute.forName(reader.getAttributeLocalName(i));
+            switch (attribute) {
+                case NUM_OWNERS: {
+                    CacheContainerCountersResource.NUM_OWNERS.parseAndSetParameter(value, counters, reader);
+                    break;
+                }
+                case RELIABILITY: {
+                    CacheContainerCountersResource.RELIABILITY.parseAndSetParameter(value, counters, reader);
+                    break;
+                }
+                default: {
+                    throw ParseUtils.unexpectedAttribute(reader, i);
+                }
+            }
+        }
+
+        while (reader.hasNext() && (reader.nextTag() != XMLStreamConstants.END_ELEMENT)) {
+            Element element = Element.forName(reader.getLocalName());
+            switch (element) {
+                case STRONG_COUNTER: {
+                    parseStrongCounterElement(reader, element, countersConfigurationAddress, operations);
+                    break;
+                }
+                case WEAK_COUNTER: {
+                    parseWeakCounterElement(reader, element, countersConfigurationAddress, operations);
+                    break;
+                }
+                default: {
+                    throw ParseUtils.unexpectedElement(reader);
+                }
+            }
+        }
+    }
+
+    private void parseStrongCounterElement(XMLExtendedStreamReader reader, Element element,
+            PathAddress countersConfigurationAddress, Map<PathAddress, ModelNode> operations)
+            throws XMLStreamException {
+
+        PathAddress strongCounterAddress = countersConfigurationAddress;
+        ModelNode counter = Util.createAddOperation(strongCounterAddress);
+        for (int i = 0; i < reader.getAttributeCount(); i++) {
+            String value = reader.getAttributeValue(i);
+            Attribute attribute = Attribute.forName(reader.getAttributeLocalName(i));
+            switch (attribute) {
+                case INITIAL_VALUE: {
+                    ((SimpleAttributeDefinition) StrongCounterConfigurationResource.INITIAL_VALUE)
+                            .parseAndSetParameter(value, counter, reader);
+                    break;
+                }
+                case NAME: {
+                    ((SimpleAttributeDefinition) StrongCounterConfigurationResource.COUNTER_NAME)
+                            .parseAndSetParameter(value, counter, reader);
+                    strongCounterAddress = strongCounterAddress.append(StrongCounterConfigurationResource.PATH.getKey(),
+                            value);
+                    counter.get(OP_ADDR).set(strongCounterAddress.toModelNode());
+                    break;
+                }
+                case STORAGE: {
+                    ((SimpleAttributeDefinition) StrongCounterConfigurationResource.STORAGE).parseAndSetParameter(value,
+                            counter, reader);
+                    break;
+                }
+                default: {
+                    throw ParseUtils.unexpectedAttribute(reader, i);
+                }
+            }
+        }
+
+        while (reader.hasNext() && (reader.nextTag() != XMLStreamConstants.END_ELEMENT)) {
+            Element e = Element.forName(reader.getLocalName());
+            switch (e) {
+                case LOWER_BOUND: {
+                    parseCounterBound(reader, e, counter);
+                    break;
+                }
+                case UPPER_BOUND: {
+                    parseCounterBound(reader, e, counter);
+                    break;
+                }
+                default: {
+                    throw ParseUtils.unexpectedElement(reader);
+                }
+            }
+        }
+        operations.put(strongCounterAddress, counter);
+
+    }
+
+    private void parseWeakCounterElement(XMLExtendedStreamReader reader, Element element,
+            PathAddress countersConfigurationAddress, Map<PathAddress, ModelNode> operations)
+            throws XMLStreamException {
+
+        PathAddress weakCountersAddress = countersConfigurationAddress;
+        ModelNode counter = Util.createAddOperation(weakCountersAddress);
+
+        for (int i = 0; i < reader.getAttributeCount(); i++) {
+            String value = reader.getAttributeValue(i);
+            Attribute attribute = Attribute.forName(reader.getAttributeLocalName(i));
+            switch (attribute) {
+                case INITIAL_VALUE: {
+                    ((SimpleAttributeDefinition) WeakCounterConfigurationResource.INITIAL_VALUE).parseAndSetParameter(value,
+                            counter, reader);
+                    break;
+                }
+                case NAME: {
+                    ((SimpleAttributeDefinition) WeakCounterConfigurationResource.COUNTER_NAME).parseAndSetParameter(value,
+                            counter, reader);
+                    weakCountersAddress = weakCountersAddress.append(WeakCounterConfigurationResource.PATH.getKey(),
+                            value);
+                    counter.get(OP_ADDR).set(weakCountersAddress.toModelNode());
+                    break;
+                }
+                case STORAGE: {
+                    ((SimpleAttributeDefinition) WeakCounterConfigurationResource.STORAGE).parseAndSetParameter(value,
+                            counter, reader);
+                    break;
+                }
+                case CONCURRENCY: {
+                    ((SimpleAttributeDefinition) WeakCounterConfigurationResource.CONCURRENCY).parseAndSetParameter(value,
+                            counter, reader);
+                    break;
+                }
+                default: {
+                    throw ParseUtils.unexpectedAttribute(reader, i);
+                }
+            }
+        }
+        while (reader.hasNext() && (reader.nextTag() != XMLStreamConstants.END_ELEMENT)) {
+            throw ParseUtils.unexpectedElement(reader);
+        }
+        operations.put(weakCountersAddress, counter);
+    }
+
+    private void parseCounterBound(XMLExtendedStreamReader reader, Element element, ModelNode counter)
+            throws XMLStreamException {
+        for (int i = 0; i < reader.getAttributeCount(); i++) {
+            String value = reader.getAttributeValue(i);
+            Attribute attribute = Attribute.forName(reader.getAttributeLocalName(i));
+            switch (attribute) {
+                case VALUE: {
+                    if (element.equals(Element.LOWER_BOUND)) {
+                        ((SimpleAttributeDefinition) StrongCounterConfigurationResource.LOWER_BOUND)
+                                .parseAndSetParameter(value, counter, reader);
+                    }
+                    if (element.equals(Element.UPPER_BOUND)) {
+                        ((SimpleAttributeDefinition) StrongCounterConfigurationResource.UPPER_BOUND)
+                                .parseAndSetParameter(value, counter, reader);
+                    }
+                    break;
+                }
+                default: {
+                    throw ParseUtils.unexpectedAttribute(reader, i);
+                }
+            }
+        }
+        while (reader.hasNext() && (reader.nextTag() != XMLStreamConstants.END_ELEMENT)) {
+            throw ParseUtils.unexpectedElement(reader);
+        }
+    }
+
+   private void parseGlobalState(XMLExtendedStreamReader reader, PathAddress containerAddress,
             Map<PathAddress, ModelNode> operations) throws XMLStreamException {
         PathAddress globalStateAddress = containerAddress.append(ModelKeys.GLOBAL_STATE, ModelKeys.GLOBAL_STATE_NAME);
         ModelNode globalState = Util.createAddOperation(globalStateAddress);

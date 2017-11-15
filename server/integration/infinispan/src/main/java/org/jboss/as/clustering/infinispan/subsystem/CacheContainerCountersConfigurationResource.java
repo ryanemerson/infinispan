@@ -1,6 +1,6 @@
 /*
  * JBoss, Home of Professional Open Source.
- * Copyright 2012, Red Hat, Inc., and individual contributors
+ * Copyright 2017, Red Hat, Inc., and individual contributors
  * as indicated by the @author tags. See the copyright.txt file in the
  * distribution for a full listing of individual contributors.
  *
@@ -29,19 +29,20 @@ import org.jboss.as.controller.registry.ManagementResourceRegistration;
 import org.jboss.as.controller.services.path.ResolvePathHandler;
 
 /**
- * CacheContainerConfigurationsResource.
+ * CacheContainerCountersResource
  *
- * @author Tristan Tarrant
- * @since 8.0
+ * @author Vladimir Blagojevic 
+ * @since 9.2
  */
-public class CacheContainerConfigurationsResource extends SimpleResourceDefinition {
-    static final PathElement PATH = PathElement.pathElement(ModelKeys.CONFIGURATIONS, ModelKeys.CONFIGURATIONS_NAME);
+public class CacheContainerCountersConfigurationResource extends SimpleResourceDefinition {
+    static final PathElement PATH = PathElement.pathElement(ModelKeys.COUNTERS, ModelKeys.COUNTERS_NAME);
+    
     private final boolean runtimeRegistration;
     private final ResolvePathHandler resolvePathHandler;
 
-    CacheContainerConfigurationsResource(ResolvePathHandler resolvePathHandler, boolean runtimeRegistration) {
+    CacheContainerCountersConfigurationResource(ResolvePathHandler resolvePathHandler, boolean runtimeRegistration) {
         super(PATH,
-              new InfinispanResourceDescriptionResolver(ModelKeys.CACHE_CONTAINER, ModelKeys.CONFIGURATIONS),
+              new InfinispanResourceDescriptionResolver(ModelKeys.CACHE_CONTAINER, ModelKeys.COUNTERS),
               CacheConfigOperationHandlers.CONTAINER_CONFIGURATIONS_ADD,
               ReloadRequiredRemoveStepHandler.INSTANCE);
 
@@ -51,10 +52,7 @@ public class CacheContainerConfigurationsResource extends SimpleResourceDefiniti
 
     @Override
     public void registerChildren(ManagementResourceRegistration resourceRegistration) {
-        resourceRegistration.registerSubModel(new LocalCacheConfigurationResource(resolvePathHandler, runtimeRegistration));
-        resourceRegistration.registerSubModel(new InvalidationCacheConfigurationResource(resolvePathHandler, runtimeRegistration));
-        resourceRegistration.registerSubModel(new ReplicatedCacheConfigurationResource(resolvePathHandler, runtimeRegistration));
-        resourceRegistration.registerSubModel(new DistributedCacheConfigurationResource(resolvePathHandler, runtimeRegistration));
-        resourceRegistration.registerSubModel(new CacheContainerCountersConfigurationResource(resolvePathHandler, runtimeRegistration));
+        resourceRegistration.registerSubModel(new StrongCounterConfigurationResource(resolvePathHandler, runtimeRegistration));
+        resourceRegistration.registerSubModel(new WeakCounterConfigurationResource(resolvePathHandler, runtimeRegistration));        
     }
 }
