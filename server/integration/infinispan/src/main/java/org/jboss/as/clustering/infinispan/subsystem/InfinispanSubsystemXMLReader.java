@@ -31,7 +31,6 @@ import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -213,16 +212,8 @@ public final class InfinispanSubsystemXMLReader implements XMLElementReader<List
         container.get(OP_ADDR).set(containerAddress.toModelNode());
         operations.put(containerAddress, container);
 
-        PathAddress countersAddress = containerAddress.append(CacheContainerCountersResource.PATH);
-        operations.put(countersAddress, Util.getEmptyOperation(ADD, countersAddress.toModelNode()));
-
-
         PathAddress configurationsAddress = containerAddress.append(CacheContainerConfigurationsResource.PATH);
         operations.put(configurationsAddress, Util.getEmptyOperation(ADD, configurationsAddress.toModelNode()));
-
-
-        PathAddress countersConfigurationAddress = configurationsAddress.append(CacheContainerCountersConfigurationResource.PATH);
-        operations.put(countersConfigurationAddress, Util.getEmptyOperation(ADD, countersConfigurationAddress.toModelNode()));
 
         Stream.of(ThreadPoolResource.values()).forEach(
                 pool -> operations.put(containerAddress.append(pool.getPathElement()), Util.createAddOperation(containerAddress.append(pool.getPathElement())))
@@ -360,6 +351,8 @@ public final class InfinispanSubsystemXMLReader implements XMLElementReader<List
                 }
                 case COUNTERS: {
                    if (namespace.since(Namespace.INFINISPAN_SERVER_9_2)) {
+                       PathAddress countersAddress = containerAddress.append(CacheContainerCountersResource.PATH);
+                       PathAddress countersConfigurationAddress = configurationsAddress.append(CacheContainerCountersConfigurationResource.PATH);
                        this.parseCounters(reader, countersAddress, countersConfigurationAddress, operations);
                        break;
                    }
@@ -374,7 +367,9 @@ public final class InfinispanSubsystemXMLReader implements XMLElementReader<List
     private void parseCounters(XMLExtendedStreamReader reader, PathAddress countersAddress, PathAddress countersConfigurationAddress,
             Map<PathAddress, ModelNode> operations) throws XMLStreamException {
 
-        ModelNode counters = operations.get(countersAddress);
+        operations.put(countersConfigurationAddress, Util.getEmptyOperation(ADD, countersConfigurationAddress.toModelNode()));
+
+        ModelNode counters = Util.getEmptyOperation(ADD, countersAddress.toModelNode());
         for (int i = 0; i < reader.getAttributeCount(); i++) {
             String value = reader.getAttributeValue(i);
             Attribute attribute = Attribute.forName(reader.getAttributeLocalName(i));
@@ -392,16 +387,17 @@ public final class InfinispanSubsystemXMLReader implements XMLElementReader<List
                 }
             }
         }
+        operations.put(countersAddress, counters);
 
         while (reader.hasNext() && (reader.nextTag() != XMLStreamConstants.END_ELEMENT)) {
             Element element = Element.forName(reader.getLocalName());
             switch (element) {
                 case STRONG_COUNTER: {
-                    parseStrongCounterElement(reader, element, countersConfigurationAddress, operations);
+                    parseStrongCounterElement(reader, countersConfigurationAddress, operations);
                     break;
                 }
                 case WEAK_COUNTER: {
-                    parseWeakCounterElement(reader, element, countersConfigurationAddress, operations);
+                    parseWeakCounterElement(reader, countersConfigurationAddress, operations);
                     break;
                 }
                 default: {
@@ -411,9 +407,8 @@ public final class InfinispanSubsystemXMLReader implements XMLElementReader<List
         }
     }
 
-    private void parseStrongCounterElement(XMLExtendedStreamReader reader, Element element,
-            PathAddress countersConfigurationAddress, Map<PathAddress, ModelNode> operations)
-            throws XMLStreamException {
+    private void parseStrongCounterElement(XMLExtendedStreamReader reader, PathAddress countersConfigurationAddress,
+                                           Map<PathAddress, ModelNode> operations) throws XMLStreamException {
 
         PathAddress strongCounterAddress = countersConfigurationAddress;
         ModelNode counter = Util.createAddOperation(strongCounterAddress);
@@ -421,24 +416,24 @@ public final class InfinispanSubsystemXMLReader implements XMLElementReader<List
             String value = reader.getAttributeValue(i);
             Attribute attribute = Attribute.forName(reader.getAttributeLocalName(i));
             switch (attribute) {
-            case INITIAL_VALUE: {
-                StrongCounterConfigurationResource.INITIAL_VALUE.parseAndSetParameter(value, counter, reader);
-                break;
-            }
-            case NAME: {
-                StrongCounterConfigurationResource.COUNTER_NAME.parseAndSetParameter(value, counter, reader);
-                strongCounterAddress = strongCounterAddress.append(StrongCounterConfigurationResource.PATH.getKey(),
-                        value);
-                counter.get(OP_ADDR).set(strongCounterAddress.toModelNode());
-                break;
-            }
-            case STORAGE: {
-                StrongCounterConfigurationResource.STORAGE.parseAndSetParameter(value, counter, reader);
-                break;
-            }
-            default: {
-                throw ParseUtils.unexpectedAttribute(reader, i);
-            }
+                case INITIAL_VALUE: {
+                    StrongCounterConfigurationResource.INITIAL_VALUE.parseAndSetParameter(value, counter, reader);
+                    break;
+                }
+                case NAME: {
+                    StrongCounterConfigurationResource.COUNTER_NAME.parseAndSetParameter(value, counter, reader);
+                    strongCounterAddress = strongCounterAddress.append(StrongCounterConfigurationResource.PATH.getKey(),
+                          value);
+                    counter.get(OP_ADDR).set(strongCounterAddress.toModelNode());
+                    break;
+                }
+                case STORAGE: {
+                    StrongCounterConfigurationResource.STORAGE.parseAndSetParameter(value, counter, reader);
+                    break;
+                }
+                default: {
+                    throw ParseUtils.unexpectedAttribute(reader, i);
+                }
             }
         }
 
@@ -459,12 +454,10 @@ public final class InfinispanSubsystemXMLReader implements XMLElementReader<List
             }
         }
         operations.put(strongCounterAddress, counter);
-
     }
 
-    private void parseWeakCounterElement(XMLExtendedStreamReader reader, Element element,
-            PathAddress countersConfigurationAddress, Map<PathAddress, ModelNode> operations)
-            throws XMLStreamException {
+    private void parseWeakCounterElement(XMLExtendedStreamReader reader, PathAddress countersConfigurationAddress,
+                                         Map<PathAddress, ModelNode> operations) throws XMLStreamException {
 
         PathAddress weakCountersAddress = countersConfigurationAddress;
         ModelNode counter = Util.createAddOperation(weakCountersAddress);
@@ -474,26 +467,21 @@ public final class InfinispanSubsystemXMLReader implements XMLElementReader<List
             Attribute attribute = Attribute.forName(reader.getAttributeLocalName(i));
             switch (attribute) {
                 case INITIAL_VALUE: {
-                    WeakCounterConfigurationResource.INITIAL_VALUE.parseAndSetParameter(value,
-                            counter, reader);
+                    WeakCounterConfigurationResource.INITIAL_VALUE.parseAndSetParameter(value, counter, reader);
                     break;
                 }
                 case NAME: {
-                    WeakCounterConfigurationResource.COUNTER_NAME.parseAndSetParameter(value,
-                            counter, reader);
-                    weakCountersAddress = weakCountersAddress.append(WeakCounterConfigurationResource.PATH.getKey(),
-                            value);
+                    WeakCounterConfigurationResource.COUNTER_NAME.parseAndSetParameter(value, counter, reader);
+                    weakCountersAddress = weakCountersAddress.append(WeakCounterConfigurationResource.PATH.getKey(), value);
                     counter.get(OP_ADDR).set(weakCountersAddress.toModelNode());
                     break;
                 }
                 case STORAGE: {
-                    WeakCounterConfigurationResource.STORAGE.parseAndSetParameter(value,
-                            counter, reader);
+                    WeakCounterConfigurationResource.STORAGE.parseAndSetParameter(value, counter, reader);
                     break;
                 }
                 case CONCURRENCY: {
-                    WeakCounterConfigurationResource.CONCURRENCY.parseAndSetParameter(value,
-                            counter, reader);
+                    WeakCounterConfigurationResource.CONCURRENCY.parseAndSetParameter(value, counter, reader);
                     break;
                 }
                 default: {
@@ -501,34 +489,28 @@ public final class InfinispanSubsystemXMLReader implements XMLElementReader<List
                 }
             }
         }
-        while (reader.hasNext() && (reader.nextTag() != XMLStreamConstants.END_ELEMENT)) {
-            throw ParseUtils.unexpectedElement(reader);
-        }
         operations.put(weakCountersAddress, counter);
     }
 
     private void parseCounterBound(XMLExtendedStreamReader reader, Element element, ModelNode counter)
-            throws XMLStreamException {
+          throws XMLStreamException {
         for (int i = 0; i < reader.getAttributeCount(); i++) {
             String value = reader.getAttributeValue(i);
             Attribute attribute = Attribute.forName(reader.getAttributeLocalName(i));
             switch (attribute) {
-            case VALUE: {
-                if (element.equals(Element.LOWER_BOUND)) {
-                    StrongCounterConfigurationResource.LOWER_BOUND.parseAndSetParameter(value, counter, reader);
+                case VALUE: {
+                    if (element.equals(Element.LOWER_BOUND)) {
+                        StrongCounterConfigurationResource.LOWER_BOUND.parseAndSetParameter(value, counter, reader);
+                    }
+                    if (element.equals(Element.UPPER_BOUND)) {
+                        StrongCounterConfigurationResource.UPPER_BOUND.parseAndSetParameter(value, counter, reader);
+                    }
+                    break;
                 }
-                if (element.equals(Element.UPPER_BOUND)) {
-                    StrongCounterConfigurationResource.UPPER_BOUND.parseAndSetParameter(value, counter, reader);
+                default: {
+                    throw ParseUtils.unexpectedAttribute(reader, i);
                 }
-                break;
             }
-            default: {
-                throw ParseUtils.unexpectedAttribute(reader, i);
-            }
-            }
-        }
-        while (reader.hasNext() && (reader.nextTag() != XMLStreamConstants.END_ELEMENT)) {
-            throw ParseUtils.unexpectedElement(reader);
         }
     }
 
