@@ -61,6 +61,11 @@
          <scope>test</scope>
       </dependency>
       <dependency>
+         <groupId>org.apache.commons</groupId>
+         <artifactId>commons-lang3</artifactId>
+         <scope>test</scope>
+      </dependency>
+      <dependency>
          <groupId>org.jboss.security</groupId>
          <artifactId>jboss-negotiation-extras</artifactId>
          <scope>test</scope>
