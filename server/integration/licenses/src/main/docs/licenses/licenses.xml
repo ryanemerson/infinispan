@@ -3539,17 +3539,6 @@
       </licenses>
     </dependency>
     <dependency>
-      <groupId>org.jboss.sasl</groupId>
-      <artifactId>jboss-sasl</artifactId>
-      <version>1.0.5.Final</version>
-      <licenses>
-        <license>
-          <name>Public Domain</name>
-          <distribution>repo</distribution>
-        </license>
-      </licenses>
-    </dependency>
-    <dependency>
       <groupId>org.jboss.seam.integration</groupId>
       <artifactId>jboss-seam-int-jbossas</artifactId>
       <version>7.0.0.GA</version>
@@ -4506,18 +4495,6 @@
         <license>
           <name>GNU General Public License v2.0</name>
           <url>http://repository.jboss.org/licenses/gpl-2.0.txt</url>
-          <distribution>repo</distribution>
-        </license>
-      </licenses>
-    </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>jcl-over-slf4j</artifactId>
-      <version>1.7.7.jbossorg-1</version>
-      <licenses>
-        <license>
-          <name>MIT License</name>
-          <url>http://www.opensource.org/licenses/mit-license.php</url>
           <distribution>repo</distribution>
         </license>
       </licenses>

@@ -9,8 +9,6 @@ import javax.security.auth.callback.PasswordCallback;
 import javax.security.auth.callback.UnsupportedCallbackException;
 import javax.security.sasl.RealmCallback;
 
-import org.jboss.sasl.callback.DigestHashCallback;
-
 /**
  * SaslClientCallbackHandler.
  *
@@ -43,8 +41,6 @@ public class SaslClientCallbackHandler implements CallbackHandler {
                 ((NameCallback) callback).setName(name);
             } else if (callback instanceof RealmCallback) {
                ((RealmCallback) callback).setText(realm);
-            } else if (callback instanceof DigestHashCallback) {
-                ((DigestHashCallback) callback).setHexHash(credential);
             }
         }
     }
