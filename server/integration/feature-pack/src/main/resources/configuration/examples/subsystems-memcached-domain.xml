@@ -4,6 +4,7 @@
    <subsystems name="clustered">
       <subsystem>infinispan-logging.xml</subsystem>
       <subsystem>datasources.xml</subsystem>
+      <subsystem supplement="domain">elytron.xml</subsystem>
       <subsystem>io.xml</subsystem>
       <subsystem supplement="clustered">infinispan-core.xml</subsystem>
       <subsystem supplement="memcached-clustered">infinispan-endpoint.xml</subsystem>
@@ -13,7 +14,6 @@
       <subsystem supplement="domain">jmx.xml</subsystem>
       <subsystem>naming.xml</subsystem>
       <subsystem>remoting.xml</subsystem>
-      <subsystem>security.xml</subsystem>
       <subsystem>security-manager.xml</subsystem>
       <subsystem>transactions.xml</subsystem>
    </subsystems>
