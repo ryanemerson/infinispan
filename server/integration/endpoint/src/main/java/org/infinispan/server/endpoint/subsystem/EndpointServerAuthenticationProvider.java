@@ -27,8 +27,7 @@ import org.jboss.as.domain.management.SecurityRealm;
  */
 public class EndpointServerAuthenticationProvider implements ServerAuthenticationProvider {
    static final String SASL_OPT_REALM_PROPERTY = "com.sun.security.sasl.digest.realm";
-   static final String SASL_OPT_ALT_PROTO_PROPERTY = "org.jboss.sasl.digest.alternative_protocols";
-   static final String SASL_OPT_PRE_DIGESTED_PROPERTY = "org.jboss.sasl.digest.pre_digested";
+   static final String SASL_OPT_PRE_DIGESTED_PROPERTY = "org.wildfly.security.sasl.digest.pre_digested";
 
    static final String DIGEST_MD5 = "DIGEST-MD5";
    static final String EXTERNAL = "EXTERNAL";

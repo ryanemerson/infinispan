@@ -124,7 +124,7 @@ fi
 if [ "$DEBUG_MODE" = "true" ]; then
     DEBUG_OPT=`echo $JAVA_OPTS | $GREP "\-agentlib:jdwp"`
     if [ "x$DEBUG_OPT" = "x" ]; then
-        JAVA_OPTS="$JAVA_OPTS -agentlib:jdwp=transport=dt_socket,address=$DEBUG_PORT,server=y,suspend=n"
+        JAVA_OPTS="$JAVA_OPTS -agentlib:jdwp=transport=dt_socket,address=$DEBUG_PORT,server=y,suspend=y"
     else
         echo "Debug already enabled in JAVA_OPTS, ignoring --debug argument"
     fi

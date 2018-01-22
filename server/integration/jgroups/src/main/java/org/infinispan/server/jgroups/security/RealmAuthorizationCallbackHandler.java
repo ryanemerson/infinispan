@@ -1,14 +1,25 @@
 package org.infinispan.server.jgroups.security;
 
+import static org.wildfly.security.sasl.util.SaslMechanismInformation.Names.DIGEST_MD5;
+import static org.wildfly.security.sasl.util.SaslMechanismInformation.Names.EXTERNAL;
+import static org.wildfly.security.sasl.util.SaslMechanismInformation.Names.GSSAPI;
+import static org.wildfly.security.sasl.util.SaslMechanismInformation.Names.PLAIN;
+
 import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
 import java.security.Principal;
+import java.security.Security;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.KeySpec;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
 import javax.security.auth.callback.Callback;
 import javax.security.auth.callback.CallbackHandler;
+import javax.security.auth.callback.NameCallback;
 import javax.security.auth.callback.UnsupportedCallbackException;
 import javax.security.sasl.AuthorizeCallback;
 
@@ -19,6 +30,18 @@ import org.jboss.as.domain.management.AuthMechanism;
 import org.jboss.as.domain.management.AuthorizingCallbackHandler;
 import org.jboss.as.domain.management.RealmConfigurationConstants;
 import org.jboss.as.domain.management.SecurityRealm;
+import org.wildfly.security.WildFlyElytronProvider;
+import org.wildfly.security.auth.callback.AvailableRealmsCallback;
+import org.wildfly.security.auth.callback.CredentialCallback;
+import org.wildfly.security.auth.client.AuthenticationConfiguration;
+import org.wildfly.security.credential.PasswordCredential;
+import org.wildfly.security.password.Password;
+import org.wildfly.security.password.PasswordFactory;
+import org.wildfly.security.password.impl.PasswordFactorySpiImpl;
+import org.wildfly.security.password.interfaces.DigestPassword;
+import org.wildfly.security.password.spec.DigestPasswordSpec;
+import org.wildfly.security.sasl.WildFlySasl;
+import org.wildfly.security.sasl.util.UsernamePasswordHashUtil;
 
 /**
  * RealmAuthorizationCallbackHandler. A {@link CallbackHandler} for JGroups which piggybacks on the
@@ -32,13 +55,7 @@ public class RealmAuthorizationCallbackHandler implements CallbackHandler {
     private final SecurityRealm realm;
     private final String clusterRole;
 
-    static final String SASL_OPT_REALM_PROPERTY = "com.sun.security.sasl.digest.realm";
-    static final String SASL_OPT_PRE_DIGESTED_PROPERTY = "org.jboss.sasl.digest.pre_digested";
-
-    static final String DIGEST_MD5 = "DIGEST-MD5";
-    static final String EXTERNAL = "EXTERNAL";
-    static final String GSSAPI = "GSSAPI";
-    static final String PLAIN = "PLAIN";
+    private static final String SASL_OPT_PRE_DIGESTED_PROPERTY = "org.wildfly.security.sasl.digest.pre_digested";
 
     public RealmAuthorizationCallbackHandler(SecurityRealm realm, String mechanismName, String clusterRole, Map<String, String> mechanismProperties) {
         this.realm = realm;
@@ -49,8 +66,8 @@ public class RealmAuthorizationCallbackHandler implements CallbackHandler {
 
     private void tunePropsForMech(Map<String, String> mechanismProperties) {
         if (DIGEST_MD5.equals(mechanismName)) {
-            if (!mechanismProperties.containsKey(SASL_OPT_REALM_PROPERTY)) {
-                mechanismProperties.put(SASL_OPT_REALM_PROPERTY, realm.getName());
+            if (!mechanismProperties.containsKey(WildFlySasl.REALM_LIST)) {
+                mechanismProperties.put(WildFlySasl.REALM_LIST, realm.getName());
             }
             Map<String, String> mechConfig = realm.getMechanismConfig(AuthMechanism.DIGEST);
             boolean plainTextDigest = true;
@@ -61,11 +78,57 @@ public class RealmAuthorizationCallbackHandler implements CallbackHandler {
                 mechanismProperties.put(SASL_OPT_PRE_DIGESTED_PROPERTY, "true");
             }
         }
+//        mechanismProperties.put("com.sun.security.sasl.digest.utf8", "true");
     }
 
     @Override
     public void handle(Callback[] callbacks) throws IOException, UnsupportedCallbackException {
+        AuthenticationConfiguration commonConfig = new AuthenticationConfiguration();
+
+        JGroupsLogger.ROOT_LOGGER.errorf("RACH callbacks %s", Arrays.toString(callbacks));
+        String name = null;
+        for (Callback callback : callbacks) {
+            if (callback instanceof AvailableRealmsCallback) {
+                ((AvailableRealmsCallback) callback).setRealmNames(realm.getName());
+                return;
+            } else if (callback instanceof NameCallback) {
+                name = ((NameCallback) callback).getName(   );
+            } else if (callback instanceof CredentialCallback) {
+                // TODO should we even be doing this? L261 digest_urp is always different to what we set here. Where is this being generated??????
+//                JGroupsLogger.ROOT_LOGGER.errorf("Providers %s" + Arrays.toString(Security.getProviders()));
+//                JGroupsLogger.ROOT_LOGGER.errorf("RealmAuthorization CredentialCallback: %s" + callback);
+                CredentialCallback cb = (CredentialCallback) callback;
+                if (name == null) {
+                    JGroupsLogger.ROOT_LOGGER.errorf("Name is null, setting manually");
+                    name = "node1";
+                }
+                Password password;
+                try {
+                    String credential = "192f232a72633ebb5ce2156fa787417d";
+                    String realmName = realm.getName();
+
+//                    final PasswordFactory instance = PasswordFactory.getInstance(DigestPassword.ALGORITHM_DIGEST_MD5);
+                    Security.insertProviderAt(new WildFlyElytronProvider(), 0);
+                    final PasswordFactory instance = new PasswordFactory(new PasswordFactorySpiImpl(), new WildFlyElytronProvider(), DigestPassword.ALGORITHM_DIGEST_MD5);
+//                    password = instance.generatePassword(new DigestPasswordSpec(name, realmName, credential.getBytes(StandardCharsets.UTF_8)));
+
+//                    final PasswordFactory instance = PasswordFactory.getInstance(DigestPassword.ALGORITHM_DIGEST_MD5);
+//                    password = instance.generatePassword(new DigestPasswordSpec(name, realmName, credential.getBytes(StandardCharsets.UTF_8)));
+//                    MessageDigest md = MessageDigest.getInstance("MD5");
+//                    JGroupsLogger.ROOT_LOGGER.errorf("Server md | Alg=%s, Provider=%s, Hash=%s", md.getAlgorithm(), md.getProvider(), md.hashCode());
+                    byte[] urpHash = new UsernamePasswordHashUtil().generateHashedURP(name, realmName, credential.toCharArray(), false);
+                    KeySpec keySpec = new DigestPasswordSpec(name, realmName, urpHash);
+                    password = instance.generatePassword(keySpec);
+                    cb.setCredential(new PasswordCredential(password));
+//
+                    JGroupsLogger.ROOT_LOGGER.errorf("urpHash        : %s", Arrays.toString(urpHash));
+                } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+                    throw new IllegalArgumentException(e);
+                }
+            }
+        }
         AuthorizingCallbackHandler cbh = getMechCallbackHandler();
+        JGroupsLogger.ROOT_LOGGER.errorf("AuthorizingCallbackHandler=%s", cbh.getClass().getName());
         cbh.handle(callbacks);
     }
 
@@ -124,11 +187,10 @@ public class RealmAuthorizationCallbackHandler implements CallbackHandler {
         }
     }
 
-    public static <T extends Callback> T findCallbackHandler(Class<T> klass, Callback[] callbacks) {
-        for(int i=0; i < callbacks.length; i++) {
-            if (klass.isInstance(callbacks[i])) {
-                return (T) callbacks[i];
-            }
+    private static <T extends Callback> T findCallbackHandler(Class<T> klass, Callback[] callbacks) {
+        for (Callback callback : callbacks) {
+            if (klass.isInstance(callback))
+                return (T) callback;
         }
         return null;
     }

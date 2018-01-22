@@ -18,7 +18,7 @@ import org.jboss.dmr.ModelType;
  */
 public class SaslPropertyResource extends SimpleResourceDefinition {
 
-    static final PathElement SASL_PROPERTY_PATH = PathElement.pathElement(ModelKeys.PROPERTY);
+    private static final PathElement SASL_PROPERTY_PATH = PathElement.pathElement(ModelKeys.PROPERTY);
 
     // attributes
     static final SimpleAttributeDefinition VALUE =

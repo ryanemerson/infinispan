@@ -1,0 +1,840 @@
+Java HotSpot(TM) 64-Bit Server VM warning: ignoring option MaxPermSize=512m; support was removed in 8.0
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] [1m------------------------------------------------------------------------[m
+[INFO] [1mBuilding Infinispan Server - Test Suite 9.2.0-SNAPSHOT[m
+[INFO] [1m------------------------------------------------------------------------[m
+[WARNING] The POM for org.slf4j:jcl-over-slf4j:jar:1.6.6 is invalid, transitive dependencies (if any) will not be available, enable debug logging for more details
+[INFO] 
+[INFO] [1m--- [0;32mmaven-clean-plugin:2.6.1:clean[m [1m(default-clean)[m @ [36minfinispan-server-testsuite[0;1m ---[m
+[INFO] Deleting /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target
+[INFO] 
+[INFO] [1m--- [0;32mmaven-enforcer-plugin:1.3.1:enforce[m [1m(enforce-java)[m @ [36minfinispan-server-testsuite[0;1m ---[m
+[INFO] 
+[INFO] [1m--- [0;32mmaven-remote-resources-plugin:1.1:process[m [1m(attach-license)[m @ [36minfinispan-server-testsuite[0;1m ---[m
+[INFO] Setting property: classpath.resource.loader.class => 'org.codehaus.plexus.velocity.ContextClassLoaderResourceLoader'.
+[INFO] Setting property: velocimacro.messages.on => 'false'.
+[INFO] Setting property: resource.loader => 'classpath'.
+[INFO] Setting property: resource.manager.logwhenfound => 'false'.
+[INFO] 
+[INFO] [1m--- [0;32mmaven-dependency-plugin:2.8:unpack[m [1m(copy-old-server)[m @ [36minfinispan-server-testsuite[0;1m ---[m
+[INFO] Configured Artifact: org.infinispan.server:infinispan-server-build:?:zip
+[INFO] Unpacking /home/remerson/.m2/repository/org/infinispan/server/infinispan-server-build/9.2.0-SNAPSHOT/infinispan-server-build-9.2.0-SNAPSHOT.zip to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node_old-tmp with includes "" and excludes ""
+[INFO] 
+[INFO] [1m--- [0;32mdepends-maven-plugin:1.2:generate-depends-file[m [1m(generate-depends-file)[m @ [36minfinispan-server-testsuite[0;1m ---[m
+[INFO] Created: /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/classes/META-INF/maven/dependencies.properties
+[INFO] 
+[INFO] [1m--- [0;32mmaven-resources-plugin:3.0.2:resources[m [1m(default-resources)[m @ [36minfinispan-server-testsuite[0;1m ---[m
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] skip non existing resourceDirectory /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/src/main/resources
+[INFO] 
+[INFO] [1m--- [0;32mmaven-compiler-plugin:3.6.1:compile[m [1m(default-compile)[m @ [36minfinispan-server-testsuite[0;1m ---[m
+[INFO] No sources to compile
+[INFO] 
+[INFO] [1m--- [0;32mexec-maven-plugin:1.6.0:java[m [1m(serialize_component_metadata)[m @ [36minfinispan-server-testsuite[0;1m ---[m
+[INFO] skipping execute as per configuration
+[INFO] 
+[INFO] [1m--- [0;32mmaven-resources-plugin:3.0.2:testResources[m [1m(default-testResources)[m @ [36minfinispan-server-testsuite[0;1m ---[m
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] Copying 130 resources
+[INFO] Copying 3 resources
+[INFO] 
+[INFO] [1m--- [0;32mmaven-dependency-plugin:2.8:copy[m [1m(copy-test-libs)[m @ [36minfinispan-server-testsuite[0;1m ---[m
+[INFO] Configured Artifact: com.h2database:h2:?:jar
+[INFO] Configured Artifact: org.infinispan:infinispan-scripting:?:jar
+[INFO] Copying h2-1.3.173.jar to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-libs/h2.jar
+[INFO] Copying infinispan-scripting-9.2.0-SNAPSHOT.jar to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-libs/infinispan-scripting.jar
+[INFO] 
+[INFO] [1m--- [0;32mmaven-antrun-plugin:1.8:run[m [1m(generate-certificates-and-keys)[m @ [36minfinispan-server-testsuite[0;1m ---[m
+[INFO] Executing tasks
+
+main:
+     [echo] Generate the vault keystore
+    [mkdir] Created dir: /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/vault
+     [echo] Generate the CA
+     [echo] Generate the server keystore
+     [echo] Sign the server certificate with the CA
+Certificate reply was installed in keystore
+     [echo] Generate an untrusted server certificate 
+     [echo] Client store
+     [echo] Generate the client certificate
+     [echo] Sign the client certificate with the CA
+Certificate reply was installed in keystore
+     [echo] Generate a client certificate which is NOT signed by the CA
+     [echo] Generate a key for JGroups encryption
+[INFO] Executed tasks
+[INFO] 
+[INFO] [1m--- [0;32mmaven-antrun-plugin:1.8:run[m [1m(generate-distros-and-configs)[m @ [36minfinispan-server-testsuite[0;1m ---[m
+[INFO] Executing tasks
+
+main:
+
+create-distro1:
+     [echo] Creating test server distro at /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1
+     [echo] Using distribution /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/../build/target/infinispan-server-9.2.0-SNAPSHOT
+     [copy] Copying 1005 files to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1
+     [copy] Copied 908 empty directories to 14 empty directories under /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1
+     [echo] JDBC tests will run with H2 datasource
+     [copy] Copying 22 files to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/examples
+     [copy] Copying 17 files to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration
+     [echo] Updating vault '/home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/vault/vault.keystore' entry 'password'...
+     [java] Jan 22, 2018 2:51:13 PM org.picketbox.plugins.vault.PicketBoxSecurityVault initWFLYSEC0047: Secured attribute value has been stored in Vault.
+     [java] 
+     [java] Please make note of the following:INFO: PBOX00361: Default Security Vault Implementation Initialized and Ready
+     [java] 
+     [java] ********************************************
+     [java] Vault Block:keystore
+     [java] Attribute Name:password
+     [java] Configuration should be done as follows:
+     [java] VAULT::keystore::password::1
+     [java] ********************************************
+     [java] WFLYSEC0048: Vault Configuration commands in WildFly for CLI:
+     [java] ********************************************
+     [java] For standalone mode:
+     [java] /core-service=vault:add(vault-options=[("KEYSTORE_URL" => "/home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/vault/vault.keystore"),("KEYSTORE_PASSWORD" => "MASK-AI3ZRwVO1Pd"),("KEYSTORE_ALIAS" => "ispn-vault"),("SALT" => "12345678"),("ITERATION_COUNT" => "23"),("ENC_FILE_DIR" => "/home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/vault/")])
+     [java] ********************************************
+     [java] For domain mode:
+     [java] /host=the_host/core-service=vault:add(vault-options=[("KEYSTORE_URL" => "/home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/vault/vault.keystore"),("KEYSTORE_PASSWORD" => "MASK-AI3ZRwVO1Pd"),("KEYSTORE_ALIAS" => "ispn-vault"),("SALT" => "12345678"),("ITERATION_COUNT" => "23"),("ENC_FILE_DIR" => "/home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/vault/")])
+     [java] ********************************************
+     [echo] Updating vault '/home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/vault/vault.keystore' entry 'passwd_hash'...
+     [java] WFLYSEC0047: Secured attribute value has been stored in Vault.
+     [java] Please make note of the following:
+     [java] ********************************************
+     [java] Vault Block:node0_md5
+     [java] Attribute Name:passwd_hash
+     [java] Configuration should be done as follows:
+     [java] VAULT::node0_md5::passwd_hash::1
+     [java] ********************************************
+     [java] WFLYSEC0048: Vault Configuration commands in WildFly for CLI:
+     [java] ********************************************
+     [java] For standalone mode:
+     [java] /core-service=vault:add(vault-options=[("KEYSTORE_URL" => "/home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/vault/vault.keystore"),("KEYSTORE_PASSWORD" => "MASK-AI3ZRwVO1Pd"),("KEYSTORE_ALIAS" => "ispn-vault"),("SALT" => "12345678"),("ITERATION_COUNT" => "23"),("ENC_FILE_DIR" => "/home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/vault/")])
+     [java] ********************************************
+     [java] For domain mode:
+     [java] /host=the_host/core-service=vault:add(vault-options=[("KEYSTORE_URL" => "/home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/vault/vault.keystore"),("KEYSTORE_PASSWORD" => "MASK-AI3ZRwVO1Pd"),("KEYSTORE_ALIAS" => "ispn-vault"),("SALT" => "12345678"),("ITERATION_COUNT" => "23"),("ENC_FILE_DIR" => "/home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/vault/")])
+     [java] ********************************************
+     [java] Jan 22, 2018 2:51:14 PM org.picketbox.plugins.vault.PicketBoxSecurityVault init
+     [java] INFO: PBOX00361: Default Security Vault Implementation Initialized and Ready
+     [echo] Updating vault '/home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/vault/vault.keystore' entry 'passwd_hash'...
+     [java] Jan 22, 2018 2:51:14 PM org.picketbox.plugins.vault.PicketBoxSecurityVault init
+     [java] INFO: PBOX00361: Default Security Vault Implementation Initialized and Ready
+     [java] WFLYSEC0047: Secured attribute value has been stored in Vault.
+     [java] Please make note of the following:
+     [java] ********************************************
+     [java] Vault Block:node1_md5
+     [java] Attribute Name:passwd_hash
+     [java] Configuration should be done as follows:
+     [java] VAULT::node1_md5::passwd_hash::1
+     [java] ********************************************
+     [java] WFLYSEC0048: Vault Configuration commands in WildFly for CLI:
+     [java] ********************************************
+     [java] For standalone mode:
+     [java] /core-service=vault:add(vault-options=[("KEYSTORE_URL" => "/home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/vault/vault.keystore"),("KEYSTORE_PASSWORD" => "MASK-AI3ZRwVO1Pd"),("KEYSTORE_ALIAS" => "ispn-vault"),("SALT" => "12345678"),("ITERATION_COUNT" => "23"),("ENC_FILE_DIR" => "/home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/vault/")])
+     [java] ********************************************
+     [java] For domain mode:
+     [java] /host=the_host/core-service=vault:add(vault-options=[("KEYSTORE_URL" => "/home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/vault/vault.keystore"),("KEYSTORE_PASSWORD" => "MASK-AI3ZRwVO1Pd"),("KEYSTORE_ALIAS" => "ispn-vault"),("SALT" => "12345678"),("ITERATION_COUNT" => "23"),("ENC_FILE_DIR" => "/home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/vault/")])
+     [java] ********************************************
+     [echo] Updating vault '/home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/vault/vault.keystore' entry 'password'...
+     [java] WFLYSEC0047: Secured attribute value has been stored in Vault.
+     [java] Please make note of the following:
+     [java] ********************************************
+     [java] Vault Block:krb_admin
+     [java] Attribute Name:password
+     [java] Configuration should be done as follows:
+     [java] VAULT::krb_admin::password::1
+     [java] ********************************************
+     [java] WFLYSEC0048: Vault Configuration commands in WildFly for CLI:
+     [java] ********************************************
+     [java] For standalone mode:
+     [java] /core-service=vault:add(vault-options=[("KEYSTORE_URL" => "/home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/vault/vault.keystore"),("KEYSTORE_PASSWORD" => "MASK-AI3ZRwVO1Pd"),("KEYSTORE_ALIAS" => "ispn-vault"),("SALT" => "12345678"),("ITERATION_COUNT" => "23"),("ENC_FILE_DIR" => "/home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/vault/")])
+     [java] ********************************************
+     [java] For domain mode:
+     [java] /host=the_host/core-service=vault:add(vault-options=[("KEYSTORE_URL" => "/home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/vault/vault.keystore"),("KEYSTORE_PASSWORD" => "MASK-AI3ZRwVO1Pd"),("KEYSTORE_ALIAS" => "ispn-vault"),("SALT" => "12345678"),("ITERATION_COUNT" => "23"),("ENC_FILE_DIR" => "/home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/vault/")])
+     [java] ********************************************
+     [java] Jan 22, 2018 2:51:15 PM org.picketbox.plugins.vault.PicketBoxSecurityVault init
+     [java] INFO: PBOX00361: Default Security Vault Implementation Initialized and Ready
+     [copy] Copying 2 files to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/vault
+     [copy] Copying 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/domain/configuration/examples
+
+transform-distro1-examples:
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/examples/clustered-xsite.xml to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/examples/clustered-xsite.xml-transformed
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/examples-modifier.xsl
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/examples
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/examples/clustered-xsite.xml to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/examples/clustered-xsite.xml-transformed
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/examples-modifier.xsl
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/examples
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/examples/standalone-rcs-local.xml to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/examples/standalone-rcs-local.xml-transformed
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/examples-modifier.xsl
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/examples
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/examples/standalone-hotrod-rolling-upgrade.xml to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/examples/standalone-hotrod-rolling-upgrade.xml-transformed
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/examples-modifier.xsl
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/examples
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml-transformed
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/examples-modifier.xsl
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/examples
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/examples/standalone-rest-rolling-upgrade.xml to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/examples/standalone-rest-rolling-upgrade.xml-transformed
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/examples-modifier.xsl
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/examples
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/examples/standalone-compatibility-mode.xml to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/examples/standalone-compatibility-mode.xml-transformed
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/examples-modifier.xsl
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/examples
+
+transform-distro1-configs:
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml-transformed
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/config-modifier.xsl
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/testsuite
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml-transformed
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/config-modifier.xsl
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/testsuite
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml-transformed
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/config-modifier.xsl
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/testsuite
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/standalone.xml to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/standalone.xml-transformed
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/config-modifier.xsl
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/testsuite
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml-transformed
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/config-modifier.xsl
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/testsuite
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml-transformed
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/config-modifier.xsl
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/testsuite
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml-transformed
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/config-modifier.xsl
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/testsuite
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml-transformed
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/config-modifier.xsl
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/testsuite
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/standalone.xml to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/standalone.xml-transformed
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/config-modifier.xsl
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/testsuite
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml-transformed
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/config-modifier.xsl
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/testsuite
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml-transformed
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/config-modifier.xsl
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/testsuite
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/examples/standalone-rcs-local.xml to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/examples/standalone-rcs-local.xml-transformed
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/config-modifier.xsl
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/testsuite
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/standalone.xml to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/standalone.xml-transformed
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/config-modifier.xsl
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/testsuite
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml-transformed
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/config-modifier.xsl
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/testsuite
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml-transformed
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/config-modifier.xsl
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/testsuite
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml-transformed
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/config-modifier.xsl
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/testsuite
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/standalone.xml to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/standalone.xml-transformed
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/config-modifier.xsl
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/standalone.xml-transformed to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/standalone.xml-transformed-rest
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/rest-sec-config-modifier.xsl
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/testsuite
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/standalone.xml to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/standalone.xml-transformed
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/config-modifier.xsl
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/standalone.xml-transformed to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/standalone.xml-transformed-rest
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/rest-sec-config-modifier.xsl
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/testsuite
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/standalone.xml to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/standalone.xml-transformed
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/config-modifier.xsl
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/standalone.xml-transformed to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/standalone.xml-transformed-rest
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/rest-sec-config-modifier.xsl
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/testsuite
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml-transformed
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/config-modifier.xsl
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/testsuite
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/standalone.xml to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/standalone.xml-transformed
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/config-modifier.xsl
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/testsuite
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/standalone.xml to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/standalone.xml-transformed
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/config-modifier.xsl
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/testsuite
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/standalone.xml to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/standalone.xml-transformed
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/config-modifier.xsl
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/testsuite
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml-transformed
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/config-modifier.xsl
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/testsuite
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/standalone.xml to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/standalone.xml-transformed
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/config-modifier.xsl
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/testsuite
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/standalone.xml to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/standalone.xml-transformed
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/config-modifier.xsl
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/testsuite
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/standalone.xml to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/standalone.xml-transformed
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/config-modifier.xsl
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/testsuite
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/standalone.xml to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/standalone.xml-transformed
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/config-modifier.xsl
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/testsuite
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/standalone.xml to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/standalone.xml-transformed
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/config-modifier.xsl
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/testsuite
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml-transformed
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/config-modifier.xsl
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/testsuite
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/standalone.xml to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/standalone.xml-transformed
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/config-modifier.xsl
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/testsuite
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml-transformed
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/config-modifier.xsl
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/testsuite
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/standalone.xml to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/standalone.xml-transformed
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/config-modifier.xsl
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/testsuite
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml-transformed
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/config-modifier.xsl
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/testsuite
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml-transformed
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/config-modifier.xsl
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/testsuite
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml-transformed
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/config-modifier.xsl
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/testsuite
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml-transformed
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/config-modifier.xsl
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/testsuite
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml-transformed
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/config-modifier.xsl
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/testsuite
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/standalone.xml to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/standalone.xml-transformed
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/config-modifier.xsl
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/testsuite
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml-transformed
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/config-modifier.xsl
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/testsuite
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml-transformed
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/config-modifier.xsl
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/testsuite
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml-transformed
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/config-modifier.xsl
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/testsuite
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml-transformed
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/config-modifier.xsl
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/testsuite
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml-transformed
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/config-modifier.xsl
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/testsuite
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml-transformed
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/config-modifier.xsl
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/testsuite
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml-transformed
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/config-modifier.xsl
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/testsuite
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml-transformed
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/config-modifier.xsl
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/testsuite
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml-transformed
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/config-modifier.xsl
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/testsuite
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml-transformed
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/config-modifier.xsl
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/testsuite
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml-transformed
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/config-modifier.xsl
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/testsuite
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml-transformed
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/config-modifier.xsl
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/testsuite
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml-transformed
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/config-modifier.xsl
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/testsuite
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/standalone.xml to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/standalone.xml-transformed
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/config-modifier.xsl
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/testsuite
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml-transformed
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/config-modifier.xsl
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/testsuite
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/clustered.xml-transformed
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/config-modifier.xsl
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/testsuite
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/examples/standalone-hotrod-rolling-upgrade.xml to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/examples/standalone-hotrod-rolling-upgrade.xml-transformed
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/config-modifier.xsl
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/testsuite
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/testsuite/clustered-hotrod-rolling-upgrade.xml to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/testsuite/clustered-hotrod-rolling-upgrade.xml-transformed
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/config-modifier.xsl
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/testsuite
+
+create-all-distros:
+     [copy] Copying 1103 files to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node2
+     [copy] Copied 912 empty directories to 14 empty directories under /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node2
+     [copy] Copying 1103 files to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node3
+     [copy] Copied 912 empty directories to 14 empty directories under /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node3
+     [echo] Creating old server distro at /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node_old
+     [echo] Zip for old server distribution was not passed. Using default old ISPN version 8.2.7.Final.
+   [delete] Deleting directory /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node_old-tmp
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node_old/standalone/configuration/standalone.xml to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node_old/standalone/configuration/standalone.xml-transformed
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/config-modifier.xsl
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node_old/standalone/configuration
+     [xslt] Processing /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node_old/standalone/configuration/clustered.xml to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node_old/standalone/configuration/clustered.xml-transformed
+     [xslt] Loading stylesheet /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes/config/xslt/config-modifier.xsl
+     [move] Moving 1 file to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node_old/standalone/configuration
+     [copy] Copying 1003 files to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node2_old
+     [copy] Copied 908 empty directories to 14 empty directories under /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node2_old
+     [copy] Copying 1003 files to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node3_old
+     [copy] Copied 908 empty directories to 14 empty directories under /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node3_old
+     [echo] Removing empty xmlns attributes (xmlns='') which IBM JDK could produce
+[INFO] Executed tasks
+[INFO] 
+[INFO] [1m--- [0;32mmaven-compiler-plugin:3.6.1:testCompile[m [1m(default-testCompile)[m @ [36minfinispan-server-testsuite[0;1m ---[m
+[INFO] Compiling 187 source files to /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-classes
+[INFO] /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/src/test/java/org/infinispan/persistence/cluster/MyCustomCacheStoreConfiguration.java: Some input files use or override a deprecated API.
+[INFO] /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/src/test/java/org/infinispan/persistence/cluster/MyCustomCacheStoreConfiguration.java: Recompile with -Xlint:deprecation for details.
+[INFO] /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/src/test/java/org/infinispan/server/test/client/hotrod/StaticCacheEventFilterFactory.java: Some input files use unchecked or unsafe operations.
+[INFO] /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/src/test/java/org/infinispan/server/test/client/hotrod/StaticCacheEventFilterFactory.java: Recompile with -Xlint:unchecked for details.
+[INFO] 
+[INFO] [1m--- [0;32mexec-maven-plugin:1.6.0:java[m [1m(serialize_test_component_metadata)[m @ [36minfinispan-server-testsuite[0;1m ---[m
+[INFO] skipping execute as per configuration
+[INFO] 
+[INFO] [1m--- [0;32mmaven-surefire-plugin:2.20.1:test[m [1m(default-test)[m @ [36minfinispan-server-testsuite[0;1m ---[m
+[INFO] Tests are skipped.
+[INFO] 
+[INFO] [1m--- [0;32mmaven-jar-plugin:2.4:jar[m [1m(default-jar)[m @ [36minfinispan-server-testsuite[0;1m ---[m
+[INFO] Building jar: /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/infinispan-server-testsuite-9.2.0-SNAPSHOT.jar
+[INFO] 
+[INFO] [1m--- [0;32mmaven-jar-plugin:2.4:test-jar[m [1m(build-test-jar)[m @ [36minfinispan-server-testsuite[0;1m ---[m
+[INFO] Building jar: /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/infinispan-server-testsuite-9.2.0-SNAPSHOT-tests.jar
+[INFO] 
+[INFO] [1m--- [0;32mmaven-jar-plugin:2.4:test-jar[m [1m(default)[m @ [36minfinispan-server-testsuite[0;1m ---[m
+[INFO] 
+[INFO] [1m--- [0;32mmaven-antrun-plugin:1.8:run[m [1m(check-h2-db-property)[m @ [36minfinispan-server-testsuite[0;1m ---[m
+[INFO] Executing tasks
+
+setup-h2:
+     [echo] Run H2 TCP server?: true
+[INFO] Executed tasks
+[INFO] 
+[INFO] [1m--- [0;32mmaven-antrun-plugin:1.8:run[m [1m(start-h2-tcp-server)[m @ [36minfinispan-server-testsuite[0;1m ---[m
+[INFO] Executing tasks
+
+start-h2:
+     [echo] Starting H2 TCP server!
+     [echo] H2 jar: /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-libs/h2.jar
+[INFO] Executed tasks
+[INFO] 
+[INFO] [1m--- [0;32mmaven-failsafe-plugin:2.20.1:integration-test[m [1m(suite-manual)[m @ [36minfinispan-server-testsuite[0;1m ---[m
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+SLF4J: Class path contains multiple SLF4J bindings.
+SLF4J: Found binding in [jar:file:/home/remerson/.m2/repository/org/apache/logging/log4j/log4j-slf4j-impl/2.3/log4j-slf4j-impl-2.3.jar!/org/slf4j/impl/StaticLoggerBinder.class]
+SLF4J: Found binding in [jar:file:/home/remerson/.m2/repository/org/apache/karaf/org.apache.karaf.client/4.1.2/org.apache.karaf.client-4.1.2.jar!/org/slf4j/impl/StaticLoggerBinder.class]
+SLF4J: Found binding in [jar:file:/home/remerson/.m2/repository/org/ops4j/pax/logging/pax-logging-api/1.10.1/pax-logging-api-1.10.1.jar!/org/slf4j/impl/StaticLoggerBinder.class]
+SLF4J: See http://www.slf4j.org/codes.html#multiple_bindings for an explanation.
+SLF4J: Actual binding is of type [org.apache.logging.slf4j.Log4jLoggerFactory]
+[INFO] Running org.infinispan.server.test.security.jgroups.sasl.[1mSaslAuthIT[m
+[OK:     0, KO:     0, SKIP:     0] Test starting: SaslAuthIT.testSaslMD5
+[0m14:51:29,098 INFO  [org.jboss.as.clustering.infinispan] (ServerService Thread Pool -- 20) Activating Infinispan subsystem.
+[0m[0m14:51:29,102 INFO  [org.infinispan.server.jgroups] (ServerService Thread Pool -- 22) DGJGRP0001: Activating JGroups subsystem.
+[0m[0m14:51:29,116 INFO  [org.jboss.as.connector.subsystems.datasources] (ServerService Thread Pool -- 18) WFLYJCA0004: Deploying JDBC-compliant driver class org.h2.Driver (version 1.4)
+[0m[0m14:51:29,120 INFO  [org.jboss.as.connector] (MSC service thread 1-6) WFLYJCA0009: Starting JCA Subsystem (WildFly/IronJacamar 1.4.6.Final)
+[0m[0m14:51:29,121 INFO  [org.wildfly.extension.io] (ServerService Thread Pool -- 23) WFLYIO001: Worker 'default' has auto-configured to 16 core threads with 128 task threads based on your 8 available processors
+[0m[33m14:51:29,127 WARN  [org.jboss.as.txn] (ServerService Thread Pool -- 29) WFLYTX0013: The node-identifier attribute on the /subsystem=transactions is set to the default value. This is a danger for environments running multiple servers. Please make sure the attribute value is unique.
+[0m[0m14:51:29,128 INFO  [org.jboss.as.naming] (ServerService Thread Pool -- 27) WFLYNAM0001: Activating Naming Subsystem
+[0m[0m14:51:29,139 INFO  [org.jboss.as.connector.deployers.jdbc] (MSC service thread 1-4) WFLYJCA0018: Started Driver service with driver-name = h2
+[0m[0m14:51:29,165 INFO  [org.jboss.as.naming] (MSC service thread 1-2) WFLYNAM0003: Starting Naming Service
+[0m[0m14:51:29,308 INFO  [org.jboss.as.patching] (MSC service thread 1-4) WFLYPAT0050: Infinispan Server cumulative patch ID is: base, one-off patches include: none
+[0m[33m14:51:29,317 WARN  [org.jboss.as.domain.management.security] (MSC service thread 1-1) WFLYDM0111: Keystore /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/configuration/application.keystore not found, it will be auto generated on first use with a self signed certificate for host localhost
+[0m[0m14:51:29,328 INFO  [org.jboss.as.server.deployment.scanner] (MSC service thread 1-5) WFLYDS0013: Started FileSystemDeploymentService for directory /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node1/standalone/deployments
+[0m[31m14:51:29,445 ERROR [org.infinispan.server.jgroups] (MSC service thread 1-4) Realm: ApplicationRealm, Role: null, Mech: DIGEST-MD5
+[0m[31m14:51:29,447 ERROR [org.infinispan.server.jgroups] (MSC service thread 1-4) SASL PROPS {com.sun.security.sasl.digest.realm=ApplicationRealm, com.sun.security.sasl.digest.utf8=true, org.wildfly.security.sasl.digest.pre_digested=true}
+[0m[31m14:51:29,452 ERROR [org.jgroups.protocols.SASL] (MSC service thread 1-4) SupportedMech server org.wildfly.security.sasl.digest.DigestServerFactory@7064d19
+[0m[31m14:51:29,453 ERROR [org.jgroups.protocols.SASL] (MSC service thread 1-4) SupportedMech server com.sun.security.sasl.digest.FactoryImpl@7bf3173a
+[0m[31m14:51:29,453 ERROR [org.jgroups.protocols.SASL] (MSC service thread 1-4) SupportedMech server org.wildfly.security.sasl.digest.DigestServerFactory@140b4ff2
+[0m[0m14:51:29,781 INFO  [org.jboss.as.connector.subsystems.datasources] (MSC service thread 1-8) WFLYJCA0001: Bound data source [java:jboss/datasources/ExampleDS]
+[0m[0m14:51:35,100 INFO  [org.infinispan.remoting.transport.jgroups.JGroupsTransport] (MSC service thread 1-3) ISPN000078: Starting JGroups channel clustered
+[0m[0m14:51:35,102 INFO  [org.infinispan.CLUSTER] (MSC service thread 1-3) ISPN000094: Received new cluster view for channel cluster: [node0|0] (1) [node0]
+[0m[0m14:51:35,107 INFO  [org.infinispan.remoting.transport.jgroups.JGroupsTransport] (MSC service thread 1-3) ISPN000079: Channel clustered local address is node0, physical addresses are [127.0.0.1:55200]
+[0m[0m14:51:35,110 INFO  [org.infinispan.factories.GlobalComponentRegistry] (MSC service thread 1-3) ISPN000128: Infinispan version: Infinispan 'Bastille' 9.2.0-SNAPSHOT
+[0m[0m14:51:35,495 INFO  [org.jboss.as.clustering.infinispan] (MSC service thread 1-1) DGISPN0001: Started memcachedCache cache from clustered container
+[0m[0m14:51:35,496 INFO  [org.jboss.as.clustering.infinispan] (MSC service thread 1-6) DGISPN0001: Started namedCache cache from clustered container
+[0m[0m14:51:35,496 INFO  [org.jboss.as.clustering.infinispan] (MSC service thread 1-2) DGISPN0001: Started default cache from clustered container
+[0m[0m14:51:35,498 INFO  [org.jboss.as.clustering.infinispan] (MSC service thread 1-4) DGISPN0001: Started offHeapCache cache from clustered container
+[0m[0m14:51:35,505 INFO  [org.jboss.as.clustering.infinispan] (MSC service thread 1-8) DGISPN0001: Started compatibilityCache cache from clustered container
+[0m[0m14:51:35,507 INFO  [org.infinispan.server.endpoint] (MSC service thread 1-3) DGENDPT10000: MemcachedServer starting
+[0m[0m14:51:35,508 INFO  [org.infinispan.server.endpoint] (MSC service thread 1-2) DGENDPT10000: HotRodServer starting
+[0m[0m14:51:35,509 INFO  [org.infinispan.server.endpoint] (MSC service thread 1-6) DGENDPT10000: REST starting
+[0m[0m14:51:35,512 INFO  [org.infinispan.server.endpoint] (MSC service thread 1-3) DGENDPT10001: MemcachedServer listening on 127.0.0.1:11211
+[0m[0m14:51:35,512 INFO  [org.infinispan.server.endpoint] (MSC service thread 1-2) DGENDPT10001: HotRodServer listening on 127.0.0.1:11222
+[0m[0m14:51:36,040 INFO  [org.infinispan.server.endpoint] (MSC service thread 1-6) DGENDPT10002: REST listening on 127.0.0.1:8080 (mapped to rest)
+[0m[0m14:51:36,092 INFO  [org.jboss.as.server] (Controller Boot Thread) WFLYSRV0212: Resuming server
+[0m[0m14:51:36,094 INFO  [org.jboss.as] (Controller Boot Thread) WFLYSRV0060: Http management interface listening on http://127.0.0.1:9990/management
+[0m[0m14:51:36,094 INFO  [org.jboss.as] (Controller Boot Thread) WFLYSRV0051: Admin console listening on http://127.0.0.1:9990
+[0m[0m14:51:36,094 INFO  [org.jboss.as] (Controller Boot Thread) WFLYSRV0025: Infinispan Server 9.2.0-SNAPSHOT (WildFly Core 3.0.8.Final) started in 8781ms - Started 217 of 277 services (143 services are lazy, passive or on-demand)
+[0m[0m14:51:38,032 INFO  [org.infinispan.server.jgroups] (ServerService Thread Pool -- 22) DGJGRP0001: Activating JGroups subsystem.
+[0m[0m14:51:38,030 INFO  [org.jboss.as.clustering.infinispan] (ServerService Thread Pool -- 20) Activating Infinispan subsystem.
+[0m[0m14:51:38,036 INFO  [org.wildfly.extension.io] (ServerService Thread Pool -- 23) WFLYIO001: Worker 'default' has auto-configured to 16 core threads with 128 task threads based on your 8 available processors
+[0m[0m14:51:38,040 INFO  [org.jboss.as.naming] (ServerService Thread Pool -- 27) WFLYNAM0001: Activating Naming Subsystem
+[0m[33m14:51:38,047 WARN  [org.jboss.as.txn] (ServerService Thread Pool -- 29) WFLYTX0013: The node-identifier attribute on the /subsystem=transactions is set to the default value. This is a danger for environments running multiple servers. Please make sure the attribute value is unique.
+[0m[0m14:51:38,060 INFO  [org.jboss.as.connector] (MSC service thread 1-6) WFLYJCA0009: Starting JCA Subsystem (WildFly/IronJacamar 1.4.6.Final)
+[0m[0m14:51:38,082 INFO  [org.jboss.as.connector.subsystems.datasources] (ServerService Thread Pool -- 18) WFLYJCA0004: Deploying JDBC-compliant driver class org.h2.Driver (version 1.4)
+[0m[0m14:51:38,084 INFO  [org.jboss.as.connector.deployers.jdbc] (MSC service thread 1-8) WFLYJCA0018: Started Driver service with driver-name = h2
+[0m[0m14:51:38,099 INFO  [org.jboss.as.naming] (MSC service thread 1-3) WFLYNAM0003: Starting Naming Service
+[0m[0m14:51:38,293 INFO  [org.jboss.as.patching] (MSC service thread 1-5) WFLYPAT0050: Infinispan Server cumulative patch ID is: base, one-off patches include: none
+[0m[33m14:51:38,303 WARN  [org.jboss.as.domain.management.security] (MSC service thread 1-8) WFLYDM0111: Keystore /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node2/standalone/configuration/application.keystore not found, it will be auto generated on first use with a self signed certificate for host localhost
+[0m[0m14:51:38,308 INFO  [org.jboss.as.server.deployment.scanner] (MSC service thread 1-3) WFLYDS0013: Started FileSystemDeploymentService for directory /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/server/node2/standalone/deployments
+[0m[31m14:51:38,475 ERROR [org.infinispan.server.jgroups] (MSC service thread 1-3) Realm: ApplicationRealm, Role: null, Mech: DIGEST-MD5
+[0m[31m14:51:38,477 ERROR [org.infinispan.server.jgroups] (MSC service thread 1-3) SASL PROPS {com.sun.security.sasl.digest.realm=ApplicationRealm, com.sun.security.sasl.digest.utf8=true, org.wildfly.security.sasl.digest.pre_digested=true}
+[0m[31m14:51:38,480 ERROR [org.jgroups.protocols.SASL] (MSC service thread 1-3) SupportedMech server org.wildfly.security.sasl.digest.DigestServerFactory@7d9bee63
+[0m[31m14:51:38,481 ERROR [org.jgroups.protocols.SASL] (MSC service thread 1-3) SupportedMech server com.sun.security.sasl.digest.FactoryImpl@1af1d917
+[0m[31m14:51:38,481 ERROR [org.jgroups.protocols.SASL] (MSC service thread 1-3) SupportedMech server org.wildfly.security.sasl.digest.DigestServerFactory@9b290b7
+[0m[31m14:51:38,555 ERROR [org.jboss.msc.service.fail] (MSC service thread 1-7) MSC000001: Failed to start service jboss.datagrid-jgroups.channel.cluster.connector: org.jboss.msc.service.StartException in service jboss.datagrid-jgroups.channel.cluster.connector: java.lang.Exception: connecting to channel cluster failed
+	at org.infinispan.server.jgroups.spi.service.ChannelConnectorBuilder.start(ChannelConnectorBuilder.java:86)
+	at org.jboss.msc.service.ServiceControllerImpl$StartTask.startService(ServiceControllerImpl.java:2032)
+	at org.jboss.msc.service.ServiceControllerImpl$StartTask.run(ServiceControllerImpl.java:1955)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617)
+	at java.lang.Thread.run(Thread.java:745)
+Caused by: java.lang.Exception: connecting to channel cluster failed
+	at org.jgroups.JChannel._connect(JChannel.java:904)
+	at org.jgroups.JChannel.connect(JChannel.java:393)
+	at org.jgroups.JChannel.connect(JChannel.java:384)
+	at org.infinispan.server.jgroups.spi.service.ChannelConnectorBuilder.start(ChannelConnectorBuilder.java:84)
+	... 5 more
+Caused by: java.lang.SecurityException: java.lang.ClassCastException: java.lang.String cannot be cast to java.lang.Boolean
+	at org.jgroups.protocols.SASL.down(SASL.java:344)
+	at org.jgroups.protocols.pbcast.ClientGmsImpl.sendJoinMessage(ClientGmsImpl.java:240)
+	at org.jgroups.protocols.pbcast.ClientGmsImpl.joinInternal(ClientGmsImpl.java:106)
+	at org.jgroups.protocols.pbcast.ClientGmsImpl.join(ClientGmsImpl.java:41)
+	at org.jgroups.protocols.pbcast.GMS.down(GMS.java:1064)
+	at org.jgroups.protocols.FlowControl.down(FlowControl.java:300)
+	at org.jgroups.protocols.FlowControl.down(FlowControl.java:300)
+	at org.jgroups.protocols.FRAG3.down(FRAG3.java:135)
+	at org.jgroups.protocols.FORK.down(FORK.java:102)
+	at org.jgroups.stack.ProtocolStack.down(ProtocolStack.java:901)
+	at org.jgroups.JChannel.down(JChannel.java:668)
+	at org.jgroups.JChannel._connect(JChannel.java:897)
+	... 8 more
+Caused by: java.lang.ClassCastException: java.lang.String cannot be cast to java.lang.Boolean
+	at org.wildfly.security.sasl.digest.DigestClientFactory.createSaslClient(DigestClientFactory.java:71)
+	at org.jgroups.auth.sasl.SaslClientContext.<init>(SaslClientContext.java:34)
+	at org.jgroups.protocols.SASL.down(SASL.java:337)
+	... 19 more
+
+[0m[0m14:51:38,698 INFO  [org.jboss.as.connector.subsystems.datasources] (MSC service thread 1-8) WFLYJCA0001: Bound data source [java:jboss/datasources/ExampleDS]
+[0m[31m14:51:38,702 ERROR [org.jboss.as.controller.management-operation] (Controller Boot Thread) WFLYCTL0013: Operation ("add") failed - address: ([
+    ("subsystem" => "datagrid-jgroups"),
+    ("channel" => "cluster")
+]) - failure description: {"WFLYCTL0080: Failed services" => {"jboss.datagrid-jgroups.channel.cluster.connector" => "java.lang.Exception: connecting to channel cluster failed
+    Caused by: java.lang.Exception: connecting to channel cluster failed
+    Caused by: java.lang.SecurityException: java.lang.ClassCastException: java.lang.String cannot be cast to java.lang.Boolean
+    Caused by: java.lang.ClassCastException: java.lang.String cannot be cast to java.lang.Boolean"}}
+[0m[0m14:51:38,710 INFO  [org.jboss.as.controller] (Controller Boot Thread) WFLYCTL0183: Service status report
+WFLYCTL0186:   Services which failed to start:      service jboss.datagrid-jgroups.channel.cluster.connector: java.lang.Exception: connecting to channel cluster failed
+
+[0m[0m14:51:38,741 INFO  [org.jboss.as.server] (Controller Boot Thread) WFLYSRV0212: Resuming server
+[0m[0m14:51:38,743 INFO  [org.jboss.as] (Controller Boot Thread) WFLYSRV0060: Http management interface listening on http://127.0.0.1:10090/management
+[0m[0m14:51:38,743 INFO  [org.jboss.as] (Controller Boot Thread) WFLYSRV0051: Admin console listening on http://127.0.0.1:10090
+[0m[31m14:51:38,744 ERROR [org.jboss.as] (Controller Boot Thread) WFLYSRV0026: Infinispan Server 9.2.0-SNAPSHOT (WildFly Core 3.0.8.Final) started (with errors) in 2506ms - Started 187 of 277 services (16 services failed or missing dependencies, 143 services are lazy, passive or on-demand)
+[0m[0m14:51:39,128 INFO  [org.jboss.as.server] (management-handler-thread - 1) WFLYSRV0236: Suspending server with no timeout.
+[0m[0m14:51:39,130 INFO  [org.jboss.as.server] (Management Triggered Shutdown) WFLYSRV0241: Shutting down in response to management operation 'shutdown'
+[0m[0m14:51:39,137 INFO  [org.jboss.as.connector.subsystems.datasources] (MSC service thread 1-8) WFLYJCA0010: Unbound data source [java:jboss/datasources/ExampleDS]
+[0m[0m14:51:39,141 INFO  [org.jboss.as.connector.deployers.jdbc] (MSC service thread 1-1) WFLYJCA0019: Stopped Driver service with driver-name = h2
+[0m[0m14:51:39,161 INFO  [org.jboss.as] (MSC service thread 1-4) WFLYSRV0050: Infinispan Server 9.2.0-SNAPSHOT (WildFly Core 3.0.8.Final) stopped in 23ms
+[0m[0m14:51:39,196 INFO  [org.jboss.as.server] (management-handler-thread - 1) WFLYSRV0236: Suspending server with no timeout.
+[0m[0m14:51:39,198 INFO  [org.jboss.as.server] (Management Triggered Shutdown) WFLYSRV0241: Shutting down in response to management operation 'shutdown'
+[0m[0m14:51:39,206 INFO  [org.jboss.as.connector.subsystems.datasources] (MSC service thread 1-4) WFLYJCA0010: Unbound data source [java:jboss/datasources/ExampleDS]
+[0m[0m14:51:39,216 INFO  [org.jboss.as.connector.deployers.jdbc] (MSC service thread 1-6) WFLYJCA0019: Stopped Driver service with driver-name = h2
+[0m[0m14:51:39,232 INFO  [org.jboss.as.clustering.infinispan] (MSC service thread 1-4) DGISPN0002: Stopped compatibilityCache cache from clustered container
+[0m[0m14:51:39,233 INFO  [org.jboss.as.clustering.infinispan] (MSC service thread 1-8) DGISPN0002: Stopped namedCache cache from clustered container
+[0m[0m14:51:39,273 INFO  [org.jboss.as.clustering.infinispan] (MSC service thread 1-3) DGISPN0002: Stopped offHeapCache cache from clustered container
+[0m[0m14:51:40,336 INFO  [org.jboss.as.clustering.infinispan] (MSC service thread 1-1) DGISPN0002: Stopped memcachedCache cache from clustered container
+[0m[0m14:51:40,353 INFO  [org.jboss.as.clustering.infinispan] (MSC service thread 1-2) DGISPN0002: Stopped default cache from clustered container
+[0m[0m14:51:40,370 INFO  [org.infinispan.remoting.transport.jgroups.JGroupsTransport] (MSC service thread 1-5) ISPN000080: Disconnecting JGroups channel clustered
+[0m[0m14:51:40,387 INFO  [org.jboss.as] (MSC service thread 1-2) WFLYSRV0050: Infinispan Server 9.2.0-SNAPSHOT (WildFly Core 3.0.8.Final) stopped in 1181ms
+[0m[31m[OK:     0, KO:     1, SKIP:     0] Test failed: SaslAuthIT.testSaslMD5
+java.lang.AssertionError: expected:<2> but was:<1>
+	at org.junit.Assert.fail(Assert.java:88)
+	at org.junit.Assert.failNotEquals(Assert.java:834)
+	at org.junit.Assert.assertEquals(Assert.java:645)
+	at org.junit.Assert.assertEquals(Assert.java:631)
+	at org.infinispan.server.test.security.jgroups.sasl.SaslAuthIT.saslTest(SaslAuthIT.java:100)
+	at org.infinispan.server.test.security.jgroups.sasl.SaslAuthIT.testSaslMD5(SaslAuthIT.java:67)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:498)
+	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:50)
+	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:47)
+	at org.jboss.arquillian.junit.Arquillian$8$1.invoke(Arquillian.java:379)
+	at org.jboss.arquillian.container.test.impl.execution.LocalTestExecuter.execute(LocalTestExecuter.java:60)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:498)
+	at org.jboss.arquillian.core.impl.ObserverImpl.invoke(ObserverImpl.java:96)
+	at org.jboss.arquillian.core.impl.EventContextImpl.invokeObservers(EventContextImpl.java:103)
+	at org.jboss.arquillian.core.impl.EventContextImpl.proceed(EventContextImpl.java:85)
+	at org.jboss.arquillian.core.impl.ManagerImpl.fire(ManagerImpl.java:143)
+	at org.jboss.arquillian.core.impl.ManagerImpl.fire(ManagerImpl.java:114)
+	at org.jboss.arquillian.core.impl.EventImpl.fire(EventImpl.java:67)
+	at org.jboss.arquillian.container.test.impl.execution.ClientTestExecuter.execute(ClientTestExecuter.java:53)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:498)
+	at org.jboss.arquillian.core.impl.ObserverImpl.invoke(ObserverImpl.java:96)
+	at org.jboss.arquillian.core.impl.EventContextImpl.invokeObservers(EventContextImpl.java:103)
+	at org.jboss.arquillian.core.impl.EventContextImpl.proceed(EventContextImpl.java:85)
+	at org.jboss.arquillian.container.test.impl.client.ContainerEventController.createContext(ContainerEventController.java:142)
+	at org.jboss.arquillian.container.test.impl.client.ContainerEventController.createTestContext(ContainerEventController.java:129)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:498)
+	at org.jboss.arquillian.core.impl.ObserverImpl.invoke(ObserverImpl.java:96)
+	at org.jboss.arquillian.core.impl.EventContextImpl.proceed(EventContextImpl.java:92)
+	at org.jboss.arquillian.test.impl.TestContextHandler.createTestContext(TestContextHandler.java:130)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:498)
+	at org.jboss.arquillian.core.impl.ObserverImpl.invoke(ObserverImpl.java:96)
+	at org.jboss.arquillian.core.impl.EventContextImpl.proceed(EventContextImpl.java:92)
+	at org.jboss.arquillian.test.impl.TestContextHandler.createClassContext(TestContextHandler.java:92)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:498)
+	at org.jboss.arquillian.core.impl.ObserverImpl.invoke(ObserverImpl.java:96)
+	at org.jboss.arquillian.core.impl.EventContextImpl.proceed(EventContextImpl.java:92)
+	at org.jboss.arquillian.test.impl.TestContextHandler.createSuiteContext(TestContextHandler.java:73)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:498)
+	at org.jboss.arquillian.core.impl.ObserverImpl.invoke(ObserverImpl.java:96)
+	at org.jboss.arquillian.core.impl.EventContextImpl.proceed(EventContextImpl.java:92)
+	at org.jboss.arquillian.core.impl.ManagerImpl.fire(ManagerImpl.java:143)
+	at org.jboss.arquillian.test.impl.EventTestRunnerAdaptor.test(EventTestRunnerAdaptor.java:136)
+	at org.jboss.arquillian.junit.Arquillian$8.evaluate(Arquillian.java:372)
+	at org.jboss.arquillian.junit.Arquillian$4.evaluate(Arquillian.java:246)
+	at org.jboss.arquillian.junit.Arquillian.multiExecute(Arquillian.java:431)
+	at org.jboss.arquillian.junit.Arquillian.access$200(Arquillian.java:55)
+	at org.jboss.arquillian.junit.Arquillian$5.evaluate(Arquillian.java:260)
+	at org.jboss.arquillian.junit.Arquillian$7$1.invoke(Arquillian.java:324)
+	at org.jboss.arquillian.container.test.impl.execution.ClientBeforeAfterLifecycleEventExecuter.execute(ClientBeforeAfterLifecycleEventExecuter.java:99)
+	at org.jboss.arquillian.container.test.impl.execution.ClientBeforeAfterLifecycleEventExecuter.on(ClientBeforeAfterLifecycleEventExecuter.java:72)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:498)
+	at org.jboss.arquillian.core.impl.ObserverImpl.invoke(ObserverImpl.java:96)
+	at org.jboss.arquillian.core.impl.EventContextImpl.invokeObservers(EventContextImpl.java:103)
+	at org.jboss.arquillian.core.impl.EventContextImpl.proceed(EventContextImpl.java:85)
+	at org.jboss.arquillian.container.test.impl.client.ContainerEventController.createContext(ContainerEventController.java:142)
+	at org.jboss.arquillian.container.test.impl.client.ContainerEventController.createBeforeContext(ContainerEventController.java:124)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:498)
+	at org.jboss.arquillian.core.impl.ObserverImpl.invoke(ObserverImpl.java:96)
+	at org.jboss.arquillian.core.impl.EventContextImpl.proceed(EventContextImpl.java:92)
+	at org.jboss.arquillian.test.impl.TestContextHandler.createTestContext(TestContextHandler.java:130)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:498)
+	at org.jboss.arquillian.core.impl.ObserverImpl.invoke(ObserverImpl.java:96)
+	at org.jboss.arquillian.core.impl.EventContextImpl.proceed(EventContextImpl.java:92)
+	at org.jboss.arquillian.test.impl.TestContextHandler.createClassContext(TestContextHandler.java:92)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:498)
+	at org.jboss.arquillian.core.impl.ObserverImpl.invoke(ObserverImpl.java:96)
+	at org.jboss.arquillian.core.impl.EventContextImpl.proceed(EventContextImpl.java:92)
+	at org.jboss.arquillian.test.impl.TestContextHandler.createSuiteContext(TestContextHandler.java:73)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:498)
+	at org.jboss.arquillian.core.impl.ObserverImpl.invoke(ObserverImpl.java:96)
+	at org.jboss.arquillian.core.impl.EventContextImpl.proceed(EventContextImpl.java:92)
+	at org.jboss.arquillian.core.impl.ManagerImpl.fire(ManagerImpl.java:143)
+	at org.jboss.arquillian.core.impl.ManagerImpl.fire(ManagerImpl.java:114)
+	at org.jboss.arquillian.test.impl.EventTestRunnerAdaptor.fireCustomLifecycle(EventTestRunnerAdaptor.java:159)
+	at org.jboss.arquillian.junit.Arquillian$7.evaluate(Arquillian.java:317)
+	at org.junit.runners.ParentRunner.runLeaf(ParentRunner.java:325)
+	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:78)
+	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:57)
+	at org.junit.runners.ParentRunner$3.run(ParentRunner.java:290)
+	at org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:71)
+	at org.junit.runners.ParentRunner.runChildren(ParentRunner.java:288)
+	at org.junit.runners.ParentRunner.access$000(ParentRunner.java:58)
+	at org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:268)
+	at org.jboss.arquillian.junit.Arquillian$2.evaluate(Arquillian.java:205)
+	at org.jboss.arquillian.junit.Arquillian.multiExecute(Arquillian.java:431)
+	at org.jboss.arquillian.junit.Arquillian.access$200(Arquillian.java:55)
+	at org.jboss.arquillian.junit.Arquillian$3.evaluate(Arquillian.java:219)
+	at org.junit.runners.ParentRunner.run(ParentRunner.java:363)
+	at org.jboss.arquillian.junit.Arquillian.run(Arquillian.java:167)
+	at org.junit.runners.Suite.runChild(Suite.java:128)
+	at org.junit.runners.Suite.runChild(Suite.java:27)
+	at org.junit.runners.ParentRunner$3.run(ParentRunner.java:290)
+	at org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:71)
+	at org.junit.runners.ParentRunner.runChildren(ParentRunner.java:288)
+	at org.junit.runners.ParentRunner.access$000(ParentRunner.java:58)
+	at org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:268)
+	at org.junit.runners.ParentRunner.run(ParentRunner.java:363)
+	at org.apache.maven.surefire.junitcore.JUnitCore.run(JUnitCore.java:55)
+	at org.apache.maven.surefire.junitcore.JUnitCoreWrapper.createRequestAndRun(JUnitCoreWrapper.java:137)
+	at org.apache.maven.surefire.junitcore.JUnitCoreWrapper.executeEager(JUnitCoreWrapper.java:107)
+	at org.apache.maven.surefire.junitcore.JUnitCoreWrapper.execute(JUnitCoreWrapper.java:83)
+	at org.apache.maven.surefire.junitcore.JUnitCoreWrapper.execute(JUnitCoreWrapper.java:75)
+	at org.apache.maven.surefire.junitcore.JUnitCoreProvider.invoke(JUnitCoreProvider.java:159)
+	at org.apache.maven.surefire.booter.ForkedBooter.invokeProviderInSameClassLoader(ForkedBooter.java:373)
+	at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter.java:334)
+	at org.apache.maven.surefire.booter.ForkedBooter.execute(ForkedBooter.java:119)
+	at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:407)
+[0m14:51:40,423 ERROR (main) [TestSuiteProgress] Test failed: SaslAuthIT.testSaslMD5
+java.lang.AssertionError: expected:<2> but was:<1>
+	at org.junit.Assert.fail(Assert.java:88)
+	at org.junit.Assert.failNotEquals(Assert.java:834)
+	at org.junit.Assert.assertEquals(Assert.java:645)
+	at org.junit.Assert.assertEquals(Assert.java:631)
+	at org.infinispan.server.test.security.jgroups.sasl.SaslAuthIT.saslTest(SaslAuthIT.java:100)
+	at org.infinispan.server.test.security.jgroups.sasl.SaslAuthIT.testSaslMD5(SaslAuthIT.java:67)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)[32m[OK:     1, KO:     1, SKIP:     0] Test succeeded: SaslAuthIT.testSaslMD5
+[0m[ERROR] [1;31mTests [0;1mrun: [0;1m1[m, [1;31mFailures: [0;1;31m1[m, Errors: 0, Skipped: 0, Time elapsed: 13.337 s[1;31m <<< FAILURE![m - in org.infinispan.server.test.security.jgroups.sasl.[1mSaslAuthIT[m
+[ERROR] testSaslMD5(org.infinispan.server.test.security.jgroups.sasl.SaslAuthIT)  Time elapsed: 13.249 s  <<< FAILURE!
+java.lang.AssertionError: expected:<2> but was:<1>
+	at org.infinispan.server.test.security.jgroups.sasl.SaslAuthIT.saslTest(SaslAuthIT.java:100)
+	at org.infinispan.server.test.security.jgroups.sasl.SaslAuthIT.testSaslMD5(SaslAuthIT.java:67)
+
+[INFO] 
+[INFO] Results:
+[INFO] 
+[ERROR] [1;31mFailures: [m
+[ERROR] [1;31m  SaslAuthIT.testSaslMD5:67->saslTest:100 expected:<2> but was:<1>[m
+[INFO] 
+[ERROR] [1;31mTests run: 1, Failures: 1, Errors: 0, Skipped: 0[m
+[INFO] 
+[INFO] 
+[INFO] [1m--- [0;32mmaven-failsafe-plugin:2.20.1:integration-test[m [1m(suite-queries)[m @ [36minfinispan-server-testsuite[0;1m ---[m
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] 
+[INFO] Results:
+[INFO] 
+[INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] 
+[INFO] [1m--- [0;32mmaven-failsafe-plugin:2.20.1:integration-test[m [1m(suite-client-local)[m @ [36minfinispan-server-testsuite[0;1m ---[m
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] 
+[INFO] Results:
+[INFO] 
+[INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] 
+[INFO] [1m--- [0;32mmaven-failsafe-plugin:2.20.1:integration-test[m [1m(suite-memcached-local)[m @ [36minfinispan-server-testsuite[0;1m ---[m
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] 
+[INFO] Results:
+[INFO] 
+[INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] 
+[INFO] [1m--- [0;32mmaven-failsafe-plugin:2.20.1:integration-test[m [1m(suite-client-dist)[m @ [36minfinispan-server-testsuite[0;1m ---[m
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] 
+[INFO] Results:
+[INFO] 
+[INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] 
+[INFO] [1m--- [0;32mmaven-failsafe-plugin:2.20.1:integration-test[m [1m(suite-memcached-dist)[m @ [36minfinispan-server-testsuite[0;1m ---[m
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] 
+[INFO] Results:
+[INFO] 
+[INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] 
+[INFO] [1m--- [0;32mmaven-failsafe-plugin:2.20.1:integration-test[m [1m(suite-client-repl)[m @ [36minfinispan-server-testsuite[0;1m ---[m
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] 
+[INFO] Results:
+[INFO] 
+[INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] 
+[INFO] [1m--- [0;32mmaven-antrun-plugin:1.8:run[m [1m(stop-h2-tcp-server)[m @ [36minfinispan-server-testsuite[0;1m ---[m
+[INFO] Executing tasks
+
+stop-h2:
+     [echo] Stopping H2 TCP server!
+     [echo] H2 jar: /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/test-libs/h2.jar
+Shutting down TCP Server at tcp://127.0.0.1:9092
+[INFO] Executed tasks
+[INFO] 
+[INFO] [1m--- [0;32mmaven-checkstyle-plugin:2.17:checkstyle[m [1m(checkstyle)[m @ [36minfinispan-server-testsuite[0;1m ---[m
+[INFO] Starting audit...
+Audit done.
+[INFO] 
+[INFO] [1m>>> [0;32mmaven-source-plugin:3.0.1:jar[m [1m(attach-sources)[0;1m > [0;1mgenerate-sources[m @ [36minfinispan-server-testsuite[0;1m >>>[m
+[INFO] 
+[INFO] [1m--- [0;32mmaven-enforcer-plugin:1.3.1:enforce[m [1m(enforce-java)[m @ [36minfinispan-server-testsuite[0;1m ---[m
+[INFO] 
+[INFO] [1m<<< [0;32mmaven-source-plugin:3.0.1:jar[m [1m(attach-sources)[0;1m < [0;1mgenerate-sources[m @ [36minfinispan-server-testsuite[0;1m <<<[m
+[INFO] 
+[INFO] 
+[INFO] [1m--- [0;32mmaven-source-plugin:3.0.1:jar[m [1m(attach-sources)[m @ [36minfinispan-server-testsuite[0;1m ---[m
+[INFO] No sources in project. Archive not created.
+[INFO] 
+[INFO] [1m>>> [0;32mmaven-source-plugin:3.0.1:test-jar[m [1m(attach-sources)[0;1m > [0;1mgenerate-sources[m @ [36minfinispan-server-testsuite[0;1m >>>[m
+[INFO] 
+[INFO] [1m--- [0;32mmaven-enforcer-plugin:1.3.1:enforce[m [1m(enforce-java)[m @ [36minfinispan-server-testsuite[0;1m ---[m
+[INFO] 
+[INFO] [1m<<< [0;32mmaven-source-plugin:3.0.1:test-jar[m [1m(attach-sources)[0;1m < [0;1mgenerate-sources[m @ [36minfinispan-server-testsuite[0;1m <<<[m
+[INFO] 
+[INFO] 
+[INFO] [1m--- [0;32mmaven-source-plugin:3.0.1:test-jar[m [1m(attach-sources)[m @ [36minfinispan-server-testsuite[0;1m ---[m
+[INFO] Building jar: /home/remerson/workspace/RedHat/infinispan/infinispan/server/integration/testsuite/target/infinispan-server-testsuite-9.2.0-SNAPSHOT-test-sources.jar
+[INFO] [1m------------------------------------------------------------------------[m
+[INFO] [1;32mBUILD SUCCESS[m
+[INFO] [1m------------------------------------------------------------------------[m
+[INFO] Total time: 47.258 s
+[INFO] Finished at: 2018-01-22T14:51:50Z
+[INFO] Final Memory: 91M/1160M
+[INFO] [1m------------------------------------------------------------------------[m

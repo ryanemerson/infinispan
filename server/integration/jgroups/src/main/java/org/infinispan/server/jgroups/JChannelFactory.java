@@ -21,6 +21,27 @@
  */
 package org.infinispan.server.jgroups;
 
+import static org.infinispan.server.jgroups.logging.JGroupsLogger.ROOT_LOGGER;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
+import java.security.PrivilegedAction;
+import java.security.PrivilegedActionException;
+import java.security.PrivilegedExceptionAction;
+import java.security.Provider;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.function.Supplier;
+
 import org.infinispan.server.jgroups.logging.JGroupsLogger;
 import org.infinispan.server.jgroups.security.RealmAuthorizationCallbackHandler;
 import org.infinispan.server.jgroups.security.SaslClientCallbackHandler;
@@ -55,27 +76,8 @@ import org.jgroups.stack.Configurator;
 import org.jgroups.stack.Protocol;
 import org.jgroups.stack.ProtocolStack;
 import org.jgroups.util.Util;
+import org.wildfly.security.WildFlyElytronProvider;
 import org.wildfly.security.manager.WildFlySecurityManager;
-
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
-import java.security.PrivilegedAction;
-import java.security.PrivilegedActionException;
-import java.security.PrivilegedExceptionAction;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentSkipListSet;
-import java.util.function.Supplier;
-
-import static org.infinispan.server.jgroups.logging.JGroupsLogger.ROOT_LOGGER;
 
 /**
  * Factory for creating fork-able channels.
@@ -191,6 +193,8 @@ public class JChannelFactory implements ChannelFactory, ProtocolStackConfigurato
             final String clusterRole = saslConfig.getClusterRole();
             final SecurityRealm securityRealm = saslConfig.getSecurityRealm();
             final String mech = saslConfig.getMech();
+
+            JGroupsLogger.ROOT_LOGGER.errorf("Realm: %s, Role: %s, Mech: %s", securityRealm.getName(), clusterRole, mech);
             final SASL sasl = new SASL();
             sasl.setMech(mech);
             Map<String, String> props = saslConfig.getProperties();
@@ -217,6 +221,9 @@ public class JChannelFactory implements ChannelFactory, ProtocolStackConfigurato
             Configurator.resolveAndAssignFields(sasl, props);
             Configurator.resolveAndInvokePropertyMethods(sasl, props);
             channel.getProtocolStack().insertProtocol(sasl, ProtocolStack.Position.BELOW, GMS.class);
+
+            Map<String, String> configuredProps = sasl.getSaslProps();
+            JGroupsLogger.ROOT_LOGGER.errorf("SASL PROPS %s", configuredProps);
             sasl.init();
         }
 
