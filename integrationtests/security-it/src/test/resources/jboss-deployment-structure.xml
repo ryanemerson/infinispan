@@ -1,7 +1,6 @@
 <jboss-deployment-structure>
   <deployment>
     <dependencies>
-      <module name="org.jboss.security.negotiation" />
       <module name="org.apache.commons.lang" />
     </dependencies>
   </deployment>

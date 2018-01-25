@@ -5,6 +5,7 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -36,10 +37,18 @@ public abstract class AbstractKrb5ConfServerSetupTask implements ServerSetupTask
 
    private static Logger LOGGER = Logger.getLogger(AbstractKrb5ConfServerSetupTask.class);
 
-   private static final String JAVA_IO_TMP_DIR = System.getProperty("java.io.tmpdir");
-   protected static final File KEYTABS_DIR = new File(JAVA_IO_TMP_DIR + File.separator + "keytabs");
+   protected static final File KEYTABS_DIR;
+
+   static {
+      try {
+         KEYTABS_DIR = Files.createTempDirectory("keytabs").toFile();
+      } catch (IOException e) {
+         throw new RuntimeException("Unable to create temporary folder", e);
+      }
+   }
+
    private static final String KRB5_CONF = "krb5.conf";
-   private static final File KRB5_CONF_FILE = new File(JAVA_IO_TMP_DIR, KRB5_CONF);
+   private static final File KRB5_CONF_FILE = new File(KEYTABS_DIR, KRB5_CONF);
 
    public static final File LDAP_KEYTAB_FILE = new File(KEYTABS_DIR, "ldap-service.keytab");
 
@@ -96,7 +105,6 @@ public abstract class AbstractKrb5ConfServerSetupTask implements ServerSetupTask
     */
    public void tearDown(ManagementClient managementClient, String containerId) throws Exception {
       FileUtils.deleteDirectory(KEYTABS_DIR);
-      FileUtils.deleteQuietly(KRB5_CONF_FILE);
       Utils.setSystemProperty("java.security.krb5.conf", origKrb5Conf);
       Utils.setSystemProperty("sun.security.krb5.debug", origKrbDebug);
       Utils.setSystemProperty("com.ibm.security.jgss.debug", origIbmJGSSDebug);
@@ -165,7 +173,7 @@ public abstract class AbstractKrb5ConfServerSetupTask implements ServerSetupTask
          dos.write(Keytab.VERSION_0X502_BYTES);
 
          for (Map.Entry<EncryptionType, EncryptionKey> keyEntry : KerberosKeyFactory.getKerberosKeys(principalName,
-                                                                                                     passPhrase).entrySet()) {
+               passPhrase).entrySet()) {
             final EncryptionKey key = keyEntry.getValue();
             final byte keyVersion = (byte) key.getKeyVersion();
             // entries.add(new KeytabEntry(principalName, principalType, timeStamp, keyVersion, key));

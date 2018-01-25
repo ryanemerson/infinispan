@@ -3,6 +3,7 @@ package org.infinispan.test.integration.security.tasks;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ADD;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ALLOW_RESOURCE_SERVICE_RESTART;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.COMPOSITE;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.LDAP_CONNECTION;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OPERATION_HEADERS;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP_ADDR;
@@ -47,7 +48,7 @@ public abstract class AbstractSecurityDomainsServerSetupTask implements ServerSe
    private static final Logger LOGGER = Logger.getLogger(AbstractSecurityDomainsServerSetupTask.class);
 
    private static final String ROLE = "role"; // The type attribute value of mapping-modules used for role assignment.
-   private static final String SUBSYSTEM_SECURITY = "security"; // The SUBSYSTEM_SECURITY
+   private static final String ELYTRON = "elytron"; // The ELYTRON
 
    protected ManagementClient managementClient;
 
@@ -74,8 +75,8 @@ public abstract class AbstractSecurityDomainsServerSetupTask implements ServerSe
          ModelNode steps = compositeOp.get(STEPS);
 
          PathAddress opAddr = PathAddress.pathAddress()
-               .append(SUBSYSTEM, SUBSYSTEM_SECURITY)
-               .append(Constants.SECURITY_DOMAIN, securityDomainName);
+               .append(SUBSYSTEM, ELYTRON)
+               .append("dir-context", LDAP_CONNECTION);
          ModelNode op = Util.createAddOperation(opAddr);
          if (StringUtils.isNotEmpty(securityDomain.getCacheType())) {
             op.get(Constants.CACHE_TYPE).set(securityDomain.getCacheType());
@@ -151,7 +152,7 @@ public abstract class AbstractSecurityDomainsServerSetupTask implements ServerSe
       final List<ModelNode> steps = new ArrayList<ModelNode>();
 
       PathAddress domainAddress = PathAddress.pathAddress()
-            .append(SUBSYSTEM, SUBSYSTEM_SECURITY)
+            .append(SUBSYSTEM, ELYTRON)
             .append(Constants.SECURITY_DOMAIN, domainName);
       PathAddress jaspiAddress = domainAddress.append(Constants.AUTHENTICATION, Constants.JASPI);
       steps.add(Util.createAddOperation(jaspiAddress));
@@ -246,7 +247,7 @@ public abstract class AbstractSecurityDomainsServerSetupTask implements ServerSe
          return false;
       }
       PathAddress address = PathAddress.pathAddress()
-            .append(SUBSYSTEM, SUBSYSTEM_SECURITY)
+            .append(SUBSYSTEM, ELYTRON)
             .append(Constants.SECURITY_DOMAIN, domainName)
             .append(securityComponent, Constants.CLASSIC);
       operations.add(Util.createAddOperation(address));
@@ -288,7 +289,7 @@ public abstract class AbstractSecurityDomainsServerSetupTask implements ServerSe
       }
       final ModelNode securityComponentNode = new ModelNode();
       securityComponentNode.get(OP).set(ADD);
-      securityComponentNode.get(OP_ADDR).add(SUBSYSTEM, SUBSYSTEM_SECURITY);
+      securityComponentNode.get(OP_ADDR).add(SUBSYSTEM, ELYTRON);
       securityComponentNode.get(OP_ADDR).add(Constants.SECURITY_DOMAIN, domainName);
 
       securityComponentNode.get(OP_ADDR).add(Constants.JSSE, Constants.CLASSIC);

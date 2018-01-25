@@ -242,7 +242,7 @@ public abstract class AbstractNodeAuthentication {
 
       @Override
       protected Collection<String> getCategories(ManagementClient managementClient, String containerId) {
-         return Arrays.asList("javax.security", "org.jboss.security", "org.picketbox");
+         return Arrays.asList("javax.security", "org.wildfly.security");
       }
    }
 
@@ -343,23 +343,6 @@ public abstract class AbstractNodeAuthentication {
       public static final File NODE0_KEYTAB_FILE = new File(KEYTABS_DIR, "jgroups_node0_clustered.keytab");
       public static final File NODE1_KEYTAB_FILE = new File(KEYTABS_DIR, "jgroups_node1_clustered.keytab");
       public static final File NODE1_FAIL_KEYTAB_FILE = new File(KEYTABS_DIR, "jgroups_node0_fail_clustered.keytab");
-      private static boolean keytabsGenerated = false;
-
-      @Override
-      public void setup(ManagementClient managementClient, String containerId) throws Exception {
-         if (!keytabsGenerated) {
-            super.setup(managementClient, containerId);
-            keytabsGenerated = true;
-         }
-      }
-
-      @Override
-      public void tearDown(ManagementClient managementClient, String containerId) throws Exception {
-         if (keytabsGenerated) {
-            super.tearDown(managementClient, containerId);
-            keytabsGenerated = false;
-         }
-      }
 
       @Override
       protected List<UserForKeyTab> kerberosUsers() {

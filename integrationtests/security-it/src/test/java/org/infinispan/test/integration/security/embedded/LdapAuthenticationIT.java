@@ -12,6 +12,8 @@ import javax.security.auth.login.LoginException;
 import org.infinispan.security.AuthorizationPermission;
 import org.infinispan.security.PrincipalRoleMapper;
 import org.infinispan.security.impl.IdentityRoleMapper;
+import org.infinispan.test.integration.security.elytron.DirContext;
+import org.infinispan.test.integration.security.tasks.AbstractDirContextSetupTask;
 import org.infinispan.test.integration.security.tasks.AbstractSecurityDomainsServerSetupTask;
 import org.infinispan.test.integration.security.tasks.AbstractTraceLoggingServerSetupTask;
 import org.infinispan.test.integration.security.utils.ApacheDsLdap;
@@ -99,7 +101,7 @@ public class LdapAuthenticationIT extends AbstractAuthentication {
 
       @Override
       protected Collection<String> getCategories(ManagementClient managementClient, String containerId) {
-         return Arrays.asList("javax.security", "org.jboss.security", "org.picketbox");
+         return Arrays.asList("javax.security", "org.wildfly.security");
       }
    }
 
@@ -163,6 +165,17 @@ public class LdapAuthenticationIT extends AbstractAuthentication {
                            .build())
                .build();
          return new SecurityDomain[]{sd};
+      }
+   }
+
+   static class DirContextSetupTask extends AbstractDirContextSetupTask {
+      @Override
+      protected DirContext[] getDirContexts() throws Exception {
+         final String hostname = Utils.getCannonicalHost(managementClient);
+         DirContext dirContext = DirContext.builder().withUrl("ldap://" + hostname + ":" + "10389")
+               .withPrincipal("uid=,ou=People,dc=infinispan,dc=org")
+               .build();
+         return new DirContext[]{dirContext};
       }
    }
 }

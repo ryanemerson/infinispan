@@ -20,6 +20,8 @@ import org.jboss.logging.Logger;
 /**
  * {@link ServerSetupTask} instance for system properties setup.
  *
+ * TODO replace with wildfly-core AbstractSystemPropertiesServerSetupTask?
+ *
  * @author <a href="mailto:jcacek@redhat.com">Josef Cacek</a>
  * @author <a href="mailto:vchepeli@redhat.com">Vitalii Chepeliuk</a>
  */
