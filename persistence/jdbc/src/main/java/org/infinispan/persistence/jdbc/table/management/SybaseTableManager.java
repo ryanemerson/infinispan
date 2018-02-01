@@ -1,8 +1,11 @@
 package org.infinispan.persistence.jdbc.table.management;
 
+import java.sql.Connection;
+
 import org.infinispan.persistence.jdbc.configuration.TableManipulationConfiguration;
 import org.infinispan.persistence.jdbc.connectionfactory.ConnectionFactory;
 import org.infinispan.persistence.jdbc.logging.Log;
+import org.infinispan.persistence.spi.PersistenceException;
 import org.infinispan.util.logging.LogFactory;
 
 /**
@@ -13,6 +16,14 @@ class SybaseTableManager extends AbstractTableManager {
 
    SybaseTableManager(ConnectionFactory connectionFactory, TableManipulationConfiguration config, DbMetaData metaData) {
       super(connectionFactory, config, metaData, LOG);
+   }
+
+   @Override
+   protected void dropTimestampIndex(Connection conn) throws PersistenceException {
+      if (!timestampIndexExists(conn)) return;
+
+      String dropIndexDdl = String.format("DROP INDEX %s.%s", getTableName(), getIndexName(true));
+      executeUpdateSql(conn, dropIndexDdl);
    }
 
    @Override
