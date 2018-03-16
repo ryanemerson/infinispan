@@ -15,6 +15,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import org.infinispan.Cache;
@@ -61,19 +63,19 @@ public class StateReceiverTest extends AbstractInfinispanTest {
    private StateReceiverImpl<Object, Object> stateReceiver;
    private LocalizedCacheTopology localizedCacheTopology;
 
-   public void testGetReplicaException() throws Exception {
+   public void testGetReplicaException() {
       CompletableFuture<Void> taskFuture = new CompletableFuture<>();
       taskFuture.completeExceptionally(new CacheException("Problem encountered retrieving state"));
       initTransferTaskMock(taskFuture);
 
-      CompletableFuture<List<Map<Address, CacheEntry<Object, Object>>>> cf = stateReceiver.getAllReplicasForSegment(0, localizedCacheTopology);
+      CompletableFuture<List<Map<Address, CacheEntry<Object, Object>>>> cf = stateReceiver.getAllReplicasForSegment(0, localizedCacheTopology, 10000);
       Exceptions.expectExecutionException(CacheException.class, cf);
    }
 
-   public void testTopologyChangeDuringSegmentRequest() throws Exception {
+   public void testTopologyChangeDuringSegmentRequest() {
       initTransferTaskMock(new CompletableFuture<>());
 
-      CompletableFuture<List<Map<Address, CacheEntry<Object, Object>>>> cf = stateReceiver.getAllReplicasForSegment(0, localizedCacheTopology);
+      CompletableFuture<List<Map<Address, CacheEntry<Object, Object>>>> cf = stateReceiver.getAllReplicasForSegment(0, localizedCacheTopology, 10000);
       assertTrue(!cf.isCancelled());
       assertTrue(!cf.isCompletedExceptionally());
 
@@ -83,7 +85,7 @@ public class StateReceiverTest extends AbstractInfinispanTest {
       Exceptions.expectExecutionException(CacheException.class, cf);
 
       stateReceiver.onDataRehash(createEventImpl(4, 4, Event.Type.DATA_REHASHED));
-      cf = stateReceiver.getAllReplicasForSegment(1, localizedCacheTopology);
+      cf = stateReceiver.getAllReplicasForSegment(1, localizedCacheTopology, 10000);
       assertTrue(!cf.isCompletedExceptionally());
       assertTrue(!cf.isCancelled());
    }
@@ -92,7 +94,7 @@ public class StateReceiverTest extends AbstractInfinispanTest {
       initTransferTaskMock(new CompletableFuture<>());
 
       int segmentId = 0;
-      stateReceiver.getAllReplicasForSegment(segmentId, localizedCacheTopology);
+      stateReceiver.getAllReplicasForSegment(segmentId, localizedCacheTopology, 10000);
       List<Address> sourceAddresses = new ArrayList<>(stateReceiver.getTransferTaskMap(segmentId).keySet());
       Map<Object, Map<Address, CacheEntry<Object, Object>>> receiverKeyMap = stateReceiver.getKeyReplicaMap(segmentId);
       assertEquals(0, receiverKeyMap.size());
@@ -112,6 +114,7 @@ public class StateReceiverTest extends AbstractInfinispanTest {
       CommandsFactory commandsFactory = mock(CommandsFactory.class);
       DataContainer dataContainer = mock(DataContainer.class);
       RpcManager rpcManager = mock(RpcManager.class);
+      ExecutorService stateTransferExecutor = Executors.newSingleThreadExecutor();
 
       when(rpcManager.invokeRemotely(any(Collection.class), any(StateRequestCommand.class), any(RpcOptions.class)))
             .thenAnswer(invocation -> {
@@ -135,7 +138,8 @@ public class StateReceiverTest extends AbstractInfinispanTest {
       when(cache.getCacheConfiguration()).thenReturn(cb.build());
 
       StateReceiverImpl stateReceiver = new StateReceiverImpl();
-      TestingUtil.inject(stateReceiver, cache, commandsFactory, dataContainer, rpcManager);
+      TestingUtil.inject(stateReceiver, cache, commandsFactory, dataContainer, rpcManager, stateTransferExecutor);
+      stateReceiver.start();
       stateReceiver.onDataRehash(createEventImpl(2, 4, Event.Type.DATA_REHASHED));
       this.localizedCacheTopology = createLocalizedCacheTopology(4);
       this.stateReceiver = spy(stateReceiver);
@@ -144,7 +148,7 @@ public class StateReceiverTest extends AbstractInfinispanTest {
    private void initTransferTaskMock(CompletableFuture<Void> completableFuture) {
       InboundTransferTask task = mock(InboundTransferTask.class);
       when(task.requestSegments()).thenReturn(completableFuture);
-      doReturn(task).when(stateReceiver).createTransferTask(any(Integer.class), any(Address.class), any(CacheTopology.class));
+      doReturn(task).when(stateReceiver).createTransferTask(any(Integer.class), any(Address.class), any(CacheTopology.class), any(Long.class));
    }
 
    private Collection<StateChunk> createStateChunks(Object key, Object value) {
