@@ -110,11 +110,11 @@ public class HotRodMergeTest extends BasePartitionHandlingTest {
       eventuallyExpectPartialTopology(client, initialTopology + 1);
 
       partition(0).merge(partition(1));
-      eventuallyExpectCompleteTopology(client, initialTopology + 3);
+      eventuallyExpectCompleteTopology(client, initialTopology + 6);
       // Check that we got the number of topology updates to NO_REBALANCE right
       LocalizedCacheTopology newTopology = advancedCache(0).getDistributionManager().getCacheTopology();
       assertEquals(CacheTopology.Phase.NO_REBALANCE, newTopology.getPhase());
-      assertEquals(initialTopology + 3, newTopology.getTopologyId());
+      assertEquals(initialTopology + 6, newTopology.getTopologyId());
    }
 
 

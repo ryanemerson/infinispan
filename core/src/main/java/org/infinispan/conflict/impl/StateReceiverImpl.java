@@ -140,8 +140,8 @@ public class StateReceiverImpl<K, V> implements StateReceiver<K, V> {
 
       synchronized CompletableFuture<List<Map<Address, CacheEntry<K, V>>>> requestState() {
          assert future == null;
-         if (trace) log.tracef("Cache %s attempting to receive replicas for segment %s from %s with topology %s",
-               cacheName, segmentId, replicaHosts, topology);
+         if (trace) log.tracef("Cache %s attempting to receive replicas for segment %s from %s with topologyId=%s, timeout=%d",
+               cacheName, segmentId, replicaHosts, topology.getTopologyId(), timeout);
 
          for (final Address replica : replicaHosts) {
             if (replica.equals(rpcManager.getAddress())) {

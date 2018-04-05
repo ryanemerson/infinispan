@@ -137,11 +137,11 @@ public class CacheTopology {
             return currentCH;
          case TRANSITORY:
             return pendingCH;
-         case CONFLICT_RESOLUTION:
          case READ_OLD_WRITE_ALL:
             assert pendingCH != null;
             assert unionCH != null;
             return currentCH;
+         case CONFLICT_RESOLUTION:
          case READ_ALL_WRITE_ALL:
             assert pendingCH != null;
             return unionCH;
