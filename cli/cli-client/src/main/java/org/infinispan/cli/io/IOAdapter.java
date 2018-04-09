@@ -6,8 +6,6 @@ import java.util.List;
 import org.infinispan.cli.commands.ProcessedCommand;
 
 public interface IOAdapter {
-   boolean isInteractive();
-
    void println(String s) throws IOException;
 
    void error(String s) throws IOException;
@@ -19,6 +17,4 @@ public interface IOAdapter {
    String secureReadln(String s) throws IOException;
 
    int getWidth();
-
-   void close() throws IOException;
 }

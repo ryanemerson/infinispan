@@ -10,17 +10,12 @@ import org.infinispan.cli.commands.ProcessedCommand;
 public class StreamIOAdapter implements IOAdapter {
 
    @Override
-   public boolean isInteractive() {
-      return false;
-   }
-
-   @Override
-   public void println(String s) throws IOException {
+   public void println(String s) {
       System.out.println(s);
    }
 
    @Override
-   public void error(String s) throws IOException {
+   public void error(String s) {
       System.err.println(s);
    }
 
@@ -48,10 +43,5 @@ public class StreamIOAdapter implements IOAdapter {
    @Override
    public int getWidth() {
       return 72;
-   }
-
-   @Override
-   public void close() {
-      //FIXME implement me
    }
 }

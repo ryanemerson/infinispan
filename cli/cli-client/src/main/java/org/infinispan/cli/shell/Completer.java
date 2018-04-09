@@ -4,12 +4,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.aesh.readline.completion.CompleteOperation;
+import org.aesh.readline.completion.Completion;
 import org.infinispan.cli.Context;
 import org.infinispan.cli.commands.Argument;
 import org.infinispan.cli.commands.Command;
 import org.infinispan.cli.commands.ProcessedCommand;
-import org.jboss.aesh.complete.CompleteOperation;
-import org.jboss.aesh.complete.Completion;
 
 public class Completer implements Completion {
    private final Context context;

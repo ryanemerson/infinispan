@@ -11,6 +11,14 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+import org.aesh.command.impl.completer.AeshCompletionHandler;
+import org.aesh.command.settings.Settings;
+import org.aesh.command.settings.SettingsBuilder;
+import org.aesh.io.FileResource;
+import org.aesh.readline.DefaultAeshContext;
+import org.aesh.readline.ReadlineBuilder;
+import org.aesh.readline.ReadlineConsole;
+import org.aesh.readline.completion.CompletionHandler;
 import org.fusesource.jansi.Ansi;
 import org.infinispan.cli.Config;
 import org.infinispan.cli.Context;
@@ -25,8 +33,6 @@ import org.infinispan.cli.impl.ContextImpl;
 import org.infinispan.cli.io.ConsoleIOAdapter;
 import org.infinispan.cli.io.StreamIOAdapter;
 import org.infinispan.cli.util.SystemUtils;
-import org.jboss.aesh.console.Console;
-import org.jboss.aesh.console.settings.SettingsBuilder;
 
 import gnu.getopt.Getopt;
 import gnu.getopt.LongOpt;
@@ -41,7 +47,7 @@ import gnu.getopt.LongOpt;
 public class ShellImpl implements Shell {
    private static final int SESSION_PING_TIMEOUT = 30;
    private Config config;
-   private Console console;
+   private ReadlineConsole console;
    private Context context;
    private ShellMode mode = ShellMode.INTERACTIVE;
    private String inputFile;
@@ -111,26 +117,31 @@ public class ShellImpl implements Shell {
    }
 
    private void batchRun() throws IOException {
-      Reader r = "-".equals(inputFile) ? new InputStreamReader(System.in) : new FileReader(inputFile);
-      BufferedReader br = new BufferedReader(r);
-      try {
+      try (Reader r = "-".equals(inputFile) ? new InputStreamReader(System.in) : new FileReader(inputFile);
+           BufferedReader br = new BufferedReader(r)) {
          for (String line = br.readLine(); line != null; line = br.readLine()) {
             execute(line);
          }
-      } finally {
-         br.close();
       }
    }
 
    private void interactiveRun() throws IOException {
       config = new ConfigImpl(SystemUtils.getAppConfigFolder("InfinispanShell"));
       config.load();
-      SettingsBuilder settings = new SettingsBuilder();
-      settings.enableAlias(false).outputStream(System.out).outputStreamError(System.err).inputStream(System.in);
-      console = new Console(settings.create());
+      CompletionHandler completionHandler = new AeshCompletionHandler(new DefaultAeshContext(new FileResource(getCWD())));
+      completionHandler.addCompletion(new Completer(context));
+      ReadlineBuilder.builder()
+            .completionHandler(completionHandler)
+      ;
+      Settings settings = SettingsBuilder.builder()
+            .enableAlias(false)
+            .outputStream(System.out)
+            .outputStreamError(System.err)
+            .inputStream(System.in)
+            .build();
+      console = new ReadlineConsole(settings);
       context.setOutputAdapter(new ConsoleIOAdapter(console));
       console.addCompletion(new Completer(context));
-      console.setConsoleCallback(new CLIConsoleCallback());
       console.start();
       ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
       sessionPingTask = executor.scheduleWithFixedDelay(new PingTask(), SESSION_PING_TIMEOUT, SESSION_PING_TIMEOUT, TimeUnit.SECONDS);
@@ -154,7 +165,7 @@ public class ShellImpl implements Shell {
          executor.shutdownNow();
          config.save();
          console.stop();
-      } catch (Exception e) {
+      } catch (Exception ignore) {
       }
    }
 

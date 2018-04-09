@@ -126,11 +126,6 @@ public class CLInterfaceLoader<K, V> implements CacheLoader<K, V> {
       ConcurrentMap<List<ProcessedCommand>, Result> results = CollectionFactory.makeConcurrentMap();
 
       @Override
-      public boolean isInteractive() {
-         return false;
-      }
-
-      @Override
       public void error(String error) {
          log.error(error);
       }
@@ -158,11 +153,6 @@ public class CLInterfaceLoader<K, V> implements CacheLoader<K, V> {
       @Override
       public int getWidth() {
          return 0;  // TODO: Customise this generated block
-      }
-
-      @Override
-      public void close() throws IOException {
-         // TODO: Customise this generated block
       }
 
       Result getResult(List<ProcessedCommand> commands) {
