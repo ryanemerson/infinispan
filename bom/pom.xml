@@ -94,7 +94,8 @@
       <version.slf4j-jboss-logging>1.1.0.Final</version.slf4j-jboss-logging>
 
       <!-- Dependency versions *not* duplicated in the parent POM -->
-      <version.aesh>0.66.13</version.aesh>
+      <version.aesh>1.0</version.aesh>
+      <version.aesh.readline>1.5</version.aesh.readline>
       <version.antlr.runtime>3.5.2</version.antlr.runtime>
       <version.commons.codec>1.4</version.commons.codec>
       <version.commons.compress>1.4</version.commons.compress>
@@ -527,9 +528,14 @@
             <version>${version.jgroups.kubernetes}</version>
          </dependency>
          <dependency>
-            <groupId>org.jboss.aesh</groupId>
+            <groupId>org.aesh</groupId>
             <artifactId>aesh</artifactId>
             <version>${version.aesh}</version>
+         </dependency>
+         <dependency>
+            <groupId>org.aesh</groupId>
+            <artifactId>aesh-readline</artifactId>
+            <version>${version.aesh.readline}</version>
          </dependency>
          <dependency>
             <groupId>org.osgi</groupId>
