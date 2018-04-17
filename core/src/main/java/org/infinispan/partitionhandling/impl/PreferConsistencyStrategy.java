@@ -226,7 +226,9 @@ public class PreferConsistencyStrategy implements AvailabilityStrategy {
                                                actualMembers, persistentUUIDManager.mapAddresses(actualMembers));
 
             // Update the currentTopology and try to resolve conflicts
-            context.updateTopologiesAfterMerge(mergedTopology, null, mergedAvailabilityMode, true);
+            context.updateTopologiesAfterMerge(mergedTopology, maxStableTopology, mergedAvailabilityMode);
+            context.queueConflictResolution(mergedTopology);
+            return;
          }
          // There's no pendingCH, therefore the topology is in stable phase
          mergedTopology = new CacheTopology(maxTopologyId + 1, mergedTopology.getRebalanceId(),
@@ -235,7 +237,7 @@ public class PreferConsistencyStrategy implements AvailabilityStrategy {
                                             persistentUUIDManager.mapAddresses(actualMembers));
       }
 
-      context.updateTopologiesAfterMerge(mergedTopology, maxStableTopology, mergedAvailabilityMode, false);
+      context.updateTopologiesAfterMerge(mergedTopology, maxStableTopology, mergedAvailabilityMode);
 
       // It shouldn't be possible to recover from unavailable mode without user action
       if (newAvailabilityMode == AvailabilityMode.DEGRADED_MODE) {
@@ -247,8 +249,20 @@ public class PreferConsistencyStrategy implements AvailabilityStrategy {
       }
    }
 
+   @Override
+   public void onConflictResolutionEnd(AvailabilityStrategyContext context, CacheTopology conflictTopology) {
+      // There's no pendingCH, therefore the topology is in stable phase
+      CacheTopology mergedTopology = new CacheTopology(conflictTopology.getTopologyId() + 1, conflictTopology.getRebalanceId(),
+            conflictTopology.getCurrentCH(), null, CacheTopology.Phase.NO_REBALANCE, conflictTopology.getActualMembers(),
+            persistentUUIDManager.mapAddresses(conflictTopology.getActualMembers()));
+
+      // CR is only called when the resulting partition will be AVAILABLE
+      context.updateTopologiesAfterMerge(mergedTopology, null, AvailabilityMode.AVAILABLE);
+      updateMembersAndRebalance(context, mergedTopology.getActualMembers(), context.getExpectedMembers());
+   }
+
    private AvailabilityMode computeAvailabilityAfterMerge(AvailabilityStrategyContext context,
-         CacheTopology maxStableTopology, List<Address> newMembers) {
+                                                          CacheTopology maxStableTopology, List<Address> newMembers) {
       if (maxStableTopology != null) {
          List<Address> stableMembers = maxStableTopology.getMembers();
          List<Address> lostMembers = new ArrayList<>(stableMembers);

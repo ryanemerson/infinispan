@@ -56,7 +56,10 @@ public class PreferAvailabilityStrategy implements AvailabilityStrategy {
 
       // We have to do this in case rebalancing is disabled, or there is another rebalance in progress
       context.updateCurrentTopology(newMembers);
-      context.queueRebalance(newMembers);
+      // If CR is already in progress we have to restart it and a rebalance will occur once CR completes
+      if (!context.restartConflictResolution(newMembers)) {
+         context.queueRebalance(newMembers);
+      }
    }
 
    @Override
@@ -70,9 +73,11 @@ public class PreferAvailabilityStrategy implements AvailabilityStrategy {
 
       checkForLostData(context.getCacheName(), context.getStableTopology(), newMembers);
 
-      // We have to do the update in case rebalancing is disabled, or there is another rebalance in progress
-      context.updateCurrentTopology(newMembers);
-      context.queueRebalance(newMembers);
+      if (!context.restartConflictResolution(newMembers)) {
+         // We have to do the update in case rebalancing is disabled, or there is another rebalance in progress
+         context.updateCurrentTopology(newMembers);
+         context.queueRebalance(newMembers);
+      }
    }
 
    protected void checkForLostData(String cacheName, CacheTopology stableTopology, List<Address> newMembers) {
@@ -123,7 +128,7 @@ public class PreferAvailabilityStrategy implements AvailabilityStrategy {
                                                           survivingMembers,
                                                           persistentUUIDManager.mapAddresses(survivingMembers));
 
-         context.updateTopologiesAfterMerge(mergedTopology, p.stableTopology, null, false);
+         context.updateTopologiesAfterMerge(mergedTopology, p.stableTopology, null);
 
          if (survivingMembers.isEmpty()) {
             // No surviving members, use the expected members instead
@@ -204,7 +209,7 @@ public class PreferAvailabilityStrategy implements AvailabilityStrategy {
                                             persistentUUIDManager.mapAddresses(actualMembers));
       }
 
-      context.updateTopologiesAfterMerge(mergedTopology, preferredPartition.stableTopology, null, resolveConflicts);
+      context.updateTopologiesAfterMerge(mergedTopology, preferredPartition.stableTopology, null);
 
       // First update the CHs to remove any nodes that left from the current topology
       if (!actualMembers.containsAll(preferredPartition.readCH.getMembers())) {
@@ -217,10 +222,12 @@ public class PreferAvailabilityStrategy implements AvailabilityStrategy {
 
          // Initialize the cache with the joiners
          context.updateCurrentTopology(actualMembers);
-      }
 
-      // Then start a rebalance with the merged members
-      context.queueRebalance(newMembers);
+         // Then start a rebalance with the merged members
+         context.queueRebalance(newMembers);
+      } else {
+         context.queueConflictResolution(mergedTopology);
+      }
    }
 
    private Partition selectPreferredPartition(List<Partition> partitions) {
@@ -337,6 +344,12 @@ public class PreferAvailabilityStrategy implements AvailabilityStrategy {
    @Override
    public void onManualAvailabilityChange(AvailabilityStrategyContext context, AvailabilityMode newAvailabilityMode) {
       // The cache should always be AVAILABLE
+   }
+
+   @Override
+   public void onConflictResolutionEnd(AvailabilityStrategyContext context, CacheTopology conflictTopology) {
+      // Then start a rebalance with the merged members
+      context.queueRebalance(conflictTopology.getMembers());
    }
 
    private static class Partition {

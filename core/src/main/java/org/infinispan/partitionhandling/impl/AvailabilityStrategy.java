@@ -75,4 +75,9 @@ public interface AvailabilityStrategy {
     * Called when the administrator manually changes the availability status.
     */
    void onManualAvailabilityChange(AvailabilityStrategyContext context, AvailabilityMode newAvailabilityMode);
+
+   /**
+    * Called when conflict resolution completes successfully
+    */
+   void onConflictResolutionEnd(AvailabilityStrategyContext context, CacheTopology conflictTopology);
 }

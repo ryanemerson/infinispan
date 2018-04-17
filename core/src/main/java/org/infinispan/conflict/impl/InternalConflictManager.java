@@ -1,5 +1,7 @@
 package org.infinispan.conflict.impl;
 
+import java.util.concurrent.CompletableFuture;
+
 import org.infinispan.conflict.ConflictManager;
 import org.infinispan.distribution.LocalizedCacheTopology;
 import org.infinispan.factories.scopes.Scope;
@@ -15,5 +17,5 @@ public interface InternalConflictManager<K, V> extends ConflictManager<K, V> {
    void onTopologyUpdate(LocalizedCacheTopology cacheTopology);
    void cancelVersionRequests();
    void restartVersionRequests();
-   void resolveConflicts(CacheTopology cacheTopology);
+   CompletableFuture<Void> resolveConflicts(CacheTopology cacheTopology);
 }

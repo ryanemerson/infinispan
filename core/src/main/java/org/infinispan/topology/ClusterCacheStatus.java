@@ -11,12 +11,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 
 import org.infinispan.AdvancedCache;
 import org.infinispan.commons.CacheException;
 import org.infinispan.commons.util.Immutables;
 import org.infinispan.conflict.ConflictManagerFactory;
-import org.infinispan.conflict.impl.DefaultConflictManager;
+import org.infinispan.conflict.impl.InternalConflictManager;
 import org.infinispan.distribution.ch.ConsistentHash;
 import org.infinispan.distribution.ch.ConsistentHashFactory;
 import org.infinispan.globalstate.ScopedPersistentState;
@@ -75,6 +76,8 @@ public class ClusterCacheStatus implements AvailabilityStrategyContext {
    private volatile List<Address> queuedRebalanceMembers;
    private volatile boolean rebalancingEnabled = true;
    private volatile boolean rebalanceInProgress = false;
+   private volatile CacheTopology queuedConflictTopology = null;
+   private volatile CompletableFuture<Void> conflictFuture = CompletableFuture.completedFuture(null);
 
    private RebalanceConfirmationCollector rebalanceConfirmationCollector;
    private ComponentStatus status;
@@ -176,22 +179,15 @@ public class ClusterCacheStatus implements AvailabilityStrategyContext {
    }
 
    @Override
-   public synchronized void updateTopologiesAfterMerge(CacheTopology currentTopology, CacheTopology stableTopology, AvailabilityMode availabilityMode, boolean resolveConflicts) {
-      log.debugf("Updating topologies after merge for cache %s, current topology = %s, stable topology = %s, " +
-                  "availability mode = %s, resolveConflicts = %s",
-            cacheName, currentTopology, stableTopology, availabilityMode, resolveConflicts);
+   public synchronized void updateTopologiesAfterMerge(CacheTopology currentTopology, CacheTopology stableTopology, AvailabilityMode availabilityMode) {
+      log.debugf("Updating topologies after merge for cache %s, current topology = %s, stable topology = %s, availability mode = %s",
+            cacheName, currentTopology, stableTopology, availabilityMode);
       this.currentTopology = currentTopology;
       this.stableTopology = stableTopology;
       this.availabilityMode = availabilityMode;
 
       if (currentTopology != null) {
          clusterTopologyManager.broadcastTopologyUpdate(cacheName, currentTopology, availabilityMode, isTotalOrder(), isDistributed());
-
-         if (resolveConflictsOnMerge && resolveConflicts) {
-            AdvancedCache<?, ?> cache = cacheManager.getCache(cacheName).getAdvancedCache();
-            DefaultConflictManager<?, ?> conflictManager = (DefaultConflictManager) ConflictManagerFactory.get(cache);
-            conflictManager.resolveConflicts(currentTopology);
-         }
       }
 
       if (stableTopology != null) {
@@ -736,6 +732,12 @@ public class ClusterCacheStatus implements AvailabilityStrategyContext {
    }
 
    public synchronized void startQueuedRebalance() {
+      // We cannot start rebalance until queued CR is complete
+      if (queuedConflictTopology != null) {
+         log.tracef("Postponing rebalance for cache %s as conflict resolution is in progress", cacheName);
+         return;
+      }
+
       if (queuedRebalanceMembers == null) {
          // We don't have a queued rebalance. We may need to broadcast a stable topology update
          if (stableTopology == null || stableTopology.getTopologyId() < currentTopology.getTopologyId()) {
@@ -907,5 +909,74 @@ public class ClusterCacheStatus implements AvailabilityStrategyContext {
       ConsistentHash unionHash = distinctHashes.stream().reduce(preferredHash, chf::union);
       unionHash = chf.union(unionHash, chf.rebalance(unionHash));
       return chf.updateMembers(unionHash, actualMembers, capacityFactors);
+   }
+
+   @Override
+   public synchronized void queueConflictResolution(CacheTopology conflictTopology) {
+      if (resolveConflictsOnMerge) {
+         log.debugf("Queueing conflict resolution for cache %s with members %s", cacheName, conflictTopology.getMembers());
+         queuedConflictTopology = conflictTopology;
+         startQueuedConflictResolution();
+      }
+   }
+
+   private synchronized void startQueuedConflictResolution() {
+      if (queuedConflictTopology == null)
+         return;
+
+      if (!conflictFuture.isDone()) {
+         // Check membership, if node removed then we must cancel the CR and start again below
+         // If currentTopology members size is one, cancel CR as it will be re-triggered on future merge
+         conflictFuture.cancel(true);
+      }
+
+      AdvancedCache<?, ?> cache = cacheManager.getCache(cacheName).getAdvancedCache();
+      InternalConflictManager<?, ?> conflictManager = (InternalConflictManager) ConflictManagerFactory.get(cache);
+      conflictFuture = conflictManager.resolveConflicts(queuedConflictTopology);
+      // Will execute using the StateTransferExecutor on completion
+      conflictFuture.thenRun(this::completeConflictResolution);
+   }
+
+   private synchronized void completeConflictResolution() {
+      CacheTopology conflictTopology = queuedConflictTopology;
+      queuedConflictTopology = null;
+      log.tracef("Cache %s conflict resolution complete", cacheName);
+      availabilityStrategy.onConflictResolutionEnd(this, conflictTopology);
+   }
+
+   @Override
+   public synchronized boolean restartConflictResolution(List<Address> newMembers) {
+      // If queuedConflictTopology is null then no CR in progress
+      if (!resolveConflictsOnMerge || queuedConflictTopology == null)
+         return false;
+
+      // No need to reattempt CR if only one node remains, so cancel CR, cleanup and queue rebalance
+      if (newMembers.size() == 1) {
+         log.debugf("Cache %s cancelling conflict resolution as only one cluster member: newMembers=%s", cacheName, newMembers);
+         conflictFuture.cancel(true);
+         queuedConflictTopology = null;
+         return false;
+      }
+
+      // CR members are the same as newMembers, so no need to restart
+      if (newMembers.containsAll(queuedConflictTopology.getMembers())) {
+         if (trace) log.tracef("Cache %s not restarting CR, existing conflict topology contains all new members (%s)", newMembers);
+         return false;
+      }
+
+      CacheTopology t = queuedConflictTopology;
+      ConsistentHashFactory chf = getJoinInfo().getConsistentHashFactory();
+      ConsistentHash newHash = chf.updateMembers(t.getCurrentCH(), newMembers, capacityFactors);
+
+      if (trace) log.tracef("Cache %s restarting conflict resolution with new consistent hash %s", cacheName, newHash);
+
+      queuedConflictTopology = new CacheTopology(t.getTopologyId() + 1, t.getRebalanceId() + 1,
+            newHash, newHash, newHash, CacheTopology.Phase.CONFLICT_RESOLUTION, newMembers, persistentUUIDManager.mapAddresses(newMembers));
+
+      currentTopology = queuedConflictTopology;
+      clusterTopologyManager.broadcastTopologyUpdate(cacheName, queuedConflictTopology, availabilityMode, isTotalOrder(), isDistributed());
+
+      queueConflictResolution(queuedConflictTopology);
+      return true;
    }
 }

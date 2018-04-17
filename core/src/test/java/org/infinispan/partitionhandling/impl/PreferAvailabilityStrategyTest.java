@@ -44,6 +44,7 @@ import org.testng.annotations.Factory;
 import org.testng.annotations.Test;
 
 /**
+ * TODO update logic to match the latest changes
  * Test how PreferAvailabilityStrategy picks the post-merge topology in different scenarios.
  *
  * @author Dan Berindei
@@ -158,7 +159,7 @@ public class PreferAvailabilityStrategyTest extends AbstractInfinispanTest {
 
       TestClusterCacheStatus expectedCache = cacheABC.copy();
       expectedCache.updateActualMembers(B, C);
-      verify(context).updateTopologiesAfterMerge(expectedCache.topology(), expectedCache.stableTopology(), null, false);
+      verify(context).updateTopologiesAfterMerge(expectedCache.topology(), expectedCache.stableTopology(), null);
       verify(context).updateCurrentTopology(remainingMembers);
       verify(context).queueRebalance(remainingMembers);
       verifyNoMoreInteractions(context);
@@ -181,7 +182,7 @@ public class PreferAvailabilityStrategyTest extends AbstractInfinispanTest {
 
       TestClusterCacheStatus expectedCache = cacheC.copy();
       expectedCache.incrementIds();
-      verify(context).updateTopologiesAfterMerge(expectedCache.topology(), expectedCache.stableTopology(), null, false);
+      verify(context).updateTopologiesAfterMerge(expectedCache.topology(), expectedCache.stableTopology(), null);
       verify(context).queueRebalance(remainingMembers);
       verifyNoMoreInteractions(context);
    }
@@ -207,7 +208,7 @@ public class PreferAvailabilityStrategyTest extends AbstractInfinispanTest {
 
       TestClusterCacheStatus expectedCache = cacheC.copy();
       expectedCache.cancelRebalance();
-      verify(context).updateTopologiesAfterMerge(expectedCache.topology(), expectedCache.stableTopology(), null, false);
+      verify(context).updateTopologiesAfterMerge(expectedCache.topology(), expectedCache.stableTopology(), null);
       verify(context).queueRebalance(remainingMembers);
       verifyNoMoreInteractions(context);
    }
@@ -234,7 +235,7 @@ public class PreferAvailabilityStrategyTest extends AbstractInfinispanTest {
 
       TestClusterCacheStatus expectedCache = cacheC.copy();
       expectedCache.cancelRebalance();
-      verify(context).updateTopologiesAfterMerge(expectedCache.topology(), expectedCache.stableTopology(), null, false);
+      verify(context).updateTopologiesAfterMerge(expectedCache.topology(), expectedCache.stableTopology(), null);
       verify(context).queueRebalance(mergeMembers);
       verifyNoMoreInteractions(context);
    }
@@ -253,7 +254,7 @@ public class PreferAvailabilityStrategyTest extends AbstractInfinispanTest {
 
       TestClusterCacheStatus expectedCache = cacheABC.copy();
       expectedCache.updateActualMembers(C);
-      verify(context).updateTopologiesAfterMerge(expectedCache.topology(), expectedCache.stableTopology(), null, false);
+      verify(context).updateTopologiesAfterMerge(expectedCache.topology(), expectedCache.stableTopology(), null);
       verify(context).updateCurrentTopology(remainingMembers);
       verify(context).queueRebalance(remainingMembers);
       verifyNoMoreInteractions(context);
@@ -280,7 +281,7 @@ public class PreferAvailabilityStrategyTest extends AbstractInfinispanTest {
 
       TestClusterCacheStatus expectedCache = cacheC.copy();
       expectedCache.cancelRebalance();
-      verify(context).updateTopologiesAfterMerge(expectedCache.topology(), expectedCache.stableTopology(), null, false);
+      verify(context).updateTopologiesAfterMerge(expectedCache.topology(), expectedCache.stableTopology(), null);
       verify(context).queueRebalance(mergeMembers);
       verifyNoMoreInteractions(context);
    }
@@ -308,7 +309,7 @@ public class PreferAvailabilityStrategyTest extends AbstractInfinispanTest {
       TestClusterCacheStatus expectedCache = cacheBC.copy();
       expectedCache.incrementIds();
       expectedCache.incrementIdsIfNeeded(cacheA);
-      verify(context).updateTopologiesAfterMerge(expectedCache.topology(), expectedCache.stableTopology(), null, false);
+      verify(context).updateTopologiesAfterMerge(expectedCache.topology(), expectedCache.stableTopology(), null);
       verify(context).queueRebalance(mergeMembers);
       verifyNoMoreInteractions(context);
    }
@@ -332,7 +333,7 @@ public class PreferAvailabilityStrategyTest extends AbstractInfinispanTest {
 
       TestClusterCacheStatus expectedCache = cacheB.copy();
       expectedCache.incrementIds();
-      verify(context).updateTopologiesAfterMerge(expectedCache.topology(), expectedCache.stableTopology(), null, false);
+      verify(context).updateTopologiesAfterMerge(expectedCache.topology(), expectedCache.stableTopology(), null);
       verify(context).queueRebalance(mergeMembers);
       verifyNoMoreInteractions(context);
    }
@@ -362,7 +363,7 @@ public class PreferAvailabilityStrategyTest extends AbstractInfinispanTest {
       when(context.resolveConflictsOnMerge()).thenReturn(conflicts.resolve());
       if (conflicts.resolve()) {
          when(context.calculateConflictHash(cacheA.readConsistentHash(),
-                                            setOf(cacheA.readConsistentHash(), cacheC.readConsistentHash())))
+                                            setOf(cacheA.readConsistentHash(), cacheC.readConsistentHash()), mergeMembers))
             .thenReturn(conflictResolutionConsistentHash(cacheA, cacheC));
       }
 
@@ -374,8 +375,7 @@ public class PreferAvailabilityStrategyTest extends AbstractInfinispanTest {
          expectedCache.startConflictResolution(conflictResolutionConsistentHash(cacheA, cacheC), A, C);
       }
       expectedCache.incrementIdsIfNeeded(cacheC);
-      verify(context).updateTopologiesAfterMerge(expectedCache.topology(), expectedCache.stableTopology(), null,
-                                                 conflicts.resolve());
+      verify(context).updateTopologiesAfterMerge(expectedCache.topology(), expectedCache.stableTopology(), null);
       if (!conflicts.resolve()) {
          verify(context).updateCurrentTopology(mergeMembers);
       }
@@ -416,8 +416,7 @@ public class PreferAvailabilityStrategyTest extends AbstractInfinispanTest {
          expectedCache.incrementIds();
       }
       expectedCache.incrementIdsIfNeeded(cacheA);
-      verify(context).updateTopologiesAfterMerge(expectedCache.topology(), expectedCache.stableTopology(), null,
-                                                 conflicts.resolve());
+      verify(context).updateTopologiesAfterMerge(expectedCache.topology(), expectedCache.stableTopology(), null);
       if (!conflicts.resolve()) {
          verify(context).updateCurrentTopology(expectedCache.topology().getMembers());
       }
@@ -455,8 +454,7 @@ public class PreferAvailabilityStrategyTest extends AbstractInfinispanTest {
          expectedCache.incrementIds();
       }
       expectedCache.incrementIdsIfNeeded(cacheA);
-      verify(context).updateTopologiesAfterMerge(expectedCache.topology(), expectedCache.stableTopology(), null,
-                                                 conflicts.resolve());
+      verify(context).updateTopologiesAfterMerge(expectedCache.topology(), expectedCache.stableTopology(), null);
       if (!conflicts.resolve()) {
          verify(context).updateCurrentTopology(expectedCache.topology().getMembers());
       }
