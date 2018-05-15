@@ -1,6 +1,7 @@
 package org.infinispan.configuration.cache;
 
 import static org.infinispan.configuration.cache.AsyncStoreConfiguration.ENABLED;
+import static org.infinispan.configuration.cache.AsyncStoreConfiguration.FAIL_SILENTLY;
 import static org.infinispan.configuration.cache.AsyncStoreConfiguration.MODIFICATION_QUEUE_SIZE;
 import static org.infinispan.configuration.cache.AsyncStoreConfiguration.THREAD_POOL_SIZE;
 
@@ -91,6 +92,11 @@ public class AsyncStoreConfigurationBuilder<S> extends AbstractStoreConfiguratio
     */
    public AsyncStoreConfigurationBuilder<S> threadPoolSize(int i) {
       attributes.attribute(THREAD_POOL_SIZE).set(i);
+      return this;
+   }
+
+   public AsyncStoreConfigurationBuilder<S> failSilently(boolean failSilently) {
+      attributes.attribute(FAIL_SILENTLY).set(failSilently);
       return this;
    }
 

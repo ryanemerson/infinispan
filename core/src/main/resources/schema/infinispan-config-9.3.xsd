@@ -1655,6 +1655,18 @@
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
+    <xs:attribute name="fail-silently" type="xs:boolean" default="${AsyncStore.failSilently}">
+      <xs:annotation>
+        <xs:documentation>
+          When enabled, write operations are attempted 3 times by the async store and if all attempts fail the errors are
+          simply ignored and the operations are never executed on the store. When disabled, failed modifications are not
+          discarded on failure. Instead they are re-attempted when the underlying store becomes available. In the even that
+          the modification-queue becomes full before the underlying store becomes available, an error will be thrown on all
+          future writers to the store until the modification-queue is successfully flushed. In the event of the underlying
+          store not becoming available before the Async store is stopped, queued modifications will not be persisted.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
   </xs:complexType>
 
   <xs:complexType name="custom-store">
