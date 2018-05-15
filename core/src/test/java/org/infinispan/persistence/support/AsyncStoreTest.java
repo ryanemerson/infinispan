@@ -113,6 +113,7 @@ public class AsyncStoreTest extends AbstractInfinispanTest {
       loader.start();
       underlying.init(ctx);
       underlying.start();
+      eventually(writer::isAvailable);
    }
 
    @BeforeMethod
