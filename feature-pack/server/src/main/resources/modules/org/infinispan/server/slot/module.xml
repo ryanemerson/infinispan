@@ -12,7 +12,7 @@
 
    <dependencies>
       <module name="javax.api" />
-      <module name="com.thoughtworks.xstream" export="true"/>
+      <module name="com.thoughtworks.xstream" export="true" slot="@infinispan.module.slot@"/>
       <module name="javax.transaction.api" />
       <module name="org.apache.xerces" services="import" />
       <module name="org.infinispan" slot="@infinispan.module.slot@"/>

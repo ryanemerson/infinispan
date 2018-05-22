@@ -13,15 +13,15 @@
       <module name="org.apache.xerces" services="import" />
       <module name="org.hibernate.validator" services="import" />
       <module name="org.infinispan" slot="@infinispan.module.slot@" />
-      <module name="org.infinispan.scripting" services="import"/>
+      <module name="org.infinispan.scripting" services="import" slot="@infinispan.module.slot@"/>
       <module name="org.infinispan.extension" slot="@infinispan.module.slot@" />
       <module name="org.infinispan.persistence.jdbc" slot="@infinispan.module.slot@" />
       <module name="org.infinispan.persistence.remote" slot="@infinispan.module.slot@" />
       <module name="org.infinispan.query" slot="@infinispan.module.slot@" />
-      <module name="org.infinispan.remote-query.server" services="import"/>
+      <module name="org.infinispan.remote-query.server" services="import" slot="@infinispan.module.slot@"/>
       <module name="org.infinispan.server" slot="@infinispan.module.slot@" />
-      <module name="org.infinispan.server.commons"/>
-      <module name="org.infinispan.server.hotrod" services="import"/>
+      <module name="org.infinispan.server.commons" slot="@infinispan.module.slot@"/>
+      <module name="org.infinispan.server.hotrod" services="import" slot="@infinispan.module.slot@"/>
       <module name="org.infinispan.server.memcached" slot="@infinispan.module.slot@" />
       <module name="org.infinispan.server.rest" slot="@infinispan.module.slot@" />
       <module name="org.infinispan.server.websocket" slot="@infinispan.module.slot@" />

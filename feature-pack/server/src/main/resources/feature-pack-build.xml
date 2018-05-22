@@ -2,5 +2,6 @@
     <dependencies>
         <artifact name="org.wildfly:wildfly-feature-pack" />
         <artifact name="org.infinispan:infinispan-feature-pack-commons" />
+        <artifact name="org.infinispan:infinispan-feature-pack-client" />
     </dependencies>
 </build>
