@@ -1,0 +1,157 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.infinispan</groupId>
+        <artifactId>infinispan-parent</artifactId>
+        <version>9.3.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>infinispan-feature-pack</artifactId>
+    <name>Infinispan Wildfly Feature Pack</name>
+    <packaging>pom</packaging>
+
+    <modules>
+        <module>embedded</module>
+    </modules>
+
+    <properties>
+        <module.skipMavenRemoteResource>true</module.skipMavenRemoteResource>
+        <feature-pack.dir>${project.build.directory}/feature-pack/src/main/resources</feature-pack.dir>
+        <template.dir>${project.build.directory}/modules/</template.dir>
+    </properties>
+
+    <dependencies>
+        <!-- Prevent infinispan-parent transistive dependencies being loaded-->
+        <dependency>
+            <groupId>org.jboss.logging</groupId>
+            <artifactId>jboss-logging-processor</artifactId>
+            <version>${version.jboss.logging.processor}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jboss</groupId>
+            <artifactId>jboss-transaction-spi</artifactId>
+            <version>${version.jboss.jboss-transaction-spi}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <!-- Feature Pack dependencies -->
+        <dependency>
+            <groupId>org.wildfly</groupId>
+            <artifactId>wildfly-feature-pack</artifactId>
+            <version>${version.org.wildfly}</version>
+            <type>zip</type>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-resources-plugin</artifactId>
+                    <executions>
+                        <execution>
+                            <phase>generate-resources</phase>
+                            <goals>
+                                <goal>copy-resources</goal>
+                            </goals>
+                            <configuration>
+                                <outputDirectory>${template.dir}</outputDirectory>
+                                <resources>
+                                    <resource>
+                                        <directory>src/main/resources</directory>
+                                        <filtering>true</filtering>
+                                    </resource>
+                                </resources>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.wildfly.build</groupId>
+                    <artifactId>wildfly-feature-pack-build-maven-plugin</artifactId>
+                    <executions>
+                        <execution>
+                            <id>feature-pack-build</id>
+                            <goals>
+                                <goal>build</goal>
+                            </goals>
+                            <phase>compile</phase>
+                            <configuration>
+                                <config-file>feature-pack-build.xml</config-file>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-antrun-plugin</artifactId>
+                    <configuration>
+                        <skip>true</skip>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <id>branded-modules</id>
+                            <goals>
+                                <goal>run</goal>
+                            </goals>
+                            <phase>compile</phase>
+                            <configuration>
+                                <target>
+                                    <ant antfile="../build.xml" inheritRefs="true">
+                                        <target name="branding" />
+                                    </ant>
+                                </target>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+                <!--<plugin>-->
+                    <!--<groupId>org.apache.maven.plugins</groupId>-->
+                    <!--<artifactId>maven-assembly-plugin</artifactId>-->
+                    <!--<executions>-->
+                        <!--<execution>-->
+                            <!--<id>assemble</id>-->
+                            <!--<phase>package</phase>-->
+                            <!--<goals>-->
+                                <!--<goal>single</goal>-->
+                            <!--</goals>-->
+                            <!--<configuration>-->
+                                <!--<descriptors>-->
+                                    <!--<descriptor>assembly.xml</descriptor>-->
+                                <!--</descriptors>-->
+                                <!--<recompressZippedFiles>true</recompressZippedFiles>-->
+                                <!--&lt;!&ndash;TODO what to change finalName to?&ndash;&gt;-->
+                                <!--&lt;!&ndash;<finalName>${server.output.dir.prefix}-${project.version}</finalName>&ndash;&gt;-->
+                                <!--<appendAssemblyId>false</appendAssemblyId>-->
+                                <!--<outputDirectory>${project.build.directory}</outputDirectory>-->
+                                <!--<workDirectory>${project.build.directory}/assembly/work</workDirectory>-->
+                                <!--<tarLongFileMode>gnu</tarLongFileMode>-->
+                            <!--</configuration>-->
+                        <!--</execution>-->
+                    <!--</executions>-->
+                <!--</plugin>-->
+            </plugins>
+        </pluginManagement>
+    </build>
+</project>

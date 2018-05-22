@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--TODO is this needed by embedded without query?-->
+<module xmlns="urn:jboss:module:1.5" name="org.antlr.antlr-runtime" slot="@infinispan.module.slot@">
+    <properties>
+        <property name="jboss.api" value="private"/>
+    </properties>
+
+    <resources>
+        <artifact name="${org.antlr:antlr-runtime}" />
+    </resources>
+</module>
