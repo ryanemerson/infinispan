@@ -13,7 +13,9 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>embedded</module>
+        <module>commons</module>
+        <module>client</module>
+        <module>server</module>
     </modules>
 
     <properties>
@@ -126,31 +128,50 @@
                         </execution>
                     </executions>
                 </plugin>
-                <!--<plugin>-->
-                    <!--<groupId>org.apache.maven.plugins</groupId>-->
-                    <!--<artifactId>maven-assembly-plugin</artifactId>-->
-                    <!--<executions>-->
-                        <!--<execution>-->
-                            <!--<id>assemble</id>-->
-                            <!--<phase>package</phase>-->
-                            <!--<goals>-->
-                                <!--<goal>single</goal>-->
-                            <!--</goals>-->
-                            <!--<configuration>-->
-                                <!--<descriptors>-->
-                                    <!--<descriptor>assembly.xml</descriptor>-->
-                                <!--</descriptors>-->
-                                <!--<recompressZippedFiles>true</recompressZippedFiles>-->
-                                <!--&lt;!&ndash;TODO what to change finalName to?&ndash;&gt;-->
-                                <!--&lt;!&ndash;<finalName>${server.output.dir.prefix}-${project.version}</finalName>&ndash;&gt;-->
-                                <!--<appendAssemblyId>false</appendAssemblyId>-->
-                                <!--<outputDirectory>${project.build.directory}</outputDirectory>-->
-                                <!--<workDirectory>${project.build.directory}/assembly/work</workDirectory>-->
-                                <!--<tarLongFileMode>gnu</tarLongFileMode>-->
-                            <!--</configuration>-->
-                        <!--</execution>-->
-                    <!--</executions>-->
-                <!--</plugin>-->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-assembly-plugin</artifactId>
+                    <executions>
+                        <execution>
+                            <id>assemble</id>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>single</goal>
+                            </goals>
+                            <configuration>
+                                <descriptors>
+                                    <descriptor>assembly.xml</descriptor>
+                                </descriptors>
+                                <recompressZippedFiles>true</recompressZippedFiles>
+                                <!--TODO what to change finalName to?-->
+                                <!--<finalName>${server.output.dir.prefix}-${project.version}</finalName>-->
+                                <appendAssemblyId>false</appendAssemblyId>
+                                <outputDirectory>${project.build.directory}</outputDirectory>
+                                <workDirectory>${project.build.directory}/assembly/work</workDirectory>
+                                <tarLongFileMode>gnu</tarLongFileMode>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-assembly-plugin</artifactId>
+                    <configuration>
+                        <appendAssemblyId>false</appendAssemblyId>
+                        <finalName>${project.artifactId}-${project.version}</finalName>
+                        <descriptors>
+                            <descriptor>../assembly.xml</descriptor>
+                        </descriptors>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <id>make-assembly</id>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>single</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
             </plugins>
         </pluginManagement>
     </build>
