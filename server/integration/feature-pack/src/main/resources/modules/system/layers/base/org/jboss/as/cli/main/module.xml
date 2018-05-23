@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!--TODO !embedded-->
 <module xmlns="urn:jboss:module:1.5" name="org.jboss.as.cli">
     <properties>
         <property name="jboss.api" value="private"/>
@@ -36,5 +35,4 @@
         <module name="ibm.jdk" />
         <module name="sun.jdk" />
     </dependencies>
-
 </module>

@@ -14,6 +14,10 @@
     <name>Infinispan Server - Feature Pack</name>
     <packaging>pom</packaging>
 
+    <properties>
+        <feature-pack.dir>${project.build.directory}/feature-pack</feature-pack.dir>
+    </properties>
+
     <dependencies>
 
         <!-- Prevent infinispan-parent transistive dependencies being loaded-->
@@ -63,11 +67,52 @@
             </exclusions>
         </dependency>
 
-       <!-- Feature Pack dependencies -->
-       <dependency>
+        <!-- Feature Pack dependencies -->
+        <dependency>
             <groupId>org.wildfly</groupId>
             <artifactId>wildfly-feature-pack</artifactId>
             <type>zip</type>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <!--TODO add to bom-->
+        <dependency>
+            <groupId>org.infinispan</groupId>
+            <artifactId>infinispan-feature-pack-server</artifactId>
+            <version>${project.version}</version>
+            <type>zip</type>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <!-- Main module dependencies -->
+        <dependency>
+            <groupId>org.infinispan.server</groupId>
+            <artifactId>infinispan-server-cli</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>org.infinispan</groupId>
+            <artifactId>infinispan-management-console</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.wildfly.core</groupId>
+            <artifactId>wildfly-cli</artifactId>
             <exclusions>
                 <exclusion>
                     <groupId>*</groupId>
@@ -81,6 +126,27 @@
         <finalName>${server.output.dir.prefix}-${project.version}</finalName>
         <plugins>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${feature-pack.dir}</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>src/main/resources</directory>
+                                    <filtering>true</filtering>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <groupId>org.wildfly.build</groupId>
                 <artifactId>wildfly-feature-pack-build-maven-plugin</artifactId>
                 <executions>
@@ -92,6 +158,8 @@
                         <phase>compile</phase>
                         <configuration>
                             <config-file>feature-pack-build.xml</config-file>
+                            <config-dir>${feature-pack.dir}</config-dir>
+                            <resourcesDir>/</resourcesDir>
                         </configuration>
                     </execution>
                 </executions>
@@ -104,7 +172,7 @@
                         <goals>
                             <goal>run</goal>
                         </goals>
-                        <phase>compile</phase>
+                        <phase>generate-resources</phase>
                         <configuration>
                             <target>
                                 <ant antfile="build.xml" inheritRefs="true">
@@ -115,7 +183,6 @@
                     </execution>
                 </executions>
             </plugin>
-
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
