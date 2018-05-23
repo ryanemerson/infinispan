@@ -24,7 +24,7 @@
       <module name="org.codehaus.jackson.jackson-jaxrs" export="true"/>
       <module name="org.codehaus.jackson.jackson-xc" export="true"/>
       <module name="org.jboss.marshalling" services="import" slot="@infinispan.module.slot@"/>
-      <module name="io.netty" export="true"/>
+      <module name="io.netty" export="true" slot="@infinispan.module.slot@"/>
       <module name="org.jgroups" slot="@infinispan.module.slot@"/>
    </dependencies>
 </module>

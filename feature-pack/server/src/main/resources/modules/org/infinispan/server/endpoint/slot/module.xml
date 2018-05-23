@@ -9,7 +9,7 @@
    <dependencies>
       <module name="javax.api" />
       <module name="javax.servlet.api" />
-      <module name="io.netty" />
+      <module name="io.netty" slot="@infinispan.module.slot@"/>
       <module name="org.apache.xerces" services="import" />
       <module name="org.hibernate.validator" services="import" />
       <module name="org.infinispan" slot="@infinispan.module.slot@" />

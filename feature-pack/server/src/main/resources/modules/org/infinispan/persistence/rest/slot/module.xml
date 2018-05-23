@@ -14,7 +14,7 @@
         <module name="javax.api"/>
         <module name="javax.transaction.api"/>
         <module name="org.infinispan" slot="@infinispan.module.slot@"/>
-        <module name="io.netty" />
+        <module name="io.netty" slot="@infinispan.module.slot@"/>
         <module name="org.infinispan.server" slot="@infinispan.module.slot@"/>
         <module name="org.infinispan.server.rest" slot="@infinispan.module.slot@"/>
         <module name="io.reactivex.rxjava2.rxjava" slot="@infinispan.module.slot@"/>
