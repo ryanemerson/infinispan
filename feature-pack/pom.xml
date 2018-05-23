@@ -16,6 +16,7 @@
         <module>commons</module>
         <module>client</module>
         <module>embedded</module>
+        <module>embedded-query</module>
         <module>server</module>
     </modules>
 
