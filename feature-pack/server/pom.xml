@@ -16,7 +16,7 @@
         <!-- Feature pack dependencies -->
         <dependency>
             <groupId>org.infinispan</groupId>
-            <artifactId>infinispan-feature-pack-commons</artifactId>
+            <artifactId>infinispan-feature-pack-embedded</artifactId>
             <!--TODO add to bom-->
             <version>${project.version}</version>
             <type>zip</type>
@@ -338,12 +338,6 @@
             </exclusions>
         </dependency>
 
-        <dependency>
-            <groupId>org.jgroups</groupId>
-            <artifactId>jgroups</artifactId>
-        </dependency>
-
-
         <!-- Transitive module dependencies -->
         <dependency>
             <groupId>commons-codec</groupId>
@@ -353,17 +347,6 @@
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>com.microsoft.azure</groupId>
-            <artifactId>azure-storage</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>*</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
 
         <dependency>
@@ -379,16 +362,6 @@
                     <groupId>xpp3</groupId>
                 </exclusion>
             </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>io.reactivex.rxjava2</groupId>
-            <artifactId>rxjava</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.reactivestreams</groupId>
-            <artifactId>reactive-streams</artifactId>
         </dependency>
 
         <dependency>
@@ -555,28 +528,6 @@
         <dependency>
             <groupId>xpp3</groupId>
             <artifactId>xpp3</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.jgroups.azure</groupId>
-            <artifactId>jgroups-azure</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>*</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>org.jgroups.kubernetes</groupId>
-            <artifactId>jgroups-kubernetes</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>*</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
     </dependencies>
 

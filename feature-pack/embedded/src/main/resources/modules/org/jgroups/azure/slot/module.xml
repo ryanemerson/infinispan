@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!--TODO !embedded?-->
-<module xmlns="urn:jboss:module:1.5" name="org.jgroups.kubernetes" slot="@infinispan.module.slot@">
+<module xmlns="urn:jboss:module:1.5" name="org.jgroups.azure" slot="@infinispan.module.slot@">
     <properties>
         <property name="jboss.api" value="private"/>
     </properties>
 
     <resources>
-        <artifact name="${org.jgroups.kubernetes:jgroups-kubernetes}"/>
+        <artifact name="${org.jgroups.azure:jgroups-azure}"/>
     </resources>
 
     <dependencies>
         <module name="javax.api"/>
+        <module name="com.microsoft.azure.storage" slot="@infinispan.module.slot@"/>
         <module name="org.jgroups" slot="@infinispan.module.slot@"/>
     </dependencies>
 </module>
