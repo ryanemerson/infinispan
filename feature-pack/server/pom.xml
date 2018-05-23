@@ -17,6 +17,7 @@
         <dependency>
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-feature-pack-commons</artifactId>
+            <!--TODO add to bom-->
             <version>${project.version}</version>
             <type>zip</type>
         </dependency>
@@ -338,11 +339,6 @@
         </dependency>
 
         <dependency>
-            <groupId>org.infinispan</groupId>
-            <artifactId>infinispan-management-console</artifactId>
-        </dependency>
-
-        <dependency>
             <groupId>org.jgroups</groupId>
             <artifactId>jgroups</artifactId>
         </dependency>
@@ -580,18 +576,6 @@
         </dependency>
 
         <dependency>
-            <groupId>org.jboss.marshalling</groupId>
-            <artifactId>jboss-marshalling-river</artifactId>
-            <version>${version.org.jboss.marshalling.jboss-marshalling}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.jboss.marshalling</groupId>
-                    <artifactId>jboss-marshalling</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
             <groupId>org.rocksdb</groupId>
             <artifactId>rocksdbjni</artifactId>
             <exclusions>
@@ -643,18 +627,6 @@
         <dependency>
             <groupId>org.jgroups.kubernetes</groupId>
             <artifactId>jgroups-kubernetes</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>*</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>io.fabric8</groupId>
-            <artifactId>agent-bond-agent</artifactId>
-            <version>${version.agent-bond}</version>
             <exclusions>
                 <exclusion>
                     <groupId>*</groupId>

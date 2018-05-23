@@ -74,6 +74,7 @@
       <version.caffeine>2.6.2</version.caffeine>
       <version.cdi>1.2</version.cdi>
       <version.groovy>2.4.8</version.groovy>
+      <version.gson>2.6.2</version.gson>
       <version.hibernate.core>5.2.12.Final</version.hibernate.core>
       <version.hibernate.javax.persistence>1.0.0.Final</version.hibernate.javax.persistence>
       <version.hibernate.search>5.9.0.Final</version.hibernate.search>
@@ -81,6 +82,7 @@
       <version.javax.cache>1.1.0</version.javax.cache>
       <version.jboss.logging>3.3.1.Final</version.jboss.logging>
       <version.jboss.marshalling>2.0.5.Final</version.jboss.marshalling>
+      <version.jest>2.0.4</version.jest>
       <version.jgroups>4.0.11.Final</version.jgroups>
       <version.jta>1.0.1.Final</version.jta>
       <version.lucene>5.5.5</version.lucene>
@@ -611,6 +613,11 @@
          </dependency>
          <dependency>
             <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-queries</artifactId>
+            <version>${version.lucene}</version>
+         </dependency>
+         <dependency>
+            <groupId>org.apache.lucene</groupId>
             <artifactId>lucene-highlighter</artifactId>
             <version>${version.lucene}</version>
          </dependency>
@@ -638,6 +645,21 @@
             <groupId>org.apache.lucene</groupId>
             <artifactId>lucene-backward-codecs</artifactId>
             <version>${version.lucene}</version>
+         </dependency>
+         <dependency>
+            <groupId>io.searchbox</groupId>
+            <artifactId>jest</artifactId>
+            <version>${version.jest}</version>
+         </dependency>
+         <dependency>
+            <groupId>io.searchbox</groupId>
+            <artifactId>jest-common</artifactId>
+            <version>${version.jest}</version>
+         </dependency>
+         <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>${version.gson}</version>
          </dependency>
          <dependency>
             <groupId>org.infinispan.protostream</groupId>
