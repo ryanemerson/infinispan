@@ -22,41 +22,6 @@
             <type>zip</type>
         </dependency>
 
-        <dependency>
-            <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-search-jbossmodules-engine</artifactId>
-            <version>${version.hibernate.search}</version>
-            <type>zip</type>
-        </dependency>
-
-        <dependency>
-            <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-search-jbossmodules-elasticsearch</artifactId>
-            <version>${version.hibernate.search}</version>
-            <type>zip</type>
-        </dependency>
-
-        <dependency>
-            <groupId>org.hibernate.lucene-jbossmodules</groupId>
-            <artifactId>lucene-jbossmodules</artifactId>
-            <version>${version.lucene.featurepack}</version>
-            <type>zip</type>
-        </dependency>
-
-        <dependency>
-            <groupId>org.hibernate.elasticsearch-client-jbossmodules</groupId>
-            <artifactId>elasticsearch-client-jbossmodules</artifactId>
-            <version>${version.elasticsearch-client.featurepack}</version>
-            <type>zip</type>
-        </dependency>
-
-        <dependency>
-            <groupId>org.hibernate.gson-jbossmodules</groupId>
-            <artifactId>gson-jbossmodules</artifactId>
-            <version>${version.gson.featurepack}</version>
-            <type>zip</type>
-        </dependency>
-
         <!-- Main module dependencies -->
         <dependency>
             <groupId>org.infinispan</groupId>

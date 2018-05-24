@@ -8,9 +8,9 @@
     <dependencies>
         <module name="javax.api" />
         <module name="javax.transaction.api" />
-        <module name="org.apache.lucene" slot="@infinispan.module.slot@"/>
-        <module name="org.hibernate.search.engine" slot="@infinispan.module.slot@"/>
-        <module name="org.hibernate.search.elasticsearch" slot="@infinispan.module.slot@"/>
+        <module name="org.apache.lucene" slot="@lucene.module.slot@"/>
+        <module name="org.hibernate.search.engine" slot="@hibernate.search.module.slot@"/>
+        <module name="org.hibernate.search.elasticsearch" slot="@hibernate.search.module.slot@"/>
         <module name="org.infinispan" slot="@infinispan.module.slot@"/>
         <module name="org.infinispan.query.dsl" slot="@infinispan.module.slot@"/>
         <module name="org.infinispan.objectfilter" slot="@infinispan.module.slot@"/>
