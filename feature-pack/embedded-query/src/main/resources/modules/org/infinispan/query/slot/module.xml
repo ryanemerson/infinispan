@@ -11,7 +11,8 @@
         <module name="org.apache.lucene" slot="@lucene.module.slot@"/>
         <module name="org.hibernate.search.engine" slot="@hibernate.search.module.slot@"/>
         <module name="org.hibernate.search.elasticsearch" slot="@hibernate.search.module.slot@"/>
-        <module name="org.infinispan" slot="@infinispan.module.slot@"/>
+        <module name="org.infinispan.commons" slot="@infinispan.module.slot@"/>
+        <module name="org.infinispan.core" slot="@infinispan.module.slot@"/>
         <module name="org.infinispan.query.dsl" slot="@infinispan.module.slot@"/>
         <module name="org.infinispan.objectfilter" slot="@infinispan.module.slot@"/>
         <module name="org.infinispan.hibernate-search.directory-provider" slot="@infinispan.module.slot@"/>

@@ -1,6 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
-<!--TODO !embedded-->
 <module xmlns="urn:jboss:module:1.5" name="org.infinispan.server.endpoint" slot="@infinispan.module.slot@">
    <resources>
       <artifact name="${org.infinispan.server:infinispan-server-endpoints}"/>
@@ -12,12 +10,13 @@
       <module name="io.netty" slot="@infinispan.module.slot@"/>
       <module name="org.apache.xerces" services="import" />
       <module name="org.hibernate.validator" services="import" />
-      <module name="org.infinispan" slot="@infinispan.module.slot@" />
+      <module name="org.infinispan.core" slot="@infinispan.module.slot@"/>
+      <module name="org.infinispan.commons" slot="@infinispan.module.slot@"/>
       <module name="org.infinispan.scripting" services="import" slot="@infinispan.module.slot@"/>
       <module name="org.infinispan.extension" slot="@infinispan.module.slot@" />
       <module name="org.infinispan.persistence.jdbc" slot="@infinispan.module.slot@" />
       <module name="org.infinispan.persistence.remote" slot="@infinispan.module.slot@" />
-      <module name="org.infinispan.query" slot="@infinispan.module.slot@" />
+      <module name="org.infinispan.query" slot="@infinispan.module.slot@" export="true" services="import"/>
       <module name="org.infinispan.remote-query.server" services="import" slot="@infinispan.module.slot@"/>
       <module name="org.infinispan.server" slot="@infinispan.module.slot@" />
       <module name="org.infinispan.server.commons" slot="@infinispan.module.slot@"/>

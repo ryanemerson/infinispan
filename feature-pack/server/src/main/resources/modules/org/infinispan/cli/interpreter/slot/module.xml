@@ -1,6 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
-<!--TODO !embedded-->
 <module xmlns="urn:jboss:module:1.5" name="org.infinispan.cli.interpreter" slot="@infinispan.module.slot@">
     <resources>
         <artifact name="${org.infinispan:infinispan-cli-interpreter}"/>
@@ -12,7 +10,8 @@
         <module name="org.antlr.antlr-runtime" slot="@infinispan.module.slot@"/>
         <module name="org.codehaus.jackson.jackson-core-asl"/>
         <module name="org.codehaus.jackson.jackson-mapper-asl"/>
-        <module name="org.infinispan" slot="@infinispan.module.slot@"/>
+        <module name="org.infinispan.core" slot="@infinispan.module.slot@"/>
+        <module name="org.infinispan.commons" slot="@infinispan.module.slot@"/>
         <module name="org.infinispan.server" slot="@infinispan.module.slot@"/>
         <module name="org.infinispan.server.hotrod" slot="@infinispan.module.slot@"/>
         <module name="org.infinispan.server.memcached" slot="@infinispan.module.slot@"/>

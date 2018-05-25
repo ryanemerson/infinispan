@@ -1,6 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
-<!--TODO !embedded-->
 <module xmlns="urn:jboss:module:1.5" name="org.infinispan.server.router" slot="@infinispan.module.slot@">
    <properties>
       <property name="jboss.api" value="private" />
@@ -19,7 +17,8 @@
       <module name="javax.ws.rs.api"/>
       <!-- Netty is exported by server core -->
       <module name="org.infinispan.server" slot="@infinispan.module.slot@"/>
-      <module name="org.infinispan" slot="@infinispan.module.slot@"/>
+      <module name="org.infinispan.core" slot="@infinispan.module.slot@"/>
+      <module name="org.infinispan.commons" slot="@infinispan.module.slot@"/>
       <module name="org.jboss.logging" />
    </dependencies>
 </module>

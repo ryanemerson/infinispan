@@ -8,7 +8,8 @@
     <dependencies>
         <module name="javax.api"/>
         <module name="javax.transaction.api"/>
-        <module name="org.infinispan" slot="@infinispan.module.slot@"/>
+        <module name="org.infinispan.core" slot="@infinispan.module.slot@"/>
+        <module name="org.infinispan.commons" slot="@infinispan.module.slot@"/>
         <module name="org.jboss.logging"/>
     </dependencies>
 </module>

@@ -9,7 +9,8 @@
         <module name="javax.cache.api" slot="@infinispan.module.slot@" export="true"/>
         <module name="javax.transaction.api"/>
         <module name="org.jgroups" slot="@infinispan.module.slot@"/>
-        <module name="org.infinispan" slot="@infinispan.module.slot@"/>
+        <module name="org.infinispan.core" slot="@infinispan.module.slot@"/>
+        <module name="org.infinispan.commons" slot="@infinispan.module.slot@"/>
         <module name="org.infinispan.cdi.embedded" slot="@infinispan.module.slot@" services="import" />
         <module name="org.infinispan.jcache.commons" slot="@infinispan.module.slot@" />
         <module name="org.jboss.logging"/>

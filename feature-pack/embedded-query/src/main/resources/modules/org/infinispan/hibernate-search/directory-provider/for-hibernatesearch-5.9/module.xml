@@ -13,18 +13,18 @@ it needs to point to the slot of module org.apache.lucene of the consuming Hiber
 and obviously needs to avoid dependencies to different versions of Hibernate Search.
 
 -->
-<module xmlns="urn:jboss:module:1.5" name="org.infinispan.hibernate-search.directory-provider" slot="for-hibernatesearch-5.5">
+<module xmlns="urn:jboss:module:1.5" name="org.infinispan.hibernate-search.directory-provider" slot="for-hibernatesearch-5.9">
     <properties>
         <property name="jboss.api" value="private"/>
     </properties>
     <resources>
-        <artifact name="org.infinispan:infinispan-directory-provider" />
-        <artifact name="org.infinispan:infinispan-lucene-directory" />
+        <artifact name="${org.infinispan:infinispan-directory-provider}"/>
+        <artifact name="${org.infinispan:infinispan-lucene-directory}"/>
     </resources>
 
     <dependencies>
-        <module name="org.apache.lucene" />
-        <module name="org.hibernate.search.engine" />
+        <module name="org.apache.lucene" slot="5.5" />
+        <module name="org.hibernate.search.engine" slot="5.9" />
         <module name="javax.api"/>
         <module name="org.infinispan.commons" slot="@infinispan.module.slot@" export="true"/>
         <module name="org.infinispan.core" slot="@infinispan.module.slot@" export="true" services="export" />

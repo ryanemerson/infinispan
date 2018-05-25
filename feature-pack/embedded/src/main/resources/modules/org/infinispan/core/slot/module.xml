@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <module xmlns="urn:jboss:module:1.5" name="org.infinispan.core" slot="@infinispan.module.slot@">
     <resources>
         <artifact name="${org.infinispan:infinispan-core}"/>
@@ -8,14 +7,13 @@
     <dependencies>
         <module name="javax.api"/>
         <module name="javax.transaction.api"/>
+        <module name="org.apache.xerces" services="import"/>
+        <module name="org.infinispan.commons" slot="@infinispan.module.slot@" />
+        <module name="com.github.ben-manes.caffeine" slot="@infinispan.module.slot@"/>
         <module name="io.reactivex.rxjava2.rxjava" slot="@infinispan.module.slot@"/>
         <module name="org.reactivestreams.reactive-streams" slot="@infinispan.module.slot@"/>
+        <module name="org.jboss.jandex"/>
         <module name="org.jboss.logging"/>
-        <module name="org.infinispan.commons" export="true" slot="@infinispan.module.slot@"/>
-        <module name="org.infinispan.query" optional="true" services="import" slot="@infinispan.module.slot@"/>
-        <module name="org.infinispan.remote-query.server" optional="true" slot="@infinispan.module.slot@"/>
-        <module name="org.infinispan.remote-query.client" optional="true" slot="@infinispan.module.slot@"/>
-        <module name="org.infinispan.lucene-directory" optional="true" export="true" services="export" slot="@infinispan.module.slot@"/>
         <module name="org.jboss.marshalling" services="import" slot="@infinispan.module.slot@"/>
         <module name="org.jgroups" slot="@infinispan.module.slot@"/>
         <module name="sun.jdk"/>

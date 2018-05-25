@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--TODO needed for embedded?-->
 <module xmlns="urn:jboss:module:1.5" name="org.apache.commons.io" slot="@infinispan.module.slot@">
     <properties>
         <property name="jboss.api" value="private"/>
