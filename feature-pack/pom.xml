@@ -18,6 +18,7 @@
         <module>embedded</module>
         <module>embedded-query</module>
         <module>server</module>
+        <module>wf-modules</module>
     </modules>
 
     <properties>
