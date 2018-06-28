@@ -5,6 +5,7 @@ import static org.junit.Assert.assertTrue;
 import java.time.Instant;
 import java.util.Date;
 
+import org.infinispan.commons.marshall.protostream.BaseProtoStreamMarshaller;
 import org.infinispan.protostream.ProtobufUtil;
 import org.infinispan.protostream.SerializationContext;
 import org.infinispan.protostream.config.Configuration;

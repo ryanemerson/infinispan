@@ -3,7 +3,7 @@ package org.infinispan.query.remote;
 import org.infinispan.factories.annotations.Inject;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.protostream.SerializationContext;
-import org.infinispan.query.remote.client.BaseProtoStreamMarshaller;
+import org.infinispan.commons.marshall.protostream.BaseProtoStreamMarshaller;
 import org.infinispan.query.remote.impl.ProtobufMetadataManagerImpl;
 
 /**
