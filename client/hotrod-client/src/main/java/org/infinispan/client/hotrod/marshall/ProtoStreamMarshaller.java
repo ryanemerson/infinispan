@@ -3,10 +3,10 @@ package org.infinispan.client.hotrod.marshall;
 import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.exceptions.HotRodClientException;
 import org.infinispan.commons.marshall.Marshaller;
+import org.infinispan.commons.marshall.protostream.BaseProtoStreamMarshaller;
 import org.infinispan.protostream.ProtobufUtil;
 import org.infinispan.protostream.SerializationContext;
 import org.infinispan.protostream.config.Configuration;
-import org.infinispan.query.remote.client.BaseProtoStreamMarshaller;
 
 /**
  * A marshaller that uses Protocol Buffers.

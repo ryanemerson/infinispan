@@ -8,7 +8,7 @@ import org.infinispan.commons.CacheException;
 import org.infinispan.protostream.ProtobufUtil;
 import org.infinispan.protostream.SerializationContext;
 import org.infinispan.protostream.config.Configuration;
-import org.infinispan.query.remote.client.BaseProtoStreamMarshaller;
+import org.infinispan.commons.marshall.protostream.BaseProtoStreamMarshaller;
 
 /**
  * @author gustavonalle
