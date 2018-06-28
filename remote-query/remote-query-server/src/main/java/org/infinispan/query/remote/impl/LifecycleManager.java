@@ -35,7 +35,7 @@ import org.infinispan.marshall.core.EncoderRegistry;
 import org.infinispan.objectfilter.Matcher;
 import org.infinispan.protostream.SerializationContext;
 import org.infinispan.query.remote.ProtobufMetadataManager;
-import org.infinispan.query.remote.client.BaseProtoStreamMarshaller;
+import org.infinispan.commons.marshall.protostream.BaseProtoStreamMarshaller;
 import org.infinispan.query.remote.client.ProtostreamSerializationContextInitializer;
 import org.infinispan.query.remote.impl.dataconversion.ProtostreamBinaryTranscoder;
 import org.infinispan.query.remote.impl.dataconversion.ProtostreamJsonTranscoder;

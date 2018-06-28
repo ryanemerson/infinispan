@@ -1,4 +1,4 @@
-package org.infinispan.query.remote.client;
+package org.infinispan.commons.marshall.protostream;
 
 import java.io.IOException;
 
