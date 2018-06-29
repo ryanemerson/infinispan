@@ -35,18 +35,18 @@ import org.infinispan.commands.write.PutMapCommand;
 import org.infinispan.commands.write.RemoveCommand;
 import org.infinispan.commands.write.ReplaceCommand;
 import org.infinispan.commands.write.WriteCommand;
-import org.infinispan.functional.Param;
-import org.infinispan.functional.Param.PersistenceMode;
 import org.infinispan.commons.marshall.StreamingMarshaller;
 import org.infinispan.configuration.cache.PersistenceConfiguration;
-import org.infinispan.container.impl.InternalEntryFactory;
 import org.infinispan.container.entries.CacheEntry;
 import org.infinispan.container.entries.InternalCacheValue;
+import org.infinispan.container.impl.InternalEntryFactory;
 import org.infinispan.context.InvocationContext;
 import org.infinispan.context.impl.FlagBitSets;
 import org.infinispan.context.impl.TxInvocationContext;
 import org.infinispan.factories.annotations.Inject;
 import org.infinispan.factories.annotations.Start;
+import org.infinispan.functional.Param;
+import org.infinispan.functional.Param.PersistenceMode;
 import org.infinispan.interceptors.InvocationSuccessAction;
 import org.infinispan.jmx.annotations.DisplayType;
 import org.infinispan.jmx.annotations.MBean;
@@ -55,6 +55,7 @@ import org.infinispan.jmx.annotations.ManagedOperation;
 import org.infinispan.jmx.annotations.MeasurementType;
 import org.infinispan.marshall.core.MarshalledEntry;
 import org.infinispan.marshall.core.MarshalledEntryImpl;
+import org.infinispan.marshall.protostream.ProtoStreamMarshaller;
 import org.infinispan.persistence.manager.PersistenceManager;
 import org.infinispan.persistence.support.BatchModification;
 import org.infinispan.transaction.xa.GlobalTransaction;
@@ -462,9 +463,10 @@ public class CacheWriterInterceptor extends JmxStatsCommandInterceptor {
       if (trace) getLog().tracef("Stored entry %s under key %s", entry.getValue(), key);
    }
 
+   // TODO do we need to change anything here?
    MarshalledEntry createMarshalledEntry(InvocationContext ctx, Object key) {
       InternalCacheValue sv = entryFactory.getValueFromCtxOrCreateNew(key, ctx);
-      return new MarshalledEntryImpl(key, sv.getValue(), internalMetadata(sv), marshaller);
+      return new MarshalledEntryImpl(key, sv.getValue(), internalMetadata(sv), new ProtoStreamMarshaller());
    }
 
    protected boolean skipSharedStores(InvocationContext ctx, Object key, FlagAffectedCommand command) {

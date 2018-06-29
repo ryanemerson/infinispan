@@ -1,0 +1,34 @@
+package core;
+
+import "core.generated";
+
+message MarshalledEntry {
+    required bytes key = 1;
+    required bytes value = 2;
+    optional bytes metadata = 3;
+}
+
+message WrappedByteArray {
+    required bytes wrappedBytes = 1;
+    optional int32 hashcode = 2;
+}
+
+message Metadata {
+    required core.generated.MetadataType type = 1;
+    optional EntryVersion version = 2;
+    optional int64 lifespan = 3 [default = -1];
+    optional int64 maxIdle = 4 [default = -1];
+}
+
+message InternalMetadata {
+    required Metadata actual = 1;
+    optional int64 created = 2 [default = -1];
+    optional int64 lastUsed = 3 [default = -1];
+}
+
+message EntryVersion {
+//    Investigate using oneofs instead of type enum for polymorphism
+    required core.generated.VersionType type = 1;
+    required int64 version = 2;
+    optional int32 topology = 3;
+}

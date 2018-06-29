@@ -56,6 +56,7 @@ import org.infinispan.interceptors.impl.CacheWriterInterceptor;
 import org.infinispan.interceptors.impl.TransactionalStoreInterceptor;
 import org.infinispan.marshall.core.MarshalledEntry;
 import org.infinispan.marshall.core.MarshalledEntryFactory;
+import org.infinispan.marshall.protostream.ProtoStreamMarshaller;
 import org.infinispan.metadata.Metadata;
 import org.infinispan.metadata.impl.InternalMetadataImpl;
 import org.infinispan.notifications.cachelistener.CacheNotifier;
@@ -131,6 +132,7 @@ public class PersistenceManagerImpl implements PersistenceManager {
    @Override
    @Start()
    public void start() {
+      m = new ProtoStreamMarshaller();
       advancedListener = new AdvancedPurgeListener<>(expirationManager);
       preloaded = false;
       enabled = configuration.persistence().usingStores();

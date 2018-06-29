@@ -2,7 +2,7 @@ package org.infinispan.marshall.core;
 
 import org.infinispan.commons.io.ByteBuffer;
 import org.infinispan.commons.marshall.StreamingMarshaller;
-import org.infinispan.factories.annotations.Inject;
+import org.infinispan.marshall.protostream.ProtoStreamMarshaller;
 import org.infinispan.metadata.InternalMetadata;
 
 /**
@@ -11,11 +11,13 @@ import org.infinispan.metadata.InternalMetadata;
  */
 public class MarshalledEntryFactoryImpl implements MarshalledEntryFactory {
 
-   @Inject private StreamingMarshaller marshaller;
+//   @Inject private StreamingMarshaller marshaller;
+   private StreamingMarshaller marshaller = new ProtoStreamMarshaller();
 
    public MarshalledEntryFactoryImpl() {
    }
 
+   // TODO pass SerializationContext here
    public MarshalledEntryFactoryImpl(StreamingMarshaller marshaller) {
       this.marshaller = marshaller;
    }

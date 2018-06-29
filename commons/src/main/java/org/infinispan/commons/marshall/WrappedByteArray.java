@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.Set;
 
 import org.infinispan.commons.util.Util;
+import org.infinispan.protostream.MessageMarshaller;
 
 /**
  * Simple wrapper around a byte[] to provide equals and hashCode semantics
@@ -123,6 +124,32 @@ public class WrappedByteArray implements WrappedBytes {
          } else {
             return new WrappedByteArray(bytes);
          }
+      }
+   }
+
+   public static class Marshaller implements MessageMarshaller<WrappedByteArray> {
+
+      @Override
+      public Class<? extends WrappedByteArray> getJavaClass() {
+         return WrappedByteArray.class;
+      }
+
+      @Override
+      public String getTypeName() {
+         return "core.WrappedByteArray";
+      }
+
+      @Override
+      public WrappedByteArray readFrom(ProtoStreamReader reader) throws IOException {
+         byte[] bytes = reader.readBytes("wrappedBytes");
+         int hashcode = reader.readInt("hashcode");
+         return hashcode == 0 ? new WrappedByteArray(bytes) : new WrappedByteArray(bytes, hashcode);
+      }
+
+      @Override
+      public void writeTo(ProtoStreamWriter writer, WrappedByteArray wrappedByteArray) throws IOException {
+         writer.writeBytes("wrappedBytes", wrappedByteArray.bytes);
+         writer.writeInt("hashcode", wrappedByteArray.hashCode);
       }
    }
 }

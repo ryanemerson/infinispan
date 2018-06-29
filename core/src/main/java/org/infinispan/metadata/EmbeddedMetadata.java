@@ -3,6 +3,8 @@ package org.infinispan.metadata;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -10,6 +12,9 @@ import org.infinispan.commons.marshall.AbstractExternalizer;
 import org.infinispan.commons.util.Util;
 import org.infinispan.container.versioning.EntryVersion;
 import org.infinispan.marshall.core.Ids;
+import org.infinispan.protostream.MessageMarshaller;
+import org.infinispan.protostream.annotations.ProtoEnum;
+import org.infinispan.protostream.annotations.ProtoEnumValue;
 import org.jboss.marshalling.util.IdentityIntMap;
 
 /**
@@ -372,7 +377,77 @@ public class EmbeddedMetadata implements Metadata {
                throw new IllegalStateException("Unknown metadata type " + number);
          }
       }
-
    }
 
+   public static class Marshaller implements MessageMarshaller<Metadata> {
+
+      @ProtoEnum(name = "MetadataType")
+      public enum MetadataType {
+         @ProtoEnumValue(number = 0)
+         IMMORTAL,
+         @ProtoEnumValue(number = 1)
+         EXPIRABLE,
+         @ProtoEnumValue(number = 2)
+         LIFESPAN_EXPIRABLE,
+         @ProtoEnumValue(number = 3)
+         MAXIDLE_EXPIRABLE;
+      }
+
+      static Map<Class, MetadataType> typeMap = new HashMap<>();
+      static {
+         typeMap.put(EmbeddedMetadata.class, MetadataType.IMMORTAL);
+         typeMap.put(EmbeddedMetadata.EmbeddedExpirableMetadata.class, MetadataType.EXPIRABLE);
+         typeMap.put(EmbeddedMetadata.EmbeddedLifespanExpirableMetadata.class, MetadataType.LIFESPAN_EXPIRABLE);
+         typeMap.put(EmbeddedMetadata.EmbeddedMaxIdleExpirableMetadata.class, MetadataType.MAXIDLE_EXPIRABLE);
+      }
+
+      @Override
+      public Metadata readFrom(ProtoStreamReader reader) throws IOException {
+         MetadataType type = reader.readEnum("type", MetadataType.class);
+         EntryVersion version = reader.readObject("version", EntryVersion.class);
+         Metadata.Builder builder = new EmbeddedMetadata.Builder().version(version);
+         switch (type) {
+            case EXPIRABLE:
+               builder.lifespan(reader.readLong("lifespan"));
+               builder.maxIdle(reader.readLong("maxIdle"));
+               break;
+            case LIFESPAN_EXPIRABLE:
+               builder.lifespan(reader.readLong("lifespan"));
+               break;
+            case MAXIDLE_EXPIRABLE:
+               builder.maxIdle(reader.readLong("maxIdle"));
+               break;
+         }
+         return builder.build();
+      }
+
+      @Override
+      public void writeTo(ProtoStreamWriter writer, Metadata metadata) throws IOException {
+         MetadataType type = typeMap.get(metadata.getClass());
+         writer.writeEnum("type", type, MetadataType.class);
+         writer.writeObject("version", metadata.version(), EntryVersion.class);
+         switch (type) {
+            case EXPIRABLE:
+               writer.writeLong("lifespan", metadata.lifespan());
+               writer.writeLong("maxIdle", metadata.maxIdle());
+               break;
+            case LIFESPAN_EXPIRABLE:
+               writer.writeLong("lifespan", metadata.lifespan());
+               break;
+            case MAXIDLE_EXPIRABLE:
+               writer.writeLong("maxIdle", metadata.maxIdle());
+               break;
+         }
+      }
+
+      @Override
+      public Class<? extends Metadata> getJavaClass() {
+         return Metadata.class;
+      }
+
+      @Override
+      public String getTypeName() {
+         return "core.Metadata";
+      }
+   }
 }

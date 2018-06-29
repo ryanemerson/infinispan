@@ -29,6 +29,7 @@ import org.infinispan.container.entries.CacheEntry;
 import org.infinispan.container.entries.InternalCacheValue;
 import org.infinispan.context.InvocationContext;
 import org.infinispan.marshall.core.MarshalledEntryImpl;
+import org.infinispan.marshall.protostream.ProtoStreamMarshaller;
 import org.infinispan.persistence.manager.PersistenceManager;
 import org.infinispan.persistence.support.BatchModification;
 
@@ -146,7 +147,7 @@ public class TxBatchUpdater extends AbstractVisitor {
          if (generateStatistics) putCount++;
          InternalCacheValue sv = entryFactory.getValueFromCtxOrCreateNew(key, ctx);
          if (sv.getValue() != null) {
-            MarshalledEntryImpl me = new MarshalledEntryImpl(key, sv.getValue(), internalMetadata(sv), marshaller);
+            MarshalledEntryImpl me = new MarshalledEntryImpl(key, sv.getValue(), internalMetadata(sv), new ProtoStreamMarshaller());
             getModifications(ctx, key, command).addMarshalledEntry(key, me);
          }
       }
@@ -163,7 +164,7 @@ public class TxBatchUpdater extends AbstractVisitor {
          } else {
             if (generateStatistics) putCount++;
             InternalCacheValue sv = entryFactory.getValueFromCtxOrCreateNew(key, ctx);
-            MarshalledEntryImpl me = new MarshalledEntryImpl(key, sv.getValue(), internalMetadata(sv), marshaller);
+            MarshalledEntryImpl me = new MarshalledEntryImpl(key, sv.getValue(), internalMetadata(sv), new ProtoStreamMarshaller());
             getModifications(ctx, key, command).addMarshalledEntry(key, me);
          }
       }

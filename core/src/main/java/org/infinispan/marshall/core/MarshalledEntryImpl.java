@@ -6,11 +6,13 @@ import java.io.ObjectOutput;
 import java.util.Set;
 
 import org.infinispan.commons.io.ByteBuffer;
+import org.infinispan.commons.io.ByteBufferImpl;
 import org.infinispan.commons.marshall.AbstractExternalizer;
 import org.infinispan.commons.marshall.StreamingMarshaller;
 import org.infinispan.commons.util.Util;
 import org.infinispan.metadata.InternalMetadata;
 import org.infinispan.persistence.spi.PersistenceException;
+import org.infinispan.protostream.MessageMarshaller;
 
 /**
  * @author Mircea Markus
@@ -220,6 +222,40 @@ public class MarshalledEntryImpl<K,V> implements MarshalledEntry<K,V> {
       @SuppressWarnings("unchecked")
       public Set<Class<? extends MarshalledEntryImpl>> getTypeClasses() {
          return Util.<Class<? extends MarshalledEntryImpl>>asSet(MarshalledEntryImpl.class);
+      }
+   }
+
+   public static class Marshaller implements MessageMarshaller<MarshalledEntryImpl> {
+
+      private final StreamingMarshaller marshaller;
+
+      public Marshaller(StreamingMarshaller marshaller) {
+         this.marshaller = marshaller;
+      }
+
+      @Override
+      public Class<? extends MarshalledEntryImpl> getJavaClass() {
+         return MarshalledEntryImpl.class;
+      }
+
+      @Override
+      public String getTypeName() {
+         return "core.MarshalledEntry";
+      }
+
+      @Override
+      public MarshalledEntryImpl readFrom(ProtoStreamReader reader) throws IOException {
+         ByteBuffer key = new ByteBufferImpl(reader.readBytes("key"));
+         ByteBuffer value = new ByteBufferImpl(reader.readBytes("value"));
+         ByteBuffer metadata = new ByteBufferImpl(reader.readBytes("metadata"));
+         return new MarshalledEntryImpl(key, value, metadata, marshaller);
+      }
+
+      @Override
+      public void writeTo(ProtoStreamWriter writer, MarshalledEntryImpl marshalledEntry) throws IOException {
+         writer.writeBytes("key", marshalledEntry.getKeyBytes().getBuf());
+         writer.writeBytes("value", marshalledEntry.getKeyBytes().getBuf());
+         writer.writeBytes("metadata", marshalledEntry.getKeyBytes().getBuf());
       }
    }
 }

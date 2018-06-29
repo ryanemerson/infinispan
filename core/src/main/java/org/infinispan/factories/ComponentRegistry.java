@@ -23,6 +23,7 @@ import org.infinispan.factories.components.ComponentMetadata;
 import org.infinispan.factories.components.ComponentMetadataRepo;
 import org.infinispan.lifecycle.ComponentStatus;
 import org.infinispan.lifecycle.ModuleLifecycle;
+import org.infinispan.marshall.protostream.ProtoStreamMarshaller;
 import org.infinispan.notifications.cachemanagerlistener.CacheManagerNotifier;
 import org.infinispan.remoting.inboundhandler.PerCacheInboundInvocationHandler;
 import org.infinispan.remoting.responses.ResponseGenerator;
@@ -293,7 +294,8 @@ public class ComponentRegistry extends AbstractComponentRegistry {
     * Caching shortcut for #getComponent(StreamingMarshaller.class, KnownComponentNames.CACHE_MARSHALLER);
     */
    public StreamingMarshaller getCacheMarshaller() {
-      return globalComponents.getComponent(StreamingMarshaller.class);
+//      return globalComponents.getComponent(StreamingMarshaller.class);
+      return new ProtoStreamMarshaller();
    }
 
    /**
