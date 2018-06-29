@@ -247,15 +247,15 @@ public class MarshalledEntryImpl<K,V> implements MarshalledEntry<K,V> {
       public MarshalledEntryImpl readFrom(ProtoStreamReader reader) throws IOException {
          ByteBuffer key = new ByteBufferImpl(reader.readBytes("key"));
          ByteBuffer value = new ByteBufferImpl(reader.readBytes("value"));
-         ByteBuffer metadata = new ByteBufferImpl(reader.readBytes("metadata"));
+         InternalMetadata metadata = reader.readObject("metadata", InternalMetadata.class);
          return new MarshalledEntryImpl(key, value, metadata, marshaller);
       }
 
       @Override
       public void writeTo(ProtoStreamWriter writer, MarshalledEntryImpl marshalledEntry) throws IOException {
          writer.writeBytes("key", marshalledEntry.getKeyBytes().getBuf());
-         writer.writeBytes("value", marshalledEntry.getKeyBytes().getBuf());
-         writer.writeBytes("metadata", marshalledEntry.getKeyBytes().getBuf());
+         writer.writeBytes("value", marshalledEntry.getValueBytes().getBuf());
+         writer.writeObject("metadata", marshalledEntry.getMetadata(), InternalMetadata.class);
       }
    }
 }

@@ -5,7 +5,7 @@ import "core.generated";
 message MarshalledEntry {
     required bytes key = 1;
     required bytes value = 2;
-    optional bytes metadata = 3;
+    optional InternalMetadata metadata = 3;
 }
 
 message WrappedByteArray {
