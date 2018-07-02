@@ -12,9 +12,8 @@ import org.infinispan.commons.marshall.AbstractExternalizer;
 import org.infinispan.commons.util.Util;
 import org.infinispan.container.versioning.EntryVersion;
 import org.infinispan.marshall.core.Ids;
+import org.infinispan.protostream.EnumMarshaller;
 import org.infinispan.protostream.MessageMarshaller;
-import org.infinispan.protostream.annotations.ProtoEnum;
-import org.infinispan.protostream.annotations.ProtoEnumValue;
 import org.jboss.marshalling.util.IdentityIntMap;
 
 /**
@@ -379,31 +378,61 @@ public class EmbeddedMetadata implements Metadata {
       }
    }
 
-   public static class Marshaller implements MessageMarshaller<Metadata> {
+   public enum Type {
+      IMMORTAL(0),
+      EXPIRABLE(1),
+      LIFESPAN_EXPIRABLE(2),
+      MAXIDLE_EXPIRABLE(3);
 
-      @ProtoEnum(name = "MetadataType")
-      public enum MetadataType {
-         @ProtoEnumValue(number = 0)
-         IMMORTAL,
-         @ProtoEnumValue(number = 1)
-         EXPIRABLE,
-         @ProtoEnumValue(number = 2)
-         LIFESPAN_EXPIRABLE,
-         @ProtoEnumValue(number = 3)
-         MAXIDLE_EXPIRABLE;
+      final int index;
+
+      Type(int index) {
+         this.index = index;
       }
 
-      static Map<Class, MetadataType> typeMap = new HashMap<>();
+      static Type get(int index) {
+         for (Type type : EmbeddedMetadata.Type.values())
+            if (type.index == index)
+               return type;
+         return null;
+      }
+   }
+
+   public static class TypeMarshaller implements EnumMarshaller<Type> {
+      @Override
+      public Type decode(int enumValue) {
+         return EmbeddedMetadata.Type.get(enumValue);
+      }
+
+      @Override
+      public int encode(Type metadataType) throws IllegalArgumentException {
+         return metadataType.index;
+      }
+
+      @Override
+      public Class<? extends Type> getJavaClass() {
+         return Type.class;
+      }
+
+      @Override
+      public String getTypeName() {
+         return "core.Metadata.Type";
+      }
+   }
+
+   public static class Marshaller implements MessageMarshaller<Metadata> {
+
+      static Map<Class, Type> typeMap = new HashMap<>();
       static {
-         typeMap.put(EmbeddedMetadata.class, MetadataType.IMMORTAL);
-         typeMap.put(EmbeddedMetadata.EmbeddedExpirableMetadata.class, MetadataType.EXPIRABLE);
-         typeMap.put(EmbeddedMetadata.EmbeddedLifespanExpirableMetadata.class, MetadataType.LIFESPAN_EXPIRABLE);
-         typeMap.put(EmbeddedMetadata.EmbeddedMaxIdleExpirableMetadata.class, MetadataType.MAXIDLE_EXPIRABLE);
+         typeMap.put(EmbeddedMetadata.class, Type.IMMORTAL);
+         typeMap.put(EmbeddedMetadata.EmbeddedExpirableMetadata.class, Type.EXPIRABLE);
+         typeMap.put(EmbeddedMetadata.EmbeddedLifespanExpirableMetadata.class, Type.LIFESPAN_EXPIRABLE);
+         typeMap.put(EmbeddedMetadata.EmbeddedMaxIdleExpirableMetadata.class, Type.MAXIDLE_EXPIRABLE);
       }
 
       @Override
       public Metadata readFrom(ProtoStreamReader reader) throws IOException {
-         MetadataType type = reader.readEnum("type", MetadataType.class);
+         Type type = reader.readEnum("type", Type.class);
          EntryVersion version = reader.readObject("version", EntryVersion.class);
          Metadata.Builder builder = new EmbeddedMetadata.Builder().version(version);
          switch (type) {
@@ -423,8 +452,8 @@ public class EmbeddedMetadata implements Metadata {
 
       @Override
       public void writeTo(ProtoStreamWriter writer, Metadata metadata) throws IOException {
-         MetadataType type = typeMap.get(metadata.getClass());
-         writer.writeEnum("type", type, MetadataType.class);
+         Type type = typeMap.get(metadata.getClass());
+         writer.writeEnum("type", type, Type.class);
          writer.writeObject("version", metadata.version(), EntryVersion.class);
          switch (type) {
             case EXPIRABLE:

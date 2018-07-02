@@ -9,6 +9,8 @@ import java.io.OutputStream;
 import org.infinispan.commons.marshall.StreamingMarshaller;
 import org.infinispan.commons.marshall.WrappedByteArray;
 import org.infinispan.commons.marshall.protostream.BaseProtoStreamMarshaller;
+import org.infinispan.container.versioning.NumericVersion;
+import org.infinispan.container.versioning.SimpleClusteredVersion;
 import org.infinispan.marshall.core.MarshalledEntryImpl;
 import org.infinispan.marshall.protostream.marshallers.EntryVersionMarshaller;
 import org.infinispan.metadata.EmbeddedMetadata;
@@ -16,7 +18,6 @@ import org.infinispan.metadata.impl.InternalMetadataImpl;
 import org.infinispan.protostream.FileDescriptorSource;
 import org.infinispan.protostream.ProtobufUtil;
 import org.infinispan.protostream.SerializationContext;
-import org.infinispan.protostream.annotations.ProtoSchemaBuilder;
 import org.infinispan.protostream.config.Configuration;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
@@ -35,19 +36,24 @@ public class ProtoStreamMarshaller extends BaseProtoStreamMarshaller implements 
 
    public ProtoStreamMarshaller() {
       try {
-         new ProtoSchemaBuilder()
-               .fileName("core.generated")
-               .packageName("core.generated")
-               .addClass(EmbeddedMetadata.Marshaller.MetadataType.class)
-               .addClass(EntryVersionMarshaller.VersionType.class)
-               .build(serializationContext);
+//         Code for importing generate POJOs. We probably don't want to do this as we want the .proto files to be as
+//         self descriptive as possible for potential external uses ... although we could also export the generated schemas
+//         new ProtoSchemaBuilder()
+//               .fileName("core.generated")
+//               .packageName("core.generated")
+//               .addClass(EmbeddedMetadata.Marshaller.Type.class)
+//               .addClass(EntryVersionMarshaller.VersionType.class)
+//               .build(serializationContext);
 
          // TODO update so that serializationContext is based upon cache config
          serializationContext.registerProtoFiles(FileDescriptorSource.fromResources("/core.proto"));
          serializationContext.registerMarshaller(new MarshalledEntryImpl.Marshaller(this));
          serializationContext.registerMarshaller(new InternalMetadataImpl.Marshaller());
          serializationContext.registerMarshaller(new EmbeddedMetadata.Marshaller());
+         serializationContext.registerMarshaller(new EmbeddedMetadata.TypeMarshaller());
          serializationContext.registerMarshaller(new WrappedByteArray.Marshaller());
+         serializationContext.registerMarshaller(new NumericVersion.Marshaller());
+         serializationContext.registerMarshaller(new SimpleClusteredVersion.Marshaller());
          serializationContext.registerMarshaller(new EntryVersionMarshaller());
       } catch (Exception e) {
          log.errorf("Error upon creating marshaller", e);

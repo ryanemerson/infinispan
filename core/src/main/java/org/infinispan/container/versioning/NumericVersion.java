@@ -110,7 +110,7 @@ public class NumericVersion implements IncrementableEntryVersion {
 
       @Override
       public String getTypeName() {
-         return "core.EntryVersion";
+         return "core.NumericVersion";
       }
    }
 }
