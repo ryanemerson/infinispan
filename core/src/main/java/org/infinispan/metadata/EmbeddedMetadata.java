@@ -432,9 +432,13 @@ public class EmbeddedMetadata implements Metadata {
 
       @Override
       public Metadata readFrom(ProtoStreamReader reader) throws IOException {
+         Metadata.Builder builder = new EmbeddedMetadata.Builder();
          Type type = reader.readEnum("type", Type.class);
+         if (type == null)
+            return new EmbeddedMetadata.Builder().build();
+
          EntryVersion version = reader.readObject("version", EntryVersion.class);
-         Metadata.Builder builder = new EmbeddedMetadata.Builder().version(version);
+         builder.version(version);
          switch (type) {
             case EXPIRABLE:
                builder.lifespan(reader.readLong("lifespan"));
@@ -453,6 +457,9 @@ public class EmbeddedMetadata implements Metadata {
       @Override
       public void writeTo(ProtoStreamWriter writer, Metadata metadata) throws IOException {
          Type type = typeMap.get(metadata.getClass());
+         if (type == null)
+            return;
+
          writer.writeEnum("type", type, Type.class);
          writer.writeObject("version", metadata.version(), EntryVersion.class);
          switch (type) {

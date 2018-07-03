@@ -9,10 +9,12 @@ import java.io.OutputStream;
 import org.infinispan.commons.marshall.StreamingMarshaller;
 import org.infinispan.commons.marshall.WrappedByteArray;
 import org.infinispan.commons.marshall.protostream.BaseProtoStreamMarshaller;
+import org.infinispan.commons.util.FastCopyHashMap;
 import org.infinispan.container.versioning.NumericVersion;
 import org.infinispan.container.versioning.SimpleClusteredVersion;
 import org.infinispan.marshall.core.MarshalledEntryImpl;
 import org.infinispan.marshall.protostream.marshallers.EntryVersionMarshaller;
+import org.infinispan.marshall.protostream.marshallers.MapMarshaller;
 import org.infinispan.metadata.EmbeddedMetadata;
 import org.infinispan.metadata.impl.InternalMetadataImpl;
 import org.infinispan.protostream.FileDescriptorSource;
@@ -25,7 +27,7 @@ import org.infinispan.util.logging.LogFactory;
 /**
  * A marshaller that uses Protocol Buffers.
  *
- * @author remers@redhat.com
+ * @author remerson@redhat.com
  * @since 9.4
  */
 public class ProtoStreamMarshaller extends BaseProtoStreamMarshaller implements StreamingMarshaller {
@@ -55,6 +57,7 @@ public class ProtoStreamMarshaller extends BaseProtoStreamMarshaller implements 
          serializationContext.registerMarshaller(new NumericVersion.Marshaller());
          serializationContext.registerMarshaller(new SimpleClusteredVersion.Marshaller());
          serializationContext.registerMarshaller(new EntryVersionMarshaller());
+         serializationContext.registerMarshaller(new MapMarshaller(FastCopyHashMap.class, this));
       } catch (Exception e) {
          log.errorf("Error upon creating marshaller", e);
       }
@@ -68,23 +71,25 @@ public class ProtoStreamMarshaller extends BaseProtoStreamMarshaller implements 
    @Override
    public ObjectOutput startObjectOutput(OutputStream os, boolean isReentrant, int estimatedSize) throws IOException {
       log.errorf(stackTrace(Thread.currentThread().getStackTrace()));
-      return null;  // TODO: Customise this generated block
+      throw new IllegalStateException();
    }
 
    @Override
    public void finishObjectOutput(ObjectOutput oo) {
       log.errorf(stackTrace(Thread.currentThread().getStackTrace()));
+      throw new IllegalStateException();
    }
 
    @Override
    public void objectToObjectStream(Object obj, ObjectOutput out) throws IOException {
       log.errorf(stackTrace(Thread.currentThread().getStackTrace()));
+      throw new IllegalStateException();
    }
 
    @Override
    public ObjectInput startObjectInput(InputStream is, boolean isReentrant) throws IOException {
       log.errorf(stackTrace(Thread.currentThread().getStackTrace()));
-      return null;  // TODO: Customise this generated block
+      throw new IllegalStateException();
    }
 
    @Override
@@ -95,7 +100,7 @@ public class ProtoStreamMarshaller extends BaseProtoStreamMarshaller implements 
    @Override
    public Object objectFromObjectStream(ObjectInput in) throws IOException, ClassNotFoundException, InterruptedException {
       log.errorf(stackTrace(Thread.currentThread().getStackTrace()));
-      return null;  // TODO: Customise this generated block
+      throw new IllegalStateException();
    }
 
    @Override
