@@ -1,5 +1,6 @@
 package org.infinispan.interceptors.impl;
 
+import static org.infinispan.factories.KnownComponentNames.USER_MARSHALLER;
 import static org.infinispan.persistence.PersistenceUtil.internalMetadata;
 import static org.infinispan.persistence.manager.PersistenceManager.AccessMode.BOTH;
 import static org.infinispan.persistence.manager.PersistenceManager.AccessMode.PRIVATE;
@@ -35,18 +36,19 @@ import org.infinispan.commands.write.PutMapCommand;
 import org.infinispan.commands.write.RemoveCommand;
 import org.infinispan.commands.write.ReplaceCommand;
 import org.infinispan.commands.write.WriteCommand;
-import org.infinispan.functional.Param;
-import org.infinispan.functional.Param.PersistenceMode;
-import org.infinispan.commons.marshall.StreamingMarshaller;
+import org.infinispan.commons.marshall.Marshaller;
 import org.infinispan.configuration.cache.PersistenceConfiguration;
-import org.infinispan.container.impl.InternalEntryFactory;
 import org.infinispan.container.entries.CacheEntry;
 import org.infinispan.container.entries.InternalCacheValue;
+import org.infinispan.container.impl.InternalEntryFactory;
 import org.infinispan.context.InvocationContext;
 import org.infinispan.context.impl.FlagBitSets;
 import org.infinispan.context.impl.TxInvocationContext;
+import org.infinispan.factories.annotations.ComponentName;
 import org.infinispan.factories.annotations.Inject;
 import org.infinispan.factories.annotations.Start;
+import org.infinispan.functional.Param;
+import org.infinispan.functional.Param.PersistenceMode;
 import org.infinispan.interceptors.InvocationSuccessAction;
 import org.infinispan.jmx.annotations.DisplayType;
 import org.infinispan.jmx.annotations.MBean;
@@ -80,7 +82,7 @@ public class CacheWriterInterceptor extends JmxStatsCommandInterceptor {
    @Inject protected PersistenceManager persistenceManager;
    @Inject private InternalEntryFactory entryFactory;
    @Inject private TransactionManager transactionManager;
-   @Inject private StreamingMarshaller marshaller;
+   @Inject @ComponentName(USER_MARSHALLER) private Marshaller marshaller;
 
    PersistenceConfiguration loaderConfig = null;
    final AtomicLong cacheStores = new AtomicLong(0);

@@ -1,5 +1,6 @@
 package org.infinispan.interceptors.impl;
 
+import static org.infinispan.factories.KnownComponentNames.USER_MARSHALLER;
 import static org.infinispan.persistence.manager.PersistenceManager.AccessMode.SHARED;
 
 import java.util.List;
@@ -10,9 +11,10 @@ import org.infinispan.commands.tx.CommitCommand;
 import org.infinispan.commands.tx.PrepareCommand;
 import org.infinispan.commands.tx.RollbackCommand;
 import org.infinispan.commands.write.WriteCommand;
-import org.infinispan.commons.marshall.StreamingMarshaller;
+import org.infinispan.commons.marshall.Marshaller;
 import org.infinispan.container.impl.InternalEntryFactory;
 import org.infinispan.context.impl.TxInvocationContext;
+import org.infinispan.factories.annotations.ComponentName;
 import org.infinispan.factories.annotations.Inject;
 import org.infinispan.interceptors.DDAsyncInterceptor;
 import org.infinispan.persistence.manager.PersistenceManager;
@@ -27,7 +29,7 @@ import org.infinispan.persistence.manager.PersistenceManager;
 public class TransactionalStoreInterceptor extends DDAsyncInterceptor {
    @Inject private PersistenceManager persistenceManager;
    @Inject private InternalEntryFactory entryFactory;
-   @Inject private StreamingMarshaller marshaller;
+   @Inject @ComponentName(USER_MARSHALLER) private Marshaller marshaller;
 
    @Override
    public Object visitPrepareCommand(TxInvocationContext ctx, PrepareCommand command) throws Throwable {

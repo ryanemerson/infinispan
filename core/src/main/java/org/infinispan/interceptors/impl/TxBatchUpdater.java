@@ -23,10 +23,10 @@ import org.infinispan.commands.write.PutKeyValueCommand;
 import org.infinispan.commands.write.PutMapCommand;
 import org.infinispan.commands.write.RemoveCommand;
 import org.infinispan.commands.write.ReplaceCommand;
-import org.infinispan.commons.marshall.StreamingMarshaller;
-import org.infinispan.container.impl.InternalEntryFactory;
+import org.infinispan.commons.marshall.Marshaller;
 import org.infinispan.container.entries.CacheEntry;
 import org.infinispan.container.entries.InternalCacheValue;
+import org.infinispan.container.impl.InternalEntryFactory;
 import org.infinispan.context.InvocationContext;
 import org.infinispan.marshall.core.MarshalledEntryImpl;
 import org.infinispan.persistence.manager.PersistenceManager;
@@ -40,25 +40,25 @@ public class TxBatchUpdater extends AbstractVisitor {
    private final CacheWriterInterceptor cwi;
    private final PersistenceManager persistenceManager;
    private final InternalEntryFactory entryFactory;
-   private final StreamingMarshaller marshaller;
+   private final Marshaller marshaller;
    private final BatchModification modifications;
    private final BatchModification nonSharedModifications;
    private final boolean generateStatistics;
    private int putCount;
 
    static TxBatchUpdater createNonTxStoreUpdater(CacheWriterInterceptor interceptor, PersistenceManager persistenceManager,
-                                                 InternalEntryFactory entryFactory, StreamingMarshaller marshaller) {
+                                                 InternalEntryFactory entryFactory, Marshaller marshaller) {
       return new TxBatchUpdater(interceptor, persistenceManager, entryFactory, marshaller,
             new BatchModification(null), new BatchModification(null));
    }
 
    static TxBatchUpdater createTxStoreUpdater(PersistenceManager persistenceManager, InternalEntryFactory entryFactory,
-                                              StreamingMarshaller marshaller, Set<Object> affectedKeys) {
+                                              Marshaller marshaller, Set<Object> affectedKeys) {
       return new TxBatchUpdater(null, persistenceManager, entryFactory, marshaller, new BatchModification(affectedKeys), null);
    }
 
    private TxBatchUpdater(CacheWriterInterceptor cwi, PersistenceManager persistenceManager, InternalEntryFactory entryFactory,
-                          StreamingMarshaller marshaller, BatchModification modifications, BatchModification nonSharedModifications) {
+                          Marshaller marshaller, BatchModification modifications, BatchModification nonSharedModifications) {
       this.cwi = cwi;
       this.persistenceManager = persistenceManager;
       this.entryFactory = entryFactory;
