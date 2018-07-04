@@ -1,5 +1,6 @@
 package org.infinispan.remoting.transport.jgroups;
 
+import static org.infinispan.factories.KnownComponentNames.INTERNAL_MARSHALLER;
 import static org.infinispan.remoting.transport.jgroups.JGroupsAddressCache.fromJGroupsAddress;
 import static org.infinispan.util.logging.LogFactory.CLUSTER;
 
@@ -69,13 +70,13 @@ import org.infinispan.remoting.rpc.ResponseMode;
 import org.infinispan.remoting.transport.AbstractRequest;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.remoting.transport.BackupResponse;
+import org.infinispan.remoting.transport.ResponseCollector;
+import org.infinispan.remoting.transport.Transport;
 import org.infinispan.remoting.transport.impl.FilterMapResponseCollector;
 import org.infinispan.remoting.transport.impl.MapResponseCollector;
 import org.infinispan.remoting.transport.impl.MultiTargetRequest;
 import org.infinispan.remoting.transport.impl.Request;
 import org.infinispan.remoting.transport.impl.RequestRepository;
-import org.infinispan.remoting.transport.ResponseCollector;
-import org.infinispan.remoting.transport.Transport;
 import org.infinispan.remoting.transport.impl.SingleResponseCollector;
 import org.infinispan.remoting.transport.impl.SingleTargetRequest;
 import org.infinispan.remoting.transport.impl.SingletonMapResponseCollector;
@@ -141,7 +142,7 @@ public class JGroupsTransport implements Transport {
    private static final byte SINGLE_MESSAGE = 2;
 
    @Inject protected GlobalConfiguration configuration;
-   @Inject protected StreamingMarshaller marshaller;
+   @Inject @ComponentName(INTERNAL_MARSHALLER) protected StreamingMarshaller marshaller;
    @Inject protected CacheManagerNotifier notifier;
    @Inject protected TimeService timeService;
    @Inject protected InboundInvocationHandler invocationHandler;

@@ -9,6 +9,7 @@ import static org.infinispan.context.Flag.SKIP_LOCKING;
 import static org.infinispan.context.Flag.SKIP_OWNERSHIP_CHECK;
 import static org.infinispan.context.Flag.SKIP_XSITE_BACKUP;
 import static org.infinispan.factories.KnownComponentNames.PERSISTENCE_EXECUTOR;
+import static org.infinispan.factories.KnownComponentNames.USER_MARSHALLER;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -37,7 +38,7 @@ import org.infinispan.AdvancedCache;
 import org.infinispan.commons.CacheException;
 import org.infinispan.commons.api.Lifecycle;
 import org.infinispan.commons.io.ByteBufferFactory;
-import org.infinispan.commons.marshall.StreamingMarshaller;
+import org.infinispan.commons.marshall.Marshaller;
 import org.infinispan.commons.util.Util;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.Configuration;
@@ -96,7 +97,7 @@ public class PersistenceManagerImpl implements PersistenceManager {
 
    @Inject private Configuration configuration;
    @Inject private AdvancedCache<Object, Object> cache;
-   @Inject private StreamingMarshaller m;
+   @Inject @ComponentName(USER_MARSHALLER) private Marshaller m;
    @Inject private TransactionManager transactionManager;
    @Inject private TimeService timeService;
    @Inject @ComponentName(PERSISTENCE_EXECUTOR)
@@ -996,7 +997,7 @@ public class PersistenceManagerImpl implements PersistenceManager {
       }
    }
 
-   public StreamingMarshaller getMarshaller() {
+   public Marshaller getMarshaller() {
       return m;
    }
 

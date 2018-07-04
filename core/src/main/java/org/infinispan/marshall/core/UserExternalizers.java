@@ -12,11 +12,11 @@ import org.infinispan.configuration.global.GlobalConfiguration;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 
-final class ExternalExternalizers {
+final class UserExternalizers {
 
-   private static final Log log = LogFactory.getLog(ExternalExternalizers.class);
+   private static final Log log = LogFactory.getLog(UserExternalizers.class);
 
-   private ExternalExternalizers() {
+   private UserExternalizers() {
    }
 
    static ClassToExternalizerMap load(GlobalConfiguration globalCfg) {
