@@ -23,7 +23,7 @@ import org.infinispan.commons.marshall.NotSerializableException;
 import org.infinispan.commons.marshall.SerializeFunctionWith;
 import org.infinispan.commons.marshall.SerializeWith;
 import org.infinispan.commons.marshall.StreamingMarshaller;
-import org.infinispan.configuration.global.GlobalConfiguration;
+import org.infinispan.commons.marshall.jboss.DefaultContextClassResolver;
 import org.infinispan.factories.GlobalComponentRegistry;
 import org.infinispan.factories.annotations.Inject;
 import org.infinispan.factories.annotations.Start;
@@ -33,6 +33,7 @@ import org.infinispan.factories.scopes.Scopes;
 import org.infinispan.marshall.core.ClassToExternalizerMap.IdToExternalizerMap;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
+import org.jboss.marshalling.ClassResolver;
 
 /**
  * A globally-scoped marshaller. This is needed so that the transport layer
@@ -132,16 +133,13 @@ public class GlobalMarshaller implements StreamingMarshaller {
       }
 
       if (external == null) {
-         this.external = startDefaultExternalMarshaller(gcr.getGlobalConfiguration());
+         ClassResolver classResolver = new DefaultContextClassResolver(gcr.getGlobalConfiguration().classLoader());
+         StreamingMarshaller marshaller = new ExternalJBossMarshaller(this, classResolver);
+         marshaller.start();
+         this.external = marshaller;
       }
 
       classIdentifiers = ClassIdentifiers.load(gcr.getGlobalConfiguration());
-   }
-
-   public Marshaller startDefaultExternalMarshaller(GlobalConfiguration globalCfg) {
-      StreamingMarshaller marshaller = new ExternalJBossMarshaller(this, globalCfg);
-      marshaller.start();
-      return marshaller;
    }
 
    @Override

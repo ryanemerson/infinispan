@@ -107,6 +107,7 @@ public class PutKeyValueCommand extends AbstractDataWriteCommand implements Meta
 
    @Override
    public void writeTo(ObjectOutput output) throws IOException {
+      // TODO need to replace this with UserMarshaller write. Create wrapper object that is externalized?
       output.writeObject(key);
       output.writeObject(value);
       UnsignedNumeric.writeUnsignedInt(output, segment);

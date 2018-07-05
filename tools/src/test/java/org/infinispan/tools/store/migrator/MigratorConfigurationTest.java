@@ -69,6 +69,7 @@ public class MigratorConfigurationTest {
       properties.put(propKey(SOURCE, MARSHALLER, CLASS), GenericJBossMarshaller.class.getName());
 
       StoreProperties props = new StoreProperties(SOURCE, properties);
+      // TODO this will need changing
       StreamingMarshaller marshaller = SerializationConfigUtil.getMarshaller(props);
       assert marshaller != null;
       assert marshaller instanceof GenericJBossMarshaller;
