@@ -20,11 +20,6 @@
       </dependency>
 
       <dependency>
-         <groupId>org.infinispan.protostream</groupId>
-         <artifactId>protostream</artifactId>
-      </dependency>
-
-      <dependency>
          <groupId>org.infinispan</groupId>
          <artifactId>infinispan-commons-test</artifactId>
          <scope>test</scope>
