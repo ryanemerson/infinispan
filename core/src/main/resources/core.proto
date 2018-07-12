@@ -1,0 +1,61 @@
+package core;
+
+message MarshalledEntry {
+    required bytes key = 1;
+    required bytes value = 2;
+    optional InternalMetadata metadata = 3;
+}
+
+message WrappedByteArray {
+    required bytes wrappedBytes = 1;
+    optional int32 hashcode = 2;
+}
+
+message Metadata {
+    enum Type {
+        IMMORTAL = 0;
+        EXPIRABLE = 1;
+        LIFESPAN_EXPIRABLE = 2;
+        MAXIDLE_EXPIRABLE = 3;
+    }
+    optional Metadata.Type type = 1;
+    optional EntryVersion version = 2;
+    optional int64 lifespan = 3 [default = -1];
+    optional int64 maxIdle = 4 [default = -1];
+}
+
+message InternalMetadata {
+    required Metadata actual = 1;
+    optional int64 created = 2 [default = -1];
+    optional int64 lastUsed = 3 [default = -1];
+}
+
+message EntryVersion {
+//    https://issues.jboss.org/browse/IPROTO-63
+//    oneof version {
+//        NumericVersion numeric = 1;
+//        ClusteredVersion clustered = 2;
+//    }
+    optional NumericVersion numeric = 1;
+    optional ClusteredVersion clustered = 2;
+}
+
+message NumericVersion {
+    required int64 version = 1;
+}
+
+message ClusteredVersion {
+    required int64 version = 1;
+    required int32 topology = 2;
+}
+
+// We can't use the map type as it does not allow a map of bytes
+message MapEntry {
+    // TODO introduce enum for common & internal impls?
+    // default value means empty map
+    required string keyType = 1 [default = ""];
+    repeated bytes keySet = 2 [packed=true];
+    optional string valueType = 3 [default = ""];
+    repeated bytes valueSet = 4 [packed=true];
+    optional string implementation = 5;
+}

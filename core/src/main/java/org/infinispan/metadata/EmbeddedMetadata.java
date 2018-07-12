@@ -3,6 +3,8 @@ package org.infinispan.metadata;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -10,6 +12,8 @@ import org.infinispan.commons.marshall.AbstractExternalizer;
 import org.infinispan.commons.util.Util;
 import org.infinispan.container.versioning.EntryVersion;
 import org.infinispan.marshall.core.Ids;
+import org.infinispan.protostream.EnumMarshaller;
+import org.infinispan.protostream.MessageMarshaller;
 import org.jboss.marshalling.util.IdentityIntMap;
 
 /**
@@ -372,7 +376,114 @@ public class EmbeddedMetadata implements Metadata {
                throw new IllegalStateException("Unknown metadata type " + number);
          }
       }
-
    }
 
+   public enum Type {
+      IMMORTAL(0),
+      EXPIRABLE(1),
+      LIFESPAN_EXPIRABLE(2),
+      MAXIDLE_EXPIRABLE(3);
+
+      final int index;
+
+      Type(int index) {
+         this.index = index;
+      }
+
+      static Type get(int index) {
+         for (Type type : EmbeddedMetadata.Type.values())
+            if (type.index == index)
+               return type;
+         return null;
+      }
+   }
+
+   public static class TypeMarshaller implements EnumMarshaller<Type> {
+      @Override
+      public Type decode(int enumValue) {
+         return EmbeddedMetadata.Type.get(enumValue);
+      }
+
+      @Override
+      public int encode(Type metadataType) throws IllegalArgumentException {
+         return metadataType.index;
+      }
+
+      @Override
+      public Class<? extends Type> getJavaClass() {
+         return Type.class;
+      }
+
+      @Override
+      public String getTypeName() {
+         return "core.Metadata.Type";
+      }
+   }
+
+   public static class Marshaller implements MessageMarshaller<Metadata> {
+
+      static Map<Class, Type> typeMap = new HashMap<>();
+      static {
+         typeMap.put(EmbeddedMetadata.class, Type.IMMORTAL);
+         typeMap.put(EmbeddedMetadata.EmbeddedExpirableMetadata.class, Type.EXPIRABLE);
+         typeMap.put(EmbeddedMetadata.EmbeddedLifespanExpirableMetadata.class, Type.LIFESPAN_EXPIRABLE);
+         typeMap.put(EmbeddedMetadata.EmbeddedMaxIdleExpirableMetadata.class, Type.MAXIDLE_EXPIRABLE);
+      }
+
+      @Override
+      public Metadata readFrom(ProtoStreamReader reader) throws IOException {
+         Metadata.Builder builder = new EmbeddedMetadata.Builder();
+         Type type = reader.readEnum("type", Type.class);
+         if (type == null)
+            return new EmbeddedMetadata.Builder().build();
+
+         EntryVersion version = reader.readObject("version", EntryVersion.class);
+         builder.version(version);
+         switch (type) {
+            case EXPIRABLE:
+               builder.lifespan(reader.readLong("lifespan"));
+               builder.maxIdle(reader.readLong("maxIdle"));
+               break;
+            case LIFESPAN_EXPIRABLE:
+               builder.lifespan(reader.readLong("lifespan"));
+               break;
+            case MAXIDLE_EXPIRABLE:
+               builder.maxIdle(reader.readLong("maxIdle"));
+               break;
+         }
+         return builder.build();
+      }
+
+      @Override
+      public void writeTo(ProtoStreamWriter writer, Metadata metadata) throws IOException {
+         Type type = typeMap.get(metadata.getClass());
+         if (type == null)
+            return;
+
+         writer.writeEnum("type", type, Type.class);
+         writer.writeObject("version", metadata.version(), EntryVersion.class);
+         switch (type) {
+            case EXPIRABLE:
+               writer.writeLong("lifespan", metadata.lifespan());
+               writer.writeLong("maxIdle", metadata.maxIdle());
+               break;
+            case LIFESPAN_EXPIRABLE:
+               writer.writeLong("lifespan", metadata.lifespan());
+               break;
+            case MAXIDLE_EXPIRABLE:
+               writer.writeLong("maxIdle", metadata.maxIdle());
+               break;
+         }
+      }
+
+      @Override
+      public Class<? extends Metadata> getJavaClass() {
+         return Metadata.class;
+      }
+
+      @Override
+      public String getTypeName() {
+         return "core.Metadata";
+      }
+   }
 }
