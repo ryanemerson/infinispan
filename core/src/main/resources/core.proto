@@ -1,11 +1,5 @@
 package core;
 
-message MarshalledEntry {
-    required bytes key = 1;
-    required bytes value = 2;
-    optional InternalMetadata metadata = 3;
-}
-
 message WrappedByteArray {
     required bytes wrappedBytes = 1;
     optional int32 hashcode = 2;

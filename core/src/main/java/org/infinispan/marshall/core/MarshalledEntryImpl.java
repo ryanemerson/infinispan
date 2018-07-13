@@ -6,13 +6,11 @@ import java.io.ObjectOutput;
 import java.util.Set;
 
 import org.infinispan.commons.io.ByteBuffer;
-import org.infinispan.commons.io.ByteBufferImpl;
 import org.infinispan.commons.marshall.AbstractExternalizer;
 import org.infinispan.commons.marshall.Marshaller;
 import org.infinispan.commons.util.Util;
 import org.infinispan.metadata.InternalMetadata;
 import org.infinispan.metadata.Metadata;
-import org.infinispan.protostream.MessageMarshaller;
 
 /**
  * @author Mircea Markus
@@ -229,40 +227,6 @@ public class MarshalledEntryImpl<K,V> implements MarshalledEntry<K,V> {
       @SuppressWarnings("unchecked")
       public Set<Class<? extends MarshalledEntryImpl>> getTypeClasses() {
          return Util.<Class<? extends MarshalledEntryImpl>>asSet(MarshalledEntryImpl.class);
-      }
-   }
-
-   public static class MarshallerImpl implements MessageMarshaller<MarshalledEntryImpl> {
-
-      private final Marshaller marshaller;
-
-      public MarshallerImpl(Marshaller marshaller) {
-         this.marshaller = marshaller;
-      }
-
-      @Override
-      public Class<? extends MarshalledEntryImpl> getJavaClass() {
-         return MarshalledEntryImpl.class;
-      }
-
-      @Override
-      public String getTypeName() {
-         return "core.MarshalledEntry";
-      }
-
-      @Override
-      public MarshalledEntryImpl readFrom(ProtoStreamReader reader) throws IOException {
-         ByteBuffer key = new ByteBufferImpl(reader.readBytes("key"));
-         ByteBuffer value = new ByteBufferImpl(reader.readBytes("value"));
-         InternalMetadata metadata = reader.readObject("metadata", InternalMetadata.class);
-         return new MarshalledEntryImpl(key, value, metadata, marshaller);
-      }
-
-      @Override
-      public void writeTo(ProtoStreamWriter writer, MarshalledEntryImpl marshalledEntry) throws IOException {
-         writer.writeBytes("key", marshalledEntry.getKeyBytes().getBuf());
-         writer.writeBytes("value", marshalledEntry.getValueBytes().getBuf());
-         writer.writeObject("metadata", marshalledEntry.getMetadata(), InternalMetadata.class);
       }
    }
 }

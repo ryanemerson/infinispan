@@ -12,7 +12,6 @@ import org.infinispan.commons.marshall.protostream.BaseProtoStreamMarshaller;
 import org.infinispan.commons.util.FastCopyHashMap;
 import org.infinispan.container.versioning.NumericVersion;
 import org.infinispan.container.versioning.SimpleClusteredVersion;
-import org.infinispan.marshall.core.MarshalledEntryImpl;
 import org.infinispan.marshall.protostream.marshallers.EntryVersionMarshaller;
 import org.infinispan.marshall.protostream.marshallers.MapMarshaller;
 import org.infinispan.metadata.EmbeddedMetadata;
@@ -38,18 +37,8 @@ public class ProtoStreamMarshaller extends BaseProtoStreamMarshaller implements 
 
    public ProtoStreamMarshaller() {
       try {
-//         Code for importing generate POJOs. We probably don't want to do this as we want the .proto files to be as
-//         self descriptive as possible for potential external uses ... although we could also export the generated schemas
-//         new ProtoSchemaBuilder()
-//               .fileName("core.generated")
-//               .packageName("core.generated")
-//               .addClass(EmbeddedMetadata.Marshaller.Type.class)
-//               .addClass(EntryVersionMarshaller.VersionType.class)
-//               .build(serializationContext);
-
          // TODO update so that serializationContext is based upon cache config
          serializationContext.registerProtoFiles(FileDescriptorSource.fromResources("/core.proto"));
-         serializationContext.registerMarshaller(new MarshalledEntryImpl.MarshallerImpl(this));
          serializationContext.registerMarshaller(new InternalMetadataImpl.Marshaller());
          serializationContext.registerMarshaller(new EmbeddedMetadata.Marshaller());
          serializationContext.registerMarshaller(new EmbeddedMetadata.TypeMarshaller());
