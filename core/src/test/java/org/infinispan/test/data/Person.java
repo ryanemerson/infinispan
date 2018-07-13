@@ -3,13 +3,17 @@ package org.infinispan.test.data;
 import java.io.Serializable;
 
 import org.infinispan.marshall.core.ExternalPojo;
+import org.infinispan.protostream.annotations.ProtoField;
 
 public class Person implements Serializable, ExternalPojo {
 
    private static final long serialVersionUID = -885384294556845285L;
 
-   String name = null;
-   Address address;
+   @ProtoField(number =  1)
+   public String name = null;
+
+   @ProtoField(number = 2)
+   public Address address;
 
    public Person() {
       // Needed for serialization

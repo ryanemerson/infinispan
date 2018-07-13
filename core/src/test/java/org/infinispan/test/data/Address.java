@@ -2,12 +2,17 @@ package org.infinispan.test.data;
 
 import java.io.Serializable;
 
+import org.infinispan.protostream.annotations.ProtoField;
+
 public class Address implements Serializable {
    private static final long serialVersionUID = 5943073369866339615L;
 
-   String street = null;
-   String city = "San Jose";
-   int zip = 0;
+   @ProtoField(number =  1)
+   public String street = null;
+   @ProtoField(number =  2)
+   public String city = "San Jose";
+   @ProtoField(number =  3, defaultValue = "0")
+   public int zip = 0;
 
    public String getStreet() {
       return street;

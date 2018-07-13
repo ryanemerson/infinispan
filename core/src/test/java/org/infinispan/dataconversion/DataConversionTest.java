@@ -43,12 +43,15 @@ import org.infinispan.interceptors.BaseCustomAsyncInterceptor;
 import org.infinispan.interceptors.impl.EntryWrappingInterceptor;
 import org.infinispan.marshall.core.EncoderRegistry;
 import org.infinispan.marshall.core.GlobalMarshaller;
+import org.infinispan.marshall.protostream.ProtoStreamMarshaller;
 import org.infinispan.notifications.Listener;
 import org.infinispan.notifications.cachelistener.annotation.CacheEntryCreated;
 import org.infinispan.notifications.cachelistener.event.CacheEntryEvent;
+import org.infinispan.protostream.annotations.ProtoSchemaBuilder;
 import org.infinispan.test.AbstractInfinispanTest;
 import org.infinispan.test.CacheManagerCallable;
 import org.infinispan.test.TestingUtil;
+import org.infinispan.test.data.Address;
 import org.infinispan.test.data.Person;
 import org.infinispan.test.fwk.TestCacheManagerFactory;
 import org.testng.Assert;
@@ -76,6 +79,14 @@ public class DataConversionTest extends AbstractInfinispanTest {
             Cache<String, Person> cache = cm.getCache();
 
             Marshaller marshaller = cache.getAdvancedCache().getComponentRegistry().getUserMarshaller();
+            // TODO make static util class that adds all test classes to a passed ProtostreamMarshaller and excepts a cache as input
+            ProtoStreamMarshaller pm = (ProtoStreamMarshaller) marshaller;
+            new ProtoSchemaBuilder()
+                  .addClass(Person.class)
+                  .addClass(Address.class)
+                  .fileName("test.proto")
+                  .packageName("org.infinispan.test")
+                  .build(pm.getSerializationContext());
 
             Person value = new Person();
             cache.put("1", value);

@@ -8,6 +8,7 @@ import org.infinispan.commons.marshall.Marshaller;
 import org.infinispan.commons.marshall.StreamingMarshaller;
 import org.infinispan.factories.annotations.DefaultFactoryFor;
 import org.infinispan.marshall.core.GlobalMarshaller;
+import org.infinispan.marshall.protostream.ProtoStreamMarshaller;
 
 /**
  * MarshallerFactory.
@@ -27,6 +28,7 @@ public class MarshallerFactory extends NamedComponentFactory implements AutoInst
    public <T> T construct(Class<T> componentType, String componentName) {
 
       Marshaller userMarshaller = globalConfiguration.serialization().marshaller();
+      userMarshaller = new ProtoStreamMarshaller();
       Marshaller comp;
       if (componentName.equals(USER_MARSHALLER)) {
          // If userMarshaller is null, then use the old marshaller
