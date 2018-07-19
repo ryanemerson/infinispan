@@ -23,6 +23,7 @@ import org.infinispan.commons.marshall.NotSerializableException;
 import org.infinispan.commons.marshall.SerializeFunctionWith;
 import org.infinispan.commons.marshall.SerializeWith;
 import org.infinispan.commons.marshall.StreamingMarshaller;
+import org.infinispan.commons.marshall.jboss.DefaultContextClassResolver;
 import org.infinispan.configuration.global.GlobalConfiguration;
 import org.infinispan.factories.GlobalComponentRegistry;
 import org.infinispan.factories.annotations.Inject;
@@ -33,6 +34,7 @@ import org.infinispan.factories.scopes.Scopes;
 import org.infinispan.marshall.core.ClassToExternalizerMap.IdToExternalizerMap;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
+import org.jboss.marshalling.ClassResolver;
 
 /**
  * A globally-scoped marshaller. This is needed so that the transport layer
@@ -117,7 +119,16 @@ public class GlobalMarshaller implements StreamingMarshaller {
    @Override
    @Start(priority = 8) // Should start after the externalizer table and before transport
    public void start() {
-      internalExts = InternalExternalizers.load(this, gcr, cmdFactory);
+      if (external == null) {
+         GlobalConfiguration globalCfg = gcr.getGlobalConfiguration();
+         ClassResolver classResolver = globalCfg.serialization().classResolver();
+         if (classResolver == null)
+            classResolver = new DefaultContextClassResolver(globalCfg.classLoader());
+         this.external = new ExternalJbossMarshaller(this, classResolver);
+         internalExts = InternalExternalizers.load(this, gcr, cmdFactory);
+      } else {
+         internalExts = InternalExternalizers.load(external, gcr, cmdFactory);
+      }
       reverseInternalExts = internalExts.reverseMap(Ids.MAX_ID);
       if (trace) {
          log.tracef("Internal class to externalizer ids: %s", internalExts);
@@ -131,17 +142,8 @@ public class GlobalMarshaller implements StreamingMarshaller {
          log.tracef("External reverse externalizers: %s", reverseExternalExts);
       }
 
-      if (external == null) {
-         this.external = startDefaultExternalMarshaller(gcr.getGlobalConfiguration());
-      }
-
       classIdentifiers = ClassIdentifiers.load(gcr.getGlobalConfiguration());
-   }
-
-   public Marshaller startDefaultExternalMarshaller(GlobalConfiguration globalCfg) {
-      StreamingMarshaller marshaller = new ExternalJBossMarshaller(this, globalCfg);
-      marshaller.start();
-      return marshaller;
+      external.start();
    }
 
    @Override
@@ -152,12 +154,7 @@ public class GlobalMarshaller implements StreamingMarshaller {
       externalExts = null;
       reverseExternalExts = null;
       classIdentifiers = null;
-      stopDefaultExternalMarshaller();
-   }
-
-   public void stopDefaultExternalMarshaller() {
-      if (external instanceof StreamingMarshaller)
-         ((StreamingMarshaller) external).stop();
+      external.stop();
    }
 
    @Override
@@ -607,7 +604,6 @@ public class GlobalMarshaller implements StreamingMarshaller {
    }
 
    private void writeUnknown(Object obj, BytesObjectOutput out) throws IOException {
-      assert ExternallyMarshallable.isAllowed(obj) : "Check support for: " + obj.getClass();
       out.writeByte(ID_UNKNOWN);
       writeRawUnknown(obj, out);
    }

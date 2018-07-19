@@ -7,7 +7,7 @@ import java.util.Set;
 
 import org.infinispan.commons.io.ByteBuffer;
 import org.infinispan.commons.marshall.AbstractExternalizer;
-import org.infinispan.commons.marshall.StreamingMarshaller;
+import org.infinispan.commons.marshall.Marshaller;
 import org.infinispan.commons.util.Util;
 import org.infinispan.metadata.InternalMetadata;
 import org.infinispan.persistence.spi.PersistenceException;
@@ -37,23 +37,23 @@ public class MarshalledEntryImpl<K,V> implements MarshalledEntry<K,V> {
    private transient K key;
    private transient V value;
    private transient InternalMetadata metadata;
-   private final transient StreamingMarshaller marshaller;
+   private volatile transient Marshaller marshaller;
 
-   public MarshalledEntryImpl(ByteBuffer key, ByteBuffer valueBytes, ByteBuffer metadataBytes, StreamingMarshaller marshaller) {
+   public MarshalledEntryImpl(ByteBuffer key, ByteBuffer valueBytes, ByteBuffer metadataBytes, Marshaller marshaller) {
       this.keyBytes = key;
       this.valueBytes = valueBytes;
       this.metadataBytes = metadataBytes;
       this.marshaller = marshaller;
    }
 
-   public MarshalledEntryImpl(K key, ByteBuffer valueBytes, ByteBuffer metadataBytes, StreamingMarshaller marshaller) {
+   public MarshalledEntryImpl(K key, ByteBuffer valueBytes, ByteBuffer metadataBytes, Marshaller marshaller) {
       this.key = key;
       this.valueBytes = valueBytes;
       this.metadataBytes = metadataBytes;
       this.marshaller = marshaller;
    }
 
-   public MarshalledEntryImpl(K key, V value, InternalMetadata im, StreamingMarshaller sm) {
+   public MarshalledEntryImpl(K key, V value, InternalMetadata im, Marshaller sm) {
       this.key = key;
       this.value = value;
       this.metadata = im;
@@ -190,10 +190,10 @@ public class MarshalledEntryImpl<K,V> implements MarshalledEntry<K,V> {
 
       private static final long serialVersionUID = -5291318076267612501L;
 
-      private final StreamingMarshaller marshaller;
+      private final Marshaller userMarshaller;
 
-      public Externalizer(StreamingMarshaller marshaller) {
-         this.marshaller = marshaller;
+      public Externalizer(Marshaller userMarshaller) {
+         this.userMarshaller = userMarshaller;
       }
 
       @Override
@@ -205,10 +205,10 @@ public class MarshalledEntryImpl<K,V> implements MarshalledEntry<K,V> {
 
       @Override
       public MarshalledEntryImpl readObject(ObjectInput input) throws IOException, ClassNotFoundException {
-            ByteBuffer keyBytes = (ByteBuffer) input.readObject();
-            ByteBuffer valueBytes = (ByteBuffer) input.readObject();
-            ByteBuffer metadataBytes = (ByteBuffer) input.readObject();
-            return new MarshalledEntryImpl(keyBytes, valueBytes, metadataBytes, marshaller);
+         ByteBuffer keyBytes = (ByteBuffer) input.readObject();
+         ByteBuffer valueBytes = (ByteBuffer) input.readObject();
+         ByteBuffer metadataBytes = (ByteBuffer) input.readObject();
+         return new MarshalledEntryImpl(keyBytes, valueBytes, metadataBytes, userMarshaller);
       }
 
       @Override
