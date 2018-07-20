@@ -1,0 +1,18 @@
+package persistence.core;
+
+// Must be the same as org.infinispan.marshall.persistence.impl.PersistenceContext.PersistenceContextInitializer fileName + filePath
+import "schema/generated/persistence.core.proto";
+
+message AtomicMap {
+    repeated AtomicMapEntry entry = 1;
+}
+
+message AtomicKeySet {
+    required ByteString cachename = 1;
+    required bytes group = 2;
+}
+
+message AtomicKeySetKey {
+    required bytes group = 1;
+    required bytes key = 2;
+}
