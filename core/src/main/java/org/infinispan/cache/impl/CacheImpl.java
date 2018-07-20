@@ -96,6 +96,8 @@ import org.infinispan.eviction.PassivationManager;
 import org.infinispan.expiration.ExpirationManager;
 import org.infinispan.expiration.impl.InternalExpirationManager;
 import org.infinispan.factories.ComponentRegistry;
+import org.infinispan.factories.KnownComponentNames;
+import org.infinispan.factories.annotations.ComponentName;
 import org.infinispan.factories.annotations.Inject;
 import org.infinispan.factories.annotations.SurvivesRestarts;
 import org.infinispan.filter.KeyFilter;
@@ -164,7 +166,7 @@ public class CacheImpl<K, V> implements AdvancedCache<K, V> {
    @Inject protected ComponentRegistry componentRegistry;
    @Inject protected TransactionManager transactionManager;
    @Inject protected RpcManager rpcManager;
-   @Inject protected StreamingMarshaller marshaller;
+   @Inject @ComponentName(KnownComponentNames.INTERNAL_MARSHALLER) protected StreamingMarshaller marshaller;
    @Inject protected KeyPartitioner keyPartitioner;
    @Inject private EvictionManager evictionManager;
    @Inject private InternalExpirationManager<K, V> expirationManager;

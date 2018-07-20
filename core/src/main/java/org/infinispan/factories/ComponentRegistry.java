@@ -23,6 +23,7 @@ import org.infinispan.factories.impl.ComponentRef;
 import org.infinispan.factories.scopes.Scopes;
 import org.infinispan.lifecycle.ComponentStatus;
 import org.infinispan.lifecycle.ModuleLifecycle;
+import org.infinispan.marshall.persistence.PersistenceMarshaller;
 import org.infinispan.notifications.cachemanagerlistener.CacheManagerNotifier;
 import org.infinispan.persistence.manager.PreloadManager;
 import org.infinispan.reactive.publisher.impl.ClusterPublisherManager;
@@ -64,6 +65,8 @@ public class ComponentRegistry extends AbstractComponentRegistry {
    private PerCacheInboundInvocationHandler inboundInvocationHandler;
    private VersionGenerator versionGenerator;
    private DistributionManager distributionManager;
+   private PersistenceMarshaller persistenceMarshaller;
+   private StreamingMarshaller internalMarshaller;
 
    /**
     * Creates an instance of the component registry.  The configuration passed in is automatically registered.
@@ -229,11 +232,23 @@ public class ComponentRegistry extends AbstractComponentRegistry {
       return cacheName;
    }
 
-   /**
-    * Caching shortcut for #getComponent(StreamingMarshaller.class, KnownComponentNames.CACHE_MARSHALLER);
-    */
+   @Deprecated
    public StreamingMarshaller getCacheMarshaller() {
-      return globalComponents.getComponent(StreamingMarshaller.class);
+      return internalMarshaller;
+   }
+
+   /**
+    * Caching shortcut for #getComponent(StreamingMarshaller.class, INTERNAL_MARSHALLER);
+    */
+   public StreamingMarshaller getInternalMarshaller() {
+      return internalMarshaller;
+   }
+
+   /**
+    * Caching shortcut for #getComponent(PersistenceMarshaller.class, PERSISTENCE_MARSHALLER);
+    */
+   public PersistenceMarshaller getPersistenceMarshaller() {
+      return persistenceMarshaller;
    }
 
    /**
@@ -303,6 +318,8 @@ public class ComponentRegistry extends AbstractComponentRegistry {
       inboundInvocationHandler = basicComponentRegistry.getComponent(PerCacheInboundInvocationHandler.class).wired();
       versionGenerator = basicComponentRegistry.getComponent(VersionGenerator.class).wired();
       distributionManager = basicComponentRegistry.getComponent(DistributionManager.class).wired();
+      persistenceMarshaller = basicComponentRegistry.getComponent(KnownComponentNames.PERSISTENCE_MARSHALLER, PersistenceMarshaller.class).wired();
+      internalMarshaller = basicComponentRegistry.getComponent(KnownComponentNames.INTERNAL_MARSHALLER, StreamingMarshaller.class).wired();
 
       // Initialize components that don't have any strong references from the cache
       basicComponentRegistry.getComponent(ClusterCacheStats.class);

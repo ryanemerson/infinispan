@@ -22,6 +22,7 @@ import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.test.AbstractInfinispanTest;
 import org.infinispan.tools.store.migrator.marshaller.MarshallerType;
+import org.testng.AssertJUnit;
 import org.testng.annotations.Test;
 
 @Test(testName = "org.infinispan.tools.store.migrator.AbstractReaderTest", groups = "functional")
@@ -83,7 +84,7 @@ public abstract class AbstractReaderTest extends AbstractInfinispanTest {
       // loaded and contains all of the expected values.
       EmbeddedCacheManager manager = new DefaultCacheManager(globalConfig, config);
       try {
-         Cache cache = manager.getCache(TEST_CACHE_NAME);
+         Cache<String, Object> cache = manager.getCache(TEST_CACHE_NAME);
          for (String key : TestUtil.TEST_MAP.keySet()) {
             Object stored = cache.get(key);
             assertNotNull(String.format("Key=%s", key), stored);
@@ -91,6 +92,11 @@ public abstract class AbstractReaderTest extends AbstractInfinispanTest {
             assertNotNull(String.format("Key=%s", key), stored);
             assertEquals(expected, stored);
          }
+
+         // Ensure that all of the unsupported classes are not written to the target store
+         TestUtil.TEST_MAP_UNSUPPORTED.keySet().stream()
+               .map(cache::get)
+               .forEach(AssertJUnit::assertNull);
       } finally {
          manager.stop();
       }
