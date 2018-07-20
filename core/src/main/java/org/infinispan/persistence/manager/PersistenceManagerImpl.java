@@ -42,7 +42,7 @@ import org.infinispan.AdvancedCache;
 import org.infinispan.commons.CacheException;
 import org.infinispan.commons.api.Lifecycle;
 import org.infinispan.commons.io.ByteBufferFactory;
-import org.infinispan.commons.marshall.StreamingMarshaller;
+import org.infinispan.commons.marshall.StreamAwareMarshaller;
 import org.infinispan.commons.time.TimeService;
 import org.infinispan.commons.util.Features;
 import org.infinispan.commons.util.IntSet;
@@ -57,6 +57,7 @@ import org.infinispan.distribution.ch.KeyPartitioner;
 import org.infinispan.eviction.EvictionType;
 import org.infinispan.expiration.impl.InternalExpirationManager;
 import org.infinispan.factories.DataContainerFactory;
+import org.infinispan.factories.KnownComponentNames;
 import org.infinispan.factories.annotations.ComponentName;
 import org.infinispan.factories.annotations.Inject;
 import org.infinispan.factories.annotations.Start;
@@ -70,6 +71,7 @@ import org.infinispan.interceptors.impl.CacheLoaderInterceptor;
 import org.infinispan.interceptors.impl.CacheWriterInterceptor;
 import org.infinispan.interceptors.impl.TransactionalStoreInterceptor;
 import org.infinispan.marshall.core.MarshalledEntryFactory;
+import org.infinispan.marshall.persistence.PersistenceMarshaller;
 import org.infinispan.metadata.Metadata;
 import org.infinispan.notifications.cachelistener.CacheNotifier;
 import org.infinispan.persistence.InitializationContextImpl;
@@ -116,7 +118,7 @@ public class PersistenceManagerImpl implements PersistenceManager {
    @Inject Configuration configuration;
    @Inject GlobalConfiguration globalConfiguration;
    @Inject ComponentRef<AdvancedCache<Object, Object>> cache;
-   @Inject StreamingMarshaller m;
+   @Inject @ComponentName(KnownComponentNames.PERSISTENCE_MARSHALLER) PersistenceMarshaller m;
    @Inject TransactionManager transactionManager;
    @Inject TimeService timeService;
    @Inject @ComponentName(PERSISTENCE_EXECUTOR)
@@ -1208,7 +1210,7 @@ public class PersistenceManagerImpl implements PersistenceManager {
       }
    }
 
-   public StreamingMarshaller getMarshaller() {
+   public StreamAwareMarshaller getMarshaller() {
       return m;
    }
 

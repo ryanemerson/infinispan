@@ -52,6 +52,23 @@
     </dependencies>
 
     <build>
+        <resources>
+            <resource>
+                <directory>${project.basedir}/src/main/resources</directory>
+                <filtering>false</filtering>
+                <includes>
+                    <include>**/*</include>
+                </includes>
+            </resource>
+            <resource>
+                <directory>${project.build.outputDirectory}/schema</directory>
+                <filtering>false</filtering>
+                <includes>
+                    <include>generated/*.proto</include>
+                </includes>
+                <targetPath>schema</targetPath>
+            </resource>
+        </resources>
         <plugins>
             <plugin>
                 <groupId>org.apache.felix</groupId>
@@ -62,7 +79,8 @@
                             ${project.groupId}.lucene.*;version=${project.version};-split-package:=error
                         </Export-Package>
                        <Include-Resource>
-                          META-INF/services/org.infinispan.lifecycle.ModuleLifecycle=target/classes/META-INF/services/org.infinispan.lifecycle.ModuleLifecycle
+                           {maven-resources},
+                           /META-INF/services=${project.basedir}/target/classes/META-INF/services,
                        </Include-Resource>
                     </instructions>
                 </configuration>

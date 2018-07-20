@@ -10,7 +10,9 @@ import java.util.Set;
 
 import org.infinispan.commons.marshall.AbstractExternalizer;
 import org.infinispan.commons.marshall.Ids;
+import org.infinispan.commons.marshall.MarshallUtil;
 import org.infinispan.commons.util.Util;
+import org.infinispan.protostream.annotations.ProtoField;
 
 /**
  * A byte buffer that exposes the internal byte array with minimal copying
@@ -19,9 +21,11 @@ import org.infinispan.commons.util.Util;
  * @since 4.0
  */
 public class ByteBufferImpl implements ByteBuffer {
-   private final byte[] buf;
-   private final int offset;
-   private final int length;
+   byte[] buf;
+   int offset;
+   int length;
+
+   ByteBufferImpl() {}
 
    public ByteBufferImpl(byte[] buf) {
       this(buf, 0, buf.length);
@@ -41,6 +45,17 @@ public class ByteBufferImpl implements ByteBuffer {
    @Override
    public byte[] getBuf() {
       return buf;
+   }
+
+   @ProtoField(number = 1)
+   public byte[] getBuffer() {
+      return MarshallUtil.toByteArray(this);
+   }
+
+   public void setBuffer(byte[] buf) {
+      this.buf = buf;
+      this.length = buf.length;
+      this.offset = 0;
    }
 
    @Override
@@ -135,6 +150,4 @@ public class ByteBufferImpl implements ByteBuffer {
          return Collections.singleton(ByteBufferImpl.class);
       }
    }
-
-
 }

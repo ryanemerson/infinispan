@@ -1,15 +1,8 @@
 package org.infinispan.marshall.persistence.impl;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
 import java.util.Objects;
-import java.util.Set;
 
 import org.infinispan.commons.io.ByteBuffer;
-import org.infinispan.commons.marshall.AdvancedExternalizer;
-import org.infinispan.commons.marshall.Ids;
-import org.infinispan.commons.util.Util;
 import org.infinispan.persistence.spi.MarshalledValue;
 
 /**
@@ -41,9 +34,17 @@ public class MarshalledValueImpl implements MarshalledValue {
       return valueBytes;
    }
 
+   public void setValueBytes(ByteBuffer valueBytes) {
+      this.valueBytes = valueBytes;
+   }
+
    @Override
    public ByteBuffer getMetadataBytes() {
       return metadataBytes;
+   }
+
+   public void setMetadataBytes(ByteBuffer metadataBytes) {
+      this.metadataBytes = metadataBytes;
    }
 
    @Override
@@ -51,9 +52,17 @@ public class MarshalledValueImpl implements MarshalledValue {
       return created;
    }
 
+   public void setCreated(long created) {
+      this.created = created;
+   }
+
    @Override
    public long getLastUsed() {
       return lastUsed;
+   }
+
+   public void setLastUsed(long lastUsed) {
+      this.lastUsed = lastUsed;
    }
 
    @Override
@@ -80,36 +89,5 @@ public class MarshalledValueImpl implements MarshalledValue {
             ", created=" + created +
             ", lastUsed=" + lastUsed +
             '}';
-   }
-
-   public static class Externalizer implements AdvancedExternalizer<MarshalledValueImpl> {
-
-      @Override
-      public void writeObject(ObjectOutput output, MarshalledValueImpl e) throws IOException {
-         output.writeObject(e.valueBytes);
-         output.writeObject(e.metadataBytes);
-         output.writeLong(e.created);
-         output.writeLong(e.lastUsed);
-      }
-
-      @Override
-      public MarshalledValueImpl readObject(ObjectInput input) throws IOException, ClassNotFoundException {
-         MarshalledValueImpl e = new MarshalledValueImpl();
-         e.valueBytes = (ByteBuffer) input.readObject();
-         e.metadataBytes = (ByteBuffer) input.readObject();
-         e.created = input.readLong();
-         e.lastUsed = input.readLong();
-         return e;
-      }
-
-      @Override
-      public Set<Class<? extends MarshalledValueImpl>> getTypeClasses() {
-         return Util.asSet(MarshalledValueImpl.class);
-      }
-
-      @Override
-      public Integer getId() {
-         return Ids.MARSHALLED_VALUE;
-      }
    }
 }
