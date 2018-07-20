@@ -64,7 +64,7 @@ public class LocalConditionalCommandTest extends SingleCacheManagerTest {
    }
 
    private static <K, V> void writeToStore(Cache<K, V> cache, K key, V value) {
-      TestingUtil.getFirstWriter(cache).write(marshalledEntry(key, value, cache.getAdvancedCache().getComponentRegistry().getCacheMarshaller()));
+      TestingUtil.getFirstWriter(cache).write(marshalledEntry(key, value, cache.getAdvancedCache().getComponentRegistry().getPersistenceMarshaller()));
    }
 
    private static <K, V> MarshalledEntry<K, V> marshalledEntry(K key, V value, StreamingMarshaller marshaller) {

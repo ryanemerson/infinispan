@@ -69,7 +69,7 @@ public class RemoteStoreTest extends BaseStoreTest {
 
    @Override
    protected StreamingMarshaller getMarshaller() {
-      return localCacheManager.getCache(REMOTE_CACHE).getAdvancedCache().getComponentRegistry().getCacheMarshaller();
+      return localCacheManager.getCache(REMOTE_CACHE).getAdvancedCache().getComponentRegistry().getPersistenceMarshaller();
    }
 
    @Override

@@ -27,8 +27,8 @@ import org.infinispan.marshall.core.MarshalledEntryImpl;
 import org.infinispan.persistence.dummy.DummyInMemoryStore;
 import org.infinispan.persistence.dummy.DummyInMemoryStoreConfigurationBuilder;
 import org.infinispan.test.MultipleCacheManagersTest;
-import org.infinispan.util.concurrent.IsolationLevel;
 import org.infinispan.test.fwk.InCacheMode;
+import org.infinispan.util.concurrent.IsolationLevel;
 import org.testng.annotations.Test;
 
 /**
@@ -582,7 +582,7 @@ public class ClusteredConditionalCommandTest extends MultipleCacheManagersTest {
       }
 
       private StreamingMarshaller marshaller(Ownership ownership) {
-         return cacheEnumMap.get(ownership).getAdvancedCache().getComponentRegistry().getCacheMarshaller();
+         return cacheEnumMap.get(ownership).getAdvancedCache().getComponentRegistry().getPersistenceMarshaller();
       }
 
       protected long loads(Ownership ownership) {

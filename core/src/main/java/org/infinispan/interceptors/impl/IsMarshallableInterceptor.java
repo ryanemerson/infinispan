@@ -1,5 +1,7 @@
 package org.infinispan.interceptors.impl;
 
+import static org.infinispan.factories.KnownComponentNames.PERSISTENCE_MARSHALLER;
+
 import java.util.Map;
 
 import org.infinispan.commands.FlagAffectedCommand;
@@ -14,6 +16,7 @@ import org.infinispan.commons.marshall.NotSerializableException;
 import org.infinispan.commons.marshall.StreamingMarshaller;
 import org.infinispan.context.InvocationContext;
 import org.infinispan.context.impl.FlagBitSets;
+import org.infinispan.factories.annotations.ComponentName;
 import org.infinispan.factories.annotations.Inject;
 import org.infinispan.factories.annotations.Start;
 import org.infinispan.interceptors.DDAsyncInterceptor;
@@ -31,7 +34,7 @@ import org.infinispan.interceptors.DDAsyncInterceptor;
  */
 public class IsMarshallableInterceptor extends DDAsyncInterceptor {
 
-   @Inject private StreamingMarshaller marshaller;
+   @Inject @ComponentName(PERSISTENCE_MARSHALLER) private StreamingMarshaller marshaller;
    private boolean usingAsyncStore;
 
    @Start

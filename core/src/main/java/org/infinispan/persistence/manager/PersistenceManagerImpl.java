@@ -9,6 +9,7 @@ import static org.infinispan.context.Flag.SKIP_LOCKING;
 import static org.infinispan.context.Flag.SKIP_OWNERSHIP_CHECK;
 import static org.infinispan.context.Flag.SKIP_XSITE_BACKUP;
 import static org.infinispan.factories.KnownComponentNames.PERSISTENCE_EXECUTOR;
+import static org.infinispan.factories.KnownComponentNames.PERSISTENCE_MARSHALLER;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -102,7 +103,7 @@ public class PersistenceManagerImpl implements PersistenceManager {
 
    @Inject private Configuration configuration;
    @Inject private AdvancedCache<Object, Object> cache;
-   @Inject private StreamingMarshaller m;
+   @Inject @ComponentName(PERSISTENCE_MARSHALLER) private StreamingMarshaller m;
    @Inject private TransactionManager transactionManager;
    @Inject private TimeService timeService;
    @Inject @ComponentName(PERSISTENCE_EXECUTOR)

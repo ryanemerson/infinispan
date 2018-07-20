@@ -65,7 +65,7 @@ public class CacheLoaderAndCacheWriterInterceptorMBeanTest extends SingleCacheMa
    }
 
    private StreamingMarshaller marshaller() {
-      return cache.getAdvancedCache().getComponentRegistry().getCacheMarshaller();
+      return cache.getAdvancedCache().getComponentRegistry().getPersistenceMarshaller();
    }
 
    public void testPutKeyValue() throws Exception {

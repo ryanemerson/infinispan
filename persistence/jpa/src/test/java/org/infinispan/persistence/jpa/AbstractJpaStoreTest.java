@@ -72,7 +72,7 @@ public abstract class AbstractJpaStoreTest extends AbstractInfinispanTest {
    public void setUp() throws Exception {
       try {
          cm = createCacheManager();
-         marshaller = cm.getCache().getAdvancedCache().getComponentRegistry().getCacheMarshaller();
+         marshaller = cm.getCache().getAdvancedCache().getComponentRegistry().getPersistenceMarshaller();
          cs = createCacheStore();
          cs.clear();
       } catch (Exception e) {

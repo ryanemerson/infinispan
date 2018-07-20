@@ -3,6 +3,8 @@ package org.infinispan.test;
 import static java.io.File.separator;
 import static org.infinispan.commons.api.BasicCacheContainer.DEFAULT_CACHE_NAME;
 import static org.infinispan.commons.util.Util.EMPTY_OBJECT_ARRAY;
+import static org.infinispan.factories.KnownComponentNames.INTERNAL_MARSHALLER;
+import static org.infinispan.factories.KnownComponentNames.PERSISTENCE_MARSHALLER;
 import static org.infinispan.persistence.manager.PersistenceManager.AccessMode.BOTH;
 import static org.testng.AssertJUnit.assertFalse;
 import static org.testng.AssertJUnit.fail;
@@ -1029,8 +1031,11 @@ public class TestingUtil {
    }
 
    public static GlobalMarshaller extractGlobalMarshaller(EmbeddedCacheManager cm) {
-      GlobalComponentRegistry gcr = extractField(cm, "globalComponentRegistry");
-      return (GlobalMarshaller) gcr.getComponent(StreamingMarshaller.class);
+      return (GlobalMarshaller) cm.getGlobalComponentRegistry().getComponent(StreamingMarshaller.class, INTERNAL_MARSHALLER);
+   }
+
+   public static StreamingMarshaller extractPersistenceMarshaller(EmbeddedCacheManager cm) {
+      return cm.getGlobalComponentRegistry().getComponent(StreamingMarshaller.class, PERSISTENCE_MARSHALLER);
    }
 
    /**
@@ -1684,7 +1689,7 @@ public class TestingUtil {
    public static <K, V> void writeToAllStores(K key, V value, Cache<K, V> cache) {
       AdvancedCache<K, V> advCache = cache.getAdvancedCache();
       PersistenceManager pm = advCache.getComponentRegistry().getComponent(PersistenceManager.class);
-      StreamingMarshaller marshaller = extractGlobalMarshaller(advCache.getCacheManager());
+      StreamingMarshaller marshaller = extractPersistenceMarshaller(advCache.getCacheManager());
       KeyPartitioner keyPartitioner = extractComponent(cache, KeyPartitioner.class);
       pm.writeToAllNonTxStores(new MarshalledEntryImpl<>(key, value, null, marshaller), keyPartitioner.getSegment(key), BOTH);
    }

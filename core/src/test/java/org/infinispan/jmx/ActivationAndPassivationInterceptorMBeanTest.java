@@ -88,7 +88,7 @@ public class ActivationAndPassivationInterceptorMBeanTest extends SingleCacheMan
    }
 
    private StreamingMarshaller marshaller() {
-      return cache.getAdvancedCache().getComponentRegistry().getCacheMarshaller();
+      return cache.getAdvancedCache().getComponentRegistry().getPersistenceMarshaller();
    }
 
    public void testActivationOnGet(Method m) throws Exception {

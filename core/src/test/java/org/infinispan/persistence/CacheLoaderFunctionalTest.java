@@ -82,7 +82,7 @@ public class CacheLoaderFunctionalTest extends AbstractInfinispanTest {
       store = TestingUtil.getFirstLoader(cache);
       writer = TestingUtil.getFirstLoader(cache);
       tm = TestingUtil.getTransactionManager(cache);
-      sm = cache.getAdvancedCache().getComponentRegistry().getCacheMarshaller();
+      sm = cache.getAdvancedCache().getComponentRegistry().getPersistenceMarshaller();
    }
 
    public CacheLoaderFunctionalTest segmented(boolean segmented) {
