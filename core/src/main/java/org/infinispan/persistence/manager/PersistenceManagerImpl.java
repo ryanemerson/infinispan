@@ -42,7 +42,7 @@ import org.infinispan.AdvancedCache;
 import org.infinispan.commons.CacheException;
 import org.infinispan.commons.api.Lifecycle;
 import org.infinispan.commons.io.ByteBufferFactory;
-import org.infinispan.commons.marshall.StreamingMarshaller;
+import org.infinispan.commons.marshall.StreamAwareMarshaller;
 import org.infinispan.commons.time.TimeService;
 import org.infinispan.commons.util.Features;
 import org.infinispan.commons.util.IntSet;
@@ -57,6 +57,7 @@ import org.infinispan.distribution.ch.KeyPartitioner;
 import org.infinispan.eviction.EvictionType;
 import org.infinispan.expiration.impl.InternalExpirationManager;
 import org.infinispan.factories.DataContainerFactory;
+import org.infinispan.factories.KnownComponentNames;
 import org.infinispan.factories.annotations.ComponentName;
 import org.infinispan.factories.annotations.Inject;
 import org.infinispan.factories.annotations.Start;
@@ -114,7 +115,7 @@ public class PersistenceManagerImpl implements PersistenceManager {
    @Inject private Configuration configuration;
    @Inject private GlobalConfiguration globalConfiguration;
    @Inject private ComponentRef<AdvancedCache<Object, Object>> cache;
-   @Inject private StreamingMarshaller m;
+   @Inject @ComponentName(KnownComponentNames.PERSISTENCE_MARSHALLER) private StreamAwareMarshaller m;
    @Inject private TransactionManager transactionManager;
    @Inject private TimeService timeService;
    @Inject @ComponentName(PERSISTENCE_EXECUTOR)
@@ -1206,7 +1207,7 @@ public class PersistenceManagerImpl implements PersistenceManager {
       }
    }
 
-   public StreamingMarshaller getMarshaller() {
+   public StreamAwareMarshaller getMarshaller() {
       return m;
    }
 

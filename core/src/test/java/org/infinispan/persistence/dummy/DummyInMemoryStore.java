@@ -17,7 +17,7 @@ import org.infinispan.Cache;
 import org.infinispan.IllegalLifecycleStateException;
 import org.infinispan.commons.CacheException;
 import org.infinispan.commons.configuration.ConfiguredBy;
-import org.infinispan.commons.marshall.StreamingMarshaller;
+import org.infinispan.commons.marshall.StreamAwareMarshaller;
 import org.infinispan.commons.persistence.Store;
 import org.infinispan.commons.time.TimeService;
 import org.infinispan.commons.util.InfinispanCollections;
@@ -57,7 +57,7 @@ public class DummyInMemoryStore implements AdvancedLoadWriteStore, AdvancedCache
    private AtomicInteger initCount = new AtomicInteger();
    private TimeService timeService;
    private Cache cache;
-   private StreamingMarshaller marshaller;
+   private StreamAwareMarshaller marshaller;
    private DummyInMemoryStoreConfiguration configuration;
    private InitializationContext ctx;
    private volatile boolean running;
@@ -69,7 +69,7 @@ public class DummyInMemoryStore implements AdvancedLoadWriteStore, AdvancedCache
       this.ctx = ctx;
       this.configuration = ctx.getConfiguration();
       this.cache = ctx.getCache();
-      this.marshaller = ctx.getMarshaller();
+      this.marshaller = ctx.getPersistenceMarshaller();
       this.storeName = makeStoreName(configuration, cache);
       this.initCount.incrementAndGet();
       this.timeService = ctx.getTimeService();

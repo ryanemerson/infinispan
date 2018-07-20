@@ -7,10 +7,12 @@ import java.util.Objects;
 import java.util.Set;
 
 import org.infinispan.commons.io.ByteBuffer;
+import org.infinispan.commons.io.ByteBufferImpl;
 import org.infinispan.commons.marshall.AdvancedExternalizer;
 import org.infinispan.commons.marshall.Ids;
 import org.infinispan.commons.util.Util;
 import org.infinispan.persistence.spi.MarshalledValue;
+import org.infinispan.protostream.MessageMarshaller;
 
 /**
  * A marshallable object that can be used by our internal store implementations to store values, metadata and timestamps.
@@ -110,6 +112,36 @@ public class MarshalledValueImpl implements MarshalledValue {
       @Override
       public Integer getId() {
          return Ids.MARSHALLED_VALUE;
+      }
+   }
+
+   public static class Marshaller implements MessageMarshaller<MarshalledValueImpl> {
+      @Override
+      public MarshalledValueImpl readFrom(ProtoStreamReader reader) throws IOException {
+         MarshalledValueImpl e = new MarshalledValueImpl();
+         e.valueBytes = reader.readObject("value", ByteBufferImpl.class);
+         e.metadataBytes = reader.readObject("metadata", ByteBufferImpl.class);
+         e.created = reader.readLong("created");
+         e.lastUsed = reader.readLong("lastUsed");
+         return e;
+      }
+
+      @Override
+      public void writeTo(ProtoStreamWriter writer, MarshalledValueImpl marshalledValue) throws IOException {
+         writer.writeObject("value", marshalledValue.valueBytes, ByteBufferImpl.class);
+         writer.writeObject("metadata", marshalledValue.metadataBytes, ByteBufferImpl.class);
+         writer.writeLong("created", marshalledValue.created);
+         writer.writeLong("lastUsed", marshalledValue.lastUsed);
+      }
+
+      @Override
+      public Class<? extends MarshalledValueImpl> getJavaClass() {
+         return MarshalledValueImpl.class;
+      }
+
+      @Override
+      public String getTypeName() {
+         return "persistence.MarshalledValue";
       }
    }
 }

@@ -4,6 +4,7 @@ import java.util.concurrent.ExecutorService;
 
 import org.infinispan.Cache;
 import org.infinispan.commons.io.ByteBufferFactory;
+import org.infinispan.commons.marshall.StreamAwareMarshaller;
 import org.infinispan.commons.marshall.StreamingMarshaller;
 import org.infinispan.commons.time.TimeService;
 import org.infinispan.configuration.cache.StoreConfiguration;
@@ -21,7 +22,7 @@ public class InitializationContextImpl implements InitializationContext {
    private final StoreConfiguration configuration;
    private final Cache cache;
    private final KeyPartitioner keyPartitioner;
-   private final StreamingMarshaller marshaller;
+   private final StreamAwareMarshaller marshaller;
    private final TimeService timeService;
    private final ByteBufferFactory byteBufferFactory;
    private final MarshalledEntryFactory marshalledEntryFactory;
@@ -30,7 +31,7 @@ public class InitializationContextImpl implements InitializationContext {
 
 
    public InitializationContextImpl(StoreConfiguration configuration, Cache cache, KeyPartitioner keyPartitioner,
-                                    StreamingMarshaller marshaller, TimeService timeService,
+                                    StreamAwareMarshaller marshaller, TimeService timeService,
                                     ByteBufferFactory byteBufferFactory, MarshalledEntryFactory marshalledEntryFactory,
                                     MarshallableEntryFactory marshallableEntryFactory, ExecutorService executorService) {
       this.configuration = configuration;
@@ -61,7 +62,7 @@ public class InitializationContextImpl implements InitializationContext {
 
    @Override
    public StreamingMarshaller getMarshaller() {
-      return marshaller;
+      return StreamingMarshaller.from(marshaller);
    }
 
    @Override
@@ -88,5 +89,10 @@ public class InitializationContextImpl implements InitializationContext {
    @Override
    public MarshalledEntryFactory getMarshalledEntryFactory() {
       return marshalledEntryFactory;
+   }
+
+   @Override
+   public StreamAwareMarshaller getPersistenceMarshaller() {
+      return marshaller;
    }
 }

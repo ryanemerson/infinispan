@@ -13,7 +13,7 @@ import org.apache.commons.codec.net.URLCodec;
 import org.infinispan.commons.CacheException;
 import org.infinispan.commons.configuration.ConfiguredBy;
 import org.infinispan.commons.marshall.MarshallUtil;
-import org.infinispan.commons.marshall.StreamingMarshaller;
+import org.infinispan.commons.marshall.Marshaller;
 import org.infinispan.commons.persistence.Store;
 import org.infinispan.commons.util.AbstractIterator;
 import org.infinispan.commons.util.Util;
@@ -84,7 +84,7 @@ public class RestStore<K, V> implements AdvancedLoadWriteStore<K, V> {
    private MetadataHelper metadataHelper;
    private final URLCodec urlCodec = new URLCodec();
    private InitializationContext ctx;
-   private StreamingMarshaller marshaller;
+   private Marshaller marshaller;
    private MarshallableEntryFactory<K, V> entryFactory;
 
    private EventLoopGroup workerGroup;
@@ -96,7 +96,7 @@ public class RestStore<K, V> implements AdvancedLoadWriteStore<K, V> {
    public void init(InitializationContext initializationContext) {
       configuration = initializationContext.getConfiguration();
       ctx = initializationContext;
-      marshaller = ctx.getMarshaller();
+      marshaller = ctx.getPersistenceMarshaller();
       entryFactory = ctx.getMarshallableEntryFactory();
    }
 

@@ -12,7 +12,7 @@ import java.util.function.ToIntBiFunction;
 
 import org.infinispan.Cache;
 import org.infinispan.client.hotrod.test.HotRodClientTestingUtil;
-import org.infinispan.commons.marshall.StreamingMarshaller;
+import org.infinispan.commons.marshall.StreamAwareMarshaller;
 import org.infinispan.commons.time.TimeService;
 import org.infinispan.commons.util.IntSet;
 import org.infinispan.commons.util.IntSets;
@@ -81,8 +81,8 @@ public class RemoteStoreTest extends BaseStoreTest {
    }
 
    @Override
-   protected StreamingMarshaller getMarshaller() {
-      return localCacheManager.getCache(REMOTE_CACHE).getAdvancedCache().getComponentRegistry().getCacheMarshaller();
+   protected StreamAwareMarshaller getMarshaller() {
+      return localCacheManager.getCache(REMOTE_CACHE).getAdvancedCache().getComponentRegistry().getPersistenceMarshaller();
    }
 
    @Override

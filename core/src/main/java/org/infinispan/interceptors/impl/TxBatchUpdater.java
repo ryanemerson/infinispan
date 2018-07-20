@@ -140,7 +140,7 @@ public class TxBatchUpdater extends AbstractVisitor {
       return null;
    }
 
-   private Object visitSingleStore(InvocationContext ctx, FlagAffectedCommand command, Object key) throws Throwable {
+   private Object visitSingleStore(InvocationContext ctx, FlagAffectedCommand command, Object key) {
       if (isProperWriter(ctx, command, key)) {
          if (generateStatistics) putCount++;
          InternalCacheValue sv = entryFactory.getValueFromCtx(key, ctx);
@@ -152,7 +152,7 @@ public class TxBatchUpdater extends AbstractVisitor {
       return null;
    }
 
-   private Object visitModify(InvocationContext ctx, FlagAffectedCommand command, Object key) throws Throwable {
+   private Object visitModify(InvocationContext ctx, FlagAffectedCommand command, Object key) {
       if (isProperWriter(ctx, command, key)) {
          CacheEntry entry = ctx.lookupEntry(key);
          if (!entry.isChanged()) {
