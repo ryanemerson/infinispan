@@ -70,7 +70,9 @@ import org.infinispan.commands.CommandsFactory;
 import org.infinispan.commands.VisitableCommand;
 import org.infinispan.commons.CacheException;
 import org.infinispan.commons.api.Lifecycle;
+import org.infinispan.commons.dataconversion.Transcoder;
 import org.infinispan.commons.jmx.PerThreadMBeanServerLookup;
+import org.infinispan.commons.marshall.StreamAwareMarshaller;
 import org.infinispan.commons.marshall.StreamingMarshaller;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.Configuration;
@@ -98,7 +100,9 @@ import org.infinispan.lifecycle.ComponentStatus;
 import org.infinispan.lifecycle.ModuleLifecycle;
 import org.infinispan.manager.CacheContainer;
 import org.infinispan.manager.EmbeddedCacheManager;
+import org.infinispan.marshall.core.EncoderRegistry;
 import org.infinispan.marshall.core.GlobalMarshaller;
+import org.infinispan.marshall.persistence.PersistenceMarshaller;
 import org.infinispan.marshall.persistence.impl.MarshalledEntryUtil;
 import org.infinispan.metadata.EmbeddedMetadata;
 import org.infinispan.metadata.Metadata;
@@ -1018,8 +1022,11 @@ public class TestingUtil {
    }
 
    public static GlobalMarshaller extractGlobalMarshaller(EmbeddedCacheManager cm) {
-      GlobalComponentRegistry gcr = extractField(cm, "globalComponentRegistry");
-      return (GlobalMarshaller) gcr.getComponent(StreamingMarshaller.class);
+      return (GlobalMarshaller) cm.getGlobalComponentRegistry().getComponent(StreamingMarshaller.class, KnownComponentNames.INTERNAL_MARSHALLER);
+   }
+
+   public static PersistenceMarshaller extractPersistenceMarshaller(EmbeddedCacheManager cm) {
+      return cm.getGlobalComponentRegistry().getComponent(PersistenceMarshaller.class, KnownComponentNames.PERSISTENCE_MARSHALLER);
    }
 
    /**
@@ -1864,5 +1871,20 @@ public class TestingUtil {
       } catch (InterruptedException | ExecutionException | java.util.concurrent.TimeoutException e) {
          throw new CacheException(e);
       }
+   }
+
+   // The first call to JbossMarshall::isMarshallable results in an object actually being serialized, the additional
+   // call to PersistenceMarshaller::isMarshallable in the GlobalMarshaller may break stats on test Externalizer implementations
+   // this is simply a convenience method to initialise MarshallableTypeHints
+   public static void initJbossMarshallerTypeHints(EmbeddedCacheManager cm, Object... objects) throws Exception {
+      StreamAwareMarshaller marshaller = extractPersistenceMarshaller(cm);
+      for (Object o : objects)
+         marshaller.isMarshallable(o);
+   }
+
+   public static void registerTranscoders(EmbeddedCacheManager cm, Transcoder... transcoders) {
+      EncoderRegistry encoderRegistry = TestingUtil.extractGlobalComponent(cm, EncoderRegistry.class);
+      for (Transcoder t : transcoders)
+         encoderRegistry.registerTranscoder(t);
    }
 }

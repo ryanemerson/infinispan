@@ -88,6 +88,18 @@
       <resources>
          <resource>
             <directory>${project.basedir}/src/main/resources</directory>
+            <filtering>false</filtering>
+            <includes>
+               <include>**/*</include>
+            </includes>
+         </resource>
+         <resource>
+            <directory>${project.build.outputDirectory}/schema</directory>
+            <filtering>false</filtering>
+            <includes>
+               <include>generated/*.proto</include>
+            </includes>
+            <targetPath>schema</targetPath>
          </resource>
       </resources>
       <plugins>
