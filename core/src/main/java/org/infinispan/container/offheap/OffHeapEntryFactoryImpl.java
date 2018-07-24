@@ -1,5 +1,7 @@
 package org.infinispan.container.offheap;
 
+import static org.infinispan.factories.KnownComponentNames.PERSISTENCE_MARSHALLER;
+
 import java.io.IOException;
 
 import org.infinispan.commons.CacheException;
@@ -7,10 +9,11 @@ import org.infinispan.commons.marshall.Marshaller;
 import org.infinispan.commons.marshall.WrappedByteArray;
 import org.infinispan.commons.marshall.WrappedBytes;
 import org.infinispan.configuration.cache.Configuration;
-import org.infinispan.container.impl.InternalEntryFactory;
 import org.infinispan.container.entries.ExpiryHelper;
 import org.infinispan.container.entries.InternalCacheEntry;
+import org.infinispan.container.impl.InternalEntryFactory;
 import org.infinispan.container.versioning.EntryVersion;
+import org.infinispan.factories.annotations.ComponentName;
 import org.infinispan.factories.annotations.Inject;
 import org.infinispan.factories.annotations.Start;
 import org.infinispan.metadata.EmbeddedMetadata;
@@ -27,7 +30,7 @@ public class OffHeapEntryFactoryImpl implements OffHeapEntryFactory {
    private static final OffHeapMemory MEMORY = OffHeapMemory.INSTANCE;
    private static final byte[] EMPTY_BYTES = new byte[0];
 
-   @Inject private Marshaller marshaller;
+   @Inject @ComponentName(PERSISTENCE_MARSHALLER) private Marshaller marshaller;
    @Inject private OffHeapMemoryAllocator allocator;
    @Inject private TimeService timeService;
    @Inject private InternalEntryFactory internalEntryFactory;

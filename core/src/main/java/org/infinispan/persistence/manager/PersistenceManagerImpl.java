@@ -145,6 +145,8 @@ public class PersistenceManagerImpl implements PersistenceManager {
       enabled = configuration.persistence().usingStores();
       if (!enabled)
          return;
+      // Needed to pass ThreeNodeGlobalStateRestartTest but do we want this?
+//      m.start();
       try {
          createLoadersAndWriters();
          Transaction xaTx = null;

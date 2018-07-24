@@ -8,6 +8,7 @@ import static org.infinispan.context.Flag.IGNORE_RETURN_VALUES;
 import static org.infinispan.context.Flag.PUT_FOR_EXTERNAL_READ;
 import static org.infinispan.context.Flag.ZERO_LOCK_ACQUISITION_TIMEOUT;
 import static org.infinispan.context.InvocationContextFactory.UNBOUNDED;
+import static org.infinispan.factories.KnownComponentNames.INTERNAL_MARSHALLER;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -95,6 +96,7 @@ import org.infinispan.eviction.PassivationManager;
 import org.infinispan.expiration.ExpirationManager;
 import org.infinispan.expiration.impl.InternalExpirationManager;
 import org.infinispan.factories.ComponentRegistry;
+import org.infinispan.factories.annotations.ComponentName;
 import org.infinispan.factories.annotations.Inject;
 import org.infinispan.factories.annotations.SurvivesRestarts;
 import org.infinispan.filter.KeyFilter;
@@ -160,7 +162,7 @@ public class CacheImpl<K, V> implements AdvancedCache<K, V> {
    @Inject protected ComponentRegistry componentRegistry;
    @Inject protected TransactionManager transactionManager;
    @Inject protected RpcManager rpcManager;
-   @Inject protected StreamingMarshaller marshaller;
+   @Inject @ComponentName(INTERNAL_MARSHALLER) protected StreamingMarshaller marshaller;
    @Inject protected KeyPartitioner keyPartitioner;
    @Inject private EvictionManager evictionManager;
    @Inject private InternalExpirationManager<K, V> expirationManager;

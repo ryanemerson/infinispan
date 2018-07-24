@@ -29,6 +29,6 @@ public class EntryVersionMarshaller implements MessageMarshaller<EntryVersion> {
 
    @Override
    public String getTypeName() {
-      return "core.EntryVersion";
+      return "persistence.EntryVersion";
    }
 }

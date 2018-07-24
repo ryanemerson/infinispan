@@ -416,7 +416,7 @@ public class EmbeddedMetadata implements Metadata {
 
       @Override
       public String getTypeName() {
-         return "core.Metadata.Type";
+         return "persistence.Metadata.Type";
       }
    }
 
@@ -483,7 +483,7 @@ public class EmbeddedMetadata implements Metadata {
 
       @Override
       public String getTypeName() {
-         return "core.Metadata";
+         return "persistence.Metadata";
       }
    }
 }

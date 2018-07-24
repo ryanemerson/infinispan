@@ -191,7 +191,7 @@ public class InternalMetadataImpl implements InternalMetadata {
 
       @Override
       public String getTypeName() {
-         return "core.InternalMetadata";
+         return "persistence.InternalMetadata";
       }
    }
 }

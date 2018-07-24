@@ -9,7 +9,7 @@ import org.infinispan.commons.marshall.StreamingMarshaller;
 import org.infinispan.factories.annotations.DefaultFactoryFor;
 import org.infinispan.marshall.core.GlobalMarshaller;
 import org.infinispan.marshall.core.JBossMarshaller;
-import org.infinispan.marshall.core.PersistenceMarshaller;
+import org.infinispan.persistence.marshaller.PersistenceMarshallerImpl;
 
 /**
  * MarshallerFactory.
@@ -31,7 +31,7 @@ public class MarshallerFactory extends NamedComponentFactory implements AutoInst
       if (componentName.equals(INTERNAL_MARSHALLER)) {
          comp = new GlobalMarshaller();
       } else if (componentName.equals(PERSISTENCE_MARSHALLER)) {
-         comp = new PersistenceMarshaller();
+         comp = new PersistenceMarshallerImpl();
       } else {
          Marshaller userMarshaller = globalConfiguration.serialization().marshaller();
          if (userMarshaller == null) {

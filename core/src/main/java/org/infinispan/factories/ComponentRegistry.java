@@ -292,17 +292,17 @@ public class ComponentRegistry extends AbstractComponentRegistry {
    }
 
    /**
-    * Caching shortcut for #getComponent(Marshaller.class, INTERNAL_MARSHALLER);
+    * Caching shortcut for #getComponent(PersistenceMarshaller.class, INTERNAL_MARSHALLER);
     */
    public StreamingMarshaller getInternalMarshaller() {
       return globalComponents.getComponent(StreamingMarshaller.class, INTERNAL_MARSHALLER);
    }
 
    /**
-    * Caching shortcut for #getPersistenceMarshaller(Marshaller.class, PERSISTENCE_MARSHALLER);
+    * Caching shortcut for #getComponent(PersistenceMarshaller.class, PERSISTENCE_MARSHALLER);
     */
    public StreamingMarshaller getPersistenceMarshaller() {
-      return globalComponents.getComponent(StreamingMarshaller.class, PERSISTENCE_MARSHALLER);
+      return getComponent(StreamingMarshaller.class, PERSISTENCE_MARSHALLER);
    }
 
    /**

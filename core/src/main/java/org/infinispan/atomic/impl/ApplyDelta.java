@@ -1,5 +1,7 @@
 package org.infinispan.atomic.impl;
 
+import static org.infinispan.factories.KnownComponentNames.INTERNAL_MARSHALLER;
+
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
@@ -10,12 +12,13 @@ import org.infinispan.atomic.CopyableDeltaAware;
 import org.infinispan.atomic.Delta;
 import org.infinispan.atomic.DeltaAware;
 import org.infinispan.commons.CacheException;
-import org.infinispan.functional.EntryView;
 import org.infinispan.commons.marshall.AdvancedExternalizer;
 import org.infinispan.commons.marshall.Ids;
 import org.infinispan.commons.marshall.Marshaller;
+import org.infinispan.commons.marshall.StreamingMarshaller;
 import org.infinispan.commons.util.Util;
 import org.infinispan.factories.GlobalComponentRegistry;
+import org.infinispan.functional.EntryView;
 
 /**
  * Replacement for {@link org.infinispan.commands.write.ApplyDeltaCommand} and
@@ -86,7 +89,7 @@ public final class ApplyDelta<K> implements BiFunction<Object, EntryView.ReadWri
 
       @Override
       public ApplyDelta readObject(ObjectInput input) throws IOException, ClassNotFoundException {
-         return new ApplyDelta(gcr.getComponent(Marshaller.class));
+         return new ApplyDelta(gcr.getComponent(StreamingMarshaller.class, INTERNAL_MARSHALLER));
       }
    }
 }

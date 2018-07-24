@@ -136,7 +136,7 @@ public class WrappedByteArray implements WrappedBytes {
 
       @Override
       public String getTypeName() {
-         return "core.WrappedByteArray";
+         return "persistence.WrappedByteArray";
       }
 
       @Override

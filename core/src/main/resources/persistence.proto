@@ -1,8 +1,17 @@
-package core;
+package persistence;
+
+message UserObject {
+    required bytes wrappedObject = 1;
+}
 
 message WrappedByteArray {
     required bytes wrappedBytes = 1;
     optional int32 hashcode = 2;
+}
+
+message KeyValuePair {
+    optional bytes key = 1;
+    optional bytes value = 2;
 }
 
 message Metadata {

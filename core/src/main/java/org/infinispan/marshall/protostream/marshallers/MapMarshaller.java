@@ -84,6 +84,6 @@ public class MapMarshaller implements MessageMarshaller<Map> {
 
    @Override
    public String getTypeName() {
-      return "core.MapEntry";
+      return "persistence.MapEntry";
    }
 }

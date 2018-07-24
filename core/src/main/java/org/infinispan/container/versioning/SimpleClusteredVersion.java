@@ -129,7 +129,7 @@ public class SimpleClusteredVersion implements IncrementableEntryVersion {
 
       @Override
       public String getTypeName() {
-         return "core.ClusteredVersion";
+         return "persistence.ClusteredVersion";
       }
    }
 }
