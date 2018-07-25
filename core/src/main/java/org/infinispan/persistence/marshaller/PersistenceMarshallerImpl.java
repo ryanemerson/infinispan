@@ -23,7 +23,6 @@ import org.infinispan.factories.annotations.Start;
 import org.infinispan.marshall.protostream.marshallers.EntryVersionMarshaller;
 import org.infinispan.metadata.EmbeddedMetadata;
 import org.infinispan.metadata.impl.InternalMetadataImpl;
-import org.infinispan.persistence.spi.PersistenceException;
 import org.infinispan.protostream.FileDescriptorSource;
 import org.infinispan.protostream.ProtobufUtil;
 import org.infinispan.protostream.SerializationContext;
@@ -146,17 +145,14 @@ public class PersistenceMarshallerImpl extends BaseProtoStreamMarshaller impleme
    }
 
    private boolean isInternalClass(Object o) {
-//      if (o == null) {
-//         int x = 1;
-//      }
       return serializationContext.canMarshall(o.getClass());
    }
 
    private boolean isUserMarshallable(Object o) {
       try {
          return userMarshaller.isMarshallable(o);
-      } catch (Exception e) {
-         throw new PersistenceException(e);
+      } catch (Exception ignore) {
+         return false;
       }
    }
 }
