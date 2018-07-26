@@ -2,6 +2,7 @@ package org.infinispan.factories;
 
 import static org.infinispan.factories.KnownComponentNames.INTERNAL_MARSHALLER;
 import static org.infinispan.factories.KnownComponentNames.PERSISTENCE_MARSHALLER;
+import static org.infinispan.factories.KnownComponentNames.USER_MARSHALLER;
 
 import org.infinispan.commons.CacheException;
 import org.infinispan.commons.marshall.Marshaller;
@@ -28,16 +29,16 @@ public class MarshallerFactory extends NamedComponentFactory implements AutoInst
    @Override
    public <T> T construct(Class<T> componentType, String componentName) {
       Object comp;
-      if (componentName.equals(INTERNAL_MARSHALLER)) {
-         comp = new GlobalMarshaller();
-      } else if (componentName.equals(PERSISTENCE_MARSHALLER)) {
+      if (componentName.equals(PERSISTENCE_MARSHALLER)) {
          comp = new PersistenceMarshallerImpl();
-      } else {
+      } else if (componentName.equals(USER_MARSHALLER)) {
          Marshaller userMarshaller = globalConfiguration.serialization().marshaller();
          if (userMarshaller == null) {
             userMarshaller = new JBossMarshaller(globalConfiguration);
          }
          comp = userMarshaller;
+      } else {
+         comp = new GlobalMarshaller();
       }
 
       try {

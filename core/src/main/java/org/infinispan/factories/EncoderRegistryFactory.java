@@ -1,7 +1,5 @@
 package org.infinispan.factories;
 
-import static org.infinispan.factories.KnownComponentNames.PERSISTENCE_MARSHALLER;
-
 import org.infinispan.commons.configuration.ClassWhiteList;
 import org.infinispan.commons.dataconversion.BinaryEncoder;
 import org.infinispan.commons.dataconversion.ByteArrayWrapper;
@@ -18,7 +16,6 @@ import org.infinispan.commons.dataconversion.UTF8Encoder;
 import org.infinispan.commons.marshall.JavaSerializationMarshaller;
 import org.infinispan.commons.marshall.StreamingMarshaller;
 import org.infinispan.commons.marshall.jboss.GenericJBossMarshaller;
-import org.infinispan.factories.annotations.ComponentName;
 import org.infinispan.factories.annotations.DefaultFactoryFor;
 import org.infinispan.factories.annotations.Inject;
 import org.infinispan.manager.EmbeddedCacheManager;
@@ -33,10 +30,8 @@ import org.infinispan.marshall.core.EncoderRegistryImpl;
 @DefaultFactoryFor(classes = {EncoderRegistry.class})
 public class EncoderRegistryFactory extends AbstractComponentFactory implements AutoInstantiableFactory {
 
-   @Inject @ComponentName(PERSISTENCE_MARSHALLER)
-   private StreamingMarshaller persistenceMarshaller;
-   @Inject
-   private EmbeddedCacheManager embeddedCacheManager;
+   @Inject private StreamingMarshaller globalMarshaller;
+   @Inject private EmbeddedCacheManager embeddedCacheManager;
 
    @Override
    public <T> T construct(Class<T> componentType) {
@@ -50,10 +45,10 @@ public class EncoderRegistryFactory extends AbstractComponentFactory implements 
       encoderRegistry.registerEncoder(IdentityEncoder.INSTANCE);
       encoderRegistry.registerEncoder(UTF8Encoder.INSTANCE);
       encoderRegistry.registerEncoder(new JavaSerializationEncoder(classWhiteList));
-      encoderRegistry.registerEncoder(new BinaryEncoder(persistenceMarshaller));
+      encoderRegistry.registerEncoder(new BinaryEncoder(globalMarshaller));
       encoderRegistry.registerEncoder(new GenericJbossMarshallerEncoder(jBossMarshaller));
-      encoderRegistry.registerEncoder(new GlobalMarshallerEncoder(persistenceMarshaller));
-      encoderRegistry.registerEncoder(new CompatModeEncoder(persistenceMarshaller));
+      encoderRegistry.registerEncoder(new GlobalMarshallerEncoder(globalMarshaller));
+      encoderRegistry.registerEncoder(new CompatModeEncoder(globalMarshaller));
       encoderRegistry.registerEncoder(new JavaCompatEncoder(classWhiteList));
       encoderRegistry.registerEncoder(UTF8CompatEncoder.INSTANCE);
       encoderRegistry.registerTranscoder(new DefaultTranscoder(jBossMarshaller, javaSerializationMarshaller));

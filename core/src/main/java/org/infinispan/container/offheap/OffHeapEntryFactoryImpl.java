@@ -1,6 +1,6 @@
 package org.infinispan.container.offheap;
 
-import static org.infinispan.factories.KnownComponentNames.PERSISTENCE_MARSHALLER;
+import static org.infinispan.factories.KnownComponentNames.INTERNAL_MARSHALLER;
 
 import java.io.IOException;
 
@@ -30,7 +30,7 @@ public class OffHeapEntryFactoryImpl implements OffHeapEntryFactory {
    private static final OffHeapMemory MEMORY = OffHeapMemory.INSTANCE;
    private static final byte[] EMPTY_BYTES = new byte[0];
 
-   @Inject @ComponentName(PERSISTENCE_MARSHALLER) private Marshaller marshaller;
+   @Inject @ComponentName(INTERNAL_MARSHALLER) private Marshaller marshaller;
    @Inject private OffHeapMemoryAllocator allocator;
    @Inject private TimeService timeService;
    @Inject private InternalEntryFactory internalEntryFactory;

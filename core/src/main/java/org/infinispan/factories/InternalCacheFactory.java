@@ -1,6 +1,7 @@
 package org.infinispan.factories;
 
 import static java.util.Objects.requireNonNull;
+import static org.infinispan.factories.KnownComponentNames.INTERNAL_MARSHALLER;
 
 import java.lang.invoke.MethodHandles;
 import java.util.Collection;
@@ -96,7 +97,7 @@ public class InternalCacheFactory<K, V> extends AbstractNamedCacheComponentFacto
 
    private AdvancedCache<K, V> createAndWire(Configuration configuration, GlobalComponentRegistry globalComponentRegistry,
                                              String cacheName) throws Exception {
-      StreamingMarshaller marshaller = globalComponentRegistry.getOrCreateComponent(StreamingMarshaller.class);
+      StreamingMarshaller marshaller = globalComponentRegistry.getOrCreateComponent(StreamingMarshaller.class, INTERNAL_MARSHALLER);
 
       final BiFunction<DataConversion, DataConversion, AdvancedCache<K, V>> actualBuilder = (kc, kv) -> new CacheImpl<>(cacheName);
       BiFunction<DataConversion, DataConversion, AdvancedCache<K, V>> usedBuilder;

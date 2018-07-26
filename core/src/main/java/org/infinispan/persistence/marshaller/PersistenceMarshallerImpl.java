@@ -12,6 +12,7 @@ import org.infinispan.commons.CacheException;
 import org.infinispan.commons.dataconversion.MediaType;
 import org.infinispan.commons.io.ByteBuffer;
 import org.infinispan.commons.marshall.Marshaller;
+import org.infinispan.commons.marshall.NotSerializableException;
 import org.infinispan.commons.marshall.StreamingMarshaller;
 import org.infinispan.commons.marshall.WrappedByteArray;
 import org.infinispan.commons.marshall.protostream.BaseProtoStreamMarshaller;
@@ -90,10 +91,17 @@ public class PersistenceMarshallerImpl extends BaseProtoStreamMarshaller impleme
 
    @Override
    protected ByteBuffer objectToBuffer(Object o, int estimatedSize) throws IOException, InterruptedException {
-      if (isInternalClass(o)) {
-         return super.objectToBuffer(o, estimatedSize);
+      try {
+         if (isInternalClass(o)) {
+            return super.objectToBuffer(o, estimatedSize);
+         }
+         return super.objectToBuffer(new UserObject(o));
+      } catch (java.io.NotSerializableException nse) {
+         // TODO do we still want this? I think it assumes too much about the configured user marshaller as it may not
+         // even support the Serializable interface. Replace with generic MarshallingException?
+         if (log.isDebugEnabled()) log.debug("Object is not serializable", nse);
+         throw new NotSerializableException(nse.getMessage(), nse.getCause());
       }
-      return super.objectToBuffer(new UserObject(o));
    }
 
    @Override
