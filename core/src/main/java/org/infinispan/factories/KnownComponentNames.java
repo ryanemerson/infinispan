@@ -34,7 +34,6 @@ public class KnownComponentNames {
 
    public static final String INTERNAL_MARSHALLER = "org.infinispan.marshaller.internal";
    public static final String PERSISTENCE_MARSHALLER = "org.infinispan.marshaller.persistence";
-   public static final String USER_MARSHALLER = "org.infinispan.marshaller.user";
 
    // Please make sure this is kept up to date
    public static final Collection<String> ALL_KNOWN_COMPONENT_NAMES = Arrays.asList(
@@ -42,7 +41,7 @@ public class KnownComponentNames {
       ASYNC_OPERATIONS_EXECUTOR, EXPIRATION_SCHEDULED_EXECUTOR, INTERNAL_MARSHALLER,
       MODULE_COMMAND_INITIALIZERS, MODULE_COMMAND_FACTORIES, CLASS_LOADER,
       REMOTE_COMMAND_EXECUTOR, STATE_TRANSFER_EXECUTOR, TRANSACTION_VERSION_GENERATOR,
-      TIMEOUT_SCHEDULE_EXECUTOR, USER_MARSHALLER
+      TIMEOUT_SCHEDULE_EXECUTOR
    );
 
    private static final Map<String, Integer> DEFAULT_THREAD_COUNT = new HashMap<>(8);

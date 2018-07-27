@@ -197,7 +197,7 @@ public class DefaultExecutorService extends AbstractExecutorService implements D
       this.rpc = SecurityActions.getCacheRpcManager(cache);
       this.invoker = registry.getComponent(AsyncInterceptorChain.class);
       this.factory = registry.getComponent(CommandsFactory.class);
-      this.marshaller = registry.getGlobalComponentRegistry().getComponent(StreamingMarshaller.class, INTERNAL_MARSHALLER);
+      this.marshaller = registry.getComponent(StreamingMarshaller.class, INTERNAL_MARSHALLER);
       this.cancellationService = registry.getComponent(CancellationService.class);
       this.localExecutorService = localExecutorService;
       this.takeExecutorOwnership = takeExecutorOwnership;

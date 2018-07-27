@@ -115,6 +115,7 @@ public class GlobalMarshaller implements StreamingMarshaller {
    private Marshaller external;
 
    public GlobalMarshaller() {
+      System.err.println("CREATE GLOBAL");
    }
 
    @Override

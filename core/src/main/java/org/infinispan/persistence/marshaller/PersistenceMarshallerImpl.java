@@ -1,7 +1,5 @@
 package org.infinispan.persistence.marshaller;
 
-import static org.infinispan.factories.KnownComponentNames.USER_MARSHALLER;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInput;
@@ -16,11 +14,13 @@ import org.infinispan.commons.marshall.NotSerializableException;
 import org.infinispan.commons.marshall.StreamingMarshaller;
 import org.infinispan.commons.marshall.WrappedByteArray;
 import org.infinispan.commons.marshall.protostream.BaseProtoStreamMarshaller;
+import org.infinispan.configuration.global.GlobalConfiguration;
 import org.infinispan.container.versioning.NumericVersion;
 import org.infinispan.container.versioning.SimpleClusteredVersion;
-import org.infinispan.factories.annotations.ComponentName;
+import org.infinispan.factories.GlobalComponentRegistry;
 import org.infinispan.factories.annotations.Inject;
 import org.infinispan.factories.annotations.Start;
+import org.infinispan.marshall.core.JBossMarshaller;
 import org.infinispan.marshall.protostream.marshallers.EntryVersionMarshaller;
 import org.infinispan.metadata.EmbeddedMetadata;
 import org.infinispan.metadata.impl.InternalMetadataImpl;
@@ -49,16 +49,26 @@ public class PersistenceMarshallerImpl extends BaseProtoStreamMarshaller impleme
 
    private static final Log log = LogFactory.getLog(PersistenceMarshallerImpl.class, Log.class);
 
-   @Inject @ComponentName(USER_MARSHALLER) private Marshaller userMarshaller;
+   @Inject private GlobalComponentRegistry gcr;
 
    private final SerializationContext serializationContext = ProtobufUtil.newSerializationContext(Configuration.builder().build());
-   private volatile boolean isStreamingMarshaller;
+   private Marshaller userMarshaller;
+
+   public PersistenceMarshallerImpl() {
+      System.err.println("CREATE Persistence");
+   }
 
    // Must be before PersistenceManager
    @Start(priority = 8)
    @Override
    public void start() {
-      this.isStreamingMarshaller = userMarshaller instanceof StreamingMarshaller;
+      GlobalConfiguration globalConfiguration = gcr.getGlobalConfiguration();
+      Marshaller marshaller = globalConfiguration.serialization().marshaller();
+      if (marshaller == null) {
+         marshaller = new JBossMarshaller(globalConfiguration);
+      }
+      this.userMarshaller = marshaller;
+
       SerializationContext ctx = this.getSerializationContext();
       try {
          ctx.registerProtoFiles(FileDescriptorSource.fromResources("/persistence.proto"));
