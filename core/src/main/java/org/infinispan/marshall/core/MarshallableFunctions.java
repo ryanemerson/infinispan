@@ -560,7 +560,7 @@ public final class MarshallableFunctions {
       }
    }
 
-   private static final class ReturnReadOnlyFindOrNull<K, V>
+   public static final class ReturnReadOnlyFindOrNull<K, V>
       implements Function<ReadEntryView<K, V>, V> {
       @Override
       public V apply(ReadEntryView<K, V> ro) {

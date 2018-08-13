@@ -148,7 +148,7 @@ public class ComponentRegistry extends AbstractComponentRegistry {
       return super.lookupComponent(componentClassName, name, nameIsFQCN);
    }
 
-   public final GlobalComponentRegistry getGlobalComponentRegistry() {
+   public GlobalComponentRegistry getGlobalComponentRegistry() {
       return globalComponents;
    }
 

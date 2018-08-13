@@ -13,9 +13,9 @@ import java.util.Map;
 
 import org.infinispan.cache.impl.EncoderCache;
 import org.infinispan.configuration.cache.Configuration;
-import org.infinispan.container.impl.InternalEntryFactory;
 import org.infinispan.container.entries.ImmortalCacheEntry;
 import org.infinispan.container.entries.InternalCacheEntry;
+import org.infinispan.container.impl.InternalEntryFactory;
 import org.infinispan.context.InvocationContext;
 import org.infinispan.context.impl.NonTxInvocationContext;
 import org.infinispan.distribution.DistributionManager;
@@ -62,8 +62,9 @@ public class CacheNotifierImplTest extends AbstractInfinispanTest {
       when(mockCache.getAdvancedCache().getStatus()).thenReturn(ComponentStatus.INITIALIZING);
       Answer answer = (Answer<Object>) invocationOnMock -> Mockito.mock((Class) invocationOnMock.getArguments()[0]);
       when(mockCache.getAdvancedCache().getComponentRegistry().getComponent(any(Class.class))).then(answer);
-      when(mockCache.getAdvancedCache().getComponentRegistry().getComponent(any(Class.class), anyString()))
-            .then(answer);
+      when(mockCache.getAdvancedCache().getComponentRegistry().getComponent(any(Class.class), anyString())).then(answer);
+      when(mockCache.getAdvancedCache().getComponentRegistry().getGlobalComponentRegistry().getComponent(any(Class.class), anyString())).then(answer);
+
       ClusteringDependentLogic.LocalLogic cdl = new ClusteringDependentLogic.LocalLogic();
       cdl.init(null, mock(Configuration.class, RETURNS_DEEP_STUBS), mock(KeyPartitioner.class));
       TestingUtil.inject(n, mockCache, cdl, config, mock(DistributionManager.class),

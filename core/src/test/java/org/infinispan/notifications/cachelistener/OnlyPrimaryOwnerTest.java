@@ -18,8 +18,8 @@ import org.infinispan.commons.hash.MurmurHash3;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.configuration.cache.StorageType;
-import org.infinispan.container.impl.InternalEntryFactory;
 import org.infinispan.container.entries.CacheEntry;
+import org.infinispan.container.impl.InternalEntryFactory;
 import org.infinispan.container.versioning.EntryVersionsMap;
 import org.infinispan.container.versioning.VersionGenerator;
 import org.infinispan.context.Flag;
@@ -43,6 +43,7 @@ import org.infinispan.remoting.transport.Address;
 import org.infinispan.test.TestingUtil;
 import org.infinispan.topology.CacheTopology;
 import org.mockito.Mockito;
+import org.mockito.stubbing.Answer;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -63,10 +64,10 @@ public class OnlyPrimaryOwnerTest {
       Configuration config = mock(Configuration.class, RETURNS_DEEP_STUBS);
       when(config.memory().storageType()).thenReturn(StorageType.OBJECT);
       when(mockCache.getAdvancedCache().getStatus()).thenReturn(ComponentStatus.INITIALIZING);
-      when(mockCache.getAdvancedCache().getComponentRegistry().getComponent(any(Class.class))).then(
-            invocationOnMock -> Mockito.mock((Class<?>) invocationOnMock.getArguments()[0]));
-      when(mockCache.getAdvancedCache().getComponentRegistry().getComponent(any(Class.class), anyString())).then(
-            invocationOnMock -> Mockito.mock((Class<?>) invocationOnMock.getArguments()[0]));
+      Answer answer = (Answer<Object>) invocationOnMock -> Mockito.mock((Class) invocationOnMock.getArguments()[0]);
+      when(mockCache.getAdvancedCache().getComponentRegistry().getComponent(any(Class.class))).then(answer);
+      when(mockCache.getAdvancedCache().getComponentRegistry().getComponent(any(Class.class), anyString())).then(answer);
+      when(mockCache.getAdvancedCache().getComponentRegistry().getGlobalComponentRegistry().getComponent(any(Class.class), anyString())).then(answer);
       when(mockCache.getAdvancedCache().getComponentRegistry().getComponent(Encoder.class)).thenReturn(new IdentityEncoder());
 
       TestingUtil.inject(n, mockCache, cdl, config, mock(DistributionManager.class),

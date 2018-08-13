@@ -48,6 +48,8 @@ public class KeyFilterTest extends AbstractInfinispanTest {
       Answer answer = (Answer<Object>) invocationOnMock -> Mockito.mock((Class) invocationOnMock.getArguments()[0]);
       when(mockCache.getAdvancedCache().getComponentRegistry().getComponent(any(Class.class))).then(answer);
       when(mockCache.getAdvancedCache().getComponentRegistry().getComponent(any(Class.class), anyString())).then(answer);
+      when(mockCache.getAdvancedCache().getComponentRegistry().getGlobalComponentRegistry().getComponent(any(Class.class), anyString())).then(answer);
+
       ClusteringDependentLogic.LocalLogic cdl = new ClusteringDependentLogic.LocalLogic();
       cdl.init(null, mock(Configuration.class, RETURNS_DEEP_STUBS), mock(KeyPartitioner.class));
       TestingUtil.inject(n, mockCache, cdl, config,

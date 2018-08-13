@@ -10,11 +10,15 @@ import org.infinispan.protostream.MessageMarshaller;
  * @author remerson
  * @since 4.0
  */
-class UserObject {
+public class UserObject {
    final Object object;
 
-   UserObject(Object object) {
+   public UserObject(Object object) {
       this.object = object;
+   }
+
+   public Object get() {
+      return object;
    }
 
    public static class Marshaller implements MessageMarshaller<UserObject> {

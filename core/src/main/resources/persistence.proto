@@ -20,6 +20,7 @@ message Metadata {
         EXPIRABLE = 1;
         LIFESPAN_EXPIRABLE = 2;
         MAXIDLE_EXPIRABLE = 3;
+        META_PARAM = 4;
     }
     optional Metadata.Type type = 1;
     optional EntryVersion version = 2;
@@ -39,6 +40,7 @@ message EntryVersion {
 //        NumericVersion numeric = 1;
 //        ClusteredVersion clustered = 2;
 //    }
+// TODO add support for custom implementation
     optional NumericVersion numeric = 1;
     optional ClusteredVersion clustered = 2;
 }
@@ -61,4 +63,9 @@ message MapEntry {
     optional string valueType = 3 [default = ""];
     repeated bytes valueSet = 4 [packed=true];
     optional string implementation = 5;
+}
+
+message AtomicKeySet {
+    required string cachename = 1;
+    required UserObject group = 2;
 }

@@ -15,7 +15,7 @@ import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 
 /**
- * TODO expose this as a user implementation
+ * TODO make this a generic implementation that can be used by users. PeristenceMarshallerImpl should then just extend this
  * A marshaller that uses Protocol Buffers.
  *
  * @author remerson@redhat.com

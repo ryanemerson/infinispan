@@ -128,6 +128,8 @@ public abstract class BaseCacheNotifierImplInitialTransferTest extends AbstractI
       Answer answer = i -> Mockito.mock(i.getArgument(0));
       when(mockCache.getAdvancedCache().getComponentRegistry().getComponent(any(Class.class))).then(answer);
       when(mockCache.getAdvancedCache().getComponentRegistry().getComponent(any(Class.class), anyString())).then(answer);
+      when(mockCache.getAdvancedCache().getComponentRegistry().getGlobalComponentRegistry().getComponent(any(Class.class), anyString())).then(answer);
+
       ClusteringDependentLogic.LocalLogic cdl = new ClusteringDependentLogic.LocalLogic();
       cdl.init(null, mock(Configuration.class, RETURNS_DEEP_STUBS), mock(KeyPartitioner.class));
       TestingUtil.inject(n, mockCache, cdl, config,
