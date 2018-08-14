@@ -63,18 +63,16 @@ public class MetadataMarshaller implements MessageMarshaller<Metadata> {
       }
 
       Metadata.Builder builder = new EmbeddedMetadata.Builder();
+      builder.version(reader.readObject("version", EntryVersion.class));
       switch (type) {
          case EXPIRABLE:
-            builder.version(reader.readObject("version", EntryVersion.class));
             builder.lifespan(reader.readLong("lifespan"));
             builder.maxIdle(reader.readLong("maxIdle"));
             break;
          case LIFESPAN_EXPIRABLE:
-            builder.version(reader.readObject("version", EntryVersion.class));
             builder.lifespan(reader.readLong("lifespan"));
             break;
          case MAXIDLE_EXPIRABLE:
-            builder.version(reader.readObject("version", EntryVersion.class));
             builder.maxIdle(reader.readLong("maxIdle"));
             break;
       }
@@ -105,31 +103,32 @@ public class MetadataMarshaller implements MessageMarshaller<Metadata> {
          return;
 
       writer.writeEnum("type", type, Type.class);
+
+      if (type == Type.META_PARAM) {
+         MetaParamsInternalMetadata m = (MetaParamsInternalMetadata) metadata;
+         m.findMetaParam(MetaParam.MetaEntryVersion.class).ifPresent(v -> {
+            try {
+               writer.writeObject("version", v.get(), EntryVersion.class);
+            } catch (IOException e) {
+               throw new CacheException(e);
+            }
+         });
+         m.findMetaParam(MetaParam.MetaLifespan.class).ifPresent(v -> writeMetaParamLong(writer, "lifespan", v.get()));
+         m.findMetaParam(MetaParam.MetaMaxIdle.class).ifPresent(v -> writeMetaParamLong(writer, "maxIdle", v.get()));
+         return;
+      }
+
+      writer.writeObject("version", metadata.version(), EntryVersion.class);
       switch (type) {
          case EXPIRABLE:
-            writer.writeObject("version", metadata.version(), EntryVersion.class);
             writer.writeLong("lifespan", metadata.lifespan());
             writer.writeLong("maxIdle", metadata.maxIdle());
             break;
          case LIFESPAN_EXPIRABLE:
-            writer.writeObject("version", metadata.version(), EntryVersion.class);
             writer.writeLong("lifespan", metadata.lifespan());
             break;
          case MAXIDLE_EXPIRABLE:
-            writer.writeObject("version", metadata.version(), EntryVersion.class);
             writer.writeLong("maxIdle", metadata.maxIdle());
-            break;
-         case META_PARAM:
-            MetaParamsInternalMetadata m = (MetaParamsInternalMetadata) metadata;
-            m.findMetaParam(MetaParam.MetaEntryVersion.class).ifPresent(v -> {
-               try {
-                  writer.writeObject("version", v.get(), EntryVersion.class);
-               } catch (IOException e) {
-                  throw new CacheException(e);
-               }
-            });
-            m.findMetaParam(MetaParam.MetaLifespan.class).ifPresent(v -> writeMetaParamLong(writer, "lifespan", v.get()));
-            m.findMetaParam(MetaParam.MetaMaxIdle.class).ifPresent(v -> writeMetaParamLong(writer, "maxIdle", v.get()));
             break;
       }
    }

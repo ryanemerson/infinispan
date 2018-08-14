@@ -291,6 +291,11 @@ public class ComponentRegistry extends AbstractComponentRegistry {
       return cacheName;
    }
 
+   @Deprecated
+   public StreamingMarshaller getCacheMarshaller() {
+      return getInternalMarshaller();
+   }
+
    /**
     * Caching shortcut for #getComponent(PersistenceMarshaller.class, INTERNAL_MARSHALLER);
     */
