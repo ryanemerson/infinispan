@@ -1,13 +1,19 @@
 package org.infinispan.commons.marshall.protostream;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 import org.infinispan.commons.dataconversion.MediaType;
 import org.infinispan.commons.io.ByteBuffer;
 import org.infinispan.commons.io.ByteBufferImpl;
 import org.infinispan.commons.marshall.AbstractMarshaller;
+import org.infinispan.commons.marshall.StreamAwareMarshaller;
 import org.infinispan.protostream.ProtobufUtil;
 import org.infinispan.protostream.SerializationContext;
+import org.infinispan.protostream.WrappedMessage;
+import org.infinispan.protostream.impl.RawProtoStreamReaderImpl;
+import org.infinispan.protostream.impl.RawProtoStreamWriterImpl;
 
 /**
  * Provides the starting point for implementing a {@link org.infinispan.commons.marshall.Marshaller} that uses Protobuf
@@ -16,7 +22,7 @@ import org.infinispan.protostream.SerializationContext;
  * @author anistor@redhat.com
  * @since 6.0
  */
-public abstract class BaseProtoStreamMarshaller extends AbstractMarshaller {
+public abstract class BaseProtoStreamMarshaller extends AbstractMarshaller implements StreamAwareMarshaller {
 
    protected BaseProtoStreamMarshaller() {
    }
@@ -31,6 +37,16 @@ public abstract class BaseProtoStreamMarshaller extends AbstractMarshaller {
    @Override
    public Object objectFromByteBuffer(byte[] buf, int offset, int length) throws IOException, ClassNotFoundException {
       return ProtobufUtil.fromWrappedByteArray(getSerializationContext(), buf, offset, length);
+   }
+
+   @Override
+   public void writeObject(Object o, OutputStream out) throws IOException {
+      WrappedMessage.writeMessage(getSerializationContext(), RawProtoStreamWriterImpl.newInstance(out), o);
+   }
+
+   @Override
+   public Object readObject(InputStream in) throws ClassNotFoundException, IOException {
+      return WrappedMessage.readMessage(getSerializationContext(), RawProtoStreamReaderImpl.newInstance(in));
    }
 
    @Override

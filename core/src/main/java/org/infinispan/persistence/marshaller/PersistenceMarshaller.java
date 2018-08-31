@@ -11,7 +11,6 @@ import org.infinispan.commons.CacheException;
 import org.infinispan.commons.io.ByteBuffer;
 import org.infinispan.commons.marshall.Marshaller;
 import org.infinispan.commons.marshall.NotSerializableException;
-import org.infinispan.commons.marshall.StreamAwareMarshaller;
 import org.infinispan.commons.marshall.WrappedByteArray;
 import org.infinispan.commons.marshall.protostream.BaseProtoStreamMarshaller;
 import org.infinispan.commons.util.FastCopyHashMap;
@@ -30,10 +29,7 @@ import org.infinispan.metadata.impl.InternalMetadataImpl;
 import org.infinispan.protostream.FileDescriptorSource;
 import org.infinispan.protostream.ProtobufUtil;
 import org.infinispan.protostream.SerializationContext;
-import org.infinispan.protostream.WrappedMessage;
 import org.infinispan.protostream.config.Configuration;
-import org.infinispan.protostream.impl.RawProtoStreamReaderImpl;
-import org.infinispan.protostream.impl.RawProtoStreamWriterImpl;
 import org.infinispan.util.KeyValuePair;
 import org.infinispan.util.function.SerializableFunction;
 import org.infinispan.util.logging.Log;
@@ -47,7 +43,7 @@ import org.infinispan.util.logging.LogFactory;
  * @author Ryan Emerson
  * @since 9.4
  */
-public class PersistenceMarshaller extends BaseProtoStreamMarshaller implements StreamAwareMarshaller {
+public class PersistenceMarshaller extends BaseProtoStreamMarshaller {
 
    private static final Log log = LogFactory.getLog(PersistenceMarshaller.class, Log.class);
 
@@ -86,7 +82,7 @@ public class PersistenceMarshaller extends BaseProtoStreamMarshaller implements 
          ctx.registerMarshaller(new MapMarshaller(FastCopyHashMap.class, this));
          ctx.registerMarshaller(new AtomicKeySetImpl.Marshaller(gcr));
       } catch (IOException e) {
-         log.error(e);
+         log.error("Exception thrown when reading 'persistence.proto'", e);
          throw new CacheException(e);
       }
    }
@@ -119,12 +115,12 @@ public class PersistenceMarshaller extends BaseProtoStreamMarshaller implements 
 
    @Override
    public void writeObject(Object o, OutputStream out) throws IOException {
-      WrappedMessage.writeMessage(serializationContext, RawProtoStreamWriterImpl.newInstance(out), wrap(o));
+      super.writeObject(wrap(o), out);
    }
 
    @Override
    public Object readObject(InputStream in) throws ClassNotFoundException, IOException {
-      return unwrap(WrappedMessage.readMessage(serializationContext, RawProtoStreamReaderImpl.newInstance(in)));
+      return unwrap(super.readObject(in));
    }
 
    private Object wrap(Object o) {
