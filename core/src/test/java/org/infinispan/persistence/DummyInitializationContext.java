@@ -50,8 +50,7 @@ public class DummyInitializationContext implements InitializationContext {
 
    @Override
    public StreamingMarshaller getMarshaller() {
-      // TODO wrap
-      return null;
+      return StreamingMarshaller.from(marshaller);
    }
 
    @Override

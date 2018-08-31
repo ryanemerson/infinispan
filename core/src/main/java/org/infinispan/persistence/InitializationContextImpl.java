@@ -50,8 +50,7 @@ public class InitializationContextImpl implements InitializationContext {
 
    @Override
    public StreamingMarshaller getMarshaller() {
-      // TODO wrap marshaller
-      return null;
+      return StreamingMarshaller.from(marshaller);
    }
 
    @Override
