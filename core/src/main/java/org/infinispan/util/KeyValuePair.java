@@ -8,7 +8,7 @@ import java.util.Set;
 
 import org.infinispan.commons.marshall.AbstractExternalizer;
 import org.infinispan.marshall.core.Ids;
-import org.infinispan.persistence.marshaller.PersistenceMarshallerImpl;
+import org.infinispan.persistence.marshaller.PersistenceMarshaller;
 import org.infinispan.protostream.MessageMarshaller;
 
 /**
@@ -89,9 +89,9 @@ public class KeyValuePair<K,V> {
 
    public static class Marshaller implements MessageMarshaller<KeyValuePair> {
 
-      private final PersistenceMarshallerImpl marshaller;
+      private final PersistenceMarshaller marshaller;
 
-      public Marshaller(PersistenceMarshallerImpl marshaller) {
+      public Marshaller(PersistenceMarshaller marshaller) {
          this.marshaller = marshaller;
       }
 

@@ -47,16 +47,16 @@ import org.infinispan.util.logging.LogFactory;
  * @author Ryan Emerson
  * @since 9.4
  */
-public class PersistenceMarshallerImpl extends BaseProtoStreamMarshaller implements StreamAwareMarshaller {
+public class PersistenceMarshaller extends BaseProtoStreamMarshaller implements StreamAwareMarshaller {
 
-   private static final Log log = LogFactory.getLog(PersistenceMarshallerImpl.class, Log.class);
+   private static final Log log = LogFactory.getLog(PersistenceMarshaller.class, Log.class);
 
    @Inject private GlobalComponentRegistry gcr;
 
    private final SerializationContext serializationContext = ProtobufUtil.newSerializationContext(Configuration.builder().build());
    private Marshaller userMarshaller;
 
-   public PersistenceMarshallerImpl() {
+   public PersistenceMarshaller() {
    }
 
    // Must be before PersistenceManager

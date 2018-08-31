@@ -8,7 +8,7 @@ import org.infinispan.commons.marshall.StreamAwareMarshaller;
 import org.infinispan.commons.marshall.StreamingMarshaller;
 import org.infinispan.factories.annotations.DefaultFactoryFor;
 import org.infinispan.marshall.core.GlobalMarshaller;
-import org.infinispan.persistence.marshaller.PersistenceMarshallerImpl;
+import org.infinispan.persistence.marshaller.PersistenceMarshaller;
 
 /**
  * MarshallerFactory.
@@ -33,7 +33,7 @@ public class MarshallerFactory extends NamedComponentFactory implements AutoInst
       switch (componentName) {
          case PERSISTENCE_MARSHALLER:
             if (persistenceMarshaller == null) {
-               persistenceMarshaller = new PersistenceMarshallerImpl();
+               persistenceMarshaller = new PersistenceMarshaller();
             }
             return (T) persistenceMarshaller;
          case INTERNAL_MARSHALLER:
