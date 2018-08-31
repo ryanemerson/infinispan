@@ -17,7 +17,7 @@ import org.infinispan.commons.hash.MurmurHash3;
 import org.infinispan.commons.io.ByteBufferImpl;
 import org.infinispan.commons.marshall.AdminFlagExternalizer;
 import org.infinispan.commons.marshall.AdvancedExternalizer;
-import org.infinispan.commons.marshall.StreamingMarshaller;
+import org.infinispan.commons.marshall.StreamAwareMarshaller;
 import org.infinispan.commons.marshall.WrappedByteArray;
 import org.infinispan.commons.marshall.exts.EquivalenceExternalizer;
 import org.infinispan.commons.tx.XidImpl;
@@ -133,7 +133,7 @@ final class InternalExternalizers {
    }
 
    static ClassToExternalizerMap load(GlobalComponentRegistry gcr, RemoteCommandsFactory cmdFactory) {
-      final StreamingMarshaller persistenceMarshaller = gcr.getComponent(StreamingMarshaller.class, PERSISTENCE_MARSHALLER);
+      final StreamAwareMarshaller persistenceMarshaller = gcr.getComponent(StreamAwareMarshaller.class, PERSISTENCE_MARSHALLER);
       // TODO Add initial value and load factor
       ClassToExternalizerMap exts = new ClassToExternalizerMap(512, 0.6f);
 

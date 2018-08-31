@@ -10,7 +10,7 @@ import java.util.Set;
 import org.infinispan.AdvancedCache;
 import org.infinispan.Cache;
 import org.infinispan.commons.io.ByteBufferFactoryImpl;
-import org.infinispan.commons.marshall.StreamingMarshaller;
+import org.infinispan.commons.marshall.StreamAwareMarshaller;
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.configuration.global.GlobalConfiguration;
 import org.infinispan.configuration.global.GlobalConfigurationBuilder;
@@ -33,22 +33,17 @@ import org.infinispan.util.concurrent.WithinThreadExecutor;
  */
 public class PersistenceMockUtil {
 
-   public static InitializationContext createContext(String cacheName, Configuration configuration, StreamingMarshaller marshaller) {
+   public static InitializationContext createContext(String cacheName, Configuration configuration, StreamAwareMarshaller marshaller) {
       return createContext(cacheName, configuration, marshaller, AbstractInfinispanTest.TIME_SERVICE);
    }
 
-   public static InitializationContext createContext(String cacheName, Configuration configuration, StreamingMarshaller marshaller, TimeService timeService) {
+   public static InitializationContext createContext(String cacheName, Configuration configuration, StreamAwareMarshaller marshaller, TimeService timeService) {
       Cache mockCache = mockCache(cacheName, configuration, timeService);
-      return new InitializationContextImpl(configuration.persistence().stores().get(0), mockCache, marshaller,
-                                           timeService, new ByteBufferFactoryImpl(), new MarshalledEntryFactoryImpl(marshaller),
-                                           new WithinThreadExecutor());
+      return new InitializationContextImpl(configuration.persistence().stores().get(0), mockCache, marshaller, timeService,
+            new ByteBufferFactoryImpl(), new MarshalledEntryFactoryImpl(marshaller), new WithinThreadExecutor());
    }
 
-   public static Cache mockCache(String name, Configuration configuration) {
-      return mockCache(name, configuration, AbstractInfinispanTest.TIME_SERVICE);
-   }
-
-   public static Cache mockCache(String name, Configuration configuration, TimeService timeService) {
+   private static Cache mockCache(String name, Configuration configuration, TimeService timeService) {
       String cacheName = "mock-cache-" + name;
       AdvancedCache cache = mock(AdvancedCache.class, RETURNS_DEEP_STUBS);
 
@@ -70,5 +65,4 @@ public class PersistenceMockUtil {
       when(cache.getCacheConfiguration()).thenReturn(configuration);
       return cache;
    }
-
 }

@@ -24,6 +24,7 @@ import org.infinispan.commons.marshall.Marshaller;
 import org.infinispan.commons.marshall.NotSerializableException;
 import org.infinispan.commons.marshall.SerializeFunctionWith;
 import org.infinispan.commons.marshall.SerializeWith;
+import org.infinispan.commons.marshall.StreamAwareMarshaller;
 import org.infinispan.commons.marshall.StreamingMarshaller;
 import org.infinispan.configuration.global.GlobalConfiguration;
 import org.infinispan.factories.GlobalComponentRegistry;
@@ -34,7 +35,6 @@ import org.infinispan.factories.annotations.Stop;
 import org.infinispan.factories.scopes.Scope;
 import org.infinispan.factories.scopes.Scopes;
 import org.infinispan.marshall.core.ClassToExternalizerMap.IdToExternalizerMap;
-import org.infinispan.persistence.marshaller.PersistenceMarshallerImpl;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 import org.jboss.marshalling.ObjectTable;
@@ -104,7 +104,7 @@ public class GlobalMarshaller implements StreamingMarshaller {
 
    @Inject private GlobalComponentRegistry gcr;
    @Inject private RemoteCommandsFactory cmdFactory;
-   @Inject @ComponentName(PERSISTENCE_MARSHALLER) StreamingMarshaller persistenceMarshaller;
+   @Inject @ComponentName(PERSISTENCE_MARSHALLER) private StreamAwareMarshaller persistenceMarshaller;
 
    private ClassToExternalizerMap internalExts;
    private IdToExternalizerMap reverseInternalExts;
@@ -121,7 +121,6 @@ public class GlobalMarshaller implements StreamingMarshaller {
    @Start(priority = 8) // Should start after the externalizer table and before transport
    public void start() {
       GlobalConfiguration globalCfg = gcr.getGlobalConfiguration();
-      // TODO need to pass persistence marshaller to MarshalledEntryExternalizer somehow. GlobalComponentRegistry?
       internalExts = InternalExternalizers.load(gcr, cmdFactory);
       reverseInternalExts = internalExts.reverseMap(Ids.MAX_ID);
       if (trace) {
@@ -592,11 +591,12 @@ public class GlobalMarshaller implements StreamingMarshaller {
    }
 
    private void writeRawUnknown(Marshaller marshaller, Object obj, ObjectOutput out) throws IOException {
-//      TODO update once PersistenceMarshaller correctly implements StreamingMarshaller
-      if (!(marshaller instanceof PersistenceMarshallerImpl) && marshaller instanceof StreamingMarshaller)
-//      if (marshaller instanceof StreamingMarshaller)
+      if (marshaller instanceof StreamingMarshaller) {
          ((StreamingMarshaller) marshaller).objectToObjectStream(obj, out);
-      else {
+      } else if (marshaller instanceof StreamAwareMarshaller && out instanceof StreamBytesObjectOutput){
+         OutputStream outputStream = ((StreamBytesObjectOutput) out).stream;
+         ((StreamAwareMarshaller) marshaller).writeObject(obj, outputStream);
+      } else {
          try {
             byte[] bytes = marshaller.objectToByteBuffer(obj);
             out.writeInt(bytes.length);
@@ -853,9 +853,7 @@ public class GlobalMarshaller implements StreamingMarshaller {
    }
 
    private Object readUnknown(Marshaller marshaller, ObjectInput in) throws IOException, ClassNotFoundException {
-//      TODO update once PersistenceMarshaller correctly implements StreamingMarshaller
-      if (!(marshaller instanceof PersistenceMarshallerImpl) && marshaller instanceof StreamingMarshaller) {
-//      if (marshaller instanceof StreamingMarshaller) {
+      if (marshaller instanceof StreamingMarshaller) {
          try {
             return ((StreamingMarshaller) marshaller).objectFromObjectStream(in);
          } catch (InterruptedException e) {

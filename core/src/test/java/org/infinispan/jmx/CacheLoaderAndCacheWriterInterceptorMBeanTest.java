@@ -6,7 +6,7 @@ import static org.infinispan.test.TestingUtil.getCacheObjectName;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
-import org.infinispan.commons.marshall.StreamingMarshaller;
+import org.infinispan.commons.marshall.StreamAwareMarshaller;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.context.Flag;
 import org.infinispan.manager.EmbeddedCacheManager;
@@ -64,7 +64,7 @@ public class CacheLoaderAndCacheWriterInterceptorMBeanTest extends SingleCacheMa
       checkMBeanOperationParameterNaming(storeInterceptorObjName);
    }
 
-   private StreamingMarshaller marshaller() {
+   private StreamAwareMarshaller marshaller() {
       return cache.getAdvancedCache().getComponentRegistry().getPersistenceMarshaller();
    }
 

@@ -13,7 +13,7 @@ import org.infinispan.commands.write.PutMapCommand;
 import org.infinispan.commands.write.RemoveCommand;
 import org.infinispan.commands.write.ReplaceCommand;
 import org.infinispan.commons.marshall.NotSerializableException;
-import org.infinispan.commons.marshall.StreamingMarshaller;
+import org.infinispan.commons.marshall.StreamAwareMarshaller;
 import org.infinispan.context.InvocationContext;
 import org.infinispan.context.impl.FlagBitSets;
 import org.infinispan.factories.annotations.ComponentName;
@@ -34,7 +34,7 @@ import org.infinispan.interceptors.DDAsyncInterceptor;
  */
 public class IsMarshallableInterceptor extends DDAsyncInterceptor {
 
-   @Inject @ComponentName(PERSISTENCE_MARSHALLER) private StreamingMarshaller marshaller;
+   @Inject @ComponentName(PERSISTENCE_MARSHALLER) private StreamAwareMarshaller marshaller;
    private boolean usingAsyncStore;
 
    @Start

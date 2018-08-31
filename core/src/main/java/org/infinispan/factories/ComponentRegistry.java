@@ -14,6 +14,7 @@ import org.infinispan.commands.CommandsFactory;
 import org.infinispan.commands.module.ModuleCommandInitializer;
 import org.infinispan.commons.CacheConfigurationException;
 import org.infinispan.commons.CacheException;
+import org.infinispan.commons.marshall.StreamAwareMarshaller;
 import org.infinispan.commons.marshall.StreamingMarshaller;
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.conflict.impl.InternalConflictManager;
@@ -306,8 +307,8 @@ public class ComponentRegistry extends AbstractComponentRegistry {
    /**
     * Caching shortcut for #getComponent(PersistenceMarshaller.class, PERSISTENCE_MARSHALLER);
     */
-   public StreamingMarshaller getPersistenceMarshaller() {
-      return getComponent(StreamingMarshaller.class, PERSISTENCE_MARSHALLER);
+   public StreamAwareMarshaller getPersistenceMarshaller() {
+      return getComponent(StreamAwareMarshaller.class, PERSISTENCE_MARSHALLER);
    }
 
    /**

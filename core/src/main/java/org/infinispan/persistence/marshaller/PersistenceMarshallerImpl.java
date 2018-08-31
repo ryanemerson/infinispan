@@ -2,19 +2,16 @@ package org.infinispan.persistence.marshaller;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
 import java.io.OutputStream;
 import java.lang.invoke.SerializedLambda;
 import java.util.Arrays;
 
 import org.infinispan.atomic.impl.AtomicKeySetImpl;
 import org.infinispan.commons.CacheException;
-import org.infinispan.commons.dataconversion.MediaType;
 import org.infinispan.commons.io.ByteBuffer;
 import org.infinispan.commons.marshall.Marshaller;
 import org.infinispan.commons.marshall.NotSerializableException;
-import org.infinispan.commons.marshall.StreamingMarshaller;
+import org.infinispan.commons.marshall.StreamAwareMarshaller;
 import org.infinispan.commons.marshall.WrappedByteArray;
 import org.infinispan.commons.marshall.protostream.BaseProtoStreamMarshaller;
 import org.infinispan.commons.util.FastCopyHashMap;
@@ -33,7 +30,10 @@ import org.infinispan.metadata.impl.InternalMetadataImpl;
 import org.infinispan.protostream.FileDescriptorSource;
 import org.infinispan.protostream.ProtobufUtil;
 import org.infinispan.protostream.SerializationContext;
+import org.infinispan.protostream.WrappedMessage;
 import org.infinispan.protostream.config.Configuration;
+import org.infinispan.protostream.impl.RawProtoStreamReaderImpl;
+import org.infinispan.protostream.impl.RawProtoStreamWriterImpl;
 import org.infinispan.util.KeyValuePair;
 import org.infinispan.util.function.SerializableFunction;
 import org.infinispan.util.logging.Log;
@@ -42,15 +42,12 @@ import org.infinispan.util.logging.LogFactory;
 /**
  * TODO How to allow none-core modules to add additional marshallers to protostream?
  *
- * How to handle common classes such as JGroups Address? Do we add as a default externalizer for the JbossMarshaller?
- *    - Failing Tests:
- *       - MemoryBasedEvictionFunctionalStoreAsBinaryTest#testJGroupsAddress
- *       - NumOwnersNodeCrashInSequenceTest
+ * TODO Make this extend/consume ProtoStreamMarshaller once StreamingMarshaller methods have been implemented
  *
  * @author Ryan Emerson
  * @since 9.4
  */
-public class PersistenceMarshallerImpl extends BaseProtoStreamMarshaller implements StreamingMarshaller {
+public class PersistenceMarshallerImpl extends BaseProtoStreamMarshaller implements StreamAwareMarshaller {
 
    private static final Log log = LogFactory.getLog(PersistenceMarshallerImpl.class, Log.class);
 
@@ -71,6 +68,7 @@ public class PersistenceMarshallerImpl extends BaseProtoStreamMarshaller impleme
       if (marshaller == null) {
          marshaller = new JBossMarshaller(globalConfiguration);
       }
+      marshaller.start();
       this.userMarshaller = marshaller;
 
       SerializationContext ctx = this.getSerializationContext();
@@ -105,10 +103,7 @@ public class PersistenceMarshallerImpl extends BaseProtoStreamMarshaller impleme
    @Override
    protected ByteBuffer objectToBuffer(Object o, int estimatedSize) throws IOException, InterruptedException {
       try {
-         if (isInternalClass(o)) {
-            return super.objectToBuffer(o, estimatedSize);
-         }
-         return super.objectToBuffer(new UserObject(o));
+         return super.objectToBuffer(wrap(o), estimatedSize);
       } catch (java.io.NotSerializableException nse) {
          // TODO do we still want this? I think it assumes too much about the configured user marshaller as it may not
          // even support the Serializable interface. Replace with generic MarshallingException?
@@ -119,54 +114,30 @@ public class PersistenceMarshallerImpl extends BaseProtoStreamMarshaller impleme
 
    @Override
    public Object objectFromByteBuffer(byte[] buf, int offset, int length) throws IOException, ClassNotFoundException {
-      try {
-         Object o = super.objectFromByteBuffer(buf, offset, length);
-         if (o instanceof UserObject)
-            return ((UserObject) o).object;
-         return o;
-      } catch (Exception e) {
-         throw e;
-      }
+      return unwrap(super.objectFromByteBuffer(buf, offset, length));
+   }
+
+   @Override
+   public void writeObject(Object o, OutputStream out) throws IOException {
+      WrappedMessage.writeMessage(serializationContext, RawProtoStreamWriterImpl.newInstance(out), wrap(o));
+   }
+
+   @Override
+   public Object readObject(InputStream in) throws ClassNotFoundException, IOException {
+      return unwrap(WrappedMessage.readMessage(serializationContext, RawProtoStreamReaderImpl.newInstance(in)));
+   }
+
+   private Object wrap(Object o) {
+      return isInternalClass(o) ? o : new UserObject(o);
+   }
+
+   private Object unwrap(Object o) {
+      return o instanceof UserObject ? ((UserObject)o).object : o;
    }
 
    @Override
    public boolean isMarshallable(Object o) {
       return !isBlacklisted(o) && (isInternalClass(o) || isUserMarshallable(o));
-   }
-
-   @Override
-   public ObjectOutput startObjectOutput(OutputStream os, boolean isReentrant, int estimatedSize) throws IOException {
-      return null;  // TODO: Customise this generated block
-   }
-
-   @Override
-   public void finishObjectOutput(ObjectOutput oo) {
-      // TODO: Customise this generated block
-   }
-
-   @Override
-   public void objectToObjectStream(Object obj, ObjectOutput out) throws IOException {
-      // TODO: Customise this generated block
-   }
-
-   @Override
-   public ObjectInput startObjectInput(InputStream is, boolean isReentrant) throws IOException {
-      return null;  // TODO: Customise this generated block
-   }
-
-   @Override
-   public void finishObjectInput(ObjectInput oi) {
-      // TODO: Customise this generated block
-   }
-
-   @Override
-   public Object objectFromObjectStream(ObjectInput in) throws IOException, ClassNotFoundException, InterruptedException {
-      return null;  // TODO: Customise this generated block
-   }
-
-   @Override
-   public MediaType mediaType() {
-      return null;  // TODO: Customise this generated block
    }
 
    private boolean isBlacklisted(Object o) {

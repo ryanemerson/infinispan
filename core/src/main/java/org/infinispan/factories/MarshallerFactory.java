@@ -3,6 +3,8 @@ package org.infinispan.factories;
 import static org.infinispan.factories.KnownComponentNames.INTERNAL_MARSHALLER;
 import static org.infinispan.factories.KnownComponentNames.PERSISTENCE_MARSHALLER;
 
+import org.infinispan.commons.marshall.Marshaller;
+import org.infinispan.commons.marshall.StreamAwareMarshaller;
 import org.infinispan.commons.marshall.StreamingMarshaller;
 import org.infinispan.factories.annotations.DefaultFactoryFor;
 import org.infinispan.marshall.core.GlobalMarshaller;
@@ -14,11 +16,11 @@ import org.infinispan.persistence.marshaller.PersistenceMarshallerImpl;
  * @author Galder Zamarreño
  * @since 4.0
  */
-@DefaultFactoryFor(classes = StreamingMarshaller.class)
+@DefaultFactoryFor(classes = {StreamingMarshaller.class, StreamAwareMarshaller.class, Marshaller.class})
 public class MarshallerFactory extends NamedComponentFactory implements AutoInstantiableFactory {
 
-   private StreamingMarshaller persistenceMarshaller;
    private StreamingMarshaller internalMarshaller;
+   private StreamAwareMarshaller persistenceMarshaller;
 
    @Override
    public <T> T construct(Class<T> componentType) {

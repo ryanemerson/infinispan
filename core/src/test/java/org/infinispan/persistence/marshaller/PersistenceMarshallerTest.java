@@ -1,6 +1,6 @@
 package org.infinispan.persistence.marshaller;
 
-import org.infinispan.commons.marshall.StreamingMarshaller;
+import org.infinispan.commons.marshall.StreamAwareMarshaller;
 import org.infinispan.test.AbstractInfinispanTest;
 import org.infinispan.test.data.Person;
 import org.infinispan.test.fwk.TestCacheManagerFactory;
@@ -10,7 +10,7 @@ import org.testng.annotations.Test;
 @Test(groups = "functional", testName = "persistence.PersistenceMarshallerTest")
 public class PersistenceMarshallerTest extends AbstractInfinispanTest {
 
-   private StreamingMarshaller marshaller;
+   private StreamAwareMarshaller marshaller;
 
    @BeforeClass
    public void setUp() {

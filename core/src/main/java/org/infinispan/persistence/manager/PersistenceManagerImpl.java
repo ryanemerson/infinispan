@@ -39,7 +39,7 @@ import org.infinispan.AdvancedCache;
 import org.infinispan.commons.CacheException;
 import org.infinispan.commons.api.Lifecycle;
 import org.infinispan.commons.io.ByteBufferFactory;
-import org.infinispan.commons.marshall.StreamingMarshaller;
+import org.infinispan.commons.marshall.StreamAwareMarshaller;
 import org.infinispan.commons.util.IntSet;
 import org.infinispan.commons.util.Util;
 import org.infinispan.configuration.cache.AbstractSegmentedStoreConfiguration;
@@ -103,7 +103,7 @@ public class PersistenceManagerImpl implements PersistenceManager {
 
    @Inject private Configuration configuration;
    @Inject private AdvancedCache<Object, Object> cache;
-   @Inject @ComponentName(PERSISTENCE_MARSHALLER) private StreamingMarshaller m;
+   @Inject @ComponentName(PERSISTENCE_MARSHALLER) private StreamAwareMarshaller m;
    @Inject private TransactionManager transactionManager;
    @Inject private TimeService timeService;
    @Inject @ComponentName(PERSISTENCE_EXECUTOR)
@@ -1157,7 +1157,7 @@ public class PersistenceManagerImpl implements PersistenceManager {
       }
    }
 
-   public StreamingMarshaller getMarshaller() {
+   public StreamAwareMarshaller getMarshaller() {
       return m;
    }
 

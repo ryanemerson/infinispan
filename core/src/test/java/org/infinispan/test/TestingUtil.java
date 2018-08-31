@@ -72,6 +72,8 @@ import org.infinispan.cache.impl.CacheImpl;
 import org.infinispan.commands.CommandsFactory;
 import org.infinispan.commands.VisitableCommand;
 import org.infinispan.commons.api.Lifecycle;
+import org.infinispan.commons.marshall.Marshaller;
+import org.infinispan.commons.marshall.StreamAwareMarshaller;
 import org.infinispan.commons.marshall.StreamingMarshaller;
 import org.infinispan.commons.util.ReflectionUtil;
 import org.infinispan.configuration.cache.CacheMode;
@@ -1034,8 +1036,8 @@ public class TestingUtil {
       return (GlobalMarshaller) cm.getGlobalComponentRegistry().getComponent(StreamingMarshaller.class, INTERNAL_MARSHALLER);
    }
 
-   public static StreamingMarshaller extractPersistenceMarshaller(EmbeddedCacheManager cm) {
-      return cm.getGlobalComponentRegistry().getComponent(StreamingMarshaller.class, PERSISTENCE_MARSHALLER);
+   public static StreamAwareMarshaller extractPersistenceMarshaller(EmbeddedCacheManager cm) {
+      return cm.getGlobalComponentRegistry().getComponent(StreamAwareMarshaller.class, PERSISTENCE_MARSHALLER);
    }
 
    /**
@@ -1655,7 +1657,7 @@ public class TestingUtil {
       return allEntries(cl, null);
    }
 
-   public static <K, V> MarshalledEntry<K, V> marshalledEntry(InternalCacheEntry<K, V> ice, StreamingMarshaller marshaller) {
+   public static <K, V> MarshalledEntry<K, V> marshalledEntry(InternalCacheEntry<K, V> ice, Marshaller marshaller) {
       return new MarshalledEntryImpl<>(ice.getKey(), ice.getValue(), PersistenceUtil.internalMetadata(ice), marshaller);
    }
 
@@ -1689,7 +1691,7 @@ public class TestingUtil {
    public static <K, V> void writeToAllStores(K key, V value, Cache<K, V> cache) {
       AdvancedCache<K, V> advCache = cache.getAdvancedCache();
       PersistenceManager pm = advCache.getComponentRegistry().getComponent(PersistenceManager.class);
-      StreamingMarshaller marshaller = extractPersistenceMarshaller(advCache.getCacheManager());
+      StreamAwareMarshaller marshaller = extractPersistenceMarshaller(advCache.getCacheManager());
       KeyPartitioner keyPartitioner = extractComponent(cache, KeyPartitioner.class);
       pm.writeToAllNonTxStores(new MarshalledEntryImpl<>(key, value, null, marshaller), keyPartitioner.getSegment(key), BOTH);
    }
