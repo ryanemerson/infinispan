@@ -8,7 +8,7 @@ import java.util.Set;
 
 import org.infinispan.commons.marshall.AbstractExternalizer;
 import org.infinispan.marshall.core.Ids;
-import org.infinispan.persistence.marshaller.PersistenceMarshaller;
+import org.infinispan.persistence.marshallers.PersistenceMarshaller;
 import org.infinispan.protostream.MessageMarshaller;
 
 /**

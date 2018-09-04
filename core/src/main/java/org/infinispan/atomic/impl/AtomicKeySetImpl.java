@@ -28,7 +28,7 @@ import org.infinispan.factories.ComponentRegistry;
 import org.infinispan.factories.GlobalComponentRegistry;
 import org.infinispan.functional.EntryView;
 import org.infinispan.interceptors.AsyncInterceptorChain;
-import org.infinispan.persistence.marshaller.UserObject;
+import org.infinispan.persistence.marshallers.UserObject;
 import org.infinispan.protostream.MessageMarshaller;
 import org.infinispan.util.ByteString;
 import org.infinispan.util.logging.Log;

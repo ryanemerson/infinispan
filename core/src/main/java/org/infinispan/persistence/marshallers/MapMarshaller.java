@@ -1,4 +1,4 @@
-package org.infinispan.marshall.protostream.marshallers;
+package org.infinispan.persistence.marshallers;
 
 import java.io.IOException;
 import java.util.ArrayList;

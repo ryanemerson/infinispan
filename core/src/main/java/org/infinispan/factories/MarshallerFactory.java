@@ -8,7 +8,7 @@ import org.infinispan.commons.marshall.StreamAwareMarshaller;
 import org.infinispan.commons.marshall.StreamingMarshaller;
 import org.infinispan.factories.annotations.DefaultFactoryFor;
 import org.infinispan.marshall.core.GlobalMarshaller;
-import org.infinispan.persistence.marshaller.PersistenceMarshaller;
+import org.infinispan.persistence.marshallers.PersistenceMarshaller;
 
 /**
  * MarshallerFactory.

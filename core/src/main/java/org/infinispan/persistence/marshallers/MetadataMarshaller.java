@@ -1,4 +1,4 @@
-package org.infinispan.persistence.marshaller;
+package org.infinispan.persistence.marshallers;
 
 import java.io.IOException;
 import java.util.HashMap;

@@ -1,4 +1,4 @@
-package org.infinispan.persistence.marshaller;
+package org.infinispan.persistence.marshallers;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -23,8 +23,6 @@ import org.infinispan.factories.annotations.Start;
 import org.infinispan.marshall.core.ExternalPojo;
 import org.infinispan.marshall.core.JBossMarshaller;
 import org.infinispan.marshall.core.MarshallableFunctions;
-import org.infinispan.marshall.protostream.marshallers.EntryVersionMarshaller;
-import org.infinispan.marshall.protostream.marshallers.MapMarshaller;
 import org.infinispan.metadata.impl.InternalMetadataImpl;
 import org.infinispan.protostream.FileDescriptorSource;
 import org.infinispan.protostream.ProtobufUtil;

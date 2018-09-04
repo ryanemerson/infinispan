@@ -16,6 +16,7 @@ import net.jcip.annotations.ThreadSafe;
 @ThreadSafe
 public interface StreamAwareMarshaller extends Marshaller {
 
+   // TODO add docs
    void writeObject(Object o, OutputStream out) throws IOException;
 
    Object readObject(InputStream in) throws ClassNotFoundException, IOException;
