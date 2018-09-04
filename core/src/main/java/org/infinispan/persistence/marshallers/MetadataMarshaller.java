@@ -14,12 +14,6 @@ import org.infinispan.metadata.Metadata;
 import org.infinispan.protostream.EnumMarshaller;
 import org.infinispan.protostream.MessageMarshaller;
 
-/**
- * // TODO: Document this
- *
- * @author remerson
- * @since 4.0
- */
 public class MetadataMarshaller implements MessageMarshaller<Metadata> {
 
    static Map<Class, Type> typeMap = new HashMap<>();

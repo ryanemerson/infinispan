@@ -15,7 +15,7 @@ public class MapMarshaller implements MessageMarshaller<Map> {
    private final Class<? extends Map> clazz;
    private final Marshaller marshaller;
 
-   public MapMarshaller(Class<? extends Map> clazz, Marshaller marshaller) {
+   MapMarshaller(Class<? extends Map> clazz, Marshaller marshaller) {
       this.clazz = clazz;
       this.marshaller = marshaller;
    }

@@ -4,12 +4,6 @@ import java.io.IOException;
 
 import org.infinispan.protostream.MessageMarshaller;
 
-/**
- * // TODO: Document this
- *
- * @author remerson
- * @since 4.0
- */
 public class UserObject {
    final Object object;
 

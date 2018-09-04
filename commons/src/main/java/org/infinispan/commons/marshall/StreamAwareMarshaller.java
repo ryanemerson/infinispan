@@ -16,8 +16,22 @@ import net.jcip.annotations.ThreadSafe;
 @ThreadSafe
 public interface StreamAwareMarshaller extends Marshaller {
 
-   // TODO add docs
+   /**
+    * Marshall an object to the {@link OutputStream}
+    *
+    * @param o the object to write to the {@link OutputStream}
+    * @param out the {@link OutputStream} to write the object to
+    * @throws IOException if the object cannot be marshalled to the {@link OutputStream} due to some I/O error
+    */
    void writeObject(Object o, OutputStream out) throws IOException;
 
+   /**
+    * Unmarshall an object from the {@link InputStream}
+    *
+    * @param in the {@link InputStream} to unmarshall an object from
+    * @return the unmarshalled object instance
+    * @throws IOException if unmarshalling cannot complete due to some I/O error
+    * @throws ClassNotFoundException if the class of the object trying to unmarshall is unknown
+    */
    Object readObject(InputStream in) throws ClassNotFoundException, IOException;
 }
