@@ -100,7 +100,7 @@ public class RemoteStore<K, V> implements AdvancedLoadWriteStore<K, V>, FlagAffe
          ClassWhiteList whiteList = ctx.getCache().getCacheManager().getClassWhiteList();
          marshaller = new GenericJBossMarshaller(Thread.currentThread().getContextClassLoader(), whiteList);
       } else {
-         marshaller = ctx.getMarshaller();
+         marshaller = ctx.getPersistenceMarshaller();
       }
       ConfigurationBuilder builder = buildRemoteConfiguration(configuration, marshaller);
       remoteCacheManager = new RemoteCacheManager(builder.build());
