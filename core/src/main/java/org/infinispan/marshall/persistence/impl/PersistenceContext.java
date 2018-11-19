@@ -42,7 +42,7 @@ public class PersistenceContext implements SerializationContext.MarshallerProvid
       ctx.registerMarshaller(new MetadataMarshaller.TypeMarshaller());
       ctx.registerMarshaller(new NumericVersion.Marshaller());
       ctx.registerMarshaller(new SimpleClusteredVersion.Marshaller());
-      ctx.registerMarshaller(new UserObject.Marshaller(pm.getUserMarshaller()));
+      ctx.registerMarshaller(new PersistenceMarshaller.WrappedObjectMarshaller("wrappedObject", "persistence.UserObject", pm.getUserMarshaller()));
       ctx.registerMarshaller(new WrappedByteArrayMarshaller());
       ctx.registerMarshallerProvider(new PersistenceContext());
    }
