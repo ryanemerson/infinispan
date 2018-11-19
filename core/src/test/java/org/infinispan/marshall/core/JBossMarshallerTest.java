@@ -89,8 +89,8 @@ public class JBossMarshallerTest extends AbstractInfinispanTest {
    }
 
    private int findExternalizerId(Object obj, EmbeddedCacheManager cm) {
-      GlobalMarshaller marshaller = TestingUtil.extractGlobalMarshaller(cm);
-      return ((AdvancedExternalizer<?>) marshaller.findExternalizerFor(obj)).getId();
+      JBossUserMarshaller userMarshaller = (JBossUserMarshaller) TestingUtil.extractUserMarshaller(cm);
+      return ((AdvancedExternalizer<?>) userMarshaller.findExternalizerFor(obj)).getId();
    }
 
    public void testForeignExternalizerMultiClassTypesViaSameExternalizer() {

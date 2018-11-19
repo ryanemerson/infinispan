@@ -2,7 +2,6 @@ package org.infinispan.marshall.core;
 
 import static org.infinispan.test.TestingUtil.createMapEntry;
 import static org.infinispan.test.TestingUtil.extractComponent;
-import static org.infinispan.test.TestingUtil.extractGlobalMarshaller;
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertTrue;
 
@@ -22,8 +21,8 @@ import java.util.Set;
 
 import org.infinispan.Cache;
 import org.infinispan.cache.impl.EncoderCache;
+import org.infinispan.commons.marshall.Marshaller;
 import org.infinispan.commons.marshall.NotSerializableException;
-import org.infinispan.commons.marshall.StreamingMarshaller;
 import org.infinispan.commons.marshall.WrappedByteArray;
 import org.infinispan.commons.marshall.WrappedBytes;
 import org.infinispan.commons.util.ObjectDuplicator;
@@ -475,7 +474,7 @@ public class StoreAsBinaryTest extends MultipleCacheManagersTest {
    }
 
    public void testEqualsAndHashCode() throws Exception {
-      StreamingMarshaller marshaller = extractGlobalMarshaller(cache(0).getCacheManager());
+      Marshaller marshaller = TestingUtil.extractUserMarshaller(cache(0).getCacheManager());
       Pojo pojo = new Pojo();
 
       WrappedBytes wb = new WrappedByteArray(marshaller.objectToByteBuffer(pojo));

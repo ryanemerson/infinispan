@@ -5,7 +5,7 @@ import java.io.IOException;
 import org.infinispan.commons.marshall.Externalizer;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.manager.EmbeddedCacheManager;
-import org.infinispan.marshall.core.GlobalMarshaller;
+import org.infinispan.marshall.core.JBossUserMarshaller;
 import org.infinispan.test.SingleCacheManagerTest;
 import org.infinispan.test.TestingUtil;
 import org.infinispan.test.fwk.TestCacheManagerFactory;
@@ -58,7 +58,7 @@ public class ExternalizersEnabledTest extends SingleCacheManagerTest {
    }
 
    private void verifyExternalizerForType(Object keySampleType, Class expectedExcternalizerClass) throws IOException {
-      GlobalMarshaller marshaller = TestingUtil.extractGlobalMarshaller(cacheManager);
+      JBossUserMarshaller marshaller = (JBossUserMarshaller) TestingUtil.extractUserMarshaller(cacheManager);
       Externalizer<Object> ext = marshaller.findExternalizerFor(keySampleType);
 
       AssertJUnit.assertEquals("Registered Externalizers should be wrapped by a ForeignAdvancedExternalizer",

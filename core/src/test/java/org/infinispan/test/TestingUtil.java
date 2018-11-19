@@ -75,6 +75,7 @@ import org.infinispan.commands.VisitableCommand;
 import org.infinispan.commons.api.Lifecycle;
 import org.infinispan.commons.dataconversion.Transcoder;
 import org.infinispan.commons.jmx.PerThreadMBeanServerLookup;
+import org.infinispan.commons.marshall.Marshaller;
 import org.infinispan.commons.marshall.StreamAwareMarshaller;
 import org.infinispan.commons.marshall.StreamingMarshaller;
 import org.infinispan.commons.util.ReflectionUtil;
@@ -1044,6 +1045,10 @@ public class TestingUtil {
 
    public static PersistenceMarshaller extractPersistenceMarshaller(EmbeddedCacheManager cm) {
       return cm.getGlobalComponentRegistry().getComponent(PersistenceMarshaller.class, KnownComponentNames.PERSISTENCE_MARSHALLER);
+   }
+
+   public static Marshaller extractUserMarshaller(EmbeddedCacheManager cm) {
+      return extractPersistenceMarshaller(cm).getUserMarshaller();
    }
 
    /**

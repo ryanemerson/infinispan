@@ -13,11 +13,11 @@ import org.infinispan.marshall.persistence.PersistenceMarshaller;
  * @author Galder Zamarreño
  * @since 4.0
  */
-@DefaultFactoryFor(classes = {StreamingMarshaller.class, StreamAwareMarshaller.class, PersistenceMarshaller.class},
+@DefaultFactoryFor(classes = {StreamAwareMarshaller.class, PersistenceMarshaller.class},
       names = {KnownComponentNames.INTERNAL_MARSHALLER, KnownComponentNames.PERSISTENCE_MARSHALLER})
 public class MarshallerFactory extends AbstractComponentFactory implements AutoInstantiableFactory {
 
-   private StreamingMarshaller internalMarshaller;
+   private StreamAwareMarshaller internalMarshaller;
    private StreamAwareMarshaller persistenceMarshaller;
 
    @Override
