@@ -1,0 +1,5 @@
+package core;
+
+message PersistenceObject {
+    required bytes wrappedObject = 1;
+}

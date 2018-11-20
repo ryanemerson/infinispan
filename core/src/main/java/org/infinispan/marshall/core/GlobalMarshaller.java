@@ -1,5 +1,8 @@
 package org.infinispan.marshall.core;
 
+import java.io.IOException;
+
+import org.infinispan.commons.CacheException;
 import org.infinispan.configuration.global.GlobalConfiguration;
 import org.infinispan.factories.KnownComponentNames;
 import org.infinispan.factories.annotations.ComponentName;
@@ -29,14 +32,17 @@ public class GlobalMarshaller extends AbstractProtostreamMarshaller {
    private PersistenceMarshaller persistenceMarshaller;
 
    public GlobalMarshaller() {
-      // TODO register wrapper
-      // ctx.registerMarshaller(new GlobalMarshaller.WrappedObjectMarshaller("wrappedObject", "core.PersistenceObject", persistenceMarshaller));
    }
 
    @Override
    @Start(priority = 8) // Should start after the externalizer table and before transport
    public void start() {
       GlobalConfiguration globalCfg = gcr.getGlobalConfiguration();
+      try {
+         InternalContext.init(gcr, this);
+      } catch (IOException e) {
+         throw new CacheException("Exception encountered when initialising the GlobalMarshaller SerializationContext", e);
+      }
    }
 
    @Override
@@ -48,5 +54,9 @@ public class GlobalMarshaller extends AbstractProtostreamMarshaller {
    @Override
    public boolean isMarshallable(Object o) {
       return getSerializationContext().canMarshall(o.getClass()) || persistenceMarshaller.isMarshallable(o);
+   }
+
+   PersistenceMarshaller getPersistenceMarshaller() {
+      return persistenceMarshaller;
    }
 }
