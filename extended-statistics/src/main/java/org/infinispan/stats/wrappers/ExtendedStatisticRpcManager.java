@@ -21,7 +21,6 @@ import static org.infinispan.stats.container.ExtendedStatistic.SYNC_PREPARE_TIME
 import static org.infinispan.stats.container.ExtendedStatistic.SYNC_ROLLBACK_TIME;
 
 import java.io.IOException;
-import java.io.ObjectOutput;
 import java.io.OutputStream;
 import java.util.Collection;
 import java.util.Collections;
@@ -38,7 +37,8 @@ import org.infinispan.commands.remote.recovery.TxCompletionNotificationCommand;
 import org.infinispan.commands.tx.CommitCommand;
 import org.infinispan.commands.tx.PrepareCommand;
 import org.infinispan.commands.tx.RollbackCommand;
-import org.infinispan.commons.marshall.StreamingMarshaller;
+import org.infinispan.commons.marshall.StreamAwareMarshaller;
+import org.infinispan.commons.time.TimeService;
 import org.infinispan.remoting.inboundhandler.DeliverOrder;
 import org.infinispan.remoting.responses.Response;
 import org.infinispan.remoting.rpc.ResponseMode;
@@ -53,7 +53,6 @@ import org.infinispan.stats.CacheStatisticManager;
 import org.infinispan.stats.container.ExtendedStatistic;
 import org.infinispan.stats.logging.Log;
 import org.infinispan.transaction.xa.GlobalTransaction;
-import org.infinispan.commons.time.TimeService;
 import org.infinispan.util.logging.LogFactory;
 import org.infinispan.xsite.XSiteBackup;
 import org.infinispan.xsite.XSiteReplicateCommand;
@@ -72,11 +71,11 @@ public class ExtendedStatisticRpcManager implements RpcManager {
    private static final boolean trace = log.isTraceEnabled();
    private final RpcManager actual;
    private final CacheStatisticManager cacheStatisticManager;
-   private final org.infinispan.commons.marshall.StreamingMarshaller marshaller;
+   private final StreamAwareMarshaller marshaller;
    private final TimeService timeService;
 
    public ExtendedStatisticRpcManager(RpcManager actual, CacheStatisticManager cacheStatisticManager,
-                                      TimeService timeService, StreamingMarshaller marshaller) {
+                                      TimeService timeService, StreamAwareMarshaller marshaller) {
       this.actual = actual;
       this.cacheStatisticManager = cacheStatisticManager;
       this.marshaller = marshaller;
@@ -310,9 +309,7 @@ public class ExtendedStatisticRpcManager implements RpcManager {
    private int getCommandSize(ReplicableCommand command) {
       try {
          CountingDataOutput dataOutput = new CountingDataOutput();
-         ObjectOutput byteOutput = marshaller.startObjectOutput(dataOutput, false, 0);
-         marshaller.objectToObjectStream(command, byteOutput);
-         marshaller.finishObjectOutput(byteOutput);
+         marshaller.writeObject(command, dataOutput);
          return dataOutput.getCount();
       } catch (Exception e) {
          return 0;

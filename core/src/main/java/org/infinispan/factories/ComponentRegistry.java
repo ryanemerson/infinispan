@@ -230,14 +230,14 @@ public class ComponentRegistry extends AbstractComponentRegistry {
 
    @Deprecated
    public StreamingMarshaller getCacheMarshaller() {
-      return getInternalMarshaller();
+      return StreamingMarshaller.from(getInternalMarshaller());
    }
 
    /**
     * Caching shortcut for #getComponent(StreamingMarshaller.class, INTERNAL_MARSHALLER);
     */
-   public StreamingMarshaller getInternalMarshaller() {
-      return globalComponents.getComponent(StreamingMarshaller.class, KnownComponentNames.INTERNAL_MARSHALLER);
+   public StreamAwareMarshaller getInternalMarshaller() {
+      return globalComponents.getComponent(StreamAwareMarshaller.class, KnownComponentNames.INTERNAL_MARSHALLER);
    }
 
    /**

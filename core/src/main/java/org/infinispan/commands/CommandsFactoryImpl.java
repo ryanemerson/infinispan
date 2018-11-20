@@ -84,7 +84,7 @@ import org.infinispan.commands.write.RemoveExpiredCommand;
 import org.infinispan.commands.write.ReplaceCommand;
 import org.infinispan.commands.write.ValueMatcher;
 import org.infinispan.commands.write.WriteCommand;
-import org.infinispan.commons.marshall.StreamingMarshaller;
+import org.infinispan.commons.marshall.StreamAwareMarshaller;
 import org.infinispan.commons.time.TimeService;
 import org.infinispan.commons.util.EnumUtil;
 import org.infinispan.commons.util.IntSet;
@@ -192,7 +192,7 @@ public class CommandsFactoryImpl implements CommandsFactory {
    @Inject private ComponentRegistry componentRegistry;
    @Inject private OrderedUpdatesManager orderedUpdatesManager;
    @Inject private StateTransferLock stateTransferLock;
-   @Inject @ComponentName(KnownComponentNames.INTERNAL_MARSHALLER) private StreamingMarshaller marshaller;
+   @Inject @ComponentName(KnownComponentNames.INTERNAL_MARSHALLER) private StreamAwareMarshaller marshaller;
    @Inject private ComponentRef<BiasManager> biasManager;
    @Inject private RpcManager rpcManager;
    @Inject @ComponentName(KnownComponentNames.MODULE_COMMAND_INITIALIZERS)

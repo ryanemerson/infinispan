@@ -14,7 +14,7 @@ import javax.cache.processor.EntryProcessor;
 import org.infinispan.commands.functional.functions.InjectableComponent;
 import org.infinispan.commons.marshall.AdvancedExternalizer;
 import org.infinispan.commons.marshall.MarshallUtil;
-import org.infinispan.commons.marshall.StreamingMarshaller;
+import org.infinispan.commons.marshall.StreamAwareMarshaller;
 import org.infinispan.commons.util.Util;
 import org.infinispan.factories.ComponentRegistry;
 import org.infinispan.functional.EntryView;
@@ -28,7 +28,7 @@ public class Invoke<K, V, R> implements Function<EntryView.ReadWriteEntryView<K,
    private final EntryProcessor<K, V, R> processor;
    private final Object[] arguments;
    private final boolean storeByReference;
-   private StreamingMarshaller marshaller;
+   private StreamAwareMarshaller marshaller;
    private ExpiryPolicy expiryPolicy;
 
    public Invoke(EntryProcessor<K, V, R> processor, Object[] arguments, boolean storeByReference) {
@@ -39,7 +39,7 @@ public class Invoke<K, V, R> implements Function<EntryView.ReadWriteEntryView<K,
 
    @Override
    public void inject(ComponentRegistry registry) {
-      this.marshaller = registry.getComponent(StreamingMarshaller.class);
+      this.marshaller = registry.getComponent(StreamAwareMarshaller.class);
       expiryPolicy = registry.getComponent(ExpiryPolicy.class);
    }
 

@@ -20,7 +20,8 @@ import org.infinispan.commons.dataconversion.ByteArrayWrapper;
 import org.infinispan.commons.dataconversion.MediaType;
 import org.infinispan.commons.dataconversion.TranscoderMarshallerAdapter;
 import org.infinispan.commons.marshall.Marshaller;
-import org.infinispan.commons.marshall.StreamingMarshaller;
+import org.infinispan.commons.marshall.StreamAwareMarshaller;
+import org.infinispan.commons.time.TimeService;
 import org.infinispan.commons.util.EnumUtil;
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.configuration.cache.ContentTypeConfiguration;
@@ -50,7 +51,6 @@ import org.infinispan.persistence.manager.PersistenceManager;
 import org.infinispan.persistence.manager.PersistenceManagerStub;
 import org.infinispan.transaction.xa.recovery.RecoveryAdminOperations;
 import org.infinispan.upgrade.RollingUpgradeManager;
-import org.infinispan.commons.time.TimeService;
 import org.infinispan.util.concurrent.CompletableFutures;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
@@ -98,8 +98,8 @@ public class InternalCacheFactory<K, V> extends AbstractNamedCacheComponentFacto
    }
 
    private AdvancedCache<K, V> createAndWire(Configuration configuration, GlobalComponentRegistry globalComponentRegistry,
-                                             String cacheName) throws Exception {
-      StreamingMarshaller marshaller = globalComponentRegistry.getOrCreateComponent(StreamingMarshaller.class, KnownComponentNames.INTERNAL_MARSHALLER);
+                                             String cacheName) {
+      Marshaller marshaller = globalComponentRegistry.getOrCreateComponent(StreamAwareMarshaller.class, KnownComponentNames.INTERNAL_MARSHALLER);
 
       final BiFunction<DataConversion, DataConversion, AdvancedCache<K, V>> actualBuilder = (kc, kv) -> new CacheImpl<>(cacheName);
       BiFunction<DataConversion, DataConversion, AdvancedCache<K, V>> usedBuilder;
@@ -186,7 +186,7 @@ public class InternalCacheFactory<K, V> extends AbstractNamedCacheComponentFacto
     * Bootstraps this factory with a Configuration and a ComponentRegistry.
     */
    private void bootstrap(String cacheName, AdvancedCache<?, ?> cache, Configuration configuration,
-                          GlobalComponentRegistry globalComponentRegistry, StreamingMarshaller globalMarshaller) {
+                          GlobalComponentRegistry globalComponentRegistry, Marshaller globalMarshaller) {
       this.configuration = configuration;
 
       // injection bootstrap stuff

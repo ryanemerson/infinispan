@@ -41,7 +41,7 @@ import org.infinispan.commons.CacheConfigurationException;
 import org.infinispan.commons.CacheException;
 import org.infinispan.commons.io.ByteBuffer;
 import org.infinispan.commons.jmx.JmxUtil;
-import org.infinispan.commons.marshall.StreamingMarshaller;
+import org.infinispan.commons.marshall.StreamAwareMarshaller;
 import org.infinispan.commons.time.TimeService;
 import org.infinispan.commons.util.FileLookup;
 import org.infinispan.commons.util.FileLookupFactory;
@@ -143,7 +143,7 @@ public class JGroupsTransport implements Transport {
    private static final byte SINGLE_MESSAGE = 2;
 
    @Inject protected GlobalConfiguration configuration;
-   @Inject @ComponentName(KnownComponentNames.INTERNAL_MARSHALLER) protected StreamingMarshaller marshaller;
+   @Inject @ComponentName(KnownComponentNames.INTERNAL_MARSHALLER) protected StreamAwareMarshaller marshaller;
    @Inject protected CacheManagerNotifier notifier;
    @Inject protected TimeService timeService;
    @Inject protected InboundInvocationHandler invocationHandler;

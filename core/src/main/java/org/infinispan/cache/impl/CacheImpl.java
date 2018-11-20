@@ -71,7 +71,7 @@ import org.infinispan.commons.dataconversion.IdentityEncoder;
 import org.infinispan.commons.dataconversion.IdentityWrapper;
 import org.infinispan.commons.dataconversion.MediaType;
 import org.infinispan.commons.dataconversion.Wrapper;
-import org.infinispan.commons.marshall.StreamingMarshaller;
+import org.infinispan.commons.marshall.StreamAwareMarshaller;
 import org.infinispan.commons.util.EnumUtil;
 import org.infinispan.commons.util.InfinispanCollections;
 import org.infinispan.commons.util.Util;
@@ -165,7 +165,7 @@ public class CacheImpl<K, V> implements AdvancedCache<K, V> {
    @Inject protected ComponentRegistry componentRegistry;
    @Inject protected TransactionManager transactionManager;
    @Inject protected RpcManager rpcManager;
-   @Inject @ComponentName(KnownComponentNames.INTERNAL_MARSHALLER) protected StreamingMarshaller marshaller;
+   @Inject @ComponentName(KnownComponentNames.INTERNAL_MARSHALLER) protected StreamAwareMarshaller marshaller;
    @Inject protected KeyPartitioner keyPartitioner;
    @Inject private EvictionManager evictionManager;
    @Inject private InternalExpirationManager<K, V> expirationManager;

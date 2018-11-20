@@ -87,7 +87,7 @@ import org.infinispan.commands.write.PutKeyValueCommand;
 import org.infinispan.commands.write.RemoveCommand;
 import org.infinispan.commands.write.ReplaceCommand;
 import org.infinispan.commands.write.WriteCommand;
-import org.infinispan.commons.marshall.StreamingMarshaller;
+import org.infinispan.commons.marshall.StreamAwareMarshaller;
 import org.infinispan.commons.time.TimeService;
 import org.infinispan.context.InvocationContext;
 import org.infinispan.context.impl.TxInvocationContext;
@@ -848,7 +848,7 @@ public class ExtendedStatisticInterceptor extends BaseCustomAsyncInterceptor {
 
    private void replaceRpcManager() {
       RpcManager oldRpcManager = componentRegistry.getComponent(RpcManager.class).running();
-      StreamingMarshaller marshaller = componentRegistry.getComponent(KnownComponentNames.INTERNAL_MARSHALLER, StreamingMarshaller.class).running();
+      StreamAwareMarshaller marshaller = componentRegistry.getComponent(KnownComponentNames.INTERNAL_MARSHALLER, StreamAwareMarshaller.class).running();
       if (oldRpcManager == null) {
          //local mode
          return;

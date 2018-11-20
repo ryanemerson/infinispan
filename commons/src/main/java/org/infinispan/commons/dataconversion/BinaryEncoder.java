@@ -3,7 +3,7 @@ package org.infinispan.commons.dataconversion;
 import java.io.IOException;
 
 import org.infinispan.commons.CacheException;
-import org.infinispan.commons.marshall.StreamingMarshaller;
+import org.infinispan.commons.marshall.StreamAwareMarshaller;
 import org.infinispan.commons.marshall.WrappedByteArray;
 
 /**
@@ -13,9 +13,9 @@ import org.infinispan.commons.marshall.WrappedByteArray;
  */
 public class BinaryEncoder implements Encoder {
 
-   private final StreamingMarshaller marshaller;
+   private final StreamAwareMarshaller marshaller;
 
-   public BinaryEncoder(StreamingMarshaller marshaller) {
+   public BinaryEncoder(StreamAwareMarshaller marshaller) {
       this.marshaller = marshaller;
    }
 
