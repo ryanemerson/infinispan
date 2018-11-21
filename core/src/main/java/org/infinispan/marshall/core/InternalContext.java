@@ -42,6 +42,7 @@ public class InternalContext implements SerializationContext.MarshallerProvider 
 
    @Override
    public BaseMarshaller<?> getMarshaller(Class<?> aClass) {
+      // TODO add ReplicableCommand.class.isAssignableFrom(aclass)
       return null;
    }
 

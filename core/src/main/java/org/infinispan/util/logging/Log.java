@@ -1834,4 +1834,8 @@ public interface Log extends BasicLogger {
    @LogMessage(level = ERROR)
    @Message(value = "Error stopping module %s", id = 538)
    void moduleStopError(String module, @Cause Throwable t);
+
+   @LogMessage(level = WARN)
+   @Message(value = "ModuleCommandFactory has been deprecated. ModuleCommandExtensions::getModuleCommandFactory returns a non-null value, which will be ignored. ", id = 539)
+   void warnModuleCommandFactoryDeprecated();
 }

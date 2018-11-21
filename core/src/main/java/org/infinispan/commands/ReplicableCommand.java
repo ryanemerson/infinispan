@@ -67,7 +67,9 @@ public interface ReplicableCommand {
     * Used by marshallers to convert this command into an id for streaming.
     *
     * @return the method id of this command.  This is compatible with pre-2.2.0 MethodCall ids.
+    * @deprecated since 10.0 no longer necessary with protostream based marshaller
     */
+   @Deprecated
    byte getCommandId();
 
    /**
@@ -104,8 +106,13 @@ public interface ReplicableCommand {
     *
     * @param output the stream.
     * @throws IOException if an error occurred during the I/O.
+    * @deprecated since 10.0. Ignored. Commands should be registered with the {@link org.infinispan.marshall.core.GlobalMarshaller}'s
+    * {@link org.infinispan.protostream.SerializationContext}.
     */
-   void writeTo(ObjectOutput output) throws IOException;
+   @Deprecated
+   default void writeTo(ObjectOutput output) throws IOException {
+      // no-op
+   }
 
    /**
     * Reads this instance from the stream written by {@link #writeTo(ObjectOutput)}.
@@ -113,8 +120,13 @@ public interface ReplicableCommand {
     * @param input the stream to read.
     * @throws IOException            if an error occurred during the I/O.
     * @throws ClassNotFoundException if it tries to load an undefined class.
+    * @deprecated since 10.0. Ignored. Commands should be registered with the {@link org.infinispan.marshall.core.GlobalMarshaller}'s
+    * {@link org.infinispan.protostream.SerializationContext}.
     */
-   void readFrom(ObjectInput input) throws IOException, ClassNotFoundException;
+   @Deprecated
+   default void readFrom(ObjectInput input) throws IOException, ClassNotFoundException {
+      // no-op
+   }
 
    /**
     * Sets the sender's {@link Address}.

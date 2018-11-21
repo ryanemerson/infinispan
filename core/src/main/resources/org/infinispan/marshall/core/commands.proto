@@ -1,0 +1,17 @@
+package commands;
+
+// Replicable Commands
+message HeartBeatCommand {
+}
+
+message ReplicableCommandHeader {
+    required string cachename = 1;
+}
+
+message LockControlCommand {
+    required ReplicableCommandHeader header = 1;
+    optional bool unlock = 2;
+    // TODO how to handle marshalling arbritary objects
+    // repeated UserObject
+    optional int64 flags = 4;
+}

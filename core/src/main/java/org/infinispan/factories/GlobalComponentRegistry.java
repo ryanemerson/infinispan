@@ -11,11 +11,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
+
 import javax.management.MBeanServer;
 import javax.management.MBeanServerFactory;
 
-import net.jcip.annotations.ThreadSafe;
 import org.infinispan.Version;
+import org.infinispan.commands.ReplicableCommand;
 import org.infinispan.commands.module.ModuleCommandFactory;
 import org.infinispan.commands.module.ModuleCommandInitializer;
 import org.infinispan.commons.CacheException;
@@ -50,6 +51,8 @@ import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 import org.infinispan.util.logging.events.EventLogManager;
 import org.infinispan.xsite.GlobalXSiteAdminOperations;
+
+import net.jcip.annotations.ThreadSafe;
 
 /**
  * A global component registry where shared components are stored.
@@ -124,7 +127,7 @@ public class GlobalComponentRegistry extends AbstractComponentRegistry {
          basicComponentRegistry.registerComponent(GlobalXSiteAdminOperations.class.getName(), new GlobalXSiteAdminOperations(), true);
 
          moduleProperties.loadModuleCommandHandlers(configuredClassLoader);
-         Map<Byte, ModuleCommandFactory> factories = moduleProperties.moduleCommandFactories();
+         Map<Class<? extends ReplicableCommand>, ModuleCommandFactory> factories = moduleProperties.moduleCommandFactories();
          if (factories != null && !factories.isEmpty()) {
             registerNonVolatileComponent(factories, KnownComponentNames.MODULE_COMMAND_FACTORIES);
          } else {
@@ -133,7 +136,7 @@ public class GlobalComponentRegistry extends AbstractComponentRegistry {
 
          // register any module-specific command initializers
          // Modules are on the same classloader as Infinispan
-         Map<Byte, ModuleCommandInitializer> initializers = moduleProperties.moduleCommandInitializers();
+         Map<Class<? extends ReplicableCommand>, ModuleCommandInitializer> initializers = moduleProperties.moduleCommandInitializers();
          if (initializers != null && !initializers.isEmpty()) {
             registerNonVolatileComponent(initializers, MODULE_COMMAND_INITIALIZERS);
             for (ModuleCommandInitializer mci : initializers.values()) {
@@ -237,11 +240,6 @@ public class GlobalComponentRegistry extends AbstractComponentRegistry {
    public synchronized final void rewireNamedRegistries() {
       for (ComponentRegistry cr : namedComponents.values())
          cr.rewire();
-   }
-
-   public Map<Byte,ModuleCommandInitializer> getModuleCommandInitializers() {
-      //moduleProperties is final so we don't need to synchronize this method for safe-publishing
-      return Collections.unmodifiableMap(moduleProperties.moduleCommandInitializers());
    }
 
    @Override

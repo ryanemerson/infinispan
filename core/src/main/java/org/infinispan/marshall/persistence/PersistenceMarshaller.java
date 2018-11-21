@@ -1,11 +1,16 @@
 package org.infinispan.marshall.persistence;
 
 import java.io.IOException;
+import java.util.Map;
 
+import org.infinispan.commands.ReplicableCommand;
+import org.infinispan.commands.module.ModuleCommandFactory;
 import org.infinispan.commons.CacheException;
 import org.infinispan.commons.marshall.Marshaller;
 import org.infinispan.configuration.global.GlobalConfiguration;
 import org.infinispan.factories.KnownComponentNames;
+import org.infinispan.factories.annotations.ComponentName;
+import org.infinispan.factories.annotations.Inject;
 import org.infinispan.factories.annotations.Start;
 import org.infinispan.factories.scopes.Scope;
 import org.infinispan.factories.scopes.Scopes;
@@ -35,6 +40,9 @@ import org.infinispan.protostream.SerializationContext;
  */
 @Scope(Scopes.GLOBAL)
 public class PersistenceMarshaller extends AbstractProtostreamMarshaller {
+
+   @Inject @ComponentName(KnownComponentNames.MODULE_COMMAND_FACTORIES)
+   private Map<Class<? extends ReplicableCommand>,ModuleCommandFactory> commandFactories;
 
    private Marshaller userMarshaller;
    private SerializationContext blacklistContext;

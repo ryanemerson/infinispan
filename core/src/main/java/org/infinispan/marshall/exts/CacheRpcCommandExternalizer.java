@@ -99,7 +99,8 @@ public final class CacheRpcCommandExternalizer extends AbstractExternalizer<Cach
                RevokeBiasCommand.class, RenewBiasCommand.class, RetrieveLastAccessCommand.class,
                UpdateLastAccessCommand.class);
       // Only interested in cache specific replicable commands
-      coreCommands.addAll(gcr.getModuleProperties().moduleCacheRpcCommands());
+      // OLD MODULE CODE
+//      coreCommands.addAll(gcr.getModuleProperties().moduleCacheRpcCommands());
       return coreCommands;
    }
 

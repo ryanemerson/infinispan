@@ -1,7 +1,10 @@
 package org.infinispan.marshall.core;
 
 import java.io.IOException;
+import java.util.Map;
 
+import org.infinispan.commands.ReplicableCommand;
+import org.infinispan.commands.module.ModuleCommandFactory;
 import org.infinispan.commons.CacheException;
 import org.infinispan.configuration.global.GlobalConfiguration;
 import org.infinispan.factories.KnownComponentNames;
@@ -28,6 +31,8 @@ public class GlobalMarshaller extends AbstractProtostreamMarshaller {
    private static final Log log = LogFactory.getLog(GlobalMarshaller.class);
    private static final boolean trace = log.isTraceEnabled();
 
+   @Inject @ComponentName(KnownComponentNames.MODULE_COMMAND_FACTORIES)
+   private Map<Class<? extends ReplicableCommand>,ModuleCommandFactory> commandFactories;
    @Inject @ComponentName(KnownComponentNames.PERSISTENCE_MARSHALLER)
    private PersistenceMarshaller persistenceMarshaller;
 
