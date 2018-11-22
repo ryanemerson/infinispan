@@ -40,6 +40,7 @@ import org.infinispan.commands.read.GetCacheEntryCommand;
 import org.infinispan.commands.read.GetKeyValueCommand;
 import org.infinispan.commands.read.KeySetCommand;
 import org.infinispan.commands.read.SizeCommand;
+import org.infinispan.commands.remote.CacheRpcCommand;
 import org.infinispan.commands.remote.ClusteredGetAllCommand;
 import org.infinispan.commands.remote.ClusteredGetCommand;
 import org.infinispan.commands.remote.GetKeysInGroupCommand;
@@ -90,6 +91,7 @@ import org.infinispan.commons.util.EnumUtil;
 import org.infinispan.commons.util.IntSet;
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.conflict.impl.StateReceiver;
+import org.infinispan.container.DataContainer;
 import org.infinispan.container.impl.InternalDataContainer;
 import org.infinispan.container.impl.InternalEntryFactory;
 import org.infinispan.container.versioning.VersionGenerator;
@@ -204,6 +206,7 @@ public class CommandsFactoryImpl implements CommandsFactory {
    private ByteString cacheName;
    private boolean transactional;
    private boolean totalOrderProtocol;
+   private CommandInitializationContext ctx;
 
    @Start(priority = 1)
    // needs to happen early on
@@ -211,6 +214,7 @@ public class CommandsFactoryImpl implements CommandsFactory {
       cacheName = ByteString.fromString(cache.wired().getName());
       this.transactional = configuration.transaction().transactionMode().isTransactional();
       this.totalOrderProtocol = configuration.transaction().transactionProtocol().isTotalOrder();
+      this.ctx = new CommandInitializationContext();
    }
 
    @Override
@@ -366,201 +370,11 @@ public class CommandsFactoryImpl implements CommandsFactory {
    @Override
    public void initializeReplicableCommand(ReplicableCommand c, boolean isRemote) {
       if (c == null) return;
-      switch (c.getCommandId()) {
-         case ComputeCommand.COMMAND_ID:
-            ((ComputeCommand)c).init(componentRegistry);
-            break;
-         case ComputeIfAbsentCommand.COMMAND_ID:
-            ((ComputeIfAbsentCommand)c).init(componentRegistry);
-            break;
-         case SingleRpcCommand.COMMAND_ID:
-            SingleRpcCommand src = (SingleRpcCommand) c;
-            src.init(interceptorChain.running(), icf.running());
-            if (src.getCommand() != null)
-               initializeReplicableCommand(src.getCommand(), false);
-            break;
-         case PrepareCommand.COMMAND_ID:
-         case VersionedPrepareCommand.COMMAND_ID:
-         case TotalOrderNonVersionedPrepareCommand.COMMAND_ID:
-         case TotalOrderVersionedPrepareCommand.COMMAND_ID:
-            PrepareCommand pc = (PrepareCommand) c;
-            pc.init(interceptorChain.running(), icf.running(), txTable.running());
-            pc.initialize(notifier, recoveryManager.running());
-            if (pc.getModifications() != null)
-               for (ReplicableCommand nested : pc.getModifications())  {
-                  initializeReplicableCommand(nested, false);
-               }
-            pc.markTransactionAsRemote(isRemote);
-            break;
-         case CommitCommand.COMMAND_ID:
-         case VersionedCommitCommand.COMMAND_ID:
-         case TotalOrderCommitCommand.COMMAND_ID:
-         case TotalOrderVersionedCommitCommand.COMMAND_ID:
-            CommitCommand commitCommand = (CommitCommand) c;
-            commitCommand.init(interceptorChain.running(), icf.running(), txTable.running());
-            commitCommand.markTransactionAsRemote(isRemote);
-            break;
-         case RollbackCommand.COMMAND_ID:
-         case TotalOrderRollbackCommand.COMMAND_ID:
-            RollbackCommand rollbackCommand = (RollbackCommand) c;
-            rollbackCommand.init(interceptorChain.running(), icf.running(), txTable.running());
-            rollbackCommand.markTransactionAsRemote(isRemote);
-            break;
-         case ClusteredGetCommand.COMMAND_ID:
-            ClusteredGetCommand clusteredGetCommand = (ClusteredGetCommand) c;
-            clusteredGetCommand.initialize(icf.running(), this, entryFactory,
-                                           interceptorChain.running());
-            break;
-         case LockControlCommand.COMMAND_ID:
-            LockControlCommand lcc = (LockControlCommand) c;
-            lcc.init(interceptorChain.running(), icf.running(), txTable.running());
-            lcc.markTransactionAsRemote(isRemote);
-            break;
-         case StateRequestCommand.COMMAND_ID:
-            ((StateRequestCommand) c).init(stateProvider.running(), biasManager.running());
-            break;
-         case StateResponseCommand.COMMAND_ID:
-            ((StateResponseCommand) c).init(stateConsumer.running(), stateReceiver.running());
-            break;
-         case GetInDoubtTransactionsCommand.COMMAND_ID:
-            GetInDoubtTransactionsCommand gptx = (GetInDoubtTransactionsCommand) c;
-            gptx.init(recoveryManager.running());
-            break;
-         case TxCompletionNotificationCommand.COMMAND_ID:
-            TxCompletionNotificationCommand ftx = (TxCompletionNotificationCommand) c;
-            ftx.init(txTable.running(), lockManager, recoveryManager.running(), stateTransferManager.wired());
-            break;
-         case DistributedExecuteCommand.COMMAND_ID:
-            DistributedExecuteCommand dec = (DistributedExecuteCommand)c;
-            dec.init(cache.wired());
-            break;
-         case GetInDoubtTxInfoCommand.COMMAND_ID:
-            GetInDoubtTxInfoCommand gidTxInfoCommand = (GetInDoubtTxInfoCommand)c;
-            gidTxInfoCommand.init(recoveryManager.running());
-            break;
-         case CompleteTransactionCommand.COMMAND_ID:
-            CompleteTransactionCommand ccc = (CompleteTransactionCommand)c;
-            ccc.init(recoveryManager.running());
-            break;
-         case CreateCacheCommand.COMMAND_ID:
-            CreateCacheCommand createCacheCommand = (CreateCacheCommand)c;
-            createCacheCommand.init(cacheManager);
-            break;
-         case XSiteAdminCommand.COMMAND_ID:
-            XSiteAdminCommand xSiteAdminCommand = (XSiteAdminCommand)c;
-            xSiteAdminCommand.init(backupSender.running());
-            break;
-         case CancelCommand.COMMAND_ID:
-            CancelCommand cancelCommand = (CancelCommand)c;
-            cancelCommand.init(cancellationService);
-            break;
-         case XSiteStateTransferControlCommand.COMMAND_ID:
-            XSiteStateTransferControlCommand xSiteStateTransferControlCommand = (XSiteStateTransferControlCommand) c;
-            xSiteStateTransferControlCommand.initialize(xSiteStateProvider.running(), xSiteStateConsumer.running(), xSiteStateTransferManager.running());
-            break;
-         case XSiteStatePushCommand.COMMAND_ID:
-            XSiteStatePushCommand xSiteStatePushCommand = (XSiteStatePushCommand) c;
-            xSiteStatePushCommand.initialize(xSiteStateConsumer.running());
-            break;
-         case ClusteredGetAllCommand.COMMAND_ID:
-            ClusteredGetAllCommand clusteredGetAllCommand = (ClusteredGetAllCommand) c;
-            clusteredGetAllCommand.init(icf.running(), this, entryFactory, interceptorChain.running(), txTable.running());
-            break;
-         case StreamRequestCommand.COMMAND_ID:
-            StreamRequestCommand streamRequestCommand = (StreamRequestCommand) c;
-            streamRequestCommand.inject(localStreamManager.running());
-            break;
-         case StreamResponseCommand.COMMAND_ID:
-            StreamResponseCommand streamResponseCommand = (StreamResponseCommand) c;
-            streamResponseCommand.inject(clusterStreamManager.running());
-            break;
-         case StreamIteratorRequestCommand.COMMAND_ID:
-            StreamIteratorRequestCommand streamIteratorRequestCommand = (StreamIteratorRequestCommand) c;
-            streamIteratorRequestCommand.inject(localStreamManager.running());
-            break;
-         case StreamIteratorNextCommand.COMMAND_ID:
-            StreamIteratorNextCommand streamIteratorNextCommand = (StreamIteratorNextCommand) c;
-            streamIteratorNextCommand.inject(localStreamManager.running());
-            break;
-         case StreamIteratorCloseCommand.COMMAND_ID:
-            StreamIteratorCloseCommand streamIteratorCloseCommand = (StreamIteratorCloseCommand) c;
-            streamIteratorCloseCommand.inject(iteratorHandler);
-            break;
-         case RetrieveLastAccessCommand.COMMAND_ID:
-            RetrieveLastAccessCommand retrieveLastAccessCommand = (RetrieveLastAccessCommand) c;
-            retrieveLastAccessCommand.inject(dataContainer, timeService);
-            break;
-         case UpdateLastAccessCommand.COMMAND_ID:
-            UpdateLastAccessCommand updateLastAccessCommand = (UpdateLastAccessCommand) c;
-            updateLastAccessCommand.inject(dataContainer);
-            break;
-         case BackupAckCommand.COMMAND_ID:
-            BackupAckCommand command = (BackupAckCommand) c;
-            command.setCommandAckCollector(commandAckCollector);
-            break;
-         case SingleKeyBackupWriteCommand.COMMAND_ID:
-            ((SingleKeyBackupWriteCommand) c).init(icf.running(), interceptorChain.running(), componentRegistry);
-            break;
-         case SingleKeyFunctionalBackupWriteCommand.COMMAND_ID:
-            ((SingleKeyFunctionalBackupWriteCommand) c).init(icf.running(), interceptorChain.running(), componentRegistry);
-            break;
-         case PutMapBackupWriteCommand.COMMAND_ID:
-            ((PutMapBackupWriteCommand) c).init(icf.running(), interceptorChain.running());
-            break;
-         case MultiEntriesFunctionalBackupWriteCommand.COMMAND_ID:
-            ((MultiEntriesFunctionalBackupWriteCommand) c).init(icf.running(), interceptorChain.running(), componentRegistry);
-            break;
-         case MultiKeyFunctionalBackupWriteCommand.COMMAND_ID:
-            ((MultiKeyFunctionalBackupWriteCommand) c).init(icf.running(), interceptorChain.running(), componentRegistry);
-            break;
-         case BackupMultiKeyAckCommand.COMMAND_ID:
-            ((BackupMultiKeyAckCommand) c).setCommandAckCollector(commandAckCollector);
-            break;
-         case ExceptionAckCommand.COMMAND_ID:
-            ((ExceptionAckCommand) c).setCommandAckCollector(commandAckCollector);
-            break;
-         case InvalidateVersionsCommand.COMMAND_ID:
-            InvalidateVersionsCommand invalidateVersionsCommand = (InvalidateVersionsCommand) c;
-            invalidateVersionsCommand.init(dataContainer, orderedUpdatesManager, stateTransferLock, distributionManager, biasManager.running());
-            break;
 
-         // === Functional commands ====
-         case ReadOnlyKeyCommand.COMMAND_ID:
-         case TxReadOnlyKeyCommand.COMMAND_ID:
-            ((ReadOnlyKeyCommand) c).init(componentRegistry);
-            break;
-
-         case ReadOnlyManyCommand.COMMAND_ID:
-         case TxReadOnlyManyCommand.COMMAND_ID:
-            ((ReadOnlyManyCommand) c).init(componentRegistry);
-            break;
-
-         case ReadWriteKeyCommand.COMMAND_ID:
-         case ReadWriteKeyValueCommand.COMMAND_ID:
-         case WriteOnlyKeyCommand.COMMAND_ID:
-         case WriteOnlyKeyValueCommand.COMMAND_ID:
-            ((AbstractWriteKeyCommand) c).init(componentRegistry);
-            break;
-
-         case ReadWriteManyCommand.COMMAND_ID:
-         case ReadWriteManyEntriesCommand.COMMAND_ID:
-         case WriteOnlyManyCommand.COMMAND_ID:
-         case WriteOnlyManyEntriesCommand.COMMAND_ID:
-            ((AbstractWriteManyCommand) c).init(componentRegistry);
-            break;
-         case RevokeBiasCommand.COMMAND_ID:
-            ((RevokeBiasCommand) c).init(biasManager.running(), this, rpcManager);
-            break;
-         case RenewBiasCommand.COMMAND_ID:
-            ((RenewBiasCommand) c).init(biasManager.running());
-            break;
-         default:
-            ModuleCommandInitializer mci = moduleCommandInitializers.get(c.getCommandId());
-            if (mci != null) {
-               mci.initializeReplicableCommand(c, isRemote);
-            } else {
-               if (trace) log.tracef("Nothing to initialize for command: %s", c);
-            }
+      if (c instanceof CacheRpcCommand) {
+         ((CacheRpcCommand) c).init(ctx, isRemote);
+      } else {
+         c.init(ctx, isRemote);
       }
    }
 
@@ -833,5 +647,137 @@ public class CommandsFactoryImpl implements CommandsFactory {
    @Override
    public MultiKeyFunctionalBackupWriteCommand buildMultiKeyFunctionalBackupWriteCommand() {
       return new MultiKeyFunctionalBackupWriteCommand(cacheName);
+   }
+
+   class CommandInitializationContext implements CacheRpcCommand.InitializationContext {
+      @Override
+      public AsyncInterceptorChain getInterceptorChain() {
+         return interceptorChain.running();
+      }
+
+      @Override
+      public BackupSender getBackupSender() {
+         return backupSender.running();
+      }
+
+      @Override
+      public BiasManager getBiasManager() {
+         return biasManager.running();
+      }
+
+      @Override
+      public Cache getCache() {
+         return cache.wired();
+      }
+
+      @Override
+      public DataContainer getDataContainer() {
+         return dataContainer;
+      }
+
+      @Override
+      public CacheNotifier getCacheNotifier() {
+         return notifier;
+      }
+
+      @Override
+      public ClusterStreamManager getClusterStreamManager() {
+         return clusterStreamManager.running();
+      }
+
+      @Override
+      public CommandAckCollector getCommandAckCollector() {
+         return commandAckCollector;
+      }
+
+      @Override
+      public ComponentRegistry getComponentRegistry() {
+         return componentRegistry;
+      }
+
+      @Override
+      public DistributionManager getDistributionManager() {
+         return distributionManager;
+      }
+
+      @Override
+      public InternalEntryFactory getInternalEntryFactory() {
+         return entryFactory;
+      }
+
+      @Override
+      public InvocationContextFactory getInvocationContextFactory() {
+         return icf.running();
+      }
+
+      @Override
+      public LocalStreamManager getLocalStreamManager() {
+         return localStreamManager.running();
+      }
+
+      @Override
+      public OrderedUpdatesManager getOrderedUpdatesManager() {
+         return orderedUpdatesManager;
+      }
+
+      @Override
+      public RecoveryManager getRecoveryManager() {
+         return recoveryManager.running();
+      }
+
+      @Override
+      public StateConsumer getStateConsumer() {
+         return stateConsumer.running();
+      }
+
+      @Override
+      public StateProvider getStateProvider() {
+         return stateProvider.running();
+      }
+
+      @Override
+      public StateTransferManager getStateTransferManager() {
+         return stateTransferManager.running();
+      }
+
+      @Override
+      public StateTransferLock getStateTransferLock() {
+         return stateTransferLock;
+      }
+
+      @Override
+      public TimeService getTimeService() {
+         return timeService;
+      }
+
+      @Override
+      public org.infinispan.transaction.TransactionTable getTransactionTable() {
+         return txTable.running();
+      }
+
+      @Override
+      public XSiteStateConsumer getXSiteStateConsumer() {
+         return xSiteStateConsumer.running();
+      }
+
+      @Override
+      public XSiteStateProvider getXSiteStateProvider() {
+         return xSiteStateProvider.running();
+      }
+
+      @Override
+      public CancellationService getCancellationService() {
+         return cancellationService;
+      }
+
+      @Override
+      public EmbeddedCacheManager getCacheManager() {
+         return cacheManager;
+      }
+
+      @Override
+      public IteratorHandler getIteratorHandler() {
+         return iteratorHandler;
+      }
    }
 }

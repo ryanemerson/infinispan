@@ -1,7 +1,6 @@
 package org.infinispan.commands.remote;
 
 import org.infinispan.Cache;
-import org.infinispan.commands.CancellationService;
 import org.infinispan.commands.ReplicableCommand;
 import org.infinispan.commons.time.TimeService;
 import org.infinispan.container.DataContainer;
@@ -10,7 +9,6 @@ import org.infinispan.context.InvocationContextFactory;
 import org.infinispan.distribution.DistributionManager;
 import org.infinispan.factories.ComponentRegistry;
 import org.infinispan.interceptors.AsyncInterceptorChain;
-import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.notifications.cachelistener.CacheNotifier;
 import org.infinispan.persistence.manager.OrderedUpdatesManager;
 import org.infinispan.remoting.transport.Address;
@@ -20,7 +18,6 @@ import org.infinispan.statetransfer.StateProvider;
 import org.infinispan.statetransfer.StateTransferLock;
 import org.infinispan.statetransfer.StateTransferManager;
 import org.infinispan.stream.impl.ClusterStreamManager;
-import org.infinispan.stream.impl.IteratorHandler;
 import org.infinispan.stream.impl.LocalStreamManager;
 import org.infinispan.transaction.TransactionTable;
 import org.infinispan.transaction.xa.recovery.RecoveryManager;
@@ -58,8 +55,8 @@ public interface CacheRpcCommand extends ReplicableCommand {
    /**
     * An optional method that allows a {@link ReplicableCommand} to initialise it's state after deserialization.
     */
-   default void init(InitializationContext context) {
-      // no-op
+   default void init(InitializationContext context, boolean isRemote) {
+      ReplicableCommand.super.init(context, isRemote);
    }
 
    /**
@@ -67,11 +64,7 @@ public interface CacheRpcCommand extends ReplicableCommand {
     * As the purpose of this interface is to avoid hash lookups, calls to {@link #getComponentRegistry()} should be
     * avoided where possible.
     */
-   interface InitializationContext {
-      /**
-       * @return true if the command is deserialized and is executed remote.
-       */
-      boolean isRemote();
+   interface InitializationContext extends ReplicableCommand.InitializationContext {
 
       AsyncInterceptorChain getInterceptorChain();
 
@@ -81,15 +74,11 @@ public interface CacheRpcCommand extends ReplicableCommand {
 
       Cache getCache();
 
-      CancellationService getCancellationService();
-
-      ClusterStreamManager getClusterStreamManager();
-
       DataContainer getDataContainer();
 
-      EmbeddedCacheManager getCacheManager();
-
       CacheNotifier getCacheNotifier();
+
+      ClusterStreamManager getClusterStreamManager();
 
       CommandAckCollector getCommandAckCollector();
 
@@ -100,8 +89,6 @@ public interface CacheRpcCommand extends ReplicableCommand {
       InternalEntryFactory getInternalEntryFactory();
 
       InvocationContextFactory getInvocationContextFactory();
-
-      IteratorHandler getIteratorHandler();
 
       LocalStreamManager getLocalStreamManager();
 

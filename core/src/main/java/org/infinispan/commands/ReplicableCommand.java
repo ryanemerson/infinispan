@@ -7,7 +7,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
 import org.infinispan.context.InvocationContext;
+import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.remoting.transport.Address;
+import org.infinispan.stream.impl.IteratorHandler;
 import org.infinispan.util.concurrent.CompletableFutures;
 
 /**
@@ -137,5 +139,18 @@ public interface ReplicableCommand {
     */
    default void setOrigin(Address origin) {
       //no-op by default
+   }
+
+   default void init(InitializationContext context, boolean isRemote) {
+      // no-op
+   }
+
+   interface InitializationContext {
+
+      CancellationService getCancellationService();
+
+      EmbeddedCacheManager getCacheManager();
+
+      IteratorHandler getIteratorHandler();
    }
 }
