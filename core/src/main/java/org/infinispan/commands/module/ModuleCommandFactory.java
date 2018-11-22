@@ -7,6 +7,7 @@ import org.infinispan.commands.remote.CacheRpcCommand;
 import org.infinispan.factories.annotations.Inject;
 import org.infinispan.factories.scopes.Scope;
 import org.infinispan.factories.scopes.Scopes;
+import org.infinispan.protostream.SerializationContext;
 import org.infinispan.util.ByteString;
 
 /**
@@ -36,15 +37,25 @@ public interface ModuleCommandFactory {
     *
     * @param commandId command id to construct
     * @return a ReplicableCommand
+    * @deprecated since 10.0 custom commands should be registered via {@link ModuleSerializationContextInitializer#registerInternalClasses(SerializationContext)}.
+    * The return value of this method is now ignored.
     */
-   ReplicableCommand fromStream(byte commandId);
+   @Deprecated
+   default ReplicableCommand fromStream(byte commandId) {
+      return null;
+   }
 
    /**
     * Construct and initialize a {@link CacheRpcCommand} based on the command id.
     *
-    * @param commandId  command id to construct
-    * @param cacheName  cache name at which command to be created is directed
-    * @return           a {@link CacheRpcCommand}
+    * @param commandId command id to construct
+    * @param cacheName cache name at which command to be created is directed
+    * @return a {@link CacheRpcCommand}
+    * @deprecated since 10.0 custom commands should be registered via {@link ModuleSerializationContextInitializer#registerInternalClasses(SerializationContext)}.
+    * The return value of this method is now ignored.
     */
-   CacheRpcCommand fromStream(byte commandId, ByteString cacheName);
+   @Deprecated
+   default CacheRpcCommand fromStream(byte commandId, ByteString cacheName) {
+      return null;
+   }
 }

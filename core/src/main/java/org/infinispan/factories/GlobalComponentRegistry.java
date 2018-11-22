@@ -11,11 +11,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
+
 import javax.management.MBeanServer;
 import javax.management.MBeanServerFactory;
 
-import net.jcip.annotations.ThreadSafe;
 import org.infinispan.Version;
+import org.infinispan.commands.ReplicableCommand;
 import org.infinispan.commands.module.ModuleCommandFactory;
 import org.infinispan.commands.module.ModuleCommandInitializer;
 import org.infinispan.commons.CacheException;
@@ -50,6 +51,8 @@ import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 import org.infinispan.util.logging.events.EventLogManager;
 import org.infinispan.xsite.GlobalXSiteAdminOperations;
+
+import net.jcip.annotations.ThreadSafe;
 
 /**
  * A global component registry where shared components are stored.
@@ -237,11 +240,6 @@ public class GlobalComponentRegistry extends AbstractComponentRegistry {
    public synchronized final void rewireNamedRegistries() {
       for (ComponentRegistry cr : namedComponents.values())
          cr.rewire();
-   }
-
-   public Map<Byte,ModuleCommandInitializer> getModuleCommandInitializers() {
-      //moduleProperties is final so we don't need to synchronize this method for safe-publishing
-      return Collections.unmodifiableMap(moduleProperties.moduleCommandInitializers());
    }
 
    @Override

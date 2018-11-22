@@ -1,7 +1,10 @@
 package org.infinispan.marshall.core;
 
 import java.io.IOException;
+import java.util.Map;
 
+import org.infinispan.commands.ReplicableCommand;
+import org.infinispan.commands.module.ModuleCommandFactory;
 import org.infinispan.commons.CacheException;
 import org.infinispan.configuration.global.GlobalConfiguration;
 import org.infinispan.factories.KnownComponentNames;
@@ -11,6 +14,8 @@ import org.infinispan.factories.annotations.Start;
 import org.infinispan.factories.annotations.Stop;
 import org.infinispan.factories.scopes.Scope;
 import org.infinispan.factories.scopes.Scopes;
+import org.infinispan.marshall.commons.AbstractProtostreamMarshaller;
+import org.infinispan.marshall.core.impl.InternalContext;
 import org.infinispan.marshall.persistence.PersistenceMarshaller;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
@@ -28,6 +33,8 @@ public class GlobalMarshaller extends AbstractProtostreamMarshaller {
    private static final Log log = LogFactory.getLog(GlobalMarshaller.class);
    private static final boolean trace = log.isTraceEnabled();
 
+   @Inject @ComponentName(KnownComponentNames.MODULE_COMMAND_FACTORIES)
+   private Map<Class<? extends ReplicableCommand>,ModuleCommandFactory> commandFactories;
    @Inject @ComponentName(KnownComponentNames.PERSISTENCE_MARSHALLER)
    private PersistenceMarshaller persistenceMarshaller;
 
@@ -56,7 +63,7 @@ public class GlobalMarshaller extends AbstractProtostreamMarshaller {
       return getSerializationContext().canMarshall(o.getClass()) || persistenceMarshaller.isMarshallable(o);
    }
 
-   PersistenceMarshaller getPersistenceMarshaller() {
+   public PersistenceMarshaller getPersistenceMarshaller() {
       return persistenceMarshaller;
    }
 }

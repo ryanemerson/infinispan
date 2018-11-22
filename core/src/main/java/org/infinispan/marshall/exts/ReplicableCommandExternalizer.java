@@ -137,13 +137,14 @@ public class ReplicableCommandExternalizer extends AbstractExternalizer<Replicab
             ReplicableCommandRunnable.class, ReplicableCommandManagerFunction.class,
             HeartBeatCommand.class);
       // Search only those commands that replicable and not cache specific replicable commands
-      Collection<Class<? extends ReplicableCommand>> moduleCommands = globalComponentRegistry.getModuleProperties().moduleOnlyReplicableCommands();
-      if (moduleCommands != null && !moduleCommands.isEmpty()) coreCommands.addAll(moduleCommands);
+      // OLD MODULE CODE
+//      Collection<Class<? extends ReplicableCommand>> moduleCommands = globalComponentRegistry.getModuleProperties().moduleOnlyReplicableCommands();
+//      if (moduleCommands != null && !moduleCommands.isEmpty()) coreCommands.addAll(moduleCommands);
       return coreCommands;
    }
 
    private Collection<Class<? extends ReplicableCommand>> getModuleCommands() {
-      return globalComponentRegistry.getModuleProperties().moduleCommands();
+//      return globalComponentRegistry.getModuleProperties().moduleCommands();
    }
 
 }

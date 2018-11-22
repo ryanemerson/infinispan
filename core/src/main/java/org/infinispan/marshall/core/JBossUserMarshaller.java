@@ -15,8 +15,8 @@ import org.jboss.marshalling.ObjectTable;
 import org.jboss.marshalling.Unmarshaller;
 
 /**
- * An extension of the {@link JBossMarshaller} that utilises {@link InternalExternalizers} as a blacklist. This class
- * can be removed once the {@link GlobalMarshaller} is no longer based upon jboss-marshalling.
+ * An extension of the {@link JBossMarshaller} that creates a {@link ObjectTable} using any user configured {@link
+ * Externalizer}s.
  *
  * @author Ryan Emerson
  * @since 10.0
@@ -34,30 +34,17 @@ public class JBossUserMarshaller extends JBossMarshaller {
    static final int ID_ANNOTATED = 0x04;
 
    private final ClassToExternalizerMap externalExts;
-   private final ClassToExternalizerMap internalExts;
 
    public JBossUserMarshaller(GlobalComponentRegistry gcr) {
       this.globalCfg = gcr.getGlobalConfiguration();
       this.externalExts = ExternalExternalizers.load(globalCfg);
-      this.internalExts = InternalExternalizers.load(gcr, null);
       this.objectTable = new UserExternalizerObjectTable();
-   }
-
-   @Override
-   public boolean isMarshallable(Object o) throws Exception {
-      // If a class have an internal externalizer, then it should not be marshallable by the user marshaller
-      return internalExts.get(o.getClass()) == null && (externalExts.get(o.getClass()) != null || super.isMarshallable(o));
    }
 
    public <T> Externalizer<T> findExternalizerFor(Object obj) {
       Class<?> clazz = obj.getClass();
-      Externalizer ext = getExternalizer(internalExts, clazz);
-      if (ext == null) {
-         ext = getExternalizer(externalExts, clazz);
-         if (ext == null)
-            ext = findAnnotatedExternalizer(clazz);
-      }
-      return ext;
+      Externalizer ext = getExternalizer(externalExts, clazz);
+      return ext != null ? ext : findAnnotatedExternalizer(clazz);
    }
 
    private <T> Externalizer<T> findAnnotatedExternalizer(Class<?> clazz) {

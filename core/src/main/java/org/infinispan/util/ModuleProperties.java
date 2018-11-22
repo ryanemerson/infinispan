@@ -3,7 +3,6 @@ package org.infinispan.util;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 
@@ -11,7 +10,6 @@ import org.infinispan.commands.ReplicableCommand;
 import org.infinispan.commands.module.ModuleCommandExtensions;
 import org.infinispan.commands.module.ModuleCommandFactory;
 import org.infinispan.commands.module.ModuleCommandInitializer;
-import org.infinispan.commands.remote.CacheRpcCommand;
 import org.infinispan.commons.util.ServiceFinder;
 import org.infinispan.factories.components.ModuleMetadataFileFinder;
 import org.infinispan.lifecycle.ModuleLifecycle;
@@ -32,7 +30,6 @@ public final class ModuleProperties {
 
    private Map<Byte, ModuleCommandFactory> commandFactories;
    private Map<Byte, ModuleCommandInitializer> commandInitializers;
-   private Collection<Class<? extends ReplicableCommand>> moduleCommands;
 
    public static Collection<ModuleLifecycle> resolveModuleLifecycles(ClassLoader cl) {
       return ServiceFinder.load(ModuleLifecycle.class, cl);
@@ -53,7 +50,6 @@ public final class ModuleProperties {
       if (moduleCmdExtLoader.iterator().hasNext()) {
          commandFactories = new HashMap<>(1);
          commandInitializers = new HashMap<>(1);
-         moduleCommands = new HashSet<>(1);
          for (ModuleCommandExtensions extension : moduleCmdExtLoader) {
             log.debugf("Loading module command extension SPI class: %s", extension);
             ModuleCommandFactory cmdFactory = extension.getModuleCommandFactory();
@@ -68,7 +64,6 @@ public final class ModuleProperties {
                         id, commandFactories.get(id).getClass().getName()));
 
                commandFactories.put(id, cmdFactory);
-               moduleCommands.add(command.getValue());
                commandInitializers.put(id, cmdInitializer);
             }
          }
@@ -79,44 +74,11 @@ public final class ModuleProperties {
       }
    }
 
-   public Collection<Class<? extends ReplicableCommand>> moduleCommands() {
-      return moduleCommands;
-   }
-
    public Map<Byte, ModuleCommandFactory> moduleCommandFactories() {
       return commandFactories;
    }
 
    public Map<Byte, ModuleCommandInitializer> moduleCommandInitializers() {
       return commandInitializers;
-   }
-
-   @SuppressWarnings("unchecked")
-   public Collection<Class<? extends CacheRpcCommand>> moduleCacheRpcCommands() {
-      Collection<Class<? extends ReplicableCommand>> cmds = moduleCommands();
-      if (cmds == null || cmds.isEmpty())
-         return Collections.emptySet();
-
-      Collection<Class<? extends CacheRpcCommand>> cacheRpcCmds = new HashSet<>(2);
-      for (Class<? extends ReplicableCommand> moduleCmdClass : cmds) {
-         if (CacheRpcCommand.class.isAssignableFrom(moduleCmdClass))
-            cacheRpcCmds.add((Class<? extends CacheRpcCommand>) moduleCmdClass);
-      }
-
-      return cacheRpcCmds;
-   }
-
-   public Collection<Class<? extends ReplicableCommand>> moduleOnlyReplicableCommands() {
-      Collection<Class<? extends ReplicableCommand>> cmds = moduleCommands();
-      if (cmds == null || cmds.isEmpty())
-         return Collections.emptySet();
-
-      Collection<Class<? extends ReplicableCommand>> replicableOnlyCmds = new HashSet<>(2);
-      for (Class<? extends ReplicableCommand> moduleCmdClass : cmds) {
-         if (!CacheRpcCommand.class.isAssignableFrom(moduleCmdClass)) {
-            replicableOnlyCmds.add(moduleCmdClass);
-         }
-      }
-      return replicableOnlyCmds;
    }
 }
