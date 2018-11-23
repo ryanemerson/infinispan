@@ -184,18 +184,12 @@ public class CacheConfigurationResource extends SimpleResourceDefinition impleme
         resourceRegistration.registerSubModel(new MemoryOffHeapConfigurationResource(this));
         resourceRegistration.registerSubModel(new CompatibilityConfigurationResource(this));
         resourceRegistration.registerSubModel(new IndexingConfigurationResource(this));
-        resourceRegistration.registerSubModel(new LoaderConfigurationResource(this));
         resourceRegistration.registerSubModel(new ClusterLoaderConfigurationResource(this));
         resourceRegistration.registerSubModel(new BackupSiteConfigurationResource(this));
-        resourceRegistration.registerSubModel(new StoreConfigurationResource(this));
-        resourceRegistration.registerSubModel(new FileStoreResource(this));
-        resourceRegistration.registerSubModel(new StringKeyedJDBCStoreResource(this));
-        resourceRegistration.registerSubModel(new RemoteStoreConfigurationResource(this));
-        resourceRegistration.registerSubModel(new RocksDBStoreConfigurationResource(this));
-        resourceRegistration.registerSubModel(new RestStoreConfigurationResource(this));
         resourceRegistration.registerSubModel(new CacheSecurityConfigurationResource(this));
         resourceRegistration.registerSubModel(new KeyDataTypeConfigurationResource(this));
         resourceRegistration.registerSubModel(new ValueDataTypeConfigurationResource(this));
-    }
 
+       ManagementResourceRegistration moduleReg = resourceRegistration.registerSubModel(new PersistenceConfigurationResource(this));
+    }
 }
