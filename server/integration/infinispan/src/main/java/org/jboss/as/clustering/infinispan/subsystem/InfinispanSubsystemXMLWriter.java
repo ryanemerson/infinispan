@@ -23,6 +23,7 @@
 package org.jboss.as.clustering.infinispan.subsystem;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -523,7 +524,23 @@ public class InfinispanSubsystemXMLWriter implements XMLElementWriter<SubsystemM
             writer.writeEndElement();
         }
 
-        // TODO make read from persistence=PERSISTENCE
+       ModelNode persistence = cache.get(ModelKeys.PERSISTENCE, ModelKeys.PERSISTENCE_NAME);
+       boolean attributeExists = Arrays.stream(PersistenceConfigurationResource.ATTRIBUTES).anyMatch(attr -> persistence.hasDefined(attr.getName()));
+
+       // If attribute exists, or a child element exists then we must write the persistence element
+       if (attributeExists || persistence.has(0)) {
+          writer.writeStartElement(ModelKeys.PERSISTENCE);
+          this.writeOptional(writer, Attribute.AVAILABILITY_INTERVAL, persistence, ModelKeys.AVAILABILITY_INTERVAL);
+          this.writeOptional(writer, Attribute.CONNECTION_ATTEMPTS, persistence, ModelKeys.CONNECTION_ATTEMPTS);
+          this.writeOptional(writer, Attribute.CONNECTION_TIMEOUT, persistence, ModelKeys.CONNECTION_INTERVAL);
+          this.writeOptional(writer, Attribute.PASSIVATION, persistence, ModelKeys.PASSIVATION);
+          writePersistence(writer, persistence);
+          writer.writeEndElement();
+       }
+
+    }
+
+    private void writePersistence(XMLExtendedStreamWriter writer, ModelNode cache) throws XMLStreamException {
         if (cache.get(ModelKeys.LOADER).isDefined()) {
             for (Property clusterLoaderEntry : cache.get(ModelKeys.LOADER).asPropertyList()) {
                 ModelNode loader = clusterLoaderEntry.getValue();
@@ -753,7 +770,6 @@ public class InfinispanSubsystemXMLWriter implements XMLElementWriter<SubsystemM
             this.writeOptional(writer, Attribute.MERGE_POLICY, partitionHandling, ModelKeys.MERGE_POLICY);
             writer.writeEndElement();
         }
-
     }
 
     private void writeListAsAttribute(XMLExtendedStreamWriter writer, Attribute attribute, ModelNode node, String key) throws XMLStreamException {
