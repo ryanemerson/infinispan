@@ -1025,6 +1025,7 @@ public final class InfinispanSubsystemXMLReader implements XMLElementReader<List
                 addCacheForConfiguration(cacheConfiguration, null, containerAddress, cacheType, operations);
             }
         }
+        addPersistenceResourceIfMissing(cacheConfigurationAddress, operations);
     }
 
     private void validateClusteredCacheAttributes(XMLExtendedStreamReader reader, ModelNode cacheConfiguration) throws XMLStreamException {
@@ -1275,10 +1276,85 @@ public final class InfinispanSubsystemXMLReader implements XMLElementReader<List
                     break;
                 }
             }
+            case PERSISTENCE: {
+                if (namespace.since(9, 4)) {
+                    this.parsePersistenceElement(reader, cache, operations);
+                } else {
+                    throw ParseUtils.unexpectedElement(reader);
+                }
+            }
             default: {
                 throw ParseUtils.unexpectedElement(reader);
             }
         }
+    }
+
+    private void parsePersistenceElement(XMLExtendedStreamReader reader, ModelNode cache, Map<PathAddress, ModelNode> operations) throws XMLStreamException {
+        PathAddress persistenceAddress = PathAddress.pathAddress(cache.get(OP_ADDR)).append(PersistenceConfigurationResource.PATH);
+        ModelNode persistence = Util.createAddOperation(persistenceAddress);
+
+        for (int i = 0; i < reader.getAttributeCount(); i++) {
+            String value = reader.getAttributeValue(i);
+            Attribute attribute = Attribute.forName(reader.getAttributeLocalName(i));
+            switch (attribute) {
+                case AVAILABILITY_INTERVAL:
+                    PersistenceConfigurationResource.AVAILABILITY_INTERVAL.parseAndSetParameter(value, persistence, reader);
+                    break;
+                case CONNECTION_ATTEMPTS:
+                    PersistenceConfigurationResource.CONNECTION_ATTEMPTS.parseAndSetParameter(value, persistence, reader);
+                    break;
+                case CONNECTION_INTERVAL:
+                    PersistenceConfigurationResource.CONNECTION_INTERVAL.parseAndSetParameter(value, persistence, reader);
+                    break;
+                case PASSIVATION:
+                    PersistenceConfigurationResource.PASSIVATION.parseAndSetParameter(value, persistence, reader);
+                    break;
+                default:
+                    throw ParseUtils.unexpectedAttribute(reader, i);
+            }
+        }
+
+        while (reader.hasNext() && (reader.nextTag() != XMLStreamConstants.END_ELEMENT)) {
+            Element element = Element.forName(reader.getLocalName());
+            switch (element) {
+                case CLUSTER_LOADER: {
+                    this.parseClusterLoader(reader, cache, operations);
+                    break;
+                }
+                case LOADER: {
+                    this.parseCustomLoader(reader, cache, operations);
+                    break;
+                }
+                case STORE: {
+                    this.parseCustomStore(reader, cache, operations);
+                    break;
+                }
+                case FILE_STORE: {
+                    this.parseFileStore(reader, cache, operations);
+                    break;
+                }
+                case STRING_KEYED_JDBC_STORE: {
+                    this.parseStringKeyedJDBCStore(reader, cache, operations);
+                    break;
+                }
+                case REMOTE_STORE: {
+                    this.parseRemoteStore(reader, cache, operations);
+                    break;
+                }
+                case REST_STORE: {
+                    this.parseRestStore(reader, cache, operations);
+                    break;
+                }
+                case ROCKSDB_STORE: {
+                    this.parseRocksDBStore(reader, cache, operations);
+                    break;
+                }
+                default: {
+                    throw ParseUtils.unexpectedElement(reader);
+                }
+            }
+        }
+        operations.put(persistenceAddress, persistence);
     }
 
     private void parseStateTransfer(XMLExtendedStreamReader reader, ModelNode cache, Map<PathAddress, ModelNode> operations) throws XMLStreamException {
@@ -1589,8 +1665,8 @@ public final class InfinispanSubsystemXMLReader implements XMLElementReader<List
         operations.put(expirationAddress, expiration);
     }
 
-    private PathAddress setOperationAddress(ModelNode operation, PathAddress address, PathElement element, String name) {
-        address = address.append(element.getKey(), name);
+    private PathAddress setStoreOperationAddress(ModelNode operation, PathAddress address, PathElement element, String name) {
+        address = address.append(PersistenceConfigurationResource.PATH).append(element.getKey(), name);
         operation.get(ModelDescriptionConstants.OP_ADDR).set(address.toModelNode());
         if (operation.hasDefined(ModelKeys.NAME))
             operation.remove(ModelKeys.NAME);
@@ -1620,7 +1696,7 @@ public final class InfinispanSubsystemXMLReader implements XMLElementReader<List
         }
 
         // update the operation address with the name of this loader
-        PathAddress loaderAddress = setOperationAddress(loader, PathAddress.pathAddress(cache.get(OP_ADDR)), LoaderConfigurationResource.LOADER_PATH, name);
+        PathAddress loaderAddress = setStoreOperationAddress(loader, PathAddress.pathAddress(cache.get(OP_ADDR)), LoaderConfigurationResource.LOADER_PATH, name);
         Map<PathAddress, ModelNode> additionalConfigurationOperations = new LinkedHashMap<>();
         this.parseLoaderElements(reader, loader, additionalConfigurationOperations);
         operations.put(loaderAddress, loader);
@@ -1647,7 +1723,7 @@ public final class InfinispanSubsystemXMLReader implements XMLElementReader<List
         }
 
         // update the cache address with the loader name
-        PathAddress loaderAddress = setOperationAddress(loader, PathAddress.pathAddress(cache.get(OP_ADDR)), ClusterLoaderConfigurationResource.PATH, name);
+        PathAddress loaderAddress = setStoreOperationAddress(loader, PathAddress.pathAddress(cache.get(OP_ADDR)), ClusterLoaderConfigurationResource.PATH, name);
 
         Map<PathAddress, ModelNode> additionalConfigurationOperations = new LinkedHashMap<>();
         this.parseLoaderElements(reader, loader, additionalConfigurationOperations);
@@ -1678,7 +1754,7 @@ public final class InfinispanSubsystemXMLReader implements XMLElementReader<List
             throw ParseUtils.missingRequired(reader, EnumSet.of(Attribute.CLASS));
         }
 
-        PathAddress storeAddress = setOperationAddress(store, PathAddress.pathAddress(cache.get(OP_ADDR)), StoreConfigurationResource.STORE_PATH, name);
+        PathAddress storeAddress = setStoreOperationAddress(store, PathAddress.pathAddress(cache.get(OP_ADDR)), StoreConfigurationResource.STORE_PATH, name);
 
         Map<PathAddress, ModelNode> additionalConfigurationOperations = new LinkedHashMap<>();
         this.parseStoreElements(reader, store, additionalConfigurationOperations);
@@ -1714,7 +1790,7 @@ public final class InfinispanSubsystemXMLReader implements XMLElementReader<List
             }
         }
 
-        PathAddress storeAddress = setOperationAddress(store, PathAddress.pathAddress(cache.get(OP_ADDR)), FileStoreResource.FILE_STORE_PATH, name);
+        PathAddress storeAddress = setStoreOperationAddress(store, PathAddress.pathAddress(cache.get(OP_ADDR)), FileStoreResource.FILE_STORE_PATH, name);
 
         Map<PathAddress, ModelNode> additionalConfigurationOperations = new LinkedHashMap<>();
         this.parseStoreElements(reader, store, additionalConfigurationOperations);
@@ -1764,7 +1840,7 @@ public final class InfinispanSubsystemXMLReader implements XMLElementReader<List
             }
         }
 
-        PathAddress storeAddress = setOperationAddress(store, PathAddress.pathAddress(cache.get(OP_ADDR)), RemoteStoreConfigurationResource.REMOTE_STORE_PATH, name);
+        PathAddress storeAddress = setStoreOperationAddress(store, PathAddress.pathAddress(cache.get(OP_ADDR)), RemoteStoreConfigurationResource.REMOTE_STORE_PATH, name);
 
         while (reader.hasNext() && (reader.nextTag() != XMLStreamConstants.END_ELEMENT)) {
             Element element = Element.forName(reader.getLocalName());
@@ -1903,7 +1979,7 @@ public final class InfinispanSubsystemXMLReader implements XMLElementReader<List
             }
         }
 
-        PathAddress storeAddress = setOperationAddress(store, PathAddress.pathAddress(cache.get(OP_ADDR)), RocksDBStoreConfigurationResource.ROCKSDBSTORE_PATH, name);
+        PathAddress storeAddress = setStoreOperationAddress(store, PathAddress.pathAddress(cache.get(OP_ADDR)), RocksDBStoreConfigurationResource.ROCKSDBSTORE_PATH, name);
 
         while (reader.hasNext() && (reader.nextTag() != XMLStreamConstants.END_ELEMENT)) {
             Element element = Element.forName(reader.getLocalName());
@@ -2026,7 +2102,7 @@ public final class InfinispanSubsystemXMLReader implements XMLElementReader<List
             }
         }
 
-        PathAddress storeAddress = setOperationAddress(store, PathAddress.pathAddress(cache.get(OP_ADDR)), RocksDBStoreConfigurationResource.ROCKSDBSTORE_PATH, name);
+        PathAddress storeAddress = setStoreOperationAddress(store, PathAddress.pathAddress(cache.get(OP_ADDR)), RocksDBStoreConfigurationResource.ROCKSDBSTORE_PATH, name);
 
         while (reader.hasNext() && (reader.nextTag() != XMLStreamConstants.END_ELEMENT)) {
             Element element = Element.forName(reader.getLocalName());
@@ -2159,7 +2235,7 @@ public final class InfinispanSubsystemXMLReader implements XMLElementReader<List
              }
          }
 
-         PathAddress storeAddress = setOperationAddress(store, PathAddress.pathAddress(cache.get(OP_ADDR)), RestStoreConfigurationResource.REST_STORE_PATH, name);
+         PathAddress storeAddress = setStoreOperationAddress(store, PathAddress.pathAddress(cache.get(OP_ADDR)), RestStoreConfigurationResource.REST_STORE_PATH, name);
 
          while (reader.hasNext() && (reader.nextTag() != XMLStreamConstants.END_ELEMENT)) {
              Element element = Element.forName(reader.getLocalName());
@@ -2239,7 +2315,7 @@ public final class InfinispanSubsystemXMLReader implements XMLElementReader<List
             throw ParseUtils.missingRequired(reader, EnumSet.of(Attribute.DATASOURCE));
         }
 
-        PathAddress storeAddress = setOperationAddress(store, PathAddress.pathAddress(cache.get(OP_ADDR)), StringKeyedJDBCStoreResource.PATH, name);
+        PathAddress storeAddress = setStoreOperationAddress(store, PathAddress.pathAddress(cache.get(OP_ADDR)), StringKeyedJDBCStoreResource.PATH, name);
 
         while (reader.hasNext() && (reader.nextTag() != XMLStreamConstants.END_ELEMENT)) {
             Element element = Element.forName(reader.getLocalName());
@@ -2958,5 +3034,13 @@ public final class InfinispanSubsystemXMLReader implements XMLElementReader<List
 
    private static void setAttribute(XMLExtendedStreamReader reader, String value, ModelNode operation, AttributeDefinition attribute) throws XMLStreamException {
        attribute.getParser().parseAndSetParameter(attribute, value, operation, reader);
+   }
+
+   private void addPersistenceResourceIfMissing(PathAddress configurationAddr, Map<PathAddress, ModelNode> operations) {
+       if (operations.get(PathAddress.pathAddress()) == null) {
+           PathAddress persistenceAddr = configurationAddr.append(PersistenceConfigurationResource.PATH);
+           ModelNode addOp = Util.createAddOperation(persistenceAddr);
+           operations.put(persistenceAddr, addOp);
+       }
    }
 }

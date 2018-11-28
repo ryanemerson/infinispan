@@ -523,6 +523,7 @@ public class InfinispanSubsystemXMLWriter implements XMLElementWriter<SubsystemM
             writer.writeEndElement();
         }
 
+        // TODO make read from persistence=PERSISTENCE
         if (cache.get(ModelKeys.LOADER).isDefined()) {
             for (Property clusterLoaderEntry : cache.get(ModelKeys.LOADER).asPropertyList()) {
                 ModelNode loader = clusterLoaderEntry.getValue();
