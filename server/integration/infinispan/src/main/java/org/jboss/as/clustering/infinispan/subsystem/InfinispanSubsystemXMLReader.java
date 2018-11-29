@@ -1190,10 +1190,6 @@ public final class InfinispanSubsystemXMLReader implements XMLElementReader<List
                 }
                 break;
             }
-            case CLUSTER_LOADER: {
-                this.parseClusterLoader(reader, cache, operations);
-                break;
-            }
             case COMPATIBILITY: {
                 this.parseCompatibility(reader, cache, operations);
                 break;
@@ -1226,32 +1222,60 @@ public final class InfinispanSubsystemXMLReader implements XMLElementReader<List
                 this.parseExpiration(reader, cache, operations);
                 break;
             }
-            case LOADER: {
-                this.parseCustomLoader(reader, cache, operations);
+            case INDEXING: {
+                this.parseIndexing(reader, cache, operations);
                 break;
             }
-            case STORE: {
-                this.parseCustomStore(reader, cache, operations);
+            case SECURITY: {
+                if (namespace.since(7, 0)) {
+                    this.parseCacheSecurity(reader, cache, operations);
+                    break;
+                }
+            }
+            case PERSISTENCE: {
+                if (namespace.since(9, 4)) {
+                    this.parsePersistenceElement(reader, cache, operations);
+                    break;
+                } else {
+                    throw ParseUtils.unexpectedElement(reader);
+                }
+            }
+            default: {
+                // Default to parse store elements, if store not recognised then XMLStreamException will be thrown
+                parseStoreElements(reader, element, cache, operations, true);
+            }
+        }
+    }
+
+    private void parseStoreElements(XMLExtendedStreamReader reader, Element element, ModelNode cache, Map<PathAddress, ModelNode> operations, boolean legacy) throws XMLStreamException {
+        if (legacy && namespace.since(10, 0)) {
+            throw ParseUtils.unexpectedElement(reader);
+        }
+
+        switch (element) {
+            case CLUSTER_LOADER: {
+                this.parseClusterLoader(reader, cache, operations);
                 break;
             }
-            case FILE_STORE: {
-                this.parseFileStore(reader, cache, operations);
-                break;
-            }
-            case STRING_KEYED_JDBC_STORE: {
-                this.parseStringKeyedJDBCStore(reader, cache, operations);
-                break;
-            }
-            case REMOTE_STORE: {
-                this.parseRemoteStore(reader, cache, operations);
-                break;
-            }
+
             case LEVELDB_STORE: {
                 if (namespace.since(9, 0)) {
                     throw ParseUtils.unexpectedElement(reader);
                 } else {
                     this.parseLevelDBStore(reader, cache, operations);
                 }
+                break;
+            }
+            case LOADER: {
+                this.parseCustomLoader(reader, cache, operations);
+                break;
+            }
+            case FILE_STORE: {
+                this.parseFileStore(reader, cache, operations);
+                break;
+            }
+            case REMOTE_STORE: {
+                this.parseRemoteStore(reader, cache, operations);
                 break;
             }
             case REST_STORE: {
@@ -1266,22 +1290,13 @@ public final class InfinispanSubsystemXMLReader implements XMLElementReader<List
                 }
                 break;
             }
-            case INDEXING: {
-                this.parseIndexing(reader, cache, operations);
+            case STORE: {
+                this.parseCustomStore(reader, cache, operations);
                 break;
             }
-            case SECURITY: {
-                if (namespace.since(7, 0)) {
-                    this.parseCacheSecurity(reader, cache, operations);
-                    break;
-                }
-            }
-            case PERSISTENCE: {
-                if (namespace.since(9, 4)) {
-                    this.parsePersistenceElement(reader, cache, operations);
-                } else {
-                    throw ParseUtils.unexpectedElement(reader);
-                }
+            case STRING_KEYED_JDBC_STORE: {
+                this.parseStringKeyedJDBCStore(reader, cache, operations);
+                break;
             }
             default: {
                 throw ParseUtils.unexpectedElement(reader);
@@ -1316,43 +1331,7 @@ public final class InfinispanSubsystemXMLReader implements XMLElementReader<List
 
         while (reader.hasNext() && (reader.nextTag() != XMLStreamConstants.END_ELEMENT)) {
             Element element = Element.forName(reader.getLocalName());
-            switch (element) {
-                case CLUSTER_LOADER: {
-                    this.parseClusterLoader(reader, cache, operations);
-                    break;
-                }
-                case LOADER: {
-                    this.parseCustomLoader(reader, cache, operations);
-                    break;
-                }
-                case STORE: {
-                    this.parseCustomStore(reader, cache, operations);
-                    break;
-                }
-                case FILE_STORE: {
-                    this.parseFileStore(reader, cache, operations);
-                    break;
-                }
-                case STRING_KEYED_JDBC_STORE: {
-                    this.parseStringKeyedJDBCStore(reader, cache, operations);
-                    break;
-                }
-                case REMOTE_STORE: {
-                    this.parseRemoteStore(reader, cache, operations);
-                    break;
-                }
-                case REST_STORE: {
-                    this.parseRestStore(reader, cache, operations);
-                    break;
-                }
-                case ROCKSDB_STORE: {
-                    this.parseRocksDBStore(reader, cache, operations);
-                    break;
-                }
-                default: {
-                    throw ParseUtils.unexpectedElement(reader);
-                }
-            }
+            parseStoreElements(reader, element, cache, operations, false);
         }
         operations.put(persistenceAddress, persistence);
     }
@@ -3037,8 +3016,8 @@ public final class InfinispanSubsystemXMLReader implements XMLElementReader<List
    }
 
    private void addPersistenceResourceIfMissing(PathAddress configurationAddr, Map<PathAddress, ModelNode> operations) {
-       if (operations.get(PathAddress.pathAddress()) == null) {
-           PathAddress persistenceAddr = configurationAddr.append(PersistenceConfigurationResource.PATH);
+       PathAddress persistenceAddr = configurationAddr.append(PersistenceConfigurationResource.PATH);
+       if (operations.get(persistenceAddr) == null) {
            ModelNode addOp = Util.createAddOperation(persistenceAddr);
            operations.put(persistenceAddr, addOp);
        }

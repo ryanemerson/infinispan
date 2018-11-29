@@ -67,6 +67,7 @@ public class PersistenceConfigurationResource extends CacheConfigurationChildRes
 
       resourceRegistration.registerSubModel(new FileStoreResource(cacheConfigResource));
       resourceRegistration.registerSubModel(new LoaderConfigurationResource(cacheConfigResource));
+      resourceRegistration.registerSubModel(new ClusterLoaderConfigurationResource(cacheConfigResource));
       resourceRegistration.registerSubModel(new RocksDBStoreConfigurationResource(cacheConfigResource));
       resourceRegistration.registerSubModel(new RemoteStoreConfigurationResource(cacheConfigResource));
       resourceRegistration.registerSubModel(new RestStoreConfigurationResource(cacheConfigResource));

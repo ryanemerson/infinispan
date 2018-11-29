@@ -190,7 +190,6 @@ public class CacheConfigurationResource extends SimpleResourceDefinition impleme
         resourceRegistration.registerSubModel(new MemoryOffHeapConfigurationResource(this));
         resourceRegistration.registerSubModel(new CompatibilityConfigurationResource(this));
         resourceRegistration.registerSubModel(new IndexingConfigurationResource(this));
-        resourceRegistration.registerSubModel(new ClusterLoaderConfigurationResource(this));
         resourceRegistration.registerSubModel(new BackupSiteConfigurationResource(this));
         resourceRegistration.registerSubModel(new CacheSecurityConfigurationResource(this));
         resourceRegistration.registerSubModel(new KeyDataTypeConfigurationResource(this));
@@ -200,6 +199,7 @@ public class CacheConfigurationResource extends SimpleResourceDefinition impleme
         PersistenceAlias alias = new PersistenceAlias(moduleReg);
         resourceRegistration.registerAlias(FileStoreResource.FILE_STORE_PATH, alias);
         resourceRegistration.registerAlias(LoaderConfigurationResource.LOADER_PATH, alias);
+        resourceRegistration.registerAlias(ClusterLoaderConfigurationResource.PATH, alias);
         resourceRegistration.registerAlias(RocksDBStoreConfigurationResource.ROCKSDBSTORE_PATH, alias);
         resourceRegistration.registerAlias(RemoteStoreConfigurationResource.REMOTE_STORE_PATH, alias);
         resourceRegistration.registerAlias(RestStoreConfigurationResource.REST_STORE_PATH, alias);
