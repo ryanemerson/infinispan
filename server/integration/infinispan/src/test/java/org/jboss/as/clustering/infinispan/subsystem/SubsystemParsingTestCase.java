@@ -78,7 +78,6 @@ public class SubsystemParsingTestCase extends ClusteringSubsystemTest {
         URL configDir = Thread.currentThread().getContextClassLoader().getResource("org/jboss/as/clustering/infinispan/subsystem");
         List<Path> paths = Files.list(Paths.get(configDir.toURI()))
               .filter(path -> path.getFileName().toString().matches("^subsystem-infinispan_[0-9]+_[0-9]+.xml$"))
-              .filter(path -> path.toString().contains("10")) // TODO remove
               .collect(Collectors.toList());
 
         boolean hasCurrentSchema = false;

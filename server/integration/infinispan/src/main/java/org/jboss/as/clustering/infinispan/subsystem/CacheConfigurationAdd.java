@@ -129,10 +129,6 @@ public abstract class CacheConfigurationAdd extends AbstractAddStepHandler imple
     private static final String DEFAULTS = "infinispan-defaults.xml";
     private static volatile Map<CacheMode, Configuration> defaults = null;
 
-    private static final String[] loaderKeys = new String[] { ModelKeys.LOADER, ModelKeys.CLUSTER_LOADER };
-    private static final String[] storeKeys = new String[] { ModelKeys.STORE, ModelKeys.FILE_STORE,
-            ModelKeys.STRING_KEYED_JDBC_STORE, ModelKeys.REMOTE_STORE, ModelKeys.REST_STORE, ModelKeys.ROCKSDB_STORE };
-
     public static synchronized Configuration getDefaultConfiguration(CacheMode cacheMode) {
         if (defaults == null) {
             ConfigurationBuilderHolder holder = load(DEFAULTS);
@@ -601,12 +597,12 @@ public abstract class CacheConfigurationAdd extends AbstractAddStepHandler imple
         }
 
         // loaders are a child resource
-        for (String loaderKey : loaderKeys) {
+        for (String loaderKey : PersistenceConfigurationResource.LOADER_KEYS) {
             handleLoaderProperties(context, cache, loaderKey, containerName, builder, dependencies);
         }
 
         // stores are a child resource
-        for (String storeKey : storeKeys) {
+        for (String storeKey : PersistenceConfigurationResource.STORE_KEYS) {
             handleStoreProperties(context, cache, storeKey, containerName, builder, dependencies);
         }
 

@@ -54,24 +54,30 @@ public class PersistenceConfigurationResource extends CacheConfigurationChildRes
 
    static final AttributeDefinition[] ATTRIBUTES = {AVAILABILITY_INTERVAL, CONNECTION_ATTEMPTS, CONNECTION_INTERVAL, PASSIVATION};
 
-   private CacheConfigurationResource cacheConfigResource;
+   static final String[] LOADER_KEYS = new String[] { ModelKeys.LOADER, ModelKeys.CLUSTER_LOADER };
+   static final String[] STORE_KEYS = new String[] { ModelKeys.STORE, ModelKeys.FILE_STORE, ModelKeys.STRING_KEYED_JDBC_STORE,
+         ModelKeys.REMOTE_STORE, ModelKeys.REST_STORE, ModelKeys.ROCKSDB_STORE };
 
-   PersistenceConfigurationResource(CacheConfigurationResource parent) {
-      super(PATH, ModelKeys.PERSISTENCE, parent, ATTRIBUTES);
-      this.cacheConfigResource = parent;
+   private CacheConfigurationResource cacheConfigResource;
+   private ManagementResourceRegistration containerReg;
+
+   PersistenceConfigurationResource(ManagementResourceRegistration containerReg, CacheConfigurationResource cacheConfigResource) {
+      super(PATH, ModelKeys.PERSISTENCE, cacheConfigResource, ATTRIBUTES);
+      this.cacheConfigResource = cacheConfigResource;
+      this.containerReg = containerReg;
    }
 
    @Override
-   public void registerChildren(ManagementResourceRegistration resourceRegistration) {
-      super.registerChildren(resourceRegistration);
+   public void registerChildren(ManagementResourceRegistration registration) {
+      super.registerChildren(registration);
 
-      resourceRegistration.registerSubModel(new FileStoreResource(cacheConfigResource));
-      resourceRegistration.registerSubModel(new LoaderConfigurationResource(cacheConfigResource));
-      resourceRegistration.registerSubModel(new ClusterLoaderConfigurationResource(cacheConfigResource));
-      resourceRegistration.registerSubModel(new RocksDBStoreConfigurationResource(cacheConfigResource));
-      resourceRegistration.registerSubModel(new RemoteStoreConfigurationResource(cacheConfigResource));
-      resourceRegistration.registerSubModel(new RestStoreConfigurationResource(cacheConfigResource));
-      resourceRegistration.registerSubModel(new StoreConfigurationResource(cacheConfigResource));
-      resourceRegistration.registerSubModel(new StringKeyedJDBCStoreResource(cacheConfigResource));
+      registration.registerSubModel(new FileStoreResource(cacheConfigResource, containerReg));
+      registration.registerSubModel(new LoaderConfigurationResource(cacheConfigResource, containerReg));
+      registration.registerSubModel(new ClusterLoaderConfigurationResource(cacheConfigResource, containerReg));
+      registration.registerSubModel(new RocksDBStoreConfigurationResource(cacheConfigResource, containerReg));
+      registration.registerSubModel(new RemoteStoreConfigurationResource(cacheConfigResource, containerReg));
+      registration.registerSubModel(new RestStoreConfigurationResource(cacheConfigResource, containerReg));
+      registration.registerSubModel(new StoreConfigurationResource(cacheConfigResource, containerReg));
+      registration.registerSubModel(new StringKeyedJDBCStoreResource(cacheConfigResource, containerReg));
    }
 }

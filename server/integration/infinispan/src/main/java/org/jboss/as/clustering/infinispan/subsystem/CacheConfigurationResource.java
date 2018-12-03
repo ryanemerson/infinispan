@@ -22,22 +22,16 @@
 
 package org.jboss.as.clustering.infinispan.subsystem;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.infinispan.configuration.cache.InvocationBatchingConfiguration;
 import org.infinispan.server.infinispan.spi.service.CacheServiceName;
 import org.jboss.as.controller.AttributeDefinition;
 import org.jboss.as.controller.OperationStepHandler;
-import org.jboss.as.controller.PathAddress;
 import org.jboss.as.controller.PathElement;
 import org.jboss.as.controller.SimpleAttributeDefinition;
 import org.jboss.as.controller.SimpleAttributeDefinitionBuilder;
 import org.jboss.as.controller.SimpleResourceDefinition;
-import org.jboss.as.controller.descriptions.ModelDescriptionConstants;
 import org.jboss.as.controller.descriptions.ResourceDescriptionResolver;
 import org.jboss.as.controller.operations.validation.EnumValidator;
-import org.jboss.as.controller.registry.AliasEntry;
 import org.jboss.as.controller.registry.AttributeAccess;
 import org.jboss.as.controller.registry.ManagementResourceRegistration;
 import org.jboss.as.controller.services.path.ResolvePathHandler;
@@ -194,40 +188,6 @@ public class CacheConfigurationResource extends SimpleResourceDefinition impleme
         resourceRegistration.registerSubModel(new CacheSecurityConfigurationResource(this));
         resourceRegistration.registerSubModel(new KeyDataTypeConfigurationResource(this));
         resourceRegistration.registerSubModel(new ValueDataTypeConfigurationResource(this));
-
-        ManagementResourceRegistration moduleReg = resourceRegistration.registerSubModel(new PersistenceConfigurationResource(this));
-        PersistenceAlias alias = new PersistenceAlias(moduleReg);
-        resourceRegistration.registerAlias(FileStoreResource.FILE_STORE_PATH, alias);
-        resourceRegistration.registerAlias(LoaderConfigurationResource.LOADER_PATH, alias);
-        resourceRegistration.registerAlias(ClusterLoaderConfigurationResource.PATH, alias);
-        resourceRegistration.registerAlias(RocksDBStoreConfigurationResource.ROCKSDBSTORE_PATH, alias);
-        resourceRegistration.registerAlias(RemoteStoreConfigurationResource.REMOTE_STORE_PATH, alias);
-        resourceRegistration.registerAlias(RestStoreConfigurationResource.REST_STORE_PATH, alias);
-        resourceRegistration.registerAlias(StoreConfigurationResource.STORE_PATH, alias);
-        resourceRegistration.registerAlias(StringKeyedJDBCStoreResource.PATH, alias);
-    }
-
-    private static class PersistenceAlias extends AliasEntry {
-
-       PersistenceAlias(ManagementResourceRegistration target) {
-          super(target);
-       }
-
-       @Override
-       public PathAddress convertToTargetAddress(PathAddress address, AliasEntry.AliasContext aliasContext) {
-          PathAddress target = this.getTargetAddress();
-          List<PathElement> result = new ArrayList<>(address.size());
-          for (int i = 0; i < address.size(); ++i) {
-             PathElement element = address.getElement(i);
-             if (i < target.size()) {
-                PathElement targetElement = target.getElement(i);
-                result.add(targetElement.isWildcard() ? PathElement.pathElement(targetElement.getKey(), element.getValue()) : targetElement);
-             } else {
-                result.add(element);
-             }
-          }
-          PathElement store = PathAddress.pathAddress(aliasContext.getOperation().get(ModelDescriptionConstants.ADDRESS)).getLastElement();
-          return PathAddress.pathAddress(result).append(store);
-       }
+        resourceRegistration.registerSubModel(new PersistenceConfigurationResource(resourceRegistration, this));
     }
 }
