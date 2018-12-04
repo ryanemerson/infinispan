@@ -1136,7 +1136,7 @@
                 </xs:annotation>
             </xs:element>
         </xs:choice>
-        <xs:attribute name="passivation" type="xs:boolean" default="${Persistence.passivation}">
+        <xs:attribute name="passivation" type="xs:boolean" default="${Server.Persistence.passivation}">
             <xs:annotation>
                 <xs:documentation>
                     If true, data is only written to the cache store when it is evicted from memory, a phenomenon known
@@ -1148,7 +1148,7 @@
                 </xs:documentation>
             </xs:annotation>
         </xs:attribute>
-        <xs:attribute name="connection-attempts" type="xs:int" default="${Persistence.connectionAttempts}">
+        <xs:attribute name="connection-attempts" type="xs:int" default="${Server.Persistence.connection-attempts}">
             <xs:annotation>
                 <xs:documentation>
                     The maximum number of unsuccessful attempts to start each of the
@@ -1157,7 +1157,7 @@
                 </xs:documentation>
             </xs:annotation>
         </xs:attribute>
-        <xs:attribute name="connection-interval" type="xs:int" default="${Persistence.connectionInterval}">
+        <xs:attribute name="connection-interval" type="xs:int" default="${Server.Persistence.connection-interval}">
             <xs:annotation>
                 <xs:documentation>
                     The time, in milliseconds, to wait between subsequent connection
@@ -1166,7 +1166,7 @@
                 </xs:documentation>
             </xs:annotation>
         </xs:attribute>
-        <xs:attribute name="availability-interval" type="xs:int" default="${Persistence.availabilityInterval}">
+        <xs:attribute name="availability-interval" type="xs:int" default="${Server.Persistence.availability-interval}">
             <xs:annotation>
                 <xs:documentation>
                     The time, in milliseconds, between availability checks to determine

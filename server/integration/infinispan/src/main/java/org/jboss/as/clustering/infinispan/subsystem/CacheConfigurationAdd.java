@@ -607,7 +607,7 @@ public abstract class CacheConfigurationAdd extends AbstractAddStepHandler imple
                 PersistenceConfigurationBuilder persistenceBuilder = builder.persistence();
                       persistenceBuilder.availabilityInterval(availabilityInterval)
                       .connectionAttempts(connectionAttempts)
-                      .connectionAttempts(connectionInterval)
+                      .connectionInterval(connectionInterval)
                       .passivation(passivation);
 
                 for (String loaderKey : PersistenceConfigurationResource.LOADER_KEYS)
