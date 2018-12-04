@@ -596,14 +596,26 @@ public abstract class CacheConfigurationAdd extends AbstractAddStepHandler imple
             }
         }
 
-        // loaders are a child resource
-        for (String loaderKey : PersistenceConfigurationResource.LOADER_KEYS) {
-            handleLoaderProperties(context, cache, loaderKey, containerName, builder, dependencies);
-        }
+        if (cache.hasDefined(ModelKeys.PERSISTENCE)) {
+            for (Property property : cache.get(ModelKeys.PERSISTENCE).asPropertyList()) {
+                ModelNode persistence = property.getValue();
+                final int availabilityInterval = PersistenceConfigurationResource.AVAILABILITY_INTERVAL.resolveModelAttribute(context, persistence).asInt();
+                final int connectionAttempts = PersistenceConfigurationResource.CONNECTION_ATTEMPTS.resolveModelAttribute(context, persistence).asInt();
+                final int connectionInterval = PersistenceConfigurationResource.CONNECTION_INTERVAL.resolveModelAttribute(context, persistence).asInt();
+                final boolean passivation = PersistenceConfigurationResource.PASSIVATION.resolveModelAttribute(context, persistence).asBoolean();
 
-        // stores are a child resource
-        for (String storeKey : PersistenceConfigurationResource.STORE_KEYS) {
-            handleStoreProperties(context, cache, storeKey, containerName, builder, dependencies);
+                PersistenceConfigurationBuilder persistenceBuilder = builder.persistence();
+                      persistenceBuilder.availabilityInterval(availabilityInterval)
+                      .connectionAttempts(connectionAttempts)
+                      .connectionAttempts(connectionInterval)
+                      .passivation(passivation);
+
+                for (String loaderKey : PersistenceConfigurationResource.LOADER_KEYS)
+                    handleLoaderProperties(context, persistence, loaderKey, persistenceBuilder);
+
+                for (String storeKey : PersistenceConfigurationResource.STORE_KEYS)
+                    handleStoreProperties(context, persistence, storeKey, containerName, persistenceBuilder, dependencies);
+            }
         }
 
         if (cache.hasDefined(ModelKeys.BACKUP)) {
@@ -635,16 +647,13 @@ public abstract class CacheConfigurationAdd extends AbstractAddStepHandler imple
         }
     }
 
-    private void handleLoaderProperties(OperationContext context, ModelNode cache, String loaderKey, String containerName,
-                                        ConfigurationBuilder builder, List<Dependency<?>> dependencies)
+    private void handleLoaderProperties(OperationContext context, ModelNode persistence, String loaderKey, PersistenceConfigurationBuilder builder)
             throws OperationFailedException {
-        if (cache.hasDefined(loaderKey)) {
-            for (Property loaderEntry : cache.get(loaderKey).asPropertyList()) {
+        if (persistence.hasDefined(loaderKey)) {
+            for (Property loaderEntry : persistence.get(loaderKey).asPropertyList()) {
                 ModelNode loader = loaderEntry.getValue();
-                PersistenceConfigurationBuilder persistence = builder.persistence();
-                StoreConfigurationBuilder<?, ?> scb = buildCacheLoader(persistence,
-                                                                       loader, loaderKey);
-                parseCommonAttributes(context, persistence, loader, scb);
+                StoreConfigurationBuilder<?, ?> scb = buildCacheLoader(builder, loader, loaderKey);
+                parseCommonAttributes(context, loader, scb);
                 final Properties properties = getProperties(loader);
                 scb.withProperties(properties);
             }
@@ -664,18 +673,15 @@ public abstract class CacheConfigurationAdd extends AbstractAddStepHandler imple
       return properties;
    }
 
-   private void handleStoreProperties(OperationContext context, ModelNode cache, String storeKey, String containerName,
-                                            ConfigurationBuilder builder, List<Dependency<?>> dependencies)
+   private void handleStoreProperties(OperationContext context, ModelNode persistence, String storeKey, String containerName,
+                                      PersistenceConfigurationBuilder builder, List<Dependency<?>> dependencies)
             throws OperationFailedException {
 
-        if (cache.hasDefined(storeKey)) {
-           for (Property storeEntry : cache.get(storeKey).asPropertyList()) {
+        if (persistence.hasDefined(storeKey)) {
+           for (Property storeEntry : persistence.get(storeKey).asPropertyList()) {
                 ModelNode store = storeEntry.getValue();
-
-                final boolean passivation = BaseStoreConfigurationResource.PASSIVATION.resolveModelAttribute(context, store).asBoolean();
-                PersistenceConfigurationBuilder loadersBuilder = builder.persistence().passivation(passivation);
-                StoreConfigurationBuilder<?, ?> scb = buildCacheStore(context, loadersBuilder, containerName, store, storeKey, dependencies);
-                parseCommonAttributes(context, loadersBuilder, store, scb);
+                StoreConfigurationBuilder<?, ?> scb = buildCacheStore(context, builder, containerName, store, storeKey, dependencies);
+                parseCommonAttributes(context, store, scb);
             }
         }
     }
@@ -963,7 +969,7 @@ public abstract class CacheConfigurationAdd extends AbstractAddStepHandler imple
       return CacheLoader.class.getClassLoader().loadClass(className).newInstance();
    }
 
-   private void parseCommonAttributes(OperationContext context, PersistenceConfigurationBuilder persistenceBuilder, ModelNode store, StoreConfigurationBuilder storeConfigurationBuilder) throws OperationFailedException {
+   private void parseCommonAttributes(OperationContext context, ModelNode store, StoreConfigurationBuilder storeConfigurationBuilder) throws OperationFailedException {
       ModelNode shared = store.get(ModelKeys.SHARED);
       if (shared != null && shared.isDefined()) {
          storeConfigurationBuilder.shared(shared.asBoolean());
@@ -979,10 +985,6 @@ public abstract class CacheConfigurationAdd extends AbstractAddStepHandler imple
       ModelNode fetchState = store.get(ModelKeys.FETCH_STATE);
       if (fetchState != null && fetchState.isDefined()) {
          storeConfigurationBuilder.fetchPersistentState(fetchState.asBoolean());
-      }
-      ModelNode passivation = store.get(ModelKeys.PASSIVATION);
-      if (passivation != null && passivation.isDefined()) {
-         persistenceBuilder.passivation(passivation.asBoolean());
       }
       ModelNode purge = store.get(ModelKeys.PURGE);
       if (purge != null && purge.isDefined()) {

@@ -57,12 +57,14 @@ public class BaseStoreConfigurationResource extends BaseLoaderConfigurationResou
                 .setDefaultValue(new ModelNode().set(AbstractStoreConfiguration.MAX_BATCH_SIZE.getDefaultValue()))
                 .setFlags(AttributeAccess.Flag.RESTART_RESOURCE_SERVICES)
                 .build();
+    @Deprecated
     static final SimpleAttributeDefinition PASSIVATION =
             new SimpleAttributeDefinitionBuilder(ModelKeys.PASSIVATION, ModelType.BOOLEAN, true)
                     .setXmlName(Attribute.PASSIVATION.getLocalName())
                     .setAllowExpression(true)
                     .setFlags(AttributeAccess.Flag.RESTART_RESOURCE_SERVICES)
                     .setDefaultValue(new ModelNode().set(PersistenceConfiguration.PASSIVATION.getDefaultValue()))
+                    .setDeprecated(ModelVersion.create(10))
                     .build();
     static final SimpleAttributeDefinition PURGE =
             new SimpleAttributeDefinitionBuilder(ModelKeys.PURGE, ModelType.BOOLEAN, true)
