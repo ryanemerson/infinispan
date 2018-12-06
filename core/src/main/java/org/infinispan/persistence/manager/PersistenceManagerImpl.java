@@ -185,7 +185,7 @@ public class PersistenceManagerImpl implements PersistenceManager {
    }
 
    protected void pollStoreAvailability() {
-      storesMutex.writeLock().lock();
+      storesMutex.readLock().lock();
       try {
          boolean availabilityChanged = false;
          boolean failureDetected = false;
@@ -203,7 +203,7 @@ public class PersistenceManagerImpl implements PersistenceManager {
             cacheNotifier.notifyPersistenceAvailabilityChanged(true);
          }
       } finally {
-         storesMutex.writeLock().unlock();
+         storesMutex.readLock().unlock();
       }
    }
 
@@ -1235,14 +1235,14 @@ public class PersistenceManagerImpl implements PersistenceManager {
    class StoreStatus {
       final Object store;
       final StoreConfiguration config;
-      volatile boolean availability = true;
+      boolean availability = true;
 
       StoreStatus(Object store, StoreConfiguration config) {
          this.store = store;
          this.config = config;
       }
 
-      boolean availabilityChanged() {
+      synchronized boolean availabilityChanged() {
          boolean oldAvailability = availability;
          try {
             if (store instanceof CacheWriter)
