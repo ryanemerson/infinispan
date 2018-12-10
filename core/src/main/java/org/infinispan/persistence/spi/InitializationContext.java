@@ -4,11 +4,11 @@ import java.util.concurrent.ExecutorService;
 
 import org.infinispan.Cache;
 import org.infinispan.commons.io.ByteBufferFactory;
-import org.infinispan.commons.marshall.StreamAwareMarshaller;
 import org.infinispan.commons.marshall.StreamingMarshaller;
 import org.infinispan.commons.time.TimeService;
 import org.infinispan.configuration.cache.StoreConfiguration;
 import org.infinispan.distribution.ch.KeyPartitioner;
+import org.infinispan.marshall.persistence.PersistenceMarshaller;
 import org.infinispan.marshall.core.MarshalledEntryFactory;
 
 import net.jcip.annotations.ThreadSafe;
@@ -71,5 +71,5 @@ public interface InitializationContext {
    /**
     * Returns the persistence marshaller which should be used to marshall/unmarshall all stored bytes.
     */
-   StreamAwareMarshaller getPersistenceMarshaller();
+   PersistenceMarshaller getPersistenceMarshaller();
 }

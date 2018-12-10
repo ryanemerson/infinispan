@@ -19,7 +19,6 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import org.infinispan.commons.marshall.StreamAwareMarshaller;
 import org.infinispan.commons.marshall.WrappedByteArray;
 import org.infinispan.commons.marshall.WrappedBytes;
 import org.infinispan.configuration.cache.Configuration;
@@ -29,6 +28,7 @@ import org.infinispan.container.impl.InternalEntryFactory;
 import org.infinispan.container.impl.InternalEntryFactoryImpl;
 import org.infinispan.marshall.TestObjectStreamMarshaller;
 import org.infinispan.marshall.core.ExternalPojo;
+import org.infinispan.marshall.persistence.PersistenceMarshaller;
 import org.infinispan.marshall.persistence.impl.MarshalledEntryUtil;
 import org.infinispan.persistence.spi.AdvancedCacheExpirationWriter;
 import org.infinispan.persistence.spi.AdvancedLoadWriteStore;
@@ -75,6 +75,7 @@ public abstract class BaseStoreTest extends AbstractInfinispanTest {
       try {
          //noinspection unchecked
          cl = createStore();
+         marshaller.generateStoreMarshallers();
          cl.start();
       } catch (Exception e) {
          log.error("Error creating store", e);
@@ -102,7 +103,7 @@ public abstract class BaseStoreTest extends AbstractInfinispanTest {
    /**
     * @return a mock marshaller for use with the cache store impls
     */
-   protected StreamAwareMarshaller getMarshaller() {
+   protected PersistenceMarshaller getMarshaller() {
       return marshaller;
    }
 

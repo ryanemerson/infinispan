@@ -7,12 +7,14 @@ import java.io.OutputStream;
 import org.infinispan.commons.dataconversion.MediaType;
 import org.infinispan.commons.io.ByteBuffer;
 import org.infinispan.commons.marshall.AbstractMarshaller;
-import org.infinispan.commons.marshall.StreamAwareMarshaller;
 import org.infinispan.commons.marshall.StreamingMarshaller;
 import org.infinispan.factories.annotations.Stop;
 import org.infinispan.factories.scopes.Scope;
 import org.infinispan.factories.scopes.Scopes;
 import org.infinispan.manager.EmbeddedCacheManager;
+import org.infinispan.marshall.persistence.PersistenceMarshaller;
+import org.infinispan.marshall.persistence.impl.PersistenceMarshallerImpl;
+import org.infinispan.protostream.SerializationContext;
 import org.infinispan.test.TestingUtil;
 import org.infinispan.test.fwk.TestCacheManagerFactory;
 import org.infinispan.util.logging.Log;
@@ -25,17 +27,17 @@ import org.infinispan.util.logging.LogFactory;
  * @author Manik Surtani
  */
 @Scope(Scopes.GLOBAL)
-public class TestObjectStreamMarshaller extends AbstractMarshaller implements StreamAwareMarshaller {
+public class TestObjectStreamMarshaller extends AbstractMarshaller implements PersistenceMarshaller {
 
    private static Log log = LogFactory.getLog(TestObjectStreamMarshaller.class);
 
-   private final StreamAwareMarshaller marshaller;
+   private final PersistenceMarshallerImpl marshaller;
 
    public final EmbeddedCacheManager cacheManager;
 
    public TestObjectStreamMarshaller() {
       cacheManager = TestCacheManagerFactory.createCacheManager();
-      marshaller = cacheManager.getCache().getAdvancedCache().getComponentRegistry().getPersistenceMarshaller();
+      marshaller = (PersistenceMarshallerImpl) cacheManager.getCache().getAdvancedCache().getComponentRegistry().getPersistenceMarshaller();
    }
 
    @Override
@@ -77,5 +79,29 @@ public class TestObjectStreamMarshaller extends AbstractMarshaller implements St
    @Override
    public MediaType mediaType() {
       return marshaller.mediaType();
+   }
+
+   @Override
+   public SerializationContext getSerializationContext() {
+      return marshaller.getSerializationContext();
+   }
+
+   @Override
+   public void registerAnnotatedPojos(String packageName, Class... classes) {
+      marshaller.registerAnnotatedPojos(packageName, classes);
+   }
+
+   @Override
+   public byte[] marshallUserObject(Object object) {
+      return marshaller.marshallUserObject(object);
+   }
+
+   @Override
+   public Object unmarshallUserBytes(byte[] bytes) {
+      return marshaller.unmarshallUserBytes(bytes);
+   }
+
+   public void generateStoreMarshallers() {
+      marshaller.generateStoreMarshallers();
    }
 }

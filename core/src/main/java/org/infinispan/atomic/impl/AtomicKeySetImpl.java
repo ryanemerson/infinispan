@@ -28,7 +28,7 @@ import org.infinispan.factories.ComponentRegistry;
 import org.infinispan.factories.GlobalComponentRegistry;
 import org.infinispan.functional.EntryView;
 import org.infinispan.interceptors.AsyncInterceptorChain;
-import org.infinispan.marshall.persistence.impl.UserObject;
+import org.infinispan.marshall.persistence.PersistenceMarshaller;
 import org.infinispan.protostream.MessageMarshaller;
 import org.infinispan.util.ByteString;
 import org.infinispan.util.logging.Log;
@@ -558,17 +558,24 @@ public final class AtomicKeySetImpl<K> implements MergeOnStore {
    }
 
    public static class KeyMarshaller implements MessageMarshaller<AtomicKeySetImpl.Key> {
+
+      private final PersistenceMarshaller persistenceMarshaller;
+
+      public KeyMarshaller(PersistenceMarshaller persistenceMarshaller) {
+         this.persistenceMarshaller = persistenceMarshaller;
+      }
+
       @Override
       public Key readFrom(ProtoStreamReader reader) throws IOException {
-         Object group = reader.readObject("group", UserObject.class).get();
-         Object key = reader.readObject("key", UserObject.class).get();
+         Object group = persistenceMarshaller.unmarshallUserBytes(reader.readBytes("group"));
+         Object key = persistenceMarshaller.unmarshallUserBytes(reader.readBytes("key"));
          return new AtomicKeySetImpl.Key<>(group, key);
       }
 
       @Override
       public void writeTo(ProtoStreamWriter writer, Key key) throws IOException {
-         writer.writeObject("group", new UserObject(key.group), UserObject.class);
-         writer.writeObject("key", new UserObject(key.key), UserObject.class);
+         writer.writeBytes("group", persistenceMarshaller.marshallUserObject(key.group));
+         writer.writeBytes("key", persistenceMarshaller.marshallUserObject(key.key));
       }
 
       @Override
@@ -585,15 +592,17 @@ public final class AtomicKeySetImpl<K> implements MergeOnStore {
    public static class Marshaller implements MessageMarshaller<AtomicKeySetImpl> {
 
       private final GlobalComponentRegistry gcr;
+      private final PersistenceMarshaller persistenceMarshaller;
 
-      public Marshaller(GlobalComponentRegistry gcr) {
+      public Marshaller(GlobalComponentRegistry gcr, PersistenceMarshaller persistenceMarshaller) {
          this.gcr = gcr;
+         this.persistenceMarshaller = persistenceMarshaller;
       }
 
       @Override
       public AtomicKeySetImpl readFrom(ProtoStreamReader reader) throws IOException {
          ByteString cacheName1 = ByteString.fromString(reader.readString("cachename"));
-         Object group = reader.readObject("group", UserObject.class).get();
+         Object group = persistenceMarshaller.unmarshallUserBytes(reader.readBytes("group"));
          ComponentRegistry cr = gcr.getNamedComponentRegistry(cacheName1);
          InvocationContextFactory icf = cr.getComponent(InvocationContextFactory.class);
          InvocationContext ctx = icf.createNonTxInvocationContext();
@@ -618,7 +627,7 @@ public final class AtomicKeySetImpl<K> implements MergeOnStore {
       @Override
       public void writeTo(ProtoStreamWriter writer, AtomicKeySetImpl atomicKeySet) throws IOException {
          writer.writeString("cachename", atomicKeySet.cacheName.toString());
-         writer.writeObject("group", new UserObject(atomicKeySet.group), UserObject.class);
+         writer.writeBytes("group", persistenceMarshaller.marshallUserObject(atomicKeySet.group));
       }
 
       @Override

@@ -6,6 +6,7 @@ import org.infinispan.factories.annotations.DefaultFactoryFor;
 import org.infinispan.factories.impl.ComponentAlias;
 import org.infinispan.marshall.core.GlobalMarshaller;
 import org.infinispan.marshall.persistence.PersistenceMarshaller;
+import org.infinispan.marshall.persistence.impl.PersistenceMarshallerImpl;
 
 /**
  * MarshallerFactory.
@@ -32,7 +33,7 @@ public class MarshallerFactory extends AbstractComponentFactory implements AutoI
       switch (componentName) {
          case KnownComponentNames.PERSISTENCE_MARSHALLER:
             if (persistenceMarshaller == null) {
-               persistenceMarshaller = new PersistenceMarshaller();
+               persistenceMarshaller = new PersistenceMarshallerImpl();
             }
             return persistenceMarshaller;
          case KnownComponentNames.INTERNAL_MARSHALLER:

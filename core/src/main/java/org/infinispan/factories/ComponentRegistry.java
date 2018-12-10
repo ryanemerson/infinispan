@@ -6,7 +6,6 @@ import org.infinispan.commands.CommandsFactory;
 import org.infinispan.commands.module.ModuleCommandInitializer;
 import org.infinispan.commons.CacheConfigurationException;
 import org.infinispan.commons.CacheException;
-import org.infinispan.commons.marshall.StreamAwareMarshaller;
 import org.infinispan.commons.marshall.StreamingMarshaller;
 import org.infinispan.commons.time.TimeService;
 import org.infinispan.commons.util.Util;
@@ -24,6 +23,7 @@ import org.infinispan.factories.impl.ComponentRef;
 import org.infinispan.factories.scopes.Scopes;
 import org.infinispan.lifecycle.ComponentStatus;
 import org.infinispan.lifecycle.ModuleLifecycle;
+import org.infinispan.marshall.persistence.PersistenceMarshaller;
 import org.infinispan.notifications.cachemanagerlistener.CacheManagerNotifier;
 import org.infinispan.persistence.manager.PreloadManager;
 import org.infinispan.reactive.publisher.impl.ClusterPublisherManager;
@@ -244,8 +244,8 @@ public class ComponentRegistry extends AbstractComponentRegistry {
    /**
     * Caching shortcut for #getComponent(StreamAwareMarshaller.class, PERSISTENCE_MARSHALLER);
     */
-   public StreamAwareMarshaller getPersistenceMarshaller() {
-      return getComponent(StreamAwareMarshaller.class, KnownComponentNames.PERSISTENCE_MARSHALLER);
+   public PersistenceMarshaller getPersistenceMarshaller() {
+      return getComponent(PersistenceMarshaller.class, KnownComponentNames.PERSISTENCE_MARSHALLER);
    }
 
    /**

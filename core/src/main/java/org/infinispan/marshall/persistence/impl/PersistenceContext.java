@@ -1,21 +1,20 @@
 package org.infinispan.marshall.persistence.impl;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Set;
 
 import org.infinispan.atomic.impl.AtomicKeySetImpl;
+import org.infinispan.commons.io.ByteBufferImpl;
+import org.infinispan.commons.marshall.WrappedByteArray;
+import org.infinispan.commons.util.Util;
 import org.infinispan.container.versioning.NumericVersion;
 import org.infinispan.container.versioning.SimpleClusteredVersion;
 import org.infinispan.factories.GlobalComponentRegistry;
-import org.infinispan.marshall.persistence.PersistenceMarshaller;
-import org.infinispan.metadata.Metadata;
-import org.infinispan.metadata.impl.InternalMetadataImpl;
-import org.infinispan.protostream.BaseMarshaller;
+import org.infinispan.functional.impl.MetaParamsInternalMetadata;
+import org.infinispan.metadata.EmbeddedMetadata;
 import org.infinispan.protostream.FileDescriptorSource;
-import org.infinispan.protostream.MessageMarshaller;
 import org.infinispan.protostream.SerializationContext;
-import org.infinispan.util.KeyValuePair;
+import org.infinispan.protostream.annotations.ProtoSchemaBuilder;
 
 /**
  * Class responsible for initialising the provided {@link org.infinispan.protostream.SerializationContext} with all of
@@ -24,53 +23,36 @@ import org.infinispan.util.KeyValuePair;
  * @author Ryan Emerson
  * @since 10.0
  */
-public class PersistenceContext implements SerializationContext.MarshallerProvider {
+public class PersistenceContext {
 
-   private static final String PROTO_FILE = "org/infinispan/persistence/persistence.proto";
+   static final String PROTO_FILE = "org/infinispan/persistence/persistence.proto";
+   static final String GENERATED_PROTO_PACKAGE = "generated.persistence";
 
-   public static void init(GlobalComponentRegistry gcr, PersistenceMarshaller pm) throws IOException {
+   public static void init(GlobalComponentRegistry gcr, PersistenceMarshallerImpl pm) throws IOException {
       ClassLoader classLoader = gcr.getGlobalConfiguration().classLoader();
       SerializationContext ctx = pm.getSerializationContext();
+
       ctx.registerProtoFiles(FileDescriptorSource.fromResources(classLoader, PROTO_FILE));
-      ctx.registerMarshaller(new AtomicKeySetImpl.Marshaller(gcr));
-      ctx.registerMarshaller(new AtomicKeySetImpl.KeyMarshaller());
-      ctx.registerMarshaller(new ByteBufferMarshaller());
-      ctx.registerMarshaller(new EntryVersionMarshaller());
-      ctx.registerMarshaller(new InternalMetadataImpl.Marshaller());
-      ctx.registerMarshaller(new KeyValuePair.Marshaller(pm));
-      ctx.registerMarshaller(new MapMarshaller.TypeMarshaller());
-      ctx.registerMarshaller(new MetadataMarshaller.TypeMarshaller());
-      ctx.registerMarshaller(new NumericVersion.Marshaller());
-      ctx.registerMarshaller(new SimpleClusteredVersion.Marshaller());
-      ctx.registerMarshaller(new UserObject.Marshaller(pm.getUserMarshaller()));
-      ctx.registerMarshaller(new WrappedByteArrayMarshaller());
-      ctx.registerMarshaller(new MarshalledValueImpl.Marshaller());
-      ctx.registerMarshallerProvider(new PersistenceContext());
+      ctx.registerMarshaller(new AtomicKeySetImpl.Marshaller(gcr, pm));
+      ctx.registerMarshaller(new AtomicKeySetImpl.KeyMarshaller(pm));
+      ctx.registerMarshaller(new AtomicMapMarshaller(pm));
+
+      Set<Class> internalClasses = Util.asSet(PersistenceMarshallerImpl.UserBytes.class, ByteBufferImpl.class,
+            AtomicMapMarshaller.AtomicMapEntry.class, WrappedByteArray.class, MarshalledValueImpl.class,
+            EmbeddedMetadata.class, EmbeddedMetadata.EmbeddedExpirableMetadata.class, EmbeddedMetadata.EmbeddedLifespanExpirableMetadata.class,
+            EmbeddedMetadata.EmbeddedMaxIdleExpirableMetadata.class, NumericVersion.class, SimpleClusteredVersion.class,
+            MetaParamsInternalMetadata.class);
+      buildPojoMarshallers(GENERATED_PROTO_PACKAGE, internalClasses, ctx);
    }
 
-   private final Map<String, BaseMarshaller> marshallerMap = new HashMap<>();
+   static void buildPojoMarshallers(String packageName, Set<Class> annotatedPojos, SerializationContext ctx) throws IOException {
+      if (!annotatedPojos.isEmpty()) {
+         ProtoSchemaBuilder builder = new ProtoSchemaBuilder()
+               .fileName(String.format("%s.proto", packageName))
+               .packageName(packageName);
 
-   private PersistenceContext() {
-      addToLookupMap(new MetadataMarshaller(), "persistence.Metadata", Metadata.class);
-      addToLookupMap(new MapMarshaller(), "persistence.Map", Map.class);
-   }
-
-   @Override
-   public BaseMarshaller<?> getMarshaller(String s) {
-      return marshallerMap.get(s);
-   }
-
-   @Override
-   public BaseMarshaller<?> getMarshaller(Class<?> aClass) {
-      if (Metadata.class.isAssignableFrom(aClass))
-         return marshallerMap.get(Metadata.class.getName());
-      else if (Map.class.isAssignableFrom(aClass))
-         return marshallerMap.get(Map.class.getName());
-      return null;
-   }
-
-   private void addToLookupMap(MessageMarshaller<?>  marshaller, String messageName, Class lookupClass) {
-      marshallerMap.put(messageName, marshaller);
-      marshallerMap.put(lookupClass.getName(), marshaller);
+         annotatedPojos.forEach(builder::addClass);
+         builder.build(ctx);
+      }
    }
 }

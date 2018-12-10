@@ -69,6 +69,8 @@ import org.infinispan.interceptors.impl.CacheLoaderInterceptor;
 import org.infinispan.interceptors.impl.CacheWriterInterceptor;
 import org.infinispan.interceptors.impl.TransactionalStoreInterceptor;
 import org.infinispan.marshall.core.MarshalledEntryFactory;
+import org.infinispan.marshall.persistence.PersistenceMarshaller;
+import org.infinispan.marshall.persistence.impl.PersistenceMarshallerImpl;
 import org.infinispan.metadata.Metadata;
 import org.infinispan.notifications.cachelistener.CacheNotifier;
 import org.infinispan.persistence.InitializationContextImpl;
@@ -115,7 +117,7 @@ public class PersistenceManagerImpl implements PersistenceManager {
    @Inject private Configuration configuration;
    @Inject private GlobalConfiguration globalConfiguration;
    @Inject private ComponentRef<AdvancedCache<Object, Object>> cache;
-   @Inject @ComponentName(KnownComponentNames.PERSISTENCE_MARSHALLER) private StreamAwareMarshaller m;
+   @Inject @ComponentName(KnownComponentNames.PERSISTENCE_MARSHALLER) private PersistenceMarshaller m;
    @Inject private TransactionManager transactionManager;
    @Inject private TimeService timeService;
    @Inject @ComponentName(PERSISTENCE_EXECUTOR)
@@ -190,6 +192,10 @@ public class PersistenceManagerImpl implements PersistenceManager {
       } catch (Exception e) {
          throw new CacheException("Unable to start cache loaders", e);
       }
+
+      // Generate protoschema marshallers after loaders/writers have been initialized to allow annotated pojos to be registered
+      // via PersistenceMarshaller::registerAnnotatedPojos in the store's init method
+      ((PersistenceMarshallerImpl) m).generateStoreMarshallers();
    }
 
    protected void pollStoreAvailability() {

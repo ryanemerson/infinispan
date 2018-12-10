@@ -4,11 +4,12 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.Collections;
+import java.util.Objects;
 import java.util.Set;
 
 import org.infinispan.commons.marshall.AbstractExternalizer;
 import org.infinispan.marshall.core.Ids;
-import org.infinispan.protostream.MessageMarshaller;
+import org.infinispan.protostream.annotations.ProtoField;
 
 import net.jcip.annotations.Immutable;
 
@@ -23,12 +24,21 @@ public class SimpleClusteredVersion implements IncrementableEntryVersion {
    /**
     * The cache topology id in which it was first created.
     */
-   public final int topologyId;
-   public final long version;
+   @ProtoField(number = 1, required = true)
+   int topologyId;
+
+   @ProtoField(number = 2, required = true)
+   long version;
+
+   SimpleClusteredVersion() {}
 
    public SimpleClusteredVersion(int topologyId, long version) {
       this.version = version;
       this.topologyId = topologyId;
+   }
+
+   public int getTopologyId() {
+      return topologyId;
    }
 
    public long getVersion() {
@@ -60,19 +70,14 @@ public class SimpleClusteredVersion implements IncrementableEntryVersion {
    public boolean equals(Object o) {
       if (this == o) return true;
       if (o == null || getClass() != o.getClass()) return false;
-
       SimpleClusteredVersion that = (SimpleClusteredVersion) o;
-
-      if (topologyId != that.topologyId) return false;
-      return version == that.version;
-
+      return topologyId == that.topologyId &&
+            version == that.version;
    }
 
    @Override
    public int hashCode() {
-      int result = topologyId;
-      result = 31 * result + (int) (version ^ (version >>> 32));
-      return result;
+      return Objects.hash(topologyId, version);
    }
 
    @Override
@@ -106,32 +111,7 @@ public class SimpleClusteredVersion implements IncrementableEntryVersion {
 
       @Override
       public Set<Class<? extends SimpleClusteredVersion>> getTypeClasses() {
-         return Collections.<Class<? extends SimpleClusteredVersion>>singleton(SimpleClusteredVersion.class);
-      }
-   }
-
-   public static class Marshaller implements MessageMarshaller<SimpleClusteredVersion> {
-      @Override
-      public SimpleClusteredVersion readFrom(ProtoStreamReader reader) throws IOException {
-         int topology = reader.readInt("topology");
-         long version = reader.readLong("version");
-         return new SimpleClusteredVersion(topology, version);
-      }
-
-      @Override
-      public void writeTo(ProtoStreamWriter writer, SimpleClusteredVersion simpleClusteredVersion) throws IOException {
-         writer.writeInt("topology", simpleClusteredVersion.topologyId);
-         writer.writeLong("version", simpleClusteredVersion.version);
-      }
-
-      @Override
-      public Class<SimpleClusteredVersion> getJavaClass() {
-         return SimpleClusteredVersion.class;
-      }
-
-      @Override
-      public String getTypeName() {
-         return "persistence.ClusteredVersion";
+         return Collections.singleton(SimpleClusteredVersion.class);
       }
    }
 }

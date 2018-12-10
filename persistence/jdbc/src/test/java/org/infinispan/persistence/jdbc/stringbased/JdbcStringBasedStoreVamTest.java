@@ -2,8 +2,8 @@ package org.infinispan.persistence.jdbc.stringbased;
 
 import static org.infinispan.test.TestingUtil.extractPersistenceMarshaller;
 
-import org.infinispan.commons.marshall.StreamAwareMarshaller;
 import org.infinispan.manager.EmbeddedCacheManager;
+import org.infinispan.marshall.persistence.PersistenceMarshaller;
 import org.infinispan.persistence.spi.PersistenceException;
 import org.infinispan.test.fwk.TestCacheManagerFactory;
 import org.testng.annotations.AfterClass;
@@ -21,7 +21,7 @@ import org.testng.annotations.Test;
 public class JdbcStringBasedStoreVamTest extends JdbcStringBasedStoreTest {
 
    EmbeddedCacheManager cm;
-   StreamAwareMarshaller marshaller;
+   PersistenceMarshaller marshaller;
 
    @Factory
    public Object[] factory() {
@@ -43,7 +43,7 @@ public class JdbcStringBasedStoreVamTest extends JdbcStringBasedStoreTest {
    }
 
    @Override
-   protected StreamAwareMarshaller getMarshaller() {
+   protected PersistenceMarshaller getMarshaller() {
       return marshaller;
    }
 

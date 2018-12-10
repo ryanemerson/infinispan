@@ -8,7 +8,7 @@ import java.util.Set;
 
 import org.infinispan.commons.marshall.AbstractExternalizer;
 import org.infinispan.marshall.core.Ids;
-import org.infinispan.protostream.MessageMarshaller;
+import org.infinispan.protostream.annotations.ProtoField;
 
 /**
  * Numeric version
@@ -18,7 +18,10 @@ import org.infinispan.protostream.MessageMarshaller;
  */
 public class NumericVersion implements IncrementableEntryVersion {
 
-   private final long version;
+   @ProtoField(number = 1, required = true)
+   long version;
+
+   NumericVersion() {}
 
    public NumericVersion(long version) {
       this.version = version;
@@ -90,27 +93,5 @@ public class NumericVersion implements IncrementableEntryVersion {
          return Ids.NUMERIC_VERSION;
       }
 
-   }
-
-   public static class Marshaller implements MessageMarshaller<NumericVersion> {
-      @Override
-      public NumericVersion readFrom(ProtoStreamReader reader) throws IOException {
-         return new NumericVersion(reader.readLong("version"));
-      }
-
-      @Override
-      public void writeTo(ProtoStreamWriter writer, NumericVersion numericVersion) throws IOException {
-         writer.writeLong("version", numericVersion.version);
-      }
-
-      @Override
-      public Class<NumericVersion> getJavaClass() {
-         return NumericVersion.class;
-      }
-
-      @Override
-      public String getTypeName() {
-         return "persistence.NumericVersion";
-      }
    }
 }

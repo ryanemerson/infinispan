@@ -108,9 +108,10 @@ public class AsyncStoreTest extends AbstractInfinispanTest {
       underlying.start();
       writer = new SlowAdvancedAsyncCacheWriter(underlying);
       writer.init(ctx);
-      writer.start();
       loader = new AdvancedAsyncCacheLoader(underlying, writer.getState());
       loader.init(ctx);
+      marshaller.generateStoreMarshallers();
+      writer.start();
       loader.start();
       eventually(writer::isAvailable);
    }
@@ -256,6 +257,7 @@ public class AsyncStoreTest extends AbstractInfinispanTest {
          writer.init(ctx);
          writer.start();
          underlying.init(ctx);
+         marshaller.generateStoreMarshallers();
          underlying.start();
 
          writer.write(MarshalledEntryUtil.create(key, "v1", marshaller));
