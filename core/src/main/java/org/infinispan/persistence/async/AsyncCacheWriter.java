@@ -192,7 +192,7 @@ public class AsyncCacheWriter extends DelegatingCacheWriter {
          availabilityLock.unlock();
       }
       // Available if actual == available || actual != available and queue has capacity
-      // Worst case, writeBatch comes in before isAvailable is called by the PersistenceManager, in which case the batch
+      // Worst case, bulkUpdate comes in before isAvailable is called by the PersistenceManager, in which case the batch
       // will wait on writeLock until the stateLock is reset when the queue is finally flushed
       return delegateAvailable || stateLock.hasCapacity();
    }
@@ -203,7 +203,7 @@ public class AsyncCacheWriter extends DelegatingCacheWriter {
    }
 
    @Override
-   public CompletionStage<Void> writeBatch(Publisher publisher) {
+   public CompletionStage<Void> bulkUpdate(Publisher publisher) {
       CompletableFuture<Void> future = new CompletableFuture<>();
       Flowable.fromPublisher((Publisher<MarshallableEntry>) publisher)
             .map(me -> new Store(me.getKey(), me))
@@ -232,7 +232,7 @@ public class AsyncCacheWriter extends DelegatingCacheWriter {
    }
 
    protected void applyModificationsSync(List<Modification> mods) throws PersistenceException {
-      actual.writeBatch(
+      actual.bulkUpdate(
             Flowable.fromIterable(mods)
                   .filter(m -> m.getType() == Modification.Type.STORE)
                   .map(Store.class::cast)

@@ -194,7 +194,7 @@ public class ComposedSegmentedLoadWriteStore<K, V, T extends AbstractSegmentedSt
    }
 
    @Override
-   public CompletionStage<Void> writeBatch(Publisher<MarshallableEntry<? extends K, ? extends V>> publisher) {
+   public CompletionStage<Void> bulkUpdate(Publisher<MarshallableEntry<? extends K, ? extends V>> publisher) {
       CompletableFuture<Void> future = new CompletableFuture<>();
 
       Flowable.fromPublisher(publisher)
@@ -202,7 +202,7 @@ public class ComposedSegmentedLoadWriteStore<K, V, T extends AbstractSegmentedSt
             .flatMap(groupedFlowable ->
                   groupedFlowable
                         .buffer(configuration.maxBatchSize())
-                        .doOnNext(batch -> stores.get(groupedFlowable.getKey()).writeBatch(Flowable.fromIterable(batch))))
+                        .doOnNext(batch -> stores.get(groupedFlowable.getKey()).bulkUpdate(Flowable.fromIterable(batch))))
             .subscribe(Functions.emptyConsumer(), future::completeExceptionally, () -> future.complete(null));
       return future;
    }

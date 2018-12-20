@@ -52,12 +52,13 @@ public interface CacheWriter<K, V> extends Lifecycle {
    boolean delete(Object key);
 
    /**
-    * Persist all provided entries to the store in a single batch update. If this is not supported by the
-    * underlying store, then entries are written to the store individually via {@link #write(MarshallableEntry)}.
+    * Persist all provided entries to the store in chunks, with the size of each chunk determined by the store
+    * implementation. If chunking is not supported by the underlying store, then entries are written to the store
+    * individually via {@link #write(MarshallableEntry)}.
     *
     * @param entries an Iterable of MarshalledEntry to be written to the store.
     * @throws NullPointerException if entries is null.
-    * @deprecated since 10.0, use {@link #writeBatch(Publisher)} instead.
+    * @deprecated since 10.0, use {@link #bulkUpdate(Publisher)} instead.
     */
    @Deprecated
    default void writeBatch(Iterable<MarshalledEntry<? extends K, ? extends V>> entries) {
@@ -65,14 +66,15 @@ public interface CacheWriter<K, V> extends Lifecycle {
    }
 
    /**
-    * Persist all provided entries to the store in a single batch update. If this is not supported by the
-    * underlying store, then entries are written to the store individually via {@link #write(MarshallableEntry)}.
+    * Persist all provided entries to the store in chunks, with the size of each chunk determined by the store
+    * implementation. If chunking is not supported by the underlying store, then entries are written to the store
+    * individually via {@link #write(MarshallableEntry)}.
     *
     * @param publisher a {@link Publisher} of {@link MarshallableEntry} instances
     * @throws NullPointerException if the publisher is null.
     */
    @SuppressWarnings("unchecked")
-   default CompletionStage<Void> writeBatch(Publisher<MarshallableEntry<? extends K, ? extends V>> publisher) {
+   default CompletionStage<Void> bulkUpdate(Publisher<MarshallableEntry<? extends K, ? extends V>> publisher) {
       CompletableFuture<Void> future = new CompletableFuture<>();
       try {
          writeBatch(

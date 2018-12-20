@@ -286,7 +286,7 @@ public class JdbcStringBasedStore<K,V> implements SegmentedAdvancedLoadWriteStor
    }
 
    @Override
-   public CompletionStage<Void> writeBatch(Publisher<MarshallableEntry<? extends K, ? extends V>> publisher) {
+   public CompletionStage<Void> bulkUpdate(Publisher<MarshallableEntry<? extends K, ? extends V>> publisher) {
       // If upsert is not supported, then we must execute the legacy write for each entry; i.e. read then update/insert
       if (!tableManager.isUpsertSupported()) {
          CompletableFuture<Void> future = new CompletableFuture<>();

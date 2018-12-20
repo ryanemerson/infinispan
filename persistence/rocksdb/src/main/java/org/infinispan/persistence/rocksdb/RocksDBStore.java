@@ -296,7 +296,7 @@ public class RocksDBStore<K,V> implements SegmentedAdvancedLoadWriteStore<K,V> {
     }
 
     @Override
-    public CompletionStage<Void> writeBatch(Publisher<MarshallableEntry<? extends K, ? extends V>> publisher) {
+    public CompletionStage<Void> bulkUpdate(Publisher<MarshallableEntry<? extends K, ? extends V>> publisher) {
         return handler.writeBatch(publisher);
     }
 

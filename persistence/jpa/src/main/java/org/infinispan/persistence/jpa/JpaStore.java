@@ -426,7 +426,7 @@ public class JpaStore<K, V> implements AdvancedLoadWriteStore<K, V> {
    }
 
    @Override
-   public CompletionStage<Void> writeBatch(Publisher<MarshallableEntry<? extends K, ? extends V>> publisher) {
+   public CompletionStage<Void> bulkUpdate(Publisher<MarshallableEntry<? extends K, ? extends V>> publisher) {
       CompletableFuture<Void> future = new CompletableFuture<>();
       Flowable.using(() -> {
                EntityManager em = emf.createEntityManager();
@@ -443,7 +443,7 @@ public class JpaStore<K, V> implements AdvancedLoadWriteStore<K, V> {
             .doOnError(e -> {
                if (e instanceof JpaStoreException)
                   throw (JpaStoreException) e;
-               throw new JpaStoreException("Exception caught in writeBatch()", e);
+               throw new JpaStoreException("Exception caught in bulkUpdate()", e);
             })
             .subscribe(Functions.emptyConsumer(), future::completeExceptionally, () -> future.complete(null));
       return future;

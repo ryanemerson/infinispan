@@ -713,7 +713,7 @@ public class PersistenceManagerImpl implements PersistenceManager {
                nonTxWriters.stream()
                .filter(writer -> !(writer instanceof FlagAffectedStore) || FlagAffectedStore.class.cast(writer).shouldWrite(flags))
                .filter(writer -> predicate.test(getStoreConfig(writer)))
-               .map(writer -> writer.writeBatch(Flowable.fromIterable(entries)))
+               .map(writer -> writer.bulkUpdate(Flowable.fromIterable(entries)))
                .map(CompletionStage::toCompletableFuture)
                .toArray(CompletableFuture[]::new)
          );
