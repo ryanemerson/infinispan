@@ -7,12 +7,13 @@ import org.infinispan.marshall.core.MarshalledEntry;
 import org.infinispan.marshall.core.MarshalledEntryFactory;
 import org.infinispan.metadata.InternalMetadata;
 import org.infinispan.persistence.spi.MarshallableEntry;
+import org.infinispan.persistence.spi.MarshallableEntryFactory;
 
 /**
  * @author Ryan Emerson
  * @since 10.0
  */
-public class MarshalledEntryFactoryImpl implements MarshalledEntryFactory {
+public class MarshalledEntryFactoryImpl implements MarshalledEntryFactory, MarshallableEntryFactory {
 
    private static final MarshallableEntry EMPTY = new MarshalledEntryImpl(null, null, (ByteBuffer) null, null);
 

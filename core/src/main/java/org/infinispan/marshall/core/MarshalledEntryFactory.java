@@ -11,7 +11,7 @@ import org.infinispan.persistence.spi.MarshallableEntryFactory;
  * @deprecated since 10.0, use {@link MarshallableEntryFactory} instead
  */
 @Deprecated
-public interface MarshalledEntryFactory<K,V> extends MarshallableEntryFactory<K,V> {
+public interface MarshalledEntryFactory<K,V> {
 
    MarshalledEntry<K,V> newMarshalledEntry(ByteBuffer key, ByteBuffer valueBytes, ByteBuffer metadataBytes);
 

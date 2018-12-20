@@ -87,6 +87,7 @@ import org.infinispan.persistence.spi.CacheWriter;
 import org.infinispan.persistence.spi.FlagAffectedStore;
 import org.infinispan.persistence.spi.LocalOnlyCacheLoader;
 import org.infinispan.persistence.spi.MarshallableEntry;
+import org.infinispan.persistence.spi.MarshallableEntryFactory;
 import org.infinispan.persistence.spi.PersistenceException;
 import org.infinispan.persistence.spi.SegmentedAdvancedLoadWriteStore;
 import org.infinispan.persistence.spi.StoreUnavailableException;
@@ -121,6 +122,7 @@ public class PersistenceManagerImpl implements PersistenceManager {
    private ScheduledExecutorService persistenceExecutor;
    @Inject private ByteBufferFactory byteBufferFactory;
    @Inject private MarshalledEntryFactory marshalledEntryFactory;
+   @Inject private MarshallableEntryFactory marshallableEntryFactory;
    @Inject private CacheStoreFactoryRegistry cacheStoreFactoryRegistry;
    @Inject private ComponentRef<InternalExpirationManager<Object, Object>> expirationManager;
    @Inject private CacheNotifier cacheNotifier;
@@ -927,8 +929,8 @@ public class PersistenceManagerImpl implements PersistenceManager {
          loader = postProcessReader(processedConfiguration, writer, loader);
 
          InitializationContextImpl ctx =
-            new InitializationContextImpl(processedConfiguration, cache.wired(), keyPartitioner, m, timeService,
-                                          byteBufferFactory, marshalledEntryFactory, persistenceExecutor);
+               new InitializationContextImpl(processedConfiguration, cache.wired(), keyPartitioner, m, timeService,
+                     byteBufferFactory, marshalledEntryFactory, marshallableEntryFactory, persistenceExecutor);
          initializeLoader(processedConfiguration, loader, ctx);
          initializeWriter(processedConfiguration, writer, ctx);
          initializeBareInstance(bareInstance, ctx);

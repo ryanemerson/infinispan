@@ -242,7 +242,7 @@ public class ComposedSegmentedLoadWriteStore<K, V, T extends AbstractSegmentedSt
          T storeConfiguration = configuration.newConfigurationFrom(segment);
          AdvancedLoadWriteStore<K, V> newStore = (AdvancedLoadWriteStore<K, V>) cacheStoreFactoryRegistry.createInstance(storeConfiguration);
          newStore.init(new InitializationContextImpl(storeConfiguration, cache, keyPartitioner, ctx.getMarshaller(), ctx.getTimeService(),
-               ctx.getByteBufferFactory(), ctx.getMarshalledEntryFactory(), ctx.getExecutor()));
+               ctx.getByteBufferFactory(), ctx.getMarshalledEntryFactory(), ctx.getMarshallableEntryFactory(), ctx.getExecutor()));
          newStore.start();
          stores.set(segment, newStore);
       }

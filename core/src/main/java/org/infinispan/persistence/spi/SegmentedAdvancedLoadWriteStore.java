@@ -26,22 +26,23 @@ public interface SegmentedAdvancedLoadWriteStore<K, V> extends AdvancedLoadWrite
    // CacheLoader methods
 
    /**
-    * Fetches an entry from the storage given a segment to optimize this lookup based on. If a
-    * {@link MarshallableEntry} needs to be created here, {@link InitializationContext#getMarshallableEntryFactory()} and
-    * {@link InitializationContext#getByteBufferFactory()} should be used.
+    * Fetches an entry from the storage given a segment to optimize this lookup based on. If a {@link MarshallableEntry}
+    * needs to be created here, {@link InitializationContext#getMarshallableEntryFactory()} and {@link
+    * InitializationContext#getByteBufferFactory()} should be used.
     * <p>
     * The provided segment may be used for performance purposes, however it it is acceptable to ignore this argument.
     * <p>
     * This method may be invoked invoked irrespective if the store is {@link StoreConfiguration#segmented()}.
-    * @implSpec Default implementation just invokes the {@link CacheLoader#get(Object)} method.
-    * <pre> {@code
-    * MarshalledValue<K, V> value = load(key);
-    * }
-    * </pre>
+    *
     * @param segment the segment that the key maps to
-    * @param key the key of the entry to fetch
+    * @param key     the key of the entry to fetch
     * @return the entry, or null if the entry does not exist
     * @throws PersistenceException in case of an error, e.g. communicating with the external storage
+    * @implSpec Default implementation just invokes the {@link CacheLoader#get(Object)} method.
+    * <pre> {@code
+    * MarshallableEntry<K, V> value = get(key);
+    * }
+    * </pre>
     */
    default MarshallableEntry<K, V> get(int segment, Object key) {
       return get(key);
@@ -57,7 +58,7 @@ public interface SegmentedAdvancedLoadWriteStore<K, V> extends AdvancedLoadWrite
     * This method may be invoked invoked irrespective if the store is {@link StoreConfiguration#segmented()}.
     * @implSpec Default implementation just invokes the {@link CacheLoader#load(Object)} method.
     * <pre> {@code
-    * MarshalledValue<K, V> value = load(key);
+    * MarshalledEntry<K, V> value = load(key);
     * }
     * </pre>
     * @param segment the segment that the key maps to
@@ -94,19 +95,20 @@ public interface SegmentedAdvancedLoadWriteStore<K, V> extends AdvancedLoadWrite
    // CacheWriter methods
 
    /**
-    * Persists the entry to the storage with the given segment to optimize further lookups based on
+    * Persists the entry to the storage with the given segment to optimize future lookups.
     * <p>
     * The provided segment may be used for performance purposes, however it it is acceptable to ignore this argument.
     * <p>
     * This method may be invoked invoked irrespective if the store is {@link StoreConfiguration#segmented()}.
+    *
+    * @param segment the segment to persist this entry to
+    * @param entry   the entry to write to the store
+    * @throws PersistenceException in case of an error, e.g. communicating with the external storage
     * @implSpec Default implementation just invokes the {@link CacheWriter#write(MarshalledEntry)} method.
     * <pre> {@code
     * write(entry);
     * }
     * </pre>
-    * @param segment the segment to persist this entry to
-    * @param entry the entry to write to the store
-    * @throws PersistenceException in case of an error, e.g. communicating with the external storage
     * @see MarshallableEntry
     * @deprecated since 10.0, use {@link #write(int, MarshallableEntry)} instead.
     */
@@ -116,20 +118,22 @@ public interface SegmentedAdvancedLoadWriteStore<K, V> extends AdvancedLoadWrite
    }
 
    /**
-    * Persists the entry to the storage with the given segment to optimize further lookups based on
+    * Persists the entry to the storage with the given segment to optimize future lookups.
     * <p>
     * The provided segment may be used for performance purposes, however it it is acceptable to ignore this argument.
     * <p>
     * This method may be invoked invoked irrespective if the store is {@link StoreConfiguration#segmented()}.
+    *
+    * @param segment the segment to persist this entry to
+    * @param entry   the entry to write to the store
+    * @throws PersistenceException in case of an error, e.g. communicating with the external storage
     * @implSpec Default implementation just invokes the {@link CacheWriter#write(MarshallableEntry)} method.
     * <pre> {@code
     * write(entry);
     * }
     * </pre>
-    * @param segment the segment to persist this entry to
-    * @param entry the entry to write to the store
-    * @throws PersistenceException in case of an error, e.g. communicating with the external storage
     * @see MarshallableEntry
+    * @implSpec The default implementation falls back to invoking {@link #write(MarshallableEntry)}.
     */
    default void write(int segment, MarshallableEntry<? extends K, ? extends V> entry) {
       write(entry);
@@ -189,9 +193,9 @@ public interface SegmentedAdvancedLoadWriteStore<K, V> extends AdvancedLoadWrite
    Publisher<K> publishKeys(IntSet segments, Predicate<? super K> filter);
 
    /**
-    * Publishes all entries from this store.  The given publisher can be used by as many
-    * {@link org.reactivestreams.Subscriber}s as desired. Entries are not retrieved until a given Subscriber requests
-    * them from the {@link org.reactivestreams.Subscription}.
+    * Publishes all entries from this store.  The given publisher can be used by as many {@link
+    * org.reactivestreams.Subscriber}s as desired. Entries are not retrieved until a given Subscriber requests them from
+    * the {@link org.reactivestreams.Subscription}.
     * <p>
     * If <b>fetchMetadata</b> is true this store must guarantee to not return any expired entries.
     * <p>
@@ -200,23 +204,27 @@ public interface SegmentedAdvancedLoadWriteStore<K, V> extends AdvancedLoadWrite
     * <p>
     * This method is not invoked invoked when the store is not configured to be {@link StoreConfiguration#segmented()}.
     * {@link StoreConfiguration#segmented()}.
-    * @param segments the segments that the keys of the entries must map to. Always non null.
-    * @param filter a filter on the keys of the entries that if passed will allow the given entry to be returned from the publisher
-    * @param fetchValue whether the value should be included in the marshalled entry
+    *
+    * @param segments      the segments that the keys of the entries must map to. Always non null.
+    * @param filter        a filter on the keys of the entries that if passed will allow the given entry to be returned
+    *                      from the publisher
+    * @param fetchValue    whether the value should be included in the marshalled entry
     * @param fetchMetadata whether the metadata should be included in the marshalled entry
     * @return a publisher that will provide the entries from the store that map to the given segments
+    * @implSpec The default implementation falls back to invoking {@link #publishEntries(Predicate, boolean,
+    * boolean)}.
     * @deprecated since 10.0, please us {@link #entryPublisher(Predicate, boolean, boolean)} instead.
     */
    @Deprecated
    default Publisher<MarshalledEntry<K, V>> publishEntries(IntSet segments, Predicate<? super K> filter, boolean fetchValue,
                                                      boolean fetchMetadata) {
-      return null;
+      return publishEntries(filter, fetchValue, fetchMetadata);
    }
 
    /**
-    * Publishes all entries from this store.  The given publisher can be used by as many
-    * {@link org.reactivestreams.Subscriber}s as desired. Entries are not retrieved until a given Subscriber requests
-    * them from the {@link org.reactivestreams.Subscription}.
+    * Publishes all entries from this store.  The given publisher can be used by as many {@link
+    * org.reactivestreams.Subscriber}s as desired. Entries are not retrieved until a given Subscriber requests them from
+    * the {@link org.reactivestreams.Subscription}.
     * <p>
     * If <b>fetchMetadata</b> is true this store must guarantee to not return any expired entries.
     * <p>
@@ -225,11 +233,15 @@ public interface SegmentedAdvancedLoadWriteStore<K, V> extends AdvancedLoadWrite
     * <p>
     * This method is not invoked invoked when the store is not configured to be {@link StoreConfiguration#segmented()}.
     * {@link StoreConfiguration#segmented()}.
-    * @param segments the segments that the keys of the entries must map to. Always non null.
-    * @param filter a filter on the keys of the entries that if passed will allow the given entry to be returned from the publisher
-    * @param fetchValue whether the value should be included in the marshalled entry
+    *
+    * @param segments      the segments that the keys of the entries must map to. Always non null.
+    * @param filter        a filter on the keys of the entries that if passed will allow the given entry to be returned
+    *                      from the publisher
+    * @param fetchValue    whether the value should be included in the marshalled entry
     * @param fetchMetadata whether the metadata should be included in the marshalled entry
     * @return a publisher that will provide the entries from the store that map to the given segments
+    * @implSpec The default implementation falls back to invoking {@link #publishEntries(IntSet, Predicate, boolean,
+    * boolean)}.
     */
    default Publisher<MarshallableEntry<K, V>> entryPublisher(IntSet segments, Predicate<? super K> filter, boolean fetchValue,
                                                              boolean fetchMetadata) {
