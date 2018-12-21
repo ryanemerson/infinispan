@@ -88,7 +88,7 @@ public abstract class AbstractJpaStoreTest extends AbstractInfinispanTest {
    }
 
    protected MarshallableEntry createEntry(Object key, Object value) {
-      return entryFactory.create(key, value, null);
+      return entryFactory.create(key, value);
    }
 
    protected MarshallableEntry createEntry(TestObject obj) {

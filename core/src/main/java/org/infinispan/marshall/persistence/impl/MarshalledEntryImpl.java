@@ -1,5 +1,7 @@
 package org.infinispan.marshall.persistence.impl;
 
+import static java.lang.Math.min;
+
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
@@ -12,6 +14,8 @@ import org.infinispan.commons.util.Util;
 import org.infinispan.marshall.core.Ids;
 import org.infinispan.marshall.core.MarshalledEntry;
 import org.infinispan.metadata.InternalMetadata;
+import org.infinispan.metadata.Metadata;
+import org.infinispan.metadata.impl.InternalMetadataImpl;
 import org.infinispan.persistence.spi.PersistenceException;
 
 /**
@@ -23,15 +27,19 @@ public class MarshalledEntryImpl<K,V> implements MarshalledEntry<K,V> {
    private ByteBuffer keyBytes;
    private ByteBuffer valueBytes;
    private ByteBuffer metadataBytes;
+   private long created;
+   private long lastUsed;
    private transient K key;
    private transient V value;
-   private transient InternalMetadata metadata;
+   private transient Metadata metadata;
    private final transient org.infinispan.commons.marshall.Marshaller marshaller;
 
-   MarshalledEntryImpl(ByteBuffer key, ByteBuffer valueBytes, ByteBuffer metadataBytes, org.infinispan.commons.marshall.Marshaller marshaller) {
+   MarshalledEntryImpl(ByteBuffer key, ByteBuffer valueBytes, ByteBuffer metadataBytes, long created, long lastUsed, org.infinispan.commons.marshall.Marshaller marshaller) {
       this.keyBytes = key;
       this.valueBytes = valueBytes;
       this.metadataBytes = metadataBytes;
+      this.created = created;
+      this.lastUsed = lastUsed;
       this.marshaller = marshaller;
    }
 
@@ -42,11 +50,13 @@ public class MarshalledEntryImpl<K,V> implements MarshalledEntry<K,V> {
       this.marshaller = marshaller;
    }
 
-   MarshalledEntryImpl(K key, V value, InternalMetadata im, org.infinispan.commons.marshall.Marshaller sm) {
+   MarshalledEntryImpl(K key, V value, Metadata metadata, long created, long lastUsed, org.infinispan.commons.marshall.Marshaller marshaller) {
       this.key = key;
       this.value = value;
-      this.metadata = im;
-      this.marshaller = sm;
+      this.metadata = metadata;
+      this.created = created;
+      this.lastUsed = lastUsed;
+      this.marshaller = marshaller;
    }
 
    @Override
@@ -73,6 +83,11 @@ public class MarshalledEntryImpl<K,V> implements MarshalledEntry<K,V> {
 
    @Override
    public InternalMetadata getMetadata() {
+      return new InternalMetadataImpl(metadata(), created, lastUsed);
+   }
+
+   @Override
+   public Metadata metadata() {
       if (metadata == null) {
          if (metadataBytes == null)
             return null;
@@ -114,6 +129,44 @@ public class MarshalledEntryImpl<K,V> implements MarshalledEntry<K,V> {
       return metadataBytes;
    }
 
+   @Override
+   public ByteBuffer metadataBytes() {
+      if (metadataBytes == null) {
+         if  (metadata == null)
+            return null;
+         metadataBytes = marshall(metadata);
+      }
+      return metadataBytes;
+   }
+
+   @Override
+   public long created() {
+      return created;
+   }
+
+   @Override
+   public long lastUsed() {
+      return lastUsed;
+   }
+
+   @Override
+   public boolean isExpired(long now) {
+      long expiry = expiryTime();
+      return expiry > 0 && expiry <= now;
+   }
+
+   @Override
+   public long expiryTime() {
+      if (metadata == null) return -1;
+      long lifespan = metadata.lifespan();
+      long lset = lifespan > -1 ? created + lifespan : -1;
+      long maxIdle = metadata.maxIdle();
+      long muet = maxIdle > -1 ? lastUsed + maxIdle : -1;
+      if (lset == -1) return muet;
+      if (muet == -1) return lset;
+      return min(lset, muet);
+   }
+
    private ByteBuffer marshall(Object obj) {
       try {
          return marshaller.objectToBuffer(obj);
@@ -139,9 +192,10 @@ public class MarshalledEntryImpl<K,V> implements MarshalledEntry<K,V> {
       MarshalledEntryImpl that = (MarshalledEntryImpl) o;
 
       if (getKeyBytes() != null ? !getKeyBytes().equals(that.getKeyBytes()) : that.getKeyBytes() != null) return false;
-      if (getMetadataBytes() != null ? !getMetadataBytes().equals(that.getMetadataBytes()) : that.getMetadataBytes() != null) return false;
+      if (metadataBytes() != null ? !metadataBytes().equals(that.metadataBytes()) : that.metadataBytes() != null) return false;
       if (getValueBytes() != null ? !getValueBytes().equals(that.getValueBytes()) : that.getValueBytes() != null) return false;
-
+      if (created != that.created) return false;
+      if (lastUsed != that.lastUsed) return false;
       return true;
    }
 
@@ -149,7 +203,9 @@ public class MarshalledEntryImpl<K,V> implements MarshalledEntry<K,V> {
    public int hashCode() {
       int result = getKeyBytes() != null ? getKeyBytes().hashCode() : 0;
       result = 31 * result + (getValueBytes() != null ? getValueBytes().hashCode() : 0);
-      result = 31 * result + (getMetadataBytes() != null ? getMetadataBytes().hashCode() : 0);
+      result = 31 * result + (metadataBytes() != null ? metadataBytes().hashCode() : 0);
+      result = 31 * result + (int) (created ^ (created >>> 32));
+      result = 31 * result + (int) (lastUsed ^ (lastUsed >>> 32));
       return result;
    }
 
@@ -189,7 +245,7 @@ public class MarshalledEntryImpl<K,V> implements MarshalledEntry<K,V> {
       public void writeObject(ObjectOutput output, MarshalledEntryImpl me) throws IOException {
          output.writeObject(me.getKeyBytes());
          output.writeObject(me.getValueBytes());
-         output.writeObject(me.getMetadataBytes());
+         output.writeObject(me.metadataBytes());
       }
 
       @Override

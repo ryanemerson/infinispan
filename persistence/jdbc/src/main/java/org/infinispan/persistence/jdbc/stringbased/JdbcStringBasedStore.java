@@ -1,9 +1,9 @@
 package org.infinispan.persistence.jdbc.stringbased;
 
-import static org.infinispan.persistence.PersistenceUtil.getExpiryTime;
-
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -24,6 +24,8 @@ import javax.transaction.Transaction;
 import org.infinispan.commons.CacheException;
 import org.infinispan.commons.configuration.ConfiguredBy;
 import org.infinispan.commons.io.ByteBuffer;
+import org.infinispan.commons.marshall.Externalizer;
+import org.infinispan.commons.marshall.SerializeWith;
 import org.infinispan.commons.marshall.StreamingMarshaller;
 import org.infinispan.commons.persistence.Store;
 import org.infinispan.commons.time.TimeService;
@@ -32,6 +34,7 @@ import org.infinispan.commons.util.IntSet;
 import org.infinispan.commons.util.Util;
 import org.infinispan.configuration.global.GlobalConfiguration;
 import org.infinispan.distribution.ch.KeyPartitioner;
+import org.infinispan.metadata.Metadata;
 import org.infinispan.persistence.jdbc.JdbcUtil;
 import org.infinispan.persistence.jdbc.configuration.JdbcStringBasedStoreConfiguration;
 import org.infinispan.persistence.jdbc.connectionfactory.ConnectionFactory;
@@ -374,8 +377,8 @@ public class JdbcStringBasedStore<K,V> implements SegmentedAdvancedLoadWriteStor
          rs = ps.executeQuery();
          if (rs.next()) {
             InputStream inputStream = rs.getBinaryStream(2);
-            KeyValuePair<ByteBuffer, ByteBuffer> icv = unmarshall(inputStream);
-            storedValue = marshalledEntryFactory.create(key, icv.getKey(), icv.getValue());
+            Entry entry = unmarshall(inputStream);
+            storedValue = marshalledEntryFactory.create(key, entry.value, entry.metadata, entry.created, entry.lastUsed);
          }
       } catch (SQLException e) {
          log.sqlFailureReadingKey(key, lockingKey, e);
@@ -387,8 +390,8 @@ public class JdbcStringBasedStore<K,V> implements SegmentedAdvancedLoadWriteStor
          JdbcUtil.safeClose(ps);
          connectionFactory.releaseConnection(conn);
       }
-      if (storedValue != null && storedValue.getMetadata() != null &&
-            storedValue.getMetadata().isExpired(timeService.wallClockTime())) {
+      if (storedValue != null && storedValue.metadata() != null &&
+            storedValue.isExpired(timeService.wallClockTime())) {
          return null;
       }
       return storedValue;
@@ -708,12 +711,11 @@ public class JdbcStringBasedStore<K,V> implements SegmentedAdvancedLoadWriteStor
    }
 
    private void prepareStatement(MarshallableEntry entry, String key, int segment, PreparedStatement ps, boolean upsert) throws InterruptedException, SQLException {
-      ByteBuffer byteBuffer = marshall(new KeyValuePair(entry.getValueBytes(), entry.getMetadataBytes()));
-      long expiryTime = getExpiryTime(entry.getMetadata());
+      ByteBuffer byteBuffer = marshall(new Entry(entry.getValue(), entry.metadata(), entry.created(), entry.lastUsed()));
       if (upsert) {
-         tableManager.prepareUpsertStatement(ps, key, expiryTime, segment, byteBuffer);
+         tableManager.prepareUpsertStatement(ps, key, entry.expiryTime(), segment, byteBuffer);
       } else {
-         tableManager.prepareUpdateStatement(ps, key, expiryTime, segment, byteBuffer);
+         tableManager.prepareUpdateStatement(ps, key, entry.expiryTime(), segment, byteBuffer);
       }
    }
 
@@ -775,27 +777,30 @@ public class JdbcStringBasedStore<K,V> implements SegmentedAdvancedLoadWriteStor
 
       @Override
       protected MarshallableEntry<K, V> getNext() {
-         MarshallableEntry<K, V> entry = null;
+         MarshallableEntry<K, V> marshalledEntry = null;
          try {
-            while (entry == null && rs.next()) {
+            while (marshalledEntry == null && rs.next()) {
                String keyStr = rs.getString(2);
                K key = (K) ((TwoWayKey2StringMapper) key2StringMapper).getKeyMapping(keyStr);
 
                if (filter == null || filter.test(key)) {
                   if (fetchValue || fetchMetadata) {
                      InputStream inputStream = rs.getBinaryStream(1);
-                     KeyValuePair<ByteBuffer, ByteBuffer> kvp = unmarshall(inputStream);
-                     entry = marshalledEntryFactory.create(
-                           key, fetchValue ? kvp.getKey() : null, fetchMetadata ? kvp.getValue() : null);
+                     Entry entry = unmarshall(inputStream);
+                     marshalledEntry = marshalledEntryFactory.create(key,
+                           fetchValue ? entry.value : null,
+                           fetchMetadata ? entry.metadata : null,
+                           entry.created,
+                           entry.lastUsed);
                   } else {
-                     entry = marshalledEntryFactory.create(key, (Object) null, null);
+                     marshalledEntry = marshalledEntryFactory.create(key);
                   }
                }
             }
          } catch (SQLException e) {
             throw new CacheException(e);
          }
-         return entry;
+         return marshalledEntry;
       }
    }
 
@@ -823,6 +828,40 @@ public class JdbcStringBasedStore<K,V> implements SegmentedAdvancedLoadWriteStor
             throw new CacheException(e);
          }
          return key;
+      }
+   }
+
+   @SerializeWith(EntryExternalizer.class)
+   static class Entry {
+      Object value;
+      Metadata metadata;
+      long created;
+      long lastUsed;
+
+      public Entry(Object value, Metadata metadata, long created, long lastUsed) {
+         this.value = value;
+         this.metadata = metadata;
+         this.created = created;
+         this.lastUsed = lastUsed;
+      }
+   }
+
+   public static class EntryExternalizer implements Externalizer<Entry> {
+      @Override
+      public void writeObject(ObjectOutput output, Entry e) throws IOException {
+         output.writeObject(e.value);
+         output.writeObject(e.metadata);
+         output.writeLong(e.created);
+         output.writeLong(e.lastUsed);
+      }
+
+      @Override
+      public Entry readObject(ObjectInput input) throws IOException, ClassNotFoundException {
+         Object value = input.readObject();
+         Metadata metadata = (Metadata) input.readObject();
+         long created = input.readLong();
+         long lastUsed = input.readLong();
+         return new Entry(value, metadata, created, lastUsed);
       }
    }
 }

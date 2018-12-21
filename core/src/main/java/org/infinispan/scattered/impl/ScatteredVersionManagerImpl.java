@@ -132,7 +132,7 @@ public class ScatteredVersionManagerImpl<K> implements ScatteredVersionManager<K
       AtomicInteger maxTopologyId = new AtomicInteger(preloadedTopologyId);
       Publisher<MarshallableEntry<Object, Object>> publisher = persistenceManager.publishEntries(false, true);
       Flowable.fromPublisher(publisher).blockingForEach(me -> {
-         Metadata metadata = me.getMetadata();
+         Metadata metadata = me.metadata();
          EntryVersion entryVersion = metadata.version();
          if (entryVersion instanceof SimpleClusteredVersion) {
             int entryTopologyId = ((SimpleClusteredVersion) entryVersion).topologyId;

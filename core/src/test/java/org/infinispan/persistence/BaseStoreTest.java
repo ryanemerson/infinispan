@@ -135,7 +135,7 @@ public abstract class BaseStoreTest extends AbstractInfinispanTest {
       MarshallableEntry entry = cl.loadEntry("k");
       assertEquals("v", unwrap(entry.getValue()));
       assertTrue("Expected an immortalEntry",
-                 entry.getMetadata() == null || entry.getMetadata().expiryTime() == -1 || entry.getMetadata().maxIdle() == -1);
+                 entry.metadata() == null || entry.expiryTime() == -1 || entry.metadata().maxIdle() == -1);
       assertContains("k", true);
       assertFalse(cl.delete("k2"));
    }
@@ -169,17 +169,17 @@ public abstract class BaseStoreTest extends AbstractInfinispanTest {
       assertEquals(me + ".getValue()", value, unwrap(me.getValue()));
 
       if (lifespan > -1) {
-         assertNotNull(me + ".getMetadata()", me.getMetadata());
-         assertEquals(me + ".getMetadata().lifespan()", lifespan, me.getMetadata().lifespan());
-         assertTrue(me + ".getMetadata().created() > -1", me.getMetadata().created() > -1);
+         assertNotNull(me + ".metadata()", me.metadata());
+         assertEquals(me + ".metadata().lifespan()", lifespan, me.metadata().lifespan());
+         assertTrue(me + ".metadata().created() > -1", me.created() > -1);
       }
       if (maxIdle > -1) {
-         assertNotNull(me + ".getMetadata()", me.getMetadata());
-         assertEquals(me + ".getMetadata().maxIdle()", maxIdle, me.getMetadata().maxIdle());
-         assertTrue(me + ".getMetadata().lastUsed() > -1", me.getMetadata().lastUsed() > -1);
+         assertNotNull(me + ".metadata()", me.metadata());
+         assertEquals(me + ".metadata().maxIdle()", maxIdle, me.metadata().maxIdle());
+         assertTrue(me + ".metadata().lastUsed() > -1", me.lastUsed() > -1);
       }
-      if (me.getMetadata() != null) {
-         assertEquals(me + "getMetadata().isExpired() ", expired, me.getMetadata().isExpired(timeService.wallClockTime()));
+      if (me.metadata() != null) {
+         assertEquals(me + "metadata().isExpired() ", expired, me.isExpired(timeService.wallClockTime()));
       }
    }
 
@@ -533,7 +533,7 @@ public abstract class BaseStoreTest extends AbstractInfinispanTest {
       assertEquals(value, cl.loadEntry(key).getValue());
       MarshallableEntry entry = cl.loadEntry(key);
       assertTrue("Expected an immortalEntry",
-                 entry.getMetadata() == null || entry.getMetadata().expiryTime() == -1 || entry.getMetadata().maxIdle() == -1);
+                 entry.metadata() == null || entry.expiryTime() == -1 || entry.metadata().maxIdle() == -1);
       assertContains(key, true);
 
       assertFalse(cl.delete(key2));

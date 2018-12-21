@@ -41,7 +41,7 @@ import org.infinispan.commons.persistence.Store;
 import org.infinispan.commons.time.TimeService;
 import org.infinispan.commons.util.AbstractIterator;
 import org.infinispan.executors.ExecutorAllCompletionService;
-import org.infinispan.metadata.InternalMetadata;
+import org.infinispan.metadata.Metadata;
 import org.infinispan.persistence.jpa.configuration.JpaStoreConfiguration;
 import org.infinispan.persistence.jpa.impl.EntityManagerFactoryRegistry;
 import org.infinispan.persistence.jpa.impl.MetadataEntity;
@@ -303,7 +303,7 @@ public class JpaStore<K, V> implements AdvancedLoadWriteStore<K, V> {
          if (entity == null) {
             return false;
          }
-         MetadataEntity metadata = getMetadata(key, em);
+         MetadataEntity metadata = getMetadataEntity(key, em);
          EntityTransaction txn = em.getTransaction();
          if (trace) log.trace("Removing " + entity + "(" + toString(metadata) + ")");
          long txnBegin = timeService.time();
@@ -384,7 +384,7 @@ public class JpaStore<K, V> implements AdvancedLoadWriteStore<K, V> {
       return new MetadataEntityKey(keyBytes);
    }
 
-   private MetadataEntity getMetadata(Object key, EntityManager em) {
+   private MetadataEntity getMetadataEntity(Object key, EntityManager em) {
       return configuration.storeMetadata() ? findMetadata(em, getMetadataKey(key)) : null;
    }
 
@@ -394,8 +394,7 @@ public class JpaStore<K, V> implements AdvancedLoadWriteStore<K, V> {
 
       Object entity = entry.getValue();
       MetadataEntity metadata = configuration.storeMetadata() ?
-            new MetadataEntity(entry.getKeyBytes(), entry.getMetadataBytes(),
-                  entry.getMetadata() == null ? Long.MAX_VALUE : entry.getMetadata().expiryTime()) : null;
+            new MetadataEntity(entry.getKeyBytes(), entry.metadataBytes(), entry.expiryTime()) : null;
       try {
          validateEntityIsAssignable(entity);
          validateObjectId(entry);
@@ -459,8 +458,8 @@ public class JpaStore<K, V> implements AdvancedLoadWriteStore<K, V> {
                validateObjectId(entry);
 
                MetadataEntity metadata = configuration.storeMetadata() ?
-                     new MetadataEntity(entry.getKeyBytes(), entry.getMetadataBytes(),
-                           entry.getMetadata() == null ? Long.MAX_VALUE : entry.getMetadata().expiryTime()) : null;
+                     new MetadataEntity(entry.getKeyBytes(), entry.metadataBytes(),
+                           entry.metadata() == null ? Long.MAX_VALUE : entry.expiryTime()) : null;
 
                mergeEntity(em, entity);
                if (metadata != null && metadata.hasBytes())
@@ -550,18 +549,21 @@ public class JpaStore<K, V> implements AdvancedLoadWriteStore<K, V> {
             try {
                if (entity == null)
                   return null;
-               InternalMetadata m = null;
+
+               Metadata m = null;
                if (configuration.storeMetadata()) {
                   MetadataEntity metadata = findMetadata(em, getMetadataKey(key));
                   if (metadata != null && metadata.getMetadata() != null) {
                      try {
-                        m = (InternalMetadata) marshaller.objectFromByteBuffer(metadata.getMetadata());
+                        m = (Metadata) marshaller.objectFromByteBuffer(metadata.getMetadata());
                      } catch (Exception e) {
                         throw new JpaStoreException("Failed to unmarshall metadata", e);
                      }
-                     if (m.isExpired(timeService.wallClockTime())) {
+                     if (isExpired(metadata)) {
                         return null;
                      }
+                     if (trace) log.trace("Loaded " + entity + " (" + m + ")");
+                     return marshallerEntryFactory.create(key, entity, m, metadata.getExpiration(), -1);
                   }
                }
                if (trace) log.trace("Loaded " + entity + " (" + m + ")");
@@ -641,16 +643,21 @@ public class JpaStore<K, V> implements AdvancedLoadWriteStore<K, V> {
                .map(k -> loadEntry(k, fetchValue, innerFetchMetadata))
                .sequential();
       } else {
-         return keyPublisher.map(k -> marshallerEntryFactory.create(k, (Object) null, null));
+         return keyPublisher.map(k -> marshallerEntryFactory.create(k));
       }
    }
 
-   private InternalMetadata getMetadata(EntityManager em, Object key) {
-      MetadataEntity m = findMetadata(em, getMetadataKey(key));
-      if (m == null) return null;
+   private boolean isExpired(MetadataEntity entity) {
+      long expiry = entity.getExpiration();
+      return expiry > 0 && expiry <= timeService.wallClockTime();
+   }
+
+   private Metadata getMetadata(MetadataEntity entity) {
+      if (entity == null)
+         return null;
 
       try {
-         return (InternalMetadata) marshaller.objectFromByteBuffer(m.getMetadata());
+         return (Metadata) marshaller.objectFromByteBuffer(entity.getMetadata());
       } catch (Exception e) {
          throw new JpaStoreException("Failed to unmarshall metadata", e);
       }
@@ -787,18 +794,19 @@ public class JpaStore<K, V> implements AdvancedLoadWriteStore<K, V> {
 
    private MarshallableEntry<K, V> loadEntry(Object key, boolean fetchValue, boolean fetchMetadata) {
       Object entity;
-      InternalMetadata metadata;
+      Metadata metadata;
 
       // The loading of entries and metadata is offloaded to another thread.
       // We need second entity manager anyway because with MySQL we can't do streaming
       // in parallel with other queries using single connection
       EntityManager emExec = emf.createEntityManager();
       try {
-         metadata = fetchMetadata ? getMetadata(emExec, key) : null;
+         MetadataEntity metaEntity = getMetadataEntity(key, emExec);
+         metadata = getMetadata(metaEntity);
          if (trace) {
             log.tracef("Fetched metadata (fetching? %s) %s", fetchMetadata, metadata);
          }
-         if (metadata != null && metadata.isExpired(timeService.wallClockTime())) {
+         if (metaEntity != null && isExpired(metaEntity)) {
             return null;
          }
          if (fetchValue) {

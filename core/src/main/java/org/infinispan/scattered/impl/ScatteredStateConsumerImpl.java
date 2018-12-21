@@ -37,7 +37,7 @@ import org.infinispan.factories.annotations.ComponentName;
 import org.infinispan.factories.annotations.Inject;
 import org.infinispan.filter.CollectionKeyFilter;
 import org.infinispan.lifecycle.ComponentStatus;
-import org.infinispan.metadata.InternalMetadata;
+import org.infinispan.metadata.Metadata;
 import org.infinispan.persistence.spi.AdvancedCacheLoader;
 import org.infinispan.remoting.responses.Response;
 import org.infinispan.remoting.responses.SuccessfulResponse;
@@ -290,7 +290,7 @@ public class ScatteredStateConsumerImpl extends StateConsumerImpl {
                         int segmentId = keyPartitioner.getSegment(me.getKey());
                         if (finalCompletedSegments.contains(segmentId)) {
                            try {
-                              InternalMetadata metadata = me.getMetadata();
+                              Metadata metadata = me.metadata();
                               if (metadata instanceof RemoteMetadata) {
                                  Address backup = ((RemoteMetadata) metadata).getAddress();
                                  retrieveEntry(me.getKey(), backup);
@@ -300,7 +300,7 @@ public class ScatteredStateConsumerImpl extends StateConsumerImpl {
                                     }
                                  }
                               } else {
-                                 backupEntry(entryFactory.create(me.getKey(), me.getValue(), me.getMetadata()));
+                                 backupEntry(entryFactory.create(me.getKey(), me.getValue(), me.metadata()));
                                  for (Address member : nonBackupAddresses) {
                                     invalidate(me.getKey(), metadata.version(), member);
                                  }

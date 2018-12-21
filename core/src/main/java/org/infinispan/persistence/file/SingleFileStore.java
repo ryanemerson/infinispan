@@ -74,7 +74,7 @@ public class SingleFileStore<K, V> implements AdvancedLoadWriteStore<K, V> {
    private static final byte[] MAGIC = new byte[]{'F', 'C', 'S', '1'};
    private static final byte[] ZERO_INT = {0, 0, 0, 0};
    private static final int KEYLEN_POS = 4;
-   private static final int KEY_POS = 4 + 4 + 4 + 4 + 8;
+   private static final int KEY_POS = 4 + 4 + 4 + 4 + 8 + 8;
    private static final int SMALLEST_ENTRY_SIZE = 128;
 
    private SingleFileStoreConfiguration configuration;
@@ -193,7 +193,8 @@ public class SingleFileStore<K, V> implements AdvancedLoadWriteStore<K, V> {
          int dataLen = buf.getInt();
          int metadataLen = buf.getInt();
          long expiryTime = buf.getLong();
-         FileEntry fe = new FileEntry(filePos, entrySize, keyLen, dataLen, metadataLen, expiryTime);
+         long lastUsed = buf.getLong();
+         FileEntry fe = new FileEntry(filePos, entrySize, keyLen, dataLen, metadataLen, expiryTime, lastUsed);
 
          // sanity check
          if (fe.size < KEY_POS + fe.keyLen + fe.dataLen + fe.metadataLen) {
@@ -331,7 +332,7 @@ public class SingleFileStore<K, V> implements AdvancedLoadWriteStore<K, V> {
          // serialize cache value
          org.infinispan.commons.io.ByteBuffer key = marshalledEntry.getKeyBytes();
          org.infinispan.commons.io.ByteBuffer data = marshalledEntry.getValueBytes();
-         org.infinispan.commons.io.ByteBuffer metadata = marshalledEntry.getMetadataBytes();
+         org.infinispan.commons.io.ByteBuffer metadata = marshalledEntry.metadataBytes();
 
          // allocate file entry and store in cache file
          int metadataLength = metadata == null ? 0 : metadata.getLength();
@@ -341,8 +342,7 @@ public class SingleFileStore<K, V> implements AdvancedLoadWriteStore<K, V> {
          resizeLock.readLock().lock();
          try {
             newEntry = allocate(len);
-            long expiryTime = metadata != null ? marshalledEntry.getMetadata().expiryTime() : -1;
-            newEntry = new FileEntry(newEntry, key.getLength(), data.getLength(), metadataLength, expiryTime);
+            newEntry = new FileEntry(newEntry, key.getLength(), data.getLength(), metadataLength, marshalledEntry.expiryTime(), marshalledEntry.lastUsed());
 
             ByteBuffer buf = ByteBuffer.allocate(len);
             buf.putInt(newEntry.size);
@@ -350,6 +350,7 @@ public class SingleFileStore<K, V> implements AdvancedLoadWriteStore<K, V> {
             buf.putInt(newEntry.dataLen);
             buf.putInt(newEntry.metadataLen);
             buf.putLong(newEntry.expiryTime);
+            buf.putLong(newEntry.lastUsed);
             buf.put(key.getBuf(), key.getOffset(), key.getLength());
             buf.put(data.getBuf(), data.getOffset(), data.getLength());
             if (metadata != null)
@@ -502,7 +503,7 @@ public class SingleFileStore<K, V> implements AdvancedLoadWriteStore<K, V> {
       if (loadMetadata && fe.metadataLen > 0) {
          metadataBb = factory.newByteBuffer(data, fe.keyLen + fe.dataLen, fe.metadataLen);
       }
-      return entryFactory.create(keyBb, valueBb, metadataBb);
+      return entryFactory.create(keyBb, valueBb, metadataBb, fe.expiryTime, fe.lastUsed);
    }
 
    @Override
@@ -553,7 +554,7 @@ public class SingleFileStore<K, V> implements AdvancedLoadWriteStore<K, V> {
             return entry;
          }).filter(me -> me != entryFactory.getEmpty());
       } else {
-         return publishKeys(filter).map(k -> entryFactory.create(k, (Object) null, null));
+         return publishKeys(filter).map(k -> entryFactory.create(k));
       }
    }
 
@@ -770,25 +771,31 @@ public class SingleFileStore<K, V> implements AdvancedLoadWriteStore<K, V> {
       final long expiryTime;
 
       /**
+       * Time stamp when the entry was last used.
+       */
+      final long lastUsed;
+
+      /**
        * Number of current readers.
        */
       transient int readers = 0;
 
       FileEntry(long offset, int size) {
-         this(offset, size, 0, 0, 0, -1);
+         this(offset, size, 0, 0, 0, -1, -1);
       }
 
-      FileEntry(long offset, int size, int keyLen, int dataLen, int metadataLen, long expiryTime) {
+      FileEntry(long offset, int size, int keyLen, int dataLen, int metadataLen, long expiryTime, long lastUsed) {
          this.offset = offset;
          this.size = size;
          this.keyLen = keyLen;
          this.dataLen = dataLen;
          this.metadataLen = metadataLen;
          this.expiryTime = expiryTime;
+         this.lastUsed = lastUsed;
       }
 
-      FileEntry(FileEntry fe, int keyLen, int dataLen, int metadataLen, long expiryTime) {
-         this(fe.offset, fe.size, keyLen, dataLen, metadataLen, expiryTime);
+      FileEntry(FileEntry fe, int keyLen, int dataLen, int metadataLen, long expiryTime, long lastUsed) {
+         this(fe.offset, fe.size, keyLen, dataLen, metadataLen, expiryTime, lastUsed);
       }
 
       synchronized boolean isLocked() {

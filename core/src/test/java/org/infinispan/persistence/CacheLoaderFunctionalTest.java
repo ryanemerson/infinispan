@@ -148,7 +148,7 @@ public class CacheLoaderFunctionalTest extends AbstractInfinispanTest {
       InternalCacheEntry se = cache.getAdvancedCache().getDataContainer().get(key);
       testStoredEntry(se.getValue(), value, se.getLifespan(), lifespanMillis, "Cache", key);
       MarshallableEntry load = loader.loadEntry(key);
-      testStoredEntry(load.getValue(), value, load.getMetadata() == null ? -1 : load.getMetadata().lifespan(), lifespanMillis, "Store", key);
+      testStoredEntry(load.getValue(), value, load.metadata() == null ? -1 : load.metadata().lifespan(), lifespanMillis, "Store", key);
    }
 
    private void testStoredEntry(Object value, Object expectedValue, long lifespan, long expectedLifespan, String src, Object key) {
@@ -658,7 +658,7 @@ public class CacheLoaderFunctionalTest extends AbstractInfinispanTest {
             found = true;
          }
          if (load != null) {
-            testStoredEntry(load.getValue(), value, load.getMetadata().lifespan(), lifespan, "Store", key);
+            testStoredEntry(load.getValue(), value, load.metadata().lifespan(), lifespan, "Store", key);
             found = true;
          }
          assertTrue("Key not found.", found);
@@ -689,7 +689,7 @@ public class CacheLoaderFunctionalTest extends AbstractInfinispanTest {
             found = true;
          }
          if (load != null) {
-            testStoredEntry(load.getValue(), value, load.getMetadata().lifespan(), lifespan, "Store", key);
+            testStoredEntry(load.getValue(), value, load.metadata().lifespan(), lifespan, "Store", key);
             found = true;
          }
          assertTrue("Key not found.", found);

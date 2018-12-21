@@ -326,6 +326,6 @@ public class OutboundTransferTask implements Runnable {
    }
 
    public static InternalCacheEntry defaultMapEntryFromStore(MarshallableEntry me, InternalEntryFactory entryFactory) {
-      return entryFactory.create(me.getKey(), me.getValue(), me.getMetadata());
+      return entryFactory.create(me.getKey(), me.getValue(), me.metadata());
    }
 }

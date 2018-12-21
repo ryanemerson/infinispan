@@ -73,7 +73,7 @@ final class DirectoryLoaderAdaptor {
       for (IndexScopedKey key : keysCollector) {
          Object value = load(key);
          if (value != null) {
-            MarshallableEntry cacheEntry = entryFactory.create(key, value, null);
+            MarshallableEntry cacheEntry = entryFactory.create(key, value);
             entriesCollector.add(cacheEntry);
          }
       }

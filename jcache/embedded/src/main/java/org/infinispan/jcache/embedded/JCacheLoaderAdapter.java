@@ -47,11 +47,11 @@ public class JCacheLoaderAdapter<K, V> implements org.infinispan.persistence.spi
          Duration expiry = Expiration.getExpiry(expiryPolicy, Expiration.Operation.CREATION);
          long now = ctx.getTimeService().wallClockTime(); // ms
          if (expiry == null || expiry.isEternal()) {
-            return ctx.getMarshallableEntryFactory().create(key, value, null);
+            return ctx.getMarshallableEntryFactory().create(key, value);
          } else {
             long exp = now + expiry.getTimeUnit().toMillis(expiry.getDurationAmount());
             JCacheInternalMetadata meta = new JCacheInternalMetadata(now, exp);
-            return ctx.getMarshallableEntryFactory().create(key, value, meta);
+            return ctx.getMarshallableEntryFactory().create(key, value, meta, now, 0);
          }
       }
 

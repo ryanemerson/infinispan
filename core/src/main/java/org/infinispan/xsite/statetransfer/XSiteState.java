@@ -48,7 +48,7 @@ public class XSiteState {
    }
 
    public static XSiteState fromCacheLoader(MarshallableEntry marshalledEntry) {
-      return new XSiteState(marshalledEntry.getKey(), marshalledEntry.getValue(), marshalledEntry.getMetadata());
+      return new XSiteState(marshalledEntry.getKey(), marshalledEntry.getValue(), marshalledEntry.metadata());
    }
 
    @Override

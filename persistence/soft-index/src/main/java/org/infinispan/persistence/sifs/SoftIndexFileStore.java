@@ -16,12 +16,12 @@ import org.infinispan.commons.time.TimeService;
 import org.infinispan.commons.util.AbstractIterator;
 import org.infinispan.commons.util.CloseableIterator;
 import org.infinispan.commons.util.Util;
-import org.infinispan.marshall.core.MarshalledEntryFactory;
-import org.infinispan.metadata.InternalMetadata;
+import org.infinispan.metadata.Metadata;
 import org.infinispan.persistence.sifs.configuration.SoftIndexFileStoreConfiguration;
 import org.infinispan.persistence.spi.AdvancedLoadWriteStore;
 import org.infinispan.persistence.spi.InitializationContext;
 import org.infinispan.persistence.spi.MarshallableEntry;
+import org.infinispan.persistence.spi.MarshallableEntryFactory;
 import org.infinispan.persistence.spi.PersistenceException;
 import org.infinispan.util.logging.LogFactory;
 import org.reactivestreams.Publisher;
@@ -119,7 +119,7 @@ public class SoftIndexFileStore implements AdvancedLoadWriteStore {
    private Compactor compactor;
    private StreamingMarshaller marshaller;
    private ByteBufferFactory byteBufferFactory;
-   private MarshalledEntryFactory marshalledEntryFactory;
+   private MarshallableEntryFactory marshallableEntryFactory;
    private TimeService timeService;
    private int maxKeyLength;
 
@@ -127,7 +127,7 @@ public class SoftIndexFileStore implements AdvancedLoadWriteStore {
    public void init(InitializationContext ctx) {
       configuration = ctx.getConfiguration();
       marshaller = ctx.getMarshaller();
-      marshalledEntryFactory = ctx.getMarshalledEntryFactory();
+      marshallableEntryFactory = ctx.getMarshallableEntryFactory();
       byteBufferFactory = ctx.getByteBufferFactory();
       timeService = ctx.getTimeService();
       maxKeyLength = configuration.maxNodeSize() - IndexNode.RESERVED_SPACE;
@@ -164,7 +164,7 @@ public class SoftIndexFileStore implements AdvancedLoadWriteStore {
 
          Flowable<Integer> filePublisher = filePublisher();
          handleFilePublisher(filePublisher.doAfterNext(compactor::completeFile), false, false,
-               (file, offset, size, serializedKey, serializedMetadata, serializedValue, seqId, expiration) -> {
+               (file, offset, size, serializedKey, serializedMetadata, serializedValue, seqId, expiration, created, lastUsed) -> {
                   long prevSeqId;
                   while (seqId > (prevSeqId = maxSeqId.get()) && !maxSeqId.compareAndSet(prevSeqId, seqId)) {
                   }
@@ -436,7 +436,8 @@ public class SoftIndexFileStore implements AdvancedLoadWriteStore {
                         }
                         return null;
                      }
-                     return marshalledEntryFactory.newMarshalledEntry(toBuffer(serializedKey), toBuffer(serializedValue), toBuffer(serializedMetadata));
+                     return marshallableEntryFactory.create(toBuffer(serializedKey), toBuffer(serializedValue),
+                           toBuffer(serializedMetadata), header.getCreated(), header.getLastUsed());
                   } finally {
                      handle.close();
                   }
@@ -444,7 +445,7 @@ public class SoftIndexFileStore implements AdvancedLoadWriteStore {
             } else {
                EntryRecord record = index.getRecord(key, marshaller.objectToByteBuffer(key));
                if (record == null) return null;
-               return marshalledEntryFactory.newMarshalledEntry(toBuffer(record.getKey()), toBuffer(record.getValue()), toBuffer(record.getMetadata()));
+               return marshallableEntryFactory.create(toBuffer(record.getKey()), toBuffer(record.getValue()), toBuffer(record.getMetadata()));
             }
          }
       } catch (Exception e) {
@@ -477,7 +478,7 @@ public class SoftIndexFileStore implements AdvancedLoadWriteStore {
    }
 
    private interface EntryFunctor<R> {
-      R apply(int file, int offset, int size, byte[] serializedKey, byte[] serializedMetadata, byte[] serializedValue, long seqId, long expiration) throws Exception;
+      R apply(int file, int offset, int size, byte[] serializedKey, byte[] serializedMetadata, byte[] serializedValue, long seqId, long expiration, long created, long lastUsed) throws Exception;
    }
 
    private Flowable<Integer> filePublisher() {
@@ -519,7 +520,7 @@ public class SoftIndexFileStore implements AdvancedLoadWriteStore {
    @Override
    public Publisher publishKeys(Predicate filter) {
       return handleFilePublisher(filePublisher(), false, true,
-            (file, offset, size, serializedKey, serializedMetadata, serializedValue, seqId, expiration) -> {
+            (file, offset, size, serializedKey, serializedMetadata, serializedValue, seqId, expiration, created, lastUsed) -> {
 
                final Object key = marshaller.objectFromByteBuffer(serializedKey);
 
@@ -533,16 +534,17 @@ public class SoftIndexFileStore implements AdvancedLoadWriteStore {
    @Override
    public Publisher<MarshallableEntry> entryPublisher(Predicate filter, boolean fetchValue, boolean fetchMetadata) {
       return handleFilePublisher(filePublisher(), fetchValue, fetchMetadata,
-            (file, offset, size, serializedKey, serializedMetadata, serializedValue, seqId, expiration) -> {
+            (file, offset, size, serializedKey, serializedMetadata, serializedValue, seqId, expiration, created, lastUsed) -> {
 
                final Object key = marshaller.objectFromByteBuffer(serializedKey);
 
                // SerializedValue is tested to handle when a remove is found
                if (serializedValue != null && (filter == null || filter.test(key)) && !isSeqIdOld(seqId, key, serializedKey)) {
-                  return marshalledEntryFactory.newMarshalledEntry(key,
+                  return marshallableEntryFactory.create(key,
                         // EMPTY_BYTES is used to symbolize when fetchValue is false but there was an entry
                         serializedValue != Util.EMPTY_BYTE_ARRAY ? marshaller.objectFromByteBuffer(serializedValue) : null,
-                        serializedMetadata == null ? null : (InternalMetadata) marshaller.objectFromByteBuffer(serializedMetadata));
+                        serializedMetadata == null ? null : (Metadata) marshaller.objectFromByteBuffer(serializedMetadata),
+                        created, lastUsed);
                }
                return null;
             });
@@ -599,8 +601,8 @@ public class SoftIndexFileStore implements AdvancedLoadWriteStore {
                      offsetOrNegation = ~innerOffset;
                   }
 
-                  next = functor.apply(file, offsetOrNegation, header.totalLength(), serializedKey,
-                        serializedMetadata, serializedValue, header.seqId(), header.expiryTime());
+                  next = functor.apply(file, offsetOrNegation, header.totalLength(), serializedKey, serializedMetadata,
+                        serializedValue, header.seqId(), header.expiryTime(), header.getCreated(), header.getLastUsed());
                } finally {
                   innerOffset = offset.addAndGet(header.totalLength());
                }

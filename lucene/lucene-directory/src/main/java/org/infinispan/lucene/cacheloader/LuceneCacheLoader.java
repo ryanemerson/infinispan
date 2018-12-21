@@ -66,7 +66,7 @@ public class LuceneCacheLoader<K, V> implements AdvancedCacheLoader<K, V> {
          DirectoryLoaderAdaptor directoryAdaptor = getDirectory(indexKey);
          Object value = directoryAdaptor.load(indexKey);
          if (value != null) {
-            return ctx.getMarshallableEntryFactory().create(key, value, null);
+            return ctx.getMarshallableEntryFactory().create(key, value);
          }
          else {
             return null;

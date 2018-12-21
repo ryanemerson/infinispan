@@ -122,7 +122,8 @@ public class EntryRecord {
       return true;
    }
 
-   public static void writeEntry(FileChannel fileChannel, byte[] serializedKey, byte[] serializedMetadata, byte[] serializedValue, long seqId, long expiration) throws IOException {
+   public static void writeEntry(FileChannel fileChannel, byte[] serializedKey, byte[] serializedMetadata, byte[] serializedValue,
+                                 long seqId, long expiration, long created, long lastUsed) throws IOException {
       ByteBuffer header = ByteBuffer.allocate(EntryHeader.HEADER_SIZE);
       if (EntryHeader.useMagic) {
          header.putInt(EntryHeader.MAGIC);
@@ -132,6 +133,8 @@ public class EntryRecord {
       header.putInt(serializedValue == null ? 0 : serializedValue.length);
       header.putLong(seqId);
       header.putLong(expiration);
+      header.putLong(created);
+      header.putLong(lastUsed);
       header.flip();
       write(fileChannel, header);
       write(fileChannel, ByteBuffer.wrap(serializedKey));
@@ -143,7 +146,9 @@ public class EntryRecord {
       }
    }
 
-   public static void writeEntry(FileChannel fileChannel, org.infinispan.commons.io.ByteBuffer serializedKey, org.infinispan.commons.io.ByteBuffer serializedMetadata, org.infinispan.commons.io.ByteBuffer serializedValue, long seqId, long expiration) throws IOException {
+   public static void writeEntry(FileChannel fileChannel, org.infinispan.commons.io.ByteBuffer serializedKey,
+                                 org.infinispan.commons.io.ByteBuffer serializedMetadata, org.infinispan.commons.io.ByteBuffer serializedValue,
+                                 long seqId, long expiration, long created, long lastUsed) throws IOException {
       ByteBuffer header = ByteBuffer.allocate(EntryHeader.HEADER_SIZE);
       if (EntryHeader.useMagic) {
          header.putInt(EntryHeader.MAGIC);
@@ -153,6 +158,8 @@ public class EntryRecord {
       header.putInt(serializedValue == null ? 0 : serializedValue.getLength());
       header.putLong(seqId);
       header.putLong(expiration);
+      header.putLong(created);
+      header.putLong(lastUsed);
       header.flip();
       write(fileChannel, header);
       write(fileChannel, ByteBuffer.wrap(serializedKey.getBuf(), serializedKey.getOffset(), serializedKey.getLength()));

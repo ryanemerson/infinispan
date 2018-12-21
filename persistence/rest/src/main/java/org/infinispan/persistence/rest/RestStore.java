@@ -17,9 +17,7 @@ import org.infinispan.commons.persistence.Store;
 import org.infinispan.commons.util.AbstractIterator;
 import org.infinispan.commons.util.Util;
 import org.infinispan.container.impl.InternalEntryFactory;
-import org.infinispan.metadata.InternalMetadata;
 import org.infinispan.metadata.Metadata;
-import org.infinispan.metadata.impl.InternalMetadataImpl;
 import org.infinispan.persistence.keymappers.MarshallingTwoWayKey2StringMapper;
 import org.infinispan.persistence.rest.configuration.ConnectionPoolConfiguration;
 import org.infinispan.persistence.rest.configuration.RestStoreConfiguration;
@@ -210,8 +208,8 @@ public class RestStore<K, V> implements AdvancedLoadWriteStore<K, V> {
          DefaultFullHttpRequest put = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.PUT, keyToUri(entry.getKey()), content);
          put.headers().add("Content-Type", contentType);
          put.headers().add("Content-Length", content.readableBytes());
-         InternalMetadata metadata = entry.getMetadata();
-         if (metadata != null && metadata.expiryTime() > -1) {
+         Metadata metadata = entry.metadata();
+         if (metadata != null && entry.expiryTime() > -1) {
             put.headers().add(TIME_TO_LIVE_SECONDS, Long.toString(timeoutToSeconds(metadata.lifespan())));
             put.headers().add(MAX_IDLE_TIME_SECONDS, Long.toString(timeoutToSeconds(metadata.maxIdle())));
          }
@@ -301,19 +299,19 @@ public class RestStore<K, V> implements AdvancedLoadWriteStore<K, V> {
          try {
             if (HttpResponseStatus.OK.equals(response.status())) {
                String contentType = response.headers().get(HttpHeaderNames.CONTENT_TYPE);
-               InternalMetadata internalMetadata;
+               long created = -1;
+               long lastUsed = -1;
+               Metadata metadata;
                if (fetchMetadata) {
                   long ttl = timeHeaderToSeconds(response.headers().get(TIME_TO_LIVE_SECONDS));
                   long maxidle = timeHeaderToSeconds(response.headers().get(MAX_IDLE_TIME_SECONDS));
-                  Metadata metadata = metadataHelper.buildMetadata(contentType, ttl, TimeUnit.SECONDS, maxidle, TimeUnit.SECONDS);
+                  metadata = metadataHelper.buildMetadata(contentType, ttl, TimeUnit.SECONDS, maxidle, TimeUnit.SECONDS);
                   if (metadata.maxIdle() > -1 || metadata.lifespan() > -1) {
-                     long now = ctx.getTimeService().wallClockTime();
-                     internalMetadata = new InternalMetadataImpl(metadata, now, now);
-                  } else {
-                     internalMetadata = new InternalMetadataImpl(metadata, -1, -1);
+                     created = ctx.getTimeService().wallClockTime();
+                     lastUsed = created;
                   }
                } else {
-                  internalMetadata = null;
+                  metadata = null;
                }
                Object value;
                if (fetchValue) {
@@ -325,7 +323,7 @@ public class RestStore<K, V> implements AdvancedLoadWriteStore<K, V> {
                   value = null;
                }
 
-               return ctx.getMarshallableEntryFactory().create(key, value, internalMetadata);
+               return entryFactory.create(key, value, metadata, created, lastUsed);
 
             } else if (HttpResponseStatus.NOT_FOUND.equals(response.status())) {
                return null;
@@ -390,7 +388,7 @@ public class RestStore<K, V> implements AdvancedLoadWriteStore<K, V> {
       Flowable<K> keyFlowable = publishKeys(filter);
 
       if (!fetchValue && !fetchMetadata) {
-         return keyFlowable.map(k -> ctx.getMarshallableEntryFactory().create(k, (Object) null, null));
+         return keyFlowable.map(k -> entryFactory.create(k));
       } else {
          return keyFlowable.map(k -> {
             // Technically this load will only be done synchronously but we are fine with that

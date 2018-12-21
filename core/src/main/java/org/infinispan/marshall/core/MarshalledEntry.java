@@ -2,6 +2,8 @@ package org.infinispan.marshall.core;
 
 import org.infinispan.commons.io.ByteBuffer;
 import org.infinispan.metadata.InternalMetadata;
+import org.infinispan.metadata.Metadata;
+import org.infinispan.metadata.impl.InternalMetadataImpl;
 import org.infinispan.persistence.spi.MarshallableEntry;
 
 /**
@@ -17,6 +19,10 @@ import org.infinispan.persistence.spi.MarshallableEntry;
  */
 @Deprecated
 public interface MarshalledEntry<K,V> extends MarshallableEntry<K,V> {
+
+   ByteBuffer getMetadataBytes();
+
+   InternalMetadata getMetadata();
 
    /**
     * A simple wrapper to convert a {@link org.infinispan.persistence.spi.MarshallableEntry} to a {@link MarshalledEntry}
@@ -35,8 +41,18 @@ public interface MarshalledEntry<K,V> extends MarshallableEntry<K,V> {
          }
 
          @Override
+         public ByteBuffer metadataBytes() {
+            return entry.metadataBytes();
+         }
+
+         @Override
          public ByteBuffer getMetadataBytes() {
-            return entry.getMetadataBytes();
+            return metadataBytes();
+         }
+
+         @Override
+         public InternalMetadata getMetadata() {
+            return new InternalMetadataImpl(metadata(), created(), lastUsed());
          }
 
          @Override
@@ -50,8 +66,28 @@ public interface MarshalledEntry<K,V> extends MarshallableEntry<K,V> {
          }
 
          @Override
-         public InternalMetadata getMetadata() {
-            return entry.getMetadata();
+         public Metadata metadata() {
+            return entry.metadata();
+         }
+
+         @Override
+         public long created() {
+            return entry.created();
+         }
+
+         @Override
+         public long lastUsed() {
+            return entry.lastUsed();
+         }
+
+         @Override
+         public boolean isExpired(long now) {
+            return entry.isExpired(now);
+         }
+
+         @Override
+         public long expiryTime() {
+            return entry.expiryTime();
          }
       };
    }

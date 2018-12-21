@@ -1,7 +1,7 @@
 package org.infinispan.persistence.spi;
 
 import org.infinispan.commons.io.ByteBuffer;
-import org.infinispan.metadata.InternalMetadata;
+import org.infinispan.metadata.Metadata;
 
 /**
  * Defines an externally persisted entry. External stores that keep the data in serialised form should return an
@@ -28,7 +28,7 @@ public interface MarshallableEntry<K, V> {
    /**
     * @return null if there's no metadata associated with the object (e.g. expiry info, version..)
     */
-   ByteBuffer getMetadataBytes();
+   ByteBuffer metadataBytes();
 
    /**
     * Returns the same key as {@link #getKeyBytes()}, but unmarshalled.
@@ -43,5 +43,13 @@ public interface MarshallableEntry<K, V> {
    /**
     * @return might be null if there's no metadata associated with the object (e.g. expiry info, version..).
     */
-   InternalMetadata getMetadata();
+   Metadata metadata();
+
+   long created();
+
+   long lastUsed();
+
+   boolean isExpired(long now);
+
+   long expiryTime();
 }

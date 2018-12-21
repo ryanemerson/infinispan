@@ -1,7 +1,7 @@
 package org.infinispan.jcache.embedded;
 
 import org.infinispan.container.versioning.EntryVersion;
-import org.infinispan.metadata.InternalMetadata;
+import org.infinispan.metadata.Metadata;
 
 /**
  * Metadata for entries stored via JCache API
@@ -9,7 +9,7 @@ import org.infinispan.metadata.InternalMetadata;
  * @author Galder Zamarreño
  * @since 6.0
  */
-public class JCacheInternalMetadata implements InternalMetadata {
+public class JCacheInternalMetadata implements Metadata {
 
    private final long created; // absolute time of creation
    private final long expiry; // absolute time when entry should expire
@@ -17,26 +17,6 @@ public class JCacheInternalMetadata implements InternalMetadata {
    public JCacheInternalMetadata(long created, long expiry) {
       this.created = created;
       this.expiry = expiry;
-   }
-
-   @Override
-   public long created() {
-      return created;
-   }
-
-   @Override
-   public long lastUsed() {
-      return 0;
-   }
-
-   @Override
-   public boolean isExpired(long now) {
-      return expiry > -1 && expiry <= now;
-   }
-
-   @Override
-   public long expiryTime() {
-      return expiry;
    }
 
    @Override
@@ -58,5 +38,4 @@ public class JCacheInternalMetadata implements InternalMetadata {
    public Builder builder() {
       return null;
    }
-
 }

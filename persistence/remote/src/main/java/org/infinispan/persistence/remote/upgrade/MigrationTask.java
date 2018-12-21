@@ -36,7 +36,6 @@ import org.infinispan.factories.ComponentRegistry;
 import org.infinispan.factories.threads.DefaultThreadFactory;
 import org.infinispan.metadata.EmbeddedMetadata;
 import org.infinispan.metadata.Metadata;
-import org.infinispan.metadata.impl.InternalMetadataImpl;
 import org.infinispan.notifications.Listener;
 import org.infinispan.notifications.cachelistener.annotation.CacheEntryRemoved;
 import org.infinispan.notifications.cachelistener.event.CacheEntryRemovedEvent;
@@ -112,18 +111,15 @@ public class MigrationTask implements DistributedCallable<Object, Object, Intege
                int lifespan = metadataValue.getLifespan();
                int maxIdle = metadataValue.getMaxIdle();
                long version = metadataValue.getVersion();
-               long created = metadataValue.getCreated();
-               long lastUsed = metadataValue.getLastUsed();
                Metadata metadata = new EmbeddedMetadata.Builder()
                      .version(new NumericVersion(version))
                      .lifespan(lifespan, TimeUnit.SECONDS)
                      .maxIdle(maxIdle, TimeUnit.SECONDS)
                      .build();
-               InternalMetadataImpl internalMetadata = new InternalMetadataImpl(metadata, created, lastUsed);
                executorService.submit(() -> {
                   Object key = entry.getKey();
                   if (!deletedKeys.contains(new WrappedByteArray((byte[]) key))) {
-                     cache.getAdvancedCache().withFlags(Flag.SKIP_CACHE_LOAD, Flag.ROLLING_UPGRADE).putIfAbsent(entry.getKey(), entry.getValue().getValue(), internalMetadata);
+                     cache.getAdvancedCache().withFlags(Flag.SKIP_CACHE_LOAD, Flag.ROLLING_UPGRADE).putIfAbsent(entry.getKey(), entry.getValue().getValue(), metadata);
                   }
                   int currentCount = counter.incrementAndGet();
                   if (log.isDebugEnabled() && currentCount % 100 == 0)

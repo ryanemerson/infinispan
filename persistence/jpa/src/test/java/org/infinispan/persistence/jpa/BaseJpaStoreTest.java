@@ -56,7 +56,7 @@ public abstract class BaseJpaStoreTest extends AbstractJpaStoreTest {
 
       assertTrue(cs.contains(obj.getKey()));
       assertEquals(obj.getValue(), cs.loadEntry(obj.getKey()).getValue());
-      assertNull(cs.loadEntry(obj.getKey()).getMetadata());
+      assertNull(cs.loadEntry(obj.getKey()).metadata());
 
       // TODO test with metadata
 

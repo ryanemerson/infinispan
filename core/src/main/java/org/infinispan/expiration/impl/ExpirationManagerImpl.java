@@ -160,7 +160,7 @@ public class ExpirationManagerImpl<K, V> implements InternalExpirationManager<K,
 
    @Override
    public void handleInStoreExpiration(final MarshallableEntry<K, V> marshalledEntry) {
-      handleInStoreExpiration(marshalledEntry.getKey(), marshalledEntry.getValue(), marshalledEntry.getMetadata());
+      handleInStoreExpiration(marshalledEntry.getKey(), marshalledEntry.getValue(), marshalledEntry.metadata());
    }
 
    private void handleInStoreExpiration(K key, V value, Metadata metadata) {

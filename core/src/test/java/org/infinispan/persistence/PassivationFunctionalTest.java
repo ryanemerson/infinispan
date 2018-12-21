@@ -96,7 +96,7 @@ public class PassivationFunctionalTest extends AbstractInfinispanTest {
       assert entry != null : src + " entry for key " + key + " should NOT be null";
       assert entry.getValue().equals(expectedValue) : src + " should contain value " + expectedValue + " under key " + key + " but was " + entry.getValue() + ". Entry is " + entry;
       if (expectedLifespan > -1)
-      assert entry.getMetadata().lifespan() == expectedLifespan : src + " expected lifespan for key " + key + " to be " + expectedLifespan + " but was " + entry.getMetadata().lifespan() + ". Entry is " + entry;
+      assert entry.metadata().lifespan() == expectedLifespan : src + " expected lifespan for key " + key + " to be " + expectedLifespan + " but was " + entry.metadata().lifespan() + ". Entry is " + entry;
    }
 
    private void assertNotInCacheAndStore(Object... keys) throws PersistenceException {

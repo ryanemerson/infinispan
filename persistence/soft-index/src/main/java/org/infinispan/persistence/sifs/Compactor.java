@@ -252,7 +252,8 @@ class Compactor extends Thread {
                         entryOffset = ~currentOffset;
                         writtenLength = EntryHeader.HEADER_SIZE + header.keyLength();
                      }
-                     EntryRecord.writeEntry(logFile.fileChannel, serializedKey, serializedMetadata, serializedValue, header.seqId(), header.expiryTime());
+                     EntryRecord.writeEntry(logFile.fileChannel, serializedKey, serializedMetadata, serializedValue,
+                           header.seqId(), header.expiryTime(), header.getCreated(), header.getLastUsed());
                      TemporaryTable.LockedEntry lockedEntry = temporaryTable.replaceOrLock(key, logFile.fileId, entryOffset, scheduledFile, indexedOffset);
                      if (lockedEntry == null) {
                         if (trace) {
