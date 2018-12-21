@@ -60,14 +60,14 @@ public class ConcurrentLoadAndEvictTest extends SingleCacheManagerTest {
       assert cache.get("a").equals("b");
       CacheLoader cl = TestingUtil.getCacheLoader(cache);
       assert cl != null;
-      MarshallableEntry se = cl.get("a");
+      MarshallableEntry se = cl.loadEntry("a");
       assert se != null;
       assert se.getValue().equals("b");
 
       // clear the cache
       cache.getAdvancedCache().withFlags(SKIP_CACHE_STORE).clear();
 
-      se = cl.get("a");
+      se = cl.loadEntry("a");
       assert se != null;
       assert se.getValue().equals("b");
 

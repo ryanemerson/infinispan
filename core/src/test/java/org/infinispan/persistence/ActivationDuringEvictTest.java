@@ -61,7 +61,7 @@ public class ActivationDuringEvictTest extends SingleCacheManagerTest {
       cache.put(KEY, VALUE);
       assertEquals(VALUE, cache.get(KEY));
 
-      MarshallableEntry se = cl.get(KEY);
+      MarshallableEntry se = cl.loadEntry(KEY);
       assertNull(se);
 
       // passivate the entry
@@ -101,7 +101,7 @@ public class ActivationDuringEvictTest extends SingleCacheManagerTest {
    private void assertPassivated(DataContainer dc, CacheLoader cl, String key, String expected) {
       MarshallableEntry se;
       assertFalse(dc.containsKey(key));
-      se = cl.get(key);
+      se = cl.loadEntry(key);
       assertNotNull(se);
       assertEquals(expected, se.getValue());
    }

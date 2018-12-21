@@ -31,7 +31,7 @@ public class AsyncCacheLoader<K, V> extends DelegatingCacheLoader<K, V> {
    public void stop() {}
 
    @Override
-   public MarshallableEntry<K, V> get(Object key) {
+   public MarshallableEntry<K, V> loadEntry(Object key) {
       Modification mod = state.get().get(key);
       if (mod != null) {
          switch (mod.getType()) {
@@ -42,7 +42,7 @@ public class AsyncCacheLoader<K, V> extends DelegatingCacheLoader<K, V> {
                return ((Store) mod).getStoredValue();
          }
       }
-      return super.get(key);
+      return super.loadEntry(key);
    }
 
 

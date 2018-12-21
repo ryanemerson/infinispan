@@ -43,7 +43,7 @@ public class MyCustomCacheStore implements ExternalStore {
     }
 
     @Override
-    public MarshallableEntry get(Object key) throws PersistenceException {
+    public MarshallableEntry loadEntry(Object key) throws PersistenceException {
         assert config.customProperty() == 10;
         return null;
     }

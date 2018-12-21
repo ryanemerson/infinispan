@@ -535,7 +535,7 @@ public class JpaStore<K, V> implements AdvancedLoadWriteStore<K, V> {
    }
 
    @Override
-   public MarshallableEntry get(Object key) {
+   public MarshallableEntry loadEntry(Object key) {
       if (!isValidKeyType(key)) {
          return null;
       }

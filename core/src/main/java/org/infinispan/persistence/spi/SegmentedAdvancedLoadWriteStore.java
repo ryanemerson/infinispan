@@ -38,14 +38,14 @@ public interface SegmentedAdvancedLoadWriteStore<K, V> extends AdvancedLoadWrite
     * @param key     the key of the entry to fetch
     * @return the entry, or null if the entry does not exist
     * @throws PersistenceException in case of an error, e.g. communicating with the external storage
-    * @implSpec Default implementation just invokes the {@link CacheLoader#get(Object)} method.
+    * @implSpec Default implementation just invokes the {@link CacheLoader#loadEntry(Object)} method.
     * <pre> {@code
     * MarshallableEntry<K, V> value = get(key);
     * }
     * </pre>
     */
    default MarshallableEntry<K, V> get(int segment, Object key) {
-      return get(key);
+      return loadEntry(key);
    }
 
    /**

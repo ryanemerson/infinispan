@@ -44,8 +44,8 @@ public abstract class DelegatingCacheLoader<K, V> implements CacheLoader<K, V> {
    }
 
    @Override
-   public MarshallableEntry<K, V> get(Object key) {
-      return actual != null ? actual.get(key) : null;
+   public MarshallableEntry<K, V> loadEntry(Object key) {
+      return actual != null ? actual.loadEntry(key) : null;
    }
 
    public CacheLoader undelegate() {

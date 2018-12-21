@@ -26,6 +26,7 @@ import org.infinispan.commons.persistence.Store;
 import org.infinispan.commons.time.TimeService;
 import org.infinispan.configuration.cache.SingleFileStoreConfiguration;
 import org.infinispan.persistence.spi.AdvancedLoadWriteStore;
+import org.infinispan.persistence.spi.CacheLoader;
 import org.infinispan.persistence.spi.InitializationContext;
 import org.infinispan.persistence.spi.MarshallableEntry;
 import org.infinispan.persistence.spi.MarshallableEntryFactory;
@@ -223,7 +224,7 @@ public class SingleFileStore<K, V> implements AdvancedLoadWriteStore<K, V> {
    }
 
    /**
-    * The base class implementation calls {@link #get(Object)} for this, we can do better because
+    * The base class implementation calls {@link CacheLoader#loadEntry(Object)} for this, we can do better because
     * we keep all keys in memory.
     */
    @Override
@@ -440,7 +441,7 @@ public class SingleFileStore<K, V> implements AdvancedLoadWriteStore<K, V> {
    }
 
    @Override
-   public MarshallableEntry<K, V> get(Object key) {
+   public MarshallableEntry<K, V> loadEntry(Object key) {
       return _load(key, true, true);
    }
 

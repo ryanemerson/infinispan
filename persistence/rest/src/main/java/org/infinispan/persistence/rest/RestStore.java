@@ -285,7 +285,7 @@ public class RestStore<K, V> implements AdvancedLoadWriteStore<K, V> {
    }
 
    @Override
-   public MarshallableEntry<K, V> get(Object key) {
+   public MarshallableEntry<K, V> loadEntry(Object key) {
       return load(key, true, true);
    }
 
@@ -441,7 +441,7 @@ public class RestStore<K, V> implements AdvancedLoadWriteStore<K, V> {
 
    @Override
    public boolean contains(Object o) {
-      return get(o) != null;
+      return loadEntry(o) != null;
    }
 
    private boolean isSuccessful(int status) {

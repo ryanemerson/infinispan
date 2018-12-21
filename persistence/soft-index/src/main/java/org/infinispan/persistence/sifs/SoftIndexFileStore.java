@@ -391,7 +391,7 @@ public class SoftIndexFileStore implements AdvancedLoadWriteStore {
    }
 
    @Override
-   public MarshallableEntry get(Object key) {
+   public MarshallableEntry loadEntry(Object key) {
       try {
          byte[] serializedValue;
          byte[] serializedKey;

@@ -17,7 +17,7 @@ public class CustomStoreWithConfiguration implements AdvancedCacheLoader<Object,
    }
 
    @Override
-   public MarshallableEntry<Object, Object> get(Object key) {
+   public MarshallableEntry<Object, Object> loadEntry(Object key) {
       return null;
    }
 

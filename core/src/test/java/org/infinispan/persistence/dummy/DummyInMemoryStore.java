@@ -153,7 +153,7 @@ public class DummyInMemoryStore implements AdvancedLoadWriteStore, AdvancedCache
    }
 
    @Override
-   public MarshallableEntry get(Object key) {
+   public MarshallableEntry loadEntry(Object key) {
       assertRunning();
       record("load");
       if (key == null) return null;

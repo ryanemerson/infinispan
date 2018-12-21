@@ -126,7 +126,7 @@ public class SoftIndexFileStoreStressTest extends AbstractInfinispanTest {
          }
       }, new WithinThreadExecutor(), true, false);
       for (Map.Entry<Object, Object> entry : entries.entrySet()) {
-         MarshallableEntry loaded = store.get(entry.getKey());
+         MarshallableEntry loaded = store.loadEntry(entry.getKey());
          if (loaded == null) {
             fail("Did not load " + entry.getKey() + " -> " + entry.getValue());
          } else if (!Objects.equals(entry.getValue(), loaded.getValue())) {
@@ -154,7 +154,7 @@ public class SoftIndexFileStoreStressTest extends AbstractInfinispanTest {
                   store.delete(key);
                   break;
                case 2:
-                  store.get(key);
+                  store.loadEntry(key);
             }
          }
       }

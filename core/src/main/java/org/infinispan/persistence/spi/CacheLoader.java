@@ -30,7 +30,7 @@ public interface CacheLoader<K, V> extends Lifecycle {
     *
     * @return the entry, or null if the entry does not exist
     * @throws PersistenceException in case of an error, e.g. communicating with the external storage
-    * @deprecated since 10.0 please implement {{@link #get(Object)}} instead
+    * @deprecated since 10.0 please implement {{@link #loadEntry(Object)}} instead
     */
    @Deprecated
    default MarshalledEntry<K, V> load(Object key) {
@@ -45,7 +45,7 @@ public interface CacheLoader<K, V> extends Lifecycle {
     * @return the entry, or null if the entry does not exist
     * @throws PersistenceException in case of an error, e.g. communicating with the external storage
     */
-   default MarshallableEntry<K, V> get(Object key) {
+   default MarshallableEntry<K, V> loadEntry(Object key) {
       return load(key);
    }
 

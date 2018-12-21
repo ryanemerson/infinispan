@@ -213,7 +213,7 @@ public class UnnecessaryLoadingTest extends SingleCacheManagerTest {
 
 
       @Override
-      public MarshallableEntry get(Object key) throws PersistenceException {
+      public MarshallableEntry loadEntry(Object key) throws PersistenceException {
          incrementLoads();
          return null;
       }

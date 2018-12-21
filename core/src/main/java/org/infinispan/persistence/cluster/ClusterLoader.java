@@ -63,7 +63,7 @@ public class ClusterLoader implements CacheLoader, LocalOnlyCacheLoader {
    }
 
    @Override
-   public MarshallableEntry get(Object key) throws PersistenceException {
+   public MarshallableEntry loadEntry(Object key) throws PersistenceException {
       if (!isCacheReady()) return null;
 
       ClusteredGetCommand clusteredGetCommand = commandsFactory.buildClusteredGetCommand(key,
@@ -98,7 +98,7 @@ public class ClusterLoader implements CacheLoader, LocalOnlyCacheLoader {
 
    @Override
    public boolean contains(Object key) {
-      return get(key) != null;
+      return loadEntry(key) != null;
    }
 
    @Override

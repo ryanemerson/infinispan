@@ -369,7 +369,7 @@ public class SingleFileStoreStressTest extends SingleCacheManagerTest {
          Random random = new Random();
          while (stopLatch.getCount() != 0) {
             String key = keys.get(random.nextInt(keys.size()));
-            MarshallableEntry entryFromStore = store.get(key);
+            MarshallableEntry entryFromStore = store.loadEntry(key);
             if (entryFromStore == null) {
                assertTrue(allowNulls);
             } else {

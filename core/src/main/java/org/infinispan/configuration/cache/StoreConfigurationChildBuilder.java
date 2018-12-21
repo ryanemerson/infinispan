@@ -93,7 +93,7 @@ public interface StoreConfigurationChildBuilder<S> extends ConfigurationChildBui
     * the shared store must implement the {@link org.infinispan.persistence.spi.SegmentedAdvancedLoadWriteStore} interface.
     * Segmented stores help performance for things that require viewing the entire contents of the store (eg. iteration,
     * stream processing, state transfer, mass indexer). If the store doesn't provide constant time operations for methods
-    * such as {@link org.infinispan.persistence.spi.CacheLoader#get(Object)} or
+    * such as {@link org.infinispan.persistence.spi.CacheLoader#loadEntry(Object)} or
     * {@link org.infinispan.persistence.spi.CacheWriter#write(MarshallableEntry)} than segmenting this store could also
     * improve performance of those operations.
     * @param b whether this store should be segmented

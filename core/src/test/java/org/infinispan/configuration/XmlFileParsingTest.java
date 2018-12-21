@@ -285,7 +285,7 @@ public class XmlFileParsingTest extends AbstractInfinispanTest {
       public void init(InitializationContext ctx) { }
 
       @Override
-      public MarshallableEntry get(Object key) { return null; }
+      public MarshallableEntry loadEntry(Object key) { return null; }
 
       @Override
       public boolean contains(Object key) { return false; }

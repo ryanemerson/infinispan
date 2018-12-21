@@ -36,8 +36,8 @@ public class DistSyncTxStoreSharedTest extends BaseDistStoreTest {
       CacheLoader storeX = TestingUtil.getFirstLoader(cacheX);
       cacheX.put("key1", "v1");
       assertEquals("v1", cacheX.get("key1"));
-      assertNotNull(storeX.get("key1"));
-      assertEquals("v1", storeX.get("key1").getValue());
+      assertNotNull(storeX.loadEntry("key1"));
+      assertEquals("v1", storeX.loadEntry("key1").getValue());
    }
 
 }

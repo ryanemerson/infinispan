@@ -266,7 +266,7 @@ public class AsyncStoreStressTest extends AbstractInfinispanTest {
       return new Operation<String, Integer>("GET") {
          @Override
          public boolean call(String key, long run) {
-            MarshallableEntry me = store.get(key);
+            MarshallableEntry me = store.loadEntry(key);
             if (trace)
                log.tracef("Loaded key=%s, value=%s", key, me != null ? me.getValue() : "null");
             return me != null;

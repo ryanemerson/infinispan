@@ -103,7 +103,7 @@ public class CustomLoaderNonNullWithExpirationTest extends SingleCacheManagerTes
       }
 
       @Override
-      public MarshallableEntry<K, V> get(Object key) {
+      public MarshallableEntry<K, V> loadEntry(Object key) {
 
          Metadata metadata = new EmbeddedMetadata.Builder()
                .lifespan(1, TimeUnit.SECONDS).build();

@@ -300,7 +300,7 @@ public abstract class BaseStoreFunctionalTest extends SingleCacheManagerTest {
       assertEquals(numberOfEntries, cache.size());
       CacheLoader cl = TestingUtil.getCacheLoader(cache);
       if (cl != null)
-         IntStream.range(0, numberOfEntries).forEach(i -> assertNotNull(cl.get(Integer.toString(i))));
+         IntStream.range(0, numberOfEntries).forEach(i -> assertNotNull(cl.loadEntry(Integer.toString(i))));
    }
 
    public void testLoadEntrySet() {

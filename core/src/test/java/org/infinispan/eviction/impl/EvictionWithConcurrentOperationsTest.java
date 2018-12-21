@@ -391,7 +391,7 @@ public class EvictionWithConcurrentOperationsTest extends SingleCacheManagerTest
       CacheLoader<Object, Object> loader = TestingUtil.getFirstLoader(cache);
       assertNotNull("Key " + key + " does not exist in data container.", entry);
       assertEquals("Wrong value for key " + key + " in data container.", value, entry.getValue());
-      MarshallableEntry<Object, Object> entryLoaded = loader.get(key);
+      MarshallableEntry<Object, Object> entryLoaded = loader.loadEntry(key);
       assertNotNull("Key " + key + " does not exist in cache loader.", entryLoaded);
       assertEquals("Wrong value for key " + key + " in cache loader.", value, entryLoaded.getValue());
    }
@@ -403,7 +403,7 @@ public class EvictionWithConcurrentOperationsTest extends SingleCacheManagerTest
       CacheLoader<Object, Object> loader = TestingUtil.getFirstLoader(cache);
       assertNotNull("Key " + key + " does not exist in data container", entry);
       assertEquals("Wrong value for key " + key + " in data container", value, entry.getValue());
-      MarshallableEntry<Object, Object> entryLoaded = loader.get(key);
+      MarshallableEntry<Object, Object> entryLoaded = loader.loadEntry(key);
       assertNotNull("Key " + key + " does not exist in cache loader", entryLoaded);
       assertEquals("Wrong value for key " + key + " in cache loader", value, entryLoaded.getValue());
    }
@@ -414,7 +414,7 @@ public class EvictionWithConcurrentOperationsTest extends SingleCacheManagerTest
       InternalCacheEntry entry = container.get(key);
       CacheLoader<Object, Object> loader = TestingUtil.getFirstLoader(cache);
       assertNull("Key " + key + " exists in data container", entry);
-      MarshallableEntry<Object, Object> entryLoaded = loader.get(key);
+      MarshallableEntry<Object, Object> entryLoaded = loader.loadEntry(key);
       assertNotNull("Key " + key + " does not exist in cache loader", entryLoaded);
       assertEquals("Wrong value for key " + key + " in cache loader", value, entryLoaded.getValue());
    }

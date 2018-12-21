@@ -62,7 +62,7 @@ public class ComposedSegmentedLoadWriteStore<K, V, T extends AbstractSegmentedSt
    public MarshallableEntry<K, V> get(int segment, Object key) {
       AdvancedLoadWriteStore<K, V> store = stores.get(segment);
       if (store != null) {
-         return store.get(key);
+         return store.loadEntry(key);
       }
       return null;
    }

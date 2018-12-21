@@ -15,7 +15,7 @@ public class CustomCacheLoader implements AdvancedCacheLoader {
    }
 
    @Override
-   public MarshallableEntry get(Object o) {
+   public MarshallableEntry loadEntry(Object o) {
       return null;
    }
 

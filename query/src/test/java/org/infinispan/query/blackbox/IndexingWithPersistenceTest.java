@@ -105,7 +105,7 @@ public class IndexingWithPersistenceTest extends SingleCacheManagerTest {
       cache.evict(KEY);
 
       // check the entry is in the store
-      MarshallableEntry inStore = store.get(KEY);
+      MarshallableEntry inStore = store.loadEntry(KEY);
       assertNotNull(inStore);
       assertTrue("In store: " + inStore, inStore.getValue() instanceof Person);
       // ...and not in the container
@@ -120,7 +120,7 @@ public class IndexingWithPersistenceTest extends SingleCacheManagerTest {
       check.accept(sm);
 
       InternalCacheEntry ice = cache.getAdvancedCache().getDataContainer().get(KEY);
-      inStore = store.get(KEY);
+      inStore = store.loadEntry(KEY);
       if (remove) {
          assertEquals(null, ice);
          assertEquals(null, inStore);

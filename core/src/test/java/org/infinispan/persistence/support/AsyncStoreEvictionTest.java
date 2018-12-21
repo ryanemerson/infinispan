@@ -148,7 +148,7 @@ public class AsyncStoreEvictionTest extends AbstractInfinispanTest {
             eventually(new Condition() {
                @Override
                public boolean isSatisfied() throws Exception {
-                  return store.get("k1") != null;
+                  return store.loadEntry("k1") != null;
                }
             });
 
@@ -182,7 +182,7 @@ public class AsyncStoreEvictionTest extends AbstractInfinispanTest {
             cache.put("k1", "v1");
             cache.put("k2", "v2"); // force eviction of "k1"
 
-            eventually(() -> store.get("k1") != null);
+            eventually(() -> store.loadEntry("k1") != null);
 
             // simulate slow back end store
             store.lock.lock();

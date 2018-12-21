@@ -61,10 +61,10 @@ public class StateTransferCacheLoaderFunctionalTest extends StateTransferFunctio
       assert l.contains(A_B_NAME);
       assert l.contains(A_C_AGE);
       assert l.contains(A_C_NAME);
-      assert l.get(A_B_AGE).getValue().equals(TWENTY);
-      assert l.get(A_B_NAME).getValue().equals(JOE);
-      assert l.get(A_C_AGE).getValue().equals(FORTY);
-      assert l.get(A_C_NAME).getValue().equals(BOB);
+      assert l.loadEntry(A_B_AGE).getValue().equals(TWENTY);
+      assert l.loadEntry(A_B_NAME).getValue().equals(JOE);
+      assert l.loadEntry(A_C_AGE).getValue().equals(FORTY);
+      assert l.loadEntry(A_C_NAME).getValue().equals(BOB);
    }
 
    protected void verifyNoData(Cache<Object, Object> c) {

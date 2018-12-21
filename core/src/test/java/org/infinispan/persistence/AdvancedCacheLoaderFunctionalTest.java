@@ -42,7 +42,7 @@ public class AdvancedCacheLoaderFunctionalTest extends AbstractInfinispanTest {
          }
 
          @Override
-         public MarshallableEntry get(Object key) {
+         public MarshallableEntry loadEntry(Object key) {
             return null;
          }
 

@@ -65,15 +65,15 @@ public class JCacheLoaderAdapterTest extends AbstractInfinispanTest {
     }
 
     public void testLoad() {
-        assertNull(adapter.get(0));
+        assertNull(adapter.loadEntry(0));
 
-        MarshallableEntry v1Entry = adapter.get(1);
+        MarshallableEntry v1Entry = adapter.loadEntry(1);
 
         assertNotNull(v1Entry);
         assertEquals(1, v1Entry.getKey());
         assertEquals("v1", v1Entry.getValue());
 
-        MarshallableEntry v2Entry = adapter.get(2);
+        MarshallableEntry v2Entry = adapter.loadEntry(2);
 
         assertNotNull(v2Entry);
         assertEquals(2, v2Entry.getKey());

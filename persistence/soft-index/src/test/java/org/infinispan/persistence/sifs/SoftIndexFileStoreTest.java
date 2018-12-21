@@ -104,7 +104,7 @@ public class SoftIndexFileStoreTest extends BaseStoreTest {
          store.write(MarshalledEntryUtil.create(ice, getMarshaller()));
       }
       for (int i = 0; i < numEntries; ++i) {
-         assertNotNull(key(i), store.get(key(i)));
+         assertNotNull(key(i), store.loadEntry(key(i)));
          assertTrue(key(i), store.delete(key(i)));
       }
       store.clear();
@@ -113,7 +113,7 @@ public class SoftIndexFileStoreTest extends BaseStoreTest {
          store.write(MarshalledEntryUtil.create(ice, getMarshaller()));
       }
       for (int i = numEntries - 1; i >= 0; --i) {
-         assertNotNull(key(i), store.get(key(i)));
+         assertNotNull(key(i), store.loadEntry(key(i)));
          assertTrue(key(i), store.delete(key(i)));
       }
    }
@@ -130,7 +130,7 @@ public class SoftIndexFileStoreTest extends BaseStoreTest {
       store.stop();
       store.start();
 
-      MarshallableEntry entry = store.get("k1");
+      MarshallableEntry entry = store.loadEntry("k1");
       assertNotNull(entry);
       assertEquals("v1", entry.getValue());
       store.write(entry2);
@@ -138,7 +138,7 @@ public class SoftIndexFileStoreTest extends BaseStoreTest {
       store.stop();
       store.start();
 
-      entry = store.get("k1");
+      entry = store.loadEntry("k1");
       assertNotNull(entry);
       assertEquals("v2", entry.getValue());
    }
@@ -155,7 +155,7 @@ public class SoftIndexFileStoreTest extends BaseStoreTest {
       store.stop();
       store.start();
 
-      assertNull(store.get(KEY));
+      assertNull(store.loadEntry(KEY));
       store.write(entry2);
       store.delete(KEY);
       store.write(entry1);
@@ -164,7 +164,7 @@ public class SoftIndexFileStoreTest extends BaseStoreTest {
       startIndex = false;
       store.start();
 
-      assertEquals(entry1.getValue(), store.get(KEY).getValue());
+      assertEquals(entry1.getValue(), store.loadEntry(KEY).getValue());
       startIndex = true;
       store.startIndex();
    }
@@ -181,7 +181,7 @@ public class SoftIndexFileStoreTest extends BaseStoreTest {
       store.stop();
       store.start();
       // value1 has been overwritten and value2 has expired
-      MarshallableEntry entry = store.get("key");
+      MarshallableEntry entry = store.loadEntry("key");
       assertNull(entry != null ? entry.getKey() + "=" + entry.getValue() : null, entry);
    }
 

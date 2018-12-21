@@ -55,7 +55,7 @@ public class Utils {
          CacheLoader store = TestingUtil.getFirstLoader(c);
          if (isOwner(c, key)) {
             assertIsInContainerImmortal(c, key);
-            MarshallableEntry me = store.get(key);
+            MarshallableEntry me = store.loadEntry(key);
             assertEquals(me.getValue(), value);
             ownerVersion = me.getMetadata().version();
          }
@@ -68,7 +68,7 @@ public class Utils {
       for (Cache c: caches) {
          CacheLoader store = TestingUtil.getFirstLoader(c);
          if (!isOwner(c, key)) {
-            MarshallableEntry me = store.get(key);
+            MarshallableEntry me = store.loadEntry(key);
             if (me != null && me.getMetadata() != null && ownerVersion.equals(me.getMetadata().version())) {
                assertEquals(me.getValue(), value);
                ++equalVersions;

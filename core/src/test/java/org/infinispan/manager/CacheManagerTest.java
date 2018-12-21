@@ -528,7 +528,7 @@ public class CacheManagerTest extends AbstractInfinispanTest {
       @Override public void init(InitializationContext ctx) {}
       @Override public void write(MarshallableEntry entry) {}
       @Override public boolean delete(Object key) { return false; }
-      @Override public MarshallableEntry get(Object key) { return null; }
+      @Override public MarshallableEntry loadEntry(Object key) { return null; }
       @Override public boolean contains(Object key) { return false; }
       @Override public void start() {}
       @Override public void stop() {

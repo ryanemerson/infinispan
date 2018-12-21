@@ -40,7 +40,7 @@ public class JCacheLoaderAdapter<K, V> implements org.infinispan.persistence.spi
    }
 
    @Override
-   public MarshallableEntry get(Object key) throws PersistenceException {
+   public MarshallableEntry loadEntry(Object key) throws PersistenceException {
       V value = loadValue(key);
 
       if (value != null) {
@@ -79,7 +79,7 @@ public class JCacheLoaderAdapter<K, V> implements org.infinispan.persistence.spi
 
    @Override
    public boolean contains(Object key) {
-      return get(key) != null;
+      return loadEntry(key) != null;
    }
 
 }

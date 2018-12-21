@@ -17,7 +17,7 @@ public abstract class AbstractSegmentedAdvancedLoadWriteStore<K, V> implements S
    protected abstract ToIntFunction<Object> getKeyMapper();
 
    @Override
-   public final MarshallableEntry<K, V> get(Object key) {
+   public final MarshallableEntry<K, V> loadEntry(Object key) {
       return get(getKeyMapper().applyAsInt(key), key);
    }
 

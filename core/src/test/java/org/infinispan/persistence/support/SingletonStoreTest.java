@@ -86,7 +86,7 @@ public class SingletonStoreTest extends MultipleCacheManagersTest {
    }
 
    private Object load(SingletonCacheWriter cs, Object key) throws PersistenceException {
-      MarshallableEntry se = ((CacheLoader)cs.undelegate()).get(key);
+      MarshallableEntry se = ((CacheLoader)cs.undelegate()).loadEntry(key);
       return se == null ? null : se.getValue();
    }
 

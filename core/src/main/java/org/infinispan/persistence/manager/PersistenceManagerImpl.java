@@ -622,7 +622,7 @@ public class PersistenceManagerImpl implements PersistenceManager {
          checkStoreAvailability();
          for (CacheLoader l : loaders) {
             if (allowLoad(l, localInvocation, includeStores)) {
-               MarshallableEntry load = l.get(key);
+               MarshallableEntry load = l.loadEntry(key);
                if (load != null)
                   return load;
             }
@@ -647,7 +647,7 @@ public class PersistenceManagerImpl implements PersistenceManager {
          }
          for (CacheLoader l : loaders) {
             if (allowLoad(l, localInvocation, includeStores)) {
-               MarshallableEntry load = l.get(key);
+               MarshallableEntry load = l.loadEntry(key);
                if (load != null)
                   return load;
             }

@@ -360,7 +360,7 @@ public class JdbcStringBasedStore<K,V> implements SegmentedAdvancedLoadWriteStor
    }
 
    @Override
-   public MarshallableEntry<K, V> get(Object key) {
+   public MarshallableEntry<K, V> loadEntry(Object key) {
       String lockingKey = key2Str(key);
       Connection conn = null;
       PreparedStatement ps = null;
@@ -513,7 +513,7 @@ public class JdbcStringBasedStore<K,V> implements SegmentedAdvancedLoadWriteStor
    @Override
    public boolean contains(Object key) {
       //we can do better if needed...
-      return get(key) != null;
+      return loadEntry(key) != null;
    }
 
    private <P> Flowable<P> publish(IntSet segments, Function<ResultSet, Flowable<P>> function) {

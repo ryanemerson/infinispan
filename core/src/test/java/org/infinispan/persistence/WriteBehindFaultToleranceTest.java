@@ -57,7 +57,7 @@ public class WriteBehindFaultToleranceTest extends AbstractInfinispanTest {
       DummyInMemoryStore store = (DummyInMemoryStore) TestingUtil.extractField(AdvancedAsyncCacheWriter.class, asyncWriter, "actual");
       store.setAvailable(true);
       cache.put(1, 1);
-      eventually(() -> store.get(1) != null);
+      eventually(() -> store.loadEntry(1) != null);
       assertEquals(1, store.size());
 
       store.setAvailable(false);
@@ -102,7 +102,7 @@ public class WriteBehindFaultToleranceTest extends AbstractInfinispanTest {
       DummyInMemoryStore store = (DummyInMemoryStore) TestingUtil.extractField(AdvancedAsyncCacheWriter.class, asyncWriter, "actual");
       assertTrue(store.isAvailable());
       cache.put(1, 1);
-      eventually(() -> store.get(1) != null);
+      eventually(() -> store.loadEntry(1) != null);
       assertEquals(1, store.size());
 
       store.setAvailable(false);
@@ -110,7 +110,7 @@ public class WriteBehindFaultToleranceTest extends AbstractInfinispanTest {
       cache.put(1, 2); // Should fail on the store, but complete in-memory
       TestingUtil.sleepThread(1000); // Sleep to ensure async write is attempted
       store.setAvailable(true);
-      MarshallableEntry entry = store.get(1);
+      MarshallableEntry entry = store.loadEntry(1);
       assertNotNull(entry);
       assertEquals(1, entry.getValue());
       assertEquals(2, cache.get(1));

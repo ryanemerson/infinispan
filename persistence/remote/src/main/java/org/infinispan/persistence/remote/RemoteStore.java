@@ -135,7 +135,7 @@ public class RemoteStore<K, V> implements SegmentedAdvancedLoadWriteStore<K, V>,
    }
 
    @Override
-   public MarshallableEntry<K, V> get(Object key) throws PersistenceException {
+   public MarshallableEntry<K, V> loadEntry(Object key) throws PersistenceException {
       if (configuration.rawValues()) {
          Object unwrappedKey;
          if (key instanceof WrappedByteArray) {

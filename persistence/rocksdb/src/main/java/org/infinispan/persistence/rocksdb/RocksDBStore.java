@@ -286,7 +286,7 @@ public class RocksDBStore<K,V> implements SegmentedAdvancedLoadWriteStore<K,V> {
     }
 
     @Override
-    public MarshallableEntry get(Object key) {
+    public MarshallableEntry loadEntry(Object key) {
         return handler.load(-1, key);
     }
 

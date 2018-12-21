@@ -55,8 +55,8 @@ public abstract class BaseJpaStoreTest extends AbstractJpaStoreTest {
       cs.write(me);
 
       assertTrue(cs.contains(obj.getKey()));
-      assertEquals(obj.getValue(), cs.get(obj.getKey()).getValue());
-      assertNull(cs.get(obj.getKey()).getMetadata());
+      assertEquals(obj.getValue(), cs.loadEntry(obj.getKey()).getValue());
+      assertNull(cs.loadEntry(obj.getKey()).getMetadata());
 
       // TODO test with metadata
 
@@ -72,9 +72,9 @@ public abstract class BaseJpaStoreTest extends AbstractJpaStoreTest {
       cs.write(createEntry(obj1));
       cs.write(createEntry(obj2));
       cs.write(createEntry(obj3));
-      assertEquals(cs.get(obj1.getKey()).getValue(), obj1.getValue());
-      assertEquals(cs.get(obj2.getKey()).getValue(), obj2.getValue());
-      assertEquals(cs.get(obj3.getKey()).getValue(), obj3.getValue());
+      assertEquals(cs.loadEntry(obj1.getKey()).getValue(), obj1.getValue());
+      assertEquals(cs.loadEntry(obj2.getKey()).getValue(), obj2.getValue());
+      assertEquals(cs.loadEntry(obj3.getKey()).getValue(), obj3.getValue());
 
       final ConcurrentHashMap map = new ConcurrentHashMap();
       Consumer<MarshallableEntry<Object, Object>> taskWithValues = me -> {

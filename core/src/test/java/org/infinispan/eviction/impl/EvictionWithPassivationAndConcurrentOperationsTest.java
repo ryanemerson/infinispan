@@ -33,7 +33,7 @@ public class EvictionWithPassivationAndConcurrentOperationsTest extends Eviction
       CacheLoader<Object, Object> loader = TestingUtil.getFirstLoader(cache);
       assertNotNull("Key " + key + " does not exist in data container.", entry);
       assertEquals("Wrong value for key " + key + " in data container.", value, entry.getValue());
-      MarshallableEntry<Object, Object> entryLoaded = loader.get(key);
+      MarshallableEntry<Object, Object> entryLoaded = loader.loadEntry(key);
       assertNull("Key " + key + " exists in cache loader.", entryLoaded);
    }
 
@@ -45,7 +45,7 @@ public class EvictionWithPassivationAndConcurrentOperationsTest extends Eviction
       CacheLoader<Object, Object> loader = TestingUtil.getFirstLoader(cache);
       assertNotNull("Key " + key + " does not exist in data container", entry);
       assertEquals("Wrong value for key " + key + " in data container", value, entry.getValue());
-      MarshallableEntry<Object, Object> entryLoaded = loader.get(key);
+      MarshallableEntry<Object, Object> entryLoaded = loader.loadEntry(key);
       assertNull("Key " + key + " exists in cache loader", entryLoaded);
    }
 
@@ -56,7 +56,7 @@ public class EvictionWithPassivationAndConcurrentOperationsTest extends Eviction
       InternalCacheEntry entry = container.get(key);
       CacheLoader<Object, Object> loader = TestingUtil.getFirstLoader(cache);
       assertNull("Key " + key + " exists in data container", entry);
-      MarshallableEntry<Object, Object> entryLoaded = loader.get(key);
+      MarshallableEntry<Object, Object> entryLoaded = loader.loadEntry(key);
       assertNotNull("Key " + key + " does not exist in cache loader", entryLoaded);
       assertEquals("Wrong value for key " + key + " in cache loader", value, entryLoaded.getValue());
    }

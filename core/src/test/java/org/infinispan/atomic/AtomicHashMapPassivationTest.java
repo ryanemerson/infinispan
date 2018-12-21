@@ -78,7 +78,7 @@ public class AtomicHashMapPassivationTest extends SingleCacheManagerTest {
    }
 
    private void assertInStoreNotInCache(Object key) throws PersistenceException {
-      MarshallableEntry se = loader.get(key);
+      MarshallableEntry se = loader.loadEntry(key);
       testStoredEntry(se, key, "Store");
       assert !cache.getAdvancedCache().getDataContainer().containsKey(key) : "Key " + key + " should not be in cache!";
    }
