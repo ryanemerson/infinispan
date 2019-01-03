@@ -2,9 +2,8 @@ package org.infinispan.persistence.jpa;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -38,10 +37,11 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.infinispan.commons.configuration.ConfiguredBy;
 import org.infinispan.commons.marshall.StreamingMarshaller;
 import org.infinispan.commons.persistence.Store;
-import org.infinispan.commons.time.TimeService;
 import org.infinispan.commons.util.AbstractIterator;
 import org.infinispan.executors.ExecutorAllCompletionService;
-import org.infinispan.metadata.Metadata;
+import org.infinispan.marshall.core.MarshalledEntry;
+import org.infinispan.marshall.core.MarshalledEntryFactory;
+import org.infinispan.metadata.InternalMetadata;
 import org.infinispan.persistence.jpa.configuration.JpaStoreConfiguration;
 import org.infinispan.persistence.jpa.impl.EntityManagerFactoryRegistry;
 import org.infinispan.persistence.jpa.impl.MetadataEntity;
@@ -49,16 +49,12 @@ import org.infinispan.persistence.jpa.impl.MetadataEntityKey;
 import org.infinispan.persistence.jpa.impl.Stats;
 import org.infinispan.persistence.spi.AdvancedLoadWriteStore;
 import org.infinispan.persistence.spi.InitializationContext;
-import org.infinispan.persistence.spi.MarshallableEntry;
-import org.infinispan.persistence.spi.MarshallableEntryFactory;
 import org.infinispan.util.KeyValuePair;
+import org.infinispan.commons.time.TimeService;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
-import org.reactivestreams.Publisher;
 
 import io.reactivex.Flowable;
-import io.reactivex.Scheduler;
-import io.reactivex.internal.functions.Functions;
 import io.reactivex.schedulers.Schedulers;
 
 /**
@@ -77,9 +73,9 @@ public class JpaStore<K, V> implements AdvancedLoadWriteStore<K, V> {
    private EntityManagerFactory emf;
    private EntityManagerFactoryRegistry emfRegistry;
    private StreamingMarshaller marshaller;
-   private MarshallableEntryFactory marshallerEntryFactory;
+   private MarshalledEntryFactory marshallerEntryFactory;
    private TimeService timeService;
-   private Scheduler scheduler;
+   private ExecutorService executorService;
    private Stats stats = new Stats();
    private boolean setFetchSizeMinInteger = false;
 
@@ -87,10 +83,10 @@ public class JpaStore<K, V> implements AdvancedLoadWriteStore<K, V> {
    public void init(InitializationContext ctx) {
       this.configuration = ctx.getConfiguration();
       this.emfRegistry = ctx.getCache().getAdvancedCache().getComponentRegistry().getGlobalComponentRegistry().getComponent(EntityManagerFactoryRegistry.class);
-      this.marshallerEntryFactory = ctx.getMarshallableEntryFactory();
+      this.marshallerEntryFactory = ctx.getMarshalledEntryFactory();
       this.marshaller = ctx.getMarshaller();
       this.timeService = ctx.getTimeService();
-      this.scheduler = Schedulers.from(ctx.getExecutor());
+      this.executorService = ctx.getExecutor();
    }
 
    @Override
@@ -303,7 +299,7 @@ public class JpaStore<K, V> implements AdvancedLoadWriteStore<K, V> {
          if (entity == null) {
             return false;
          }
-         MetadataEntity metadata = getMetadataEntity(key, em);
+         MetadataEntity metadata = getMetadata(key, em);
          EntityTransaction txn = em.getTransaction();
          if (trace) log.trace("Removing " + entity + "(" + toString(metadata) + ")");
          long txnBegin = timeService.time();
@@ -384,17 +380,18 @@ public class JpaStore<K, V> implements AdvancedLoadWriteStore<K, V> {
       return new MetadataEntityKey(keyBytes);
    }
 
-   private MetadataEntity getMetadataEntity(Object key, EntityManager em) {
+   private MetadataEntity getMetadata(Object key, EntityManager em) {
       return configuration.storeMetadata() ? findMetadata(em, getMetadataKey(key)) : null;
    }
 
    @Override
-   public void write(MarshallableEntry entry) {
+   public void write(MarshalledEntry entry) {
       EntityManager em = emf.createEntityManager();
 
       Object entity = entry.getValue();
       MetadataEntity metadata = configuration.storeMetadata() ?
-            new MetadataEntity(entry.getKeyBytes(), entry.metadataBytes(), entry.expiryTime()) : null;
+            new MetadataEntity(entry.getKeyBytes(), entry.getMetadataBytes(),
+                  entry.getMetadata() == null ? Long.MAX_VALUE : entry.getMetadata().expiryTime()) : null;
       try {
          validateEntityIsAssignable(entity);
          validateObjectId(entry);
@@ -425,58 +422,43 @@ public class JpaStore<K, V> implements AdvancedLoadWriteStore<K, V> {
    }
 
    @Override
-   public CompletionStage<Void> bulkUpdate(Publisher<MarshallableEntry<? extends K, ? extends V>> publisher) {
-      CompletableFuture<Void> future = new CompletableFuture<>();
-      Flowable.using(() -> {
-               EntityManager em = emf.createEntityManager();
-               EntityTransaction txn = em.getTransaction();
-               return new KeyValuePair<>(em, txn);
-            },
-            kvp -> createBatchFlowable(kvp.getKey(), kvp.getValue(), publisher),
-            kvp -> {
-               EntityTransaction txn = kvp.getValue();
-               if (txn != null && txn.isActive())
-                  txn.rollback();
-               kvp.getKey().close();
-            })
-            .doOnError(e -> {
-               if (e instanceof JpaStoreException)
-                  throw (JpaStoreException) e;
-               throw new JpaStoreException("Exception caught in bulkUpdate()", e);
-            })
-            .subscribe(Functions.emptyConsumer(), future::completeExceptionally, () -> future.complete(null));
-      return future;
-   }
-
-   private Flowable<MarshallableEntry<? extends K, ? extends V>> createBatchFlowable(EntityManager em, EntityTransaction txn, Publisher<MarshallableEntry<? extends K, ? extends V>> publisher) {
-      final long txnBegin = timeService.time();
-      txn.begin();
-      return Flowable.fromPublisher(publisher)
-            .doOnNext(entry -> {
+   public void writeBatch(Iterable<MarshalledEntry<? extends K, ? extends V>> marshalledEntries) {
+      EntityManager em = emf.createEntityManager();
+      try {
+         EntityTransaction txn = em.getTransaction();
+         long txnBegin = timeService.time();
+         try {
+            txn.begin();
+            for (MarshalledEntry entry : marshalledEntries) {
                Object entity = entry.getValue();
                validateEntityIsAssignable(entity);
                validateObjectId(entry);
 
                MetadataEntity metadata = configuration.storeMetadata() ?
-                     new MetadataEntity(entry.getKeyBytes(), entry.metadataBytes(),
-                           entry.metadata() == null ? Long.MAX_VALUE : entry.expiryTime()) : null;
+                     new MetadataEntity(entry.getKeyBytes(), entry.getMetadataBytes(),
+                           entry.getMetadata() == null ? Long.MAX_VALUE : entry.getMetadata().expiryTime()) : null;
 
                mergeEntity(em, entity);
                if (metadata != null && metadata.hasBytes())
                   mergeMetadata(em, metadata);
-            })
-            .doOnComplete(() -> {
-               stats.addBatchWriteTxCommitted(timeService.time() - txnBegin);
-               txn.commit();
-            })
-            .doOnError(e -> stats.addBatchWriteTxFailed(timeService.time() - txnBegin))
-            .doFinally(() -> {
-               if (txn.isActive())
-                  txn.rollback();
-            });
+            }
+            txn.commit();
+            stats.addBatchWriteTxCommitted(timeService.time() - txnBegin);
+         } catch (Exception e) {
+            stats.addBatchWriteTxFailed(timeService.time() - txnBegin);
+            if (e instanceof JpaStoreException)
+               throw e;
+            throw new JpaStoreException("Exception caught in writeBatch()", e);
+         } finally {
+            if (txn != null && txn.isActive())
+               txn.rollback();
+         }
+      } finally {
+         em.close();
+      }
    }
 
-   private void validateObjectId(MarshallableEntry entry) {
+   private void validateObjectId(MarshalledEntry entry) {
       Object id = emf.getPersistenceUnitUtil().getIdentifier(entry.getValue());
       if (!entry.getKey().equals(id)) {
          throw new JpaStoreException(
@@ -534,7 +516,7 @@ public class JpaStore<K, V> implements AdvancedLoadWriteStore<K, V> {
    }
 
    @Override
-   public MarshallableEntry loadEntry(Object key) {
+   public MarshalledEntry load(Object key) {
       if (!isValidKeyType(key)) {
          return null;
       }
@@ -549,25 +531,22 @@ public class JpaStore<K, V> implements AdvancedLoadWriteStore<K, V> {
             try {
                if (entity == null)
                   return null;
-
-               Metadata m = null;
+               InternalMetadata m = null;
                if (configuration.storeMetadata()) {
                   MetadataEntity metadata = findMetadata(em, getMetadataKey(key));
                   if (metadata != null && metadata.getMetadata() != null) {
                      try {
-                        m = (Metadata) marshaller.objectFromByteBuffer(metadata.getMetadata());
+                        m = (InternalMetadata) marshaller.objectFromByteBuffer(metadata.getMetadata());
                      } catch (Exception e) {
                         throw new JpaStoreException("Failed to unmarshall metadata", e);
                      }
-                     if (isExpired(metadata)) {
+                     if (m.isExpired(timeService.wallClockTime())) {
                         return null;
                      }
-                     if (trace) log.trace("Loaded " + entity + " (" + m + ")");
-                     return marshallerEntryFactory.create(key, entity, m, metadata.getExpiration(), -1);
                   }
                }
                if (trace) log.trace("Loaded " + entity + " (" + m + ")");
-               return marshallerEntryFactory.create(key, entity, m);
+               return marshallerEntryFactory.newMarshalledEntry(key, entity, m);
             } finally {
                try {
                   txn.commit();
@@ -611,7 +590,7 @@ public class JpaStore<K, V> implements AdvancedLoadWriteStore<K, V> {
    }
 
    @Override
-   public Flowable<MarshallableEntry<K, V>> entryPublisher(Predicate<? super K> filter, boolean fetchValue, boolean fetchMetadata) {
+   public Flowable<MarshalledEntry<K, V>> publishEntries(Predicate<? super K> filter, boolean fetchValue, boolean fetchMetadata) {
       boolean innerFetchMetadata;
       if (fetchMetadata && !configuration.storeMetadata()) {
          log.debug("Metadata cannot be retrieved as JPA Store is not configured to persist metadata.");
@@ -639,25 +618,20 @@ public class JpaStore<K, V> implements AdvancedLoadWriteStore<K, V> {
          return keyPublisher
                // Run the loading in parallel using executor since it will be blocking
                .parallel()
-               .runOn(scheduler)
+               .runOn(Schedulers.from(executorService))
                .map(k -> loadEntry(k, fetchValue, innerFetchMetadata))
                .sequential();
       } else {
-         return keyPublisher.map(k -> marshallerEntryFactory.create(k));
+         return keyPublisher.map(k -> marshallerEntryFactory.newMarshalledEntry(k, (Object) null, null));
       }
    }
 
-   private boolean isExpired(MetadataEntity entity) {
-      long expiry = entity.getExpiration();
-      return expiry > 0 && expiry <= timeService.wallClockTime();
-   }
-
-   private Metadata getMetadata(MetadataEntity entity) {
-      if (entity == null)
-         return null;
+   private InternalMetadata getMetadata(EntityManager em, Object key) {
+      MetadataEntity m = findMetadata(em, getMetadataKey(key));
+      if (m == null) return null;
 
       try {
-         return (Metadata) marshaller.objectFromByteBuffer(entity.getMetadata());
+         return (InternalMetadata) marshaller.objectFromByteBuffer(m.getMetadata());
       } catch (Exception e) {
          throw new JpaStoreException("Failed to unmarshall metadata", e);
       }
@@ -792,21 +766,20 @@ public class JpaStore<K, V> implements AdvancedLoadWriteStore<K, V> {
       }
    }
 
-   private MarshallableEntry<K, V> loadEntry(Object key, boolean fetchValue, boolean fetchMetadata) {
+   private MarshalledEntry<K, V> loadEntry(Object key, boolean fetchValue, boolean fetchMetadata) {
       Object entity;
-      Metadata metadata;
+      InternalMetadata metadata;
 
       // The loading of entries and metadata is offloaded to another thread.
       // We need second entity manager anyway because with MySQL we can't do streaming
       // in parallel with other queries using single connection
       EntityManager emExec = emf.createEntityManager();
       try {
-         MetadataEntity metaEntity = getMetadataEntity(key, emExec);
-         metadata = getMetadata(metaEntity);
+         metadata = fetchMetadata ? getMetadata(emExec, key) : null;
          if (trace) {
             log.tracef("Fetched metadata (fetching? %s) %s", fetchMetadata, metadata);
          }
-         if (metaEntity != null && isExpired(metaEntity)) {
+         if (metadata != null && metadata.isExpired(timeService.wallClockTime())) {
             return null;
          }
          if (fetchValue) {
@@ -823,7 +796,7 @@ public class JpaStore<K, V> implements AdvancedLoadWriteStore<K, V> {
          }
       }
       try {
-         final MarshallableEntry<K, V> marshalledEntry = marshallerEntryFactory.create(key, entity, metadata);
+         final MarshalledEntry<K, V> marshalledEntry = marshallerEntryFactory.newMarshalledEntry(key, entity, metadata);
          if (marshalledEntry != null) {
             return marshalledEntry;
          }

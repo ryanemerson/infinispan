@@ -29,66 +29,76 @@ public interface MarshalledEntry<K,V> extends MarshallableEntry<K,V> {
     * for backwards compatibility.
     */
    static <K,V> MarshalledEntry<K,V> wrap(MarshallableEntry<K,V> entry) {
-      return entry instanceof MarshalledEntry ? (MarshalledEntry<K,V>) entry : new MarshalledEntry<K, V>() {
-         @Override
-         public ByteBuffer getKeyBytes() {
-            return entry.getKeyBytes();
-         }
-
-         @Override
-         public ByteBuffer getValueBytes() {
-            return entry.getValueBytes();
-         }
-
-         @Override
-         public ByteBuffer metadataBytes() {
-            return entry.metadataBytes();
-         }
-
-         @Override
-         public ByteBuffer getMetadataBytes() {
-            return metadataBytes();
-         }
-
-         @Override
-         public InternalMetadata getMetadata() {
-            return new InternalMetadataImpl(metadata(), created(), lastUsed());
-         }
-
-         @Override
-         public K getKey() {
-            return entry.getKey();
-         }
-
-         @Override
-         public V getValue() {
-            return entry.getValue();
-         }
-
-         @Override
-         public Metadata metadata() {
-            return entry.metadata();
-         }
-
-         @Override
-         public long created() {
-            return entry.created();
-         }
-
-         @Override
-         public long lastUsed() {
-            return entry.lastUsed();
-         }
-
-         @Override
-         public boolean isExpired(long now) {
-            return entry.isExpired(now);
-         }
-
-         @Override
-         public long expiryTime() {
-            return entry.expiryTime();
-         }
-      };
+      return entry instanceof MarshalledEntry ? (MarshalledEntry<K,V>) entry : new Wrapper<>(entry);
    }
+
+   class Wrapper<K,V> implements MarshalledEntry<K,V> {
+
+      MarshallableEntry<K,V> entry;
+
+      Wrapper(MarshallableEntry<K, V> entry) {
+         this.entry = entry;
+      }
+
+      @Override
+      public ByteBuffer getKeyBytes() {
+         return entry.getKeyBytes();
+      }
+
+      @Override
+      public ByteBuffer getValueBytes() {
+         return entry.getValueBytes();
+      }
+
+      @Override
+      public ByteBuffer metadataBytes() {
+         return entry.metadataBytes();
+      }
+
+      @Override
+      public ByteBuffer getMetadataBytes() {
+         return metadataBytes();
+      }
+
+      @Override
+      public InternalMetadata getMetadata() {
+         Metadata meta = metadata();
+         return meta == null ? null : new InternalMetadataImpl(meta, created(), lastUsed());
+      }
+
+      @Override
+      public K getKey() {
+         return entry.getKey();
+      }
+
+      @Override
+      public V getValue() {
+         return entry.getValue();
+      }
+
+      @Override
+      public Metadata metadata() {
+         return entry.metadata();
+      }
+
+      @Override
+      public long created() {
+         return entry.created();
+      }
+
+      @Override
+      public long lastUsed() {
+         return entry.lastUsed();
+      }
+
+      @Override
+      public boolean isExpired(long now) {
+         return entry.isExpired(now);
+      }
+
+      @Override
+      public long expiryTime() {
+         return entry.expiryTime();
+      }
+   };
 }

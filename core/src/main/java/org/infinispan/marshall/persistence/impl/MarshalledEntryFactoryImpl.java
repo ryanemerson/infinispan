@@ -7,7 +7,6 @@ import org.infinispan.marshall.core.MarshalledEntry;
 import org.infinispan.marshall.core.MarshalledEntryFactory;
 import org.infinispan.metadata.InternalMetadata;
 import org.infinispan.metadata.Metadata;
-import org.infinispan.metadata.impl.InternalMetadataImpl;
 import org.infinispan.persistence.spi.MarshallableEntry;
 import org.infinispan.persistence.spi.MarshallableEntryFactory;
 
@@ -29,18 +28,19 @@ public class MarshalledEntryFactoryImpl implements MarshalledEntryFactory, Marsh
    }
 
    @Override
-   public MarshallableEntry create(ByteBuffer key, ByteBuffer valueBytes, ByteBuffer metadataBytes) {
-      return newMarshalledEntry(key, valueBytes, metadataBytes);
+   public MarshallableEntry create(ByteBuffer key, ByteBuffer valueBytes) {
+      return new MarshallableEntryImpl(key, valueBytes, null, marshaller);
+   }
+
+   // TODO remove when migrator updated
+   @Override
+   public MarshallableEntry create(Object key, ByteBuffer valueBytes, ByteBuffer metadataBytes) {
+      return new MarshallableEntryImpl(key, valueBytes, metadataBytes, marshaller);
    }
 
    @Override
    public MarshallableEntry create(ByteBuffer key, ByteBuffer valueBytes, ByteBuffer metadataBytes, long created, long lastUsed) {
-      return new MarshalledEntryImpl<>(key, valueBytes, metadataBytes, created, lastUsed, marshaller);
-   }
-
-   @Override
-   public MarshallableEntry create(Object key, ByteBuffer valueBytes, ByteBuffer metadataBytes) {
-      return newMarshalledEntry(key, valueBytes, metadataBytes);
+      return new MarshallableEntryImpl(key, valueBytes, metadataBytes, created, lastUsed, marshaller);
    }
 
    @Override
@@ -60,7 +60,7 @@ public class MarshalledEntryFactoryImpl implements MarshalledEntryFactory, Marsh
 
    @Override
    public MarshallableEntry create(Object key, Object value, Metadata metadata, long created, long lastUsed) {
-      return new MarshalledEntryImpl<>(key, value, metadata, created, lastUsed, marshaller);
+      return new MarshallableEntryImpl(key, value, metadata, created, lastUsed, marshaller);
    }
 
    @Override
@@ -80,15 +80,6 @@ public class MarshalledEntryFactoryImpl implements MarshalledEntryFactory, Marsh
 
    @Override
    public MarshalledEntry newMarshalledEntry(Object key, Object value, InternalMetadata im) {
-      if (im == null)
-         return new MarshalledEntryImpl<>(key, value, (Metadata) null, -1, -1, marshaller);
-
-      long created = im.created();
-      long lastUsed = im.lastUsed();
-      if (im instanceof InternalMetadataImpl) {
-         InternalMetadataImpl impl = (InternalMetadataImpl) im;
-         return new MarshalledEntryImpl<>(key, value, impl.actual(), created, lastUsed, marshaller);
-      }
-      return new MarshalledEntryImpl<>(key, value, null, created, lastUsed, marshaller);
+      return new MarshalledEntryImpl<>(key, value, im, marshaller);
    }
 }

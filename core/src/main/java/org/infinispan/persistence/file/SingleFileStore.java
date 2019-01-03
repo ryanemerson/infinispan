@@ -474,7 +474,7 @@ public class SingleFileStore<K, V> implements AdvancedLoadWriteStore<K, V> {
       // If we only require the key, then no need to read disk
       if (!loadValue && !loadMetadata) {
          try {
-            return entryFactory.create(key, valueBb, metadataBb);
+            return entryFactory.create(key);
          } finally {
             fe.unlock();
          }

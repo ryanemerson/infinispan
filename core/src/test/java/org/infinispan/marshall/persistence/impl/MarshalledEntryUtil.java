@@ -32,7 +32,7 @@ public class MarshalledEntryUtil {
    }
 
    public static <K,V> MarshallableEntry<K,V> create(K key, V value, Metadata metadata, long created, long lastUsed, Marshaller m) {
-      return new MarshalledEntryImpl<>(key, value, metadata, created, lastUsed, m);
+      return new MarshallableEntryImpl<>(key, value, metadata, created, lastUsed, m);
    }
 
    public static <K, V> MarshallableEntry<K, V> create(InternalCacheEntry<K, V> ice, Marshaller m) {
@@ -46,6 +46,6 @@ public class MarshalledEntryUtil {
          created = ice.getCreated();
          lastUsed = ice.getLastUsed();
       }
-      return new MarshalledEntryImpl<>(ice.getKey(), ice.getValue(), metadata, created, lastUsed, m);
+      return new MarshallableEntryImpl<>(ice.getKey(), ice.getValue(), metadata, created, lastUsed, m);
    }
 }

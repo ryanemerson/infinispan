@@ -23,6 +23,7 @@ import org.infinispan.util.KeyValuePair;
 class StringJdbcIterator extends AbstractJdbcEntryIterator {
 
    private final TwoWayKey2StringMapper key2StringMapper;
+   // TODO make this use the deprecated MarshalledEntry methods
    private final MarshallableEntryFactory entryFactory;
 
    StringJdbcIterator(ConnectionFactory connectionFactory, TableManager tableManager, StreamingMarshaller marshaller,
