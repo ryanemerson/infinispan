@@ -64,6 +64,8 @@ public class ComponentRegistry extends AbstractComponentRegistry {
    private PerCacheInboundInvocationHandler inboundInvocationHandler;
    private VersionGenerator versionGenerator;
    private DistributionManager distributionManager;
+   private PersistenceMarshaller persistenceMarshaller;
+   private StreamingMarshaller internalMarshaller;
 
    /**
     * Creates an instance of the component registry.  The configuration passed in is automatically registered.
@@ -231,21 +233,21 @@ public class ComponentRegistry extends AbstractComponentRegistry {
 
    @Deprecated
    public StreamingMarshaller getCacheMarshaller() {
-      return getInternalMarshaller();
+      return internalMarshaller;
    }
 
    /**
     * Caching shortcut for #getComponent(StreamingMarshaller.class, INTERNAL_MARSHALLER);
     */
    public StreamingMarshaller getInternalMarshaller() {
-      return globalComponents.getComponent(StreamingMarshaller.class, KnownComponentNames.INTERNAL_MARSHALLER);
+      return internalMarshaller;
    }
 
    /**
-    * Caching shortcut for #getComponent(StreamAwareMarshaller.class, PERSISTENCE_MARSHALLER);
+    * Caching shortcut for #getComponent(PersistenceMarshaller.class, PERSISTENCE_MARSHALLER);
     */
    public PersistenceMarshaller getPersistenceMarshaller() {
-      return getComponent(PersistenceMarshaller.class, KnownComponentNames.PERSISTENCE_MARSHALLER);
+      return persistenceMarshaller;
    }
 
    /**
@@ -315,6 +317,8 @@ public class ComponentRegistry extends AbstractComponentRegistry {
       inboundInvocationHandler = basicComponentRegistry.getComponent(PerCacheInboundInvocationHandler.class).wired();
       versionGenerator = basicComponentRegistry.getComponent(VersionGenerator.class).wired();
       distributionManager = basicComponentRegistry.getComponent(DistributionManager.class).wired();
+      persistenceMarshaller = basicComponentRegistry.getComponent(KnownComponentNames.PERSISTENCE_MARSHALLER, PersistenceMarshaller.class).wired();
+      internalMarshaller = basicComponentRegistry.getComponent(KnownComponentNames.INTERNAL_MARSHALLER, StreamingMarshaller.class).wired();
 
       // Initialize components that don't have any strong references from the cache
       basicComponentRegistry.getComponent(ClusterCacheStats.class);
