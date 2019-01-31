@@ -18,9 +18,6 @@ import org.infinispan.marshall.persistence.impl.PersistenceMarshallerImpl;
       names = {KnownComponentNames.INTERNAL_MARSHALLER, KnownComponentNames.PERSISTENCE_MARSHALLER})
 public class MarshallerFactory extends AbstractComponentFactory implements AutoInstantiableFactory {
 
-   private StreamingMarshaller internalMarshaller;
-   private StreamAwareMarshaller persistenceMarshaller;
-
    @Override
    public Object construct(String componentName) {
 
@@ -32,15 +29,9 @@ public class MarshallerFactory extends AbstractComponentFactory implements AutoI
 
       switch (componentName) {
          case KnownComponentNames.PERSISTENCE_MARSHALLER:
-            if (persistenceMarshaller == null) {
-               persistenceMarshaller = new PersistenceMarshallerImpl();
-            }
-            return persistenceMarshaller;
+            return new PersistenceMarshallerImpl();
          case KnownComponentNames.INTERNAL_MARSHALLER:
-            if (internalMarshaller == null) {
-               internalMarshaller = new GlobalMarshaller();
-            }
-            return internalMarshaller;
+            return new GlobalMarshaller();
          default:
             throw new IllegalArgumentException(String.format("Marshaller name '%s' not recognised", componentName));
       }
