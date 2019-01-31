@@ -15,6 +15,7 @@ import org.infinispan.metadata.EmbeddedMetadata;
 import org.infinispan.protostream.FileDescriptorSource;
 import org.infinispan.protostream.SerializationContext;
 import org.infinispan.protostream.annotations.ProtoSchemaBuilder;
+import org.infinispan.util.ByteString;
 
 /**
  * Class responsible for initialising the provided {@link org.infinispan.protostream.SerializationContext} with all of
@@ -33,15 +34,25 @@ public class PersistenceContext {
       SerializationContext ctx = pm.getSerializationContext();
 
       ctx.registerProtoFiles(FileDescriptorSource.fromResources(classLoader, PROTO_FILE));
-      ctx.registerMarshaller(new AtomicKeySetImpl.Marshaller(gcr, pm));
       ctx.registerMarshaller(new AtomicKeySetImpl.KeyMarshaller(pm));
+      ctx.registerMarshaller(new AtomicKeySetImpl.Marshaller(gcr, pm));
       ctx.registerMarshaller(new AtomicMapMarshaller(pm));
 
-      Set<Class> internalClasses = Util.asSet(PersistenceMarshallerImpl.UserBytes.class, ByteBufferImpl.class,
-            AtomicMapMarshaller.AtomicMapEntry.class, WrappedByteArray.class, MarshalledValueImpl.class,
-            EmbeddedMetadata.class, EmbeddedMetadata.EmbeddedExpirableMetadata.class, EmbeddedMetadata.EmbeddedLifespanExpirableMetadata.class,
-            EmbeddedMetadata.EmbeddedMaxIdleExpirableMetadata.class, NumericVersion.class, SimpleClusteredVersion.class,
-            MetaParamsInternalMetadata.class);
+      Set<Class> internalClasses = Util.asSet(
+            AtomicMapMarshaller.AtomicMapEntry.class,
+            ByteBufferImpl.class,
+            ByteString.class,
+            EmbeddedMetadata.class,
+            EmbeddedMetadata.EmbeddedExpirableMetadata.class,
+            EmbeddedMetadata.EmbeddedLifespanExpirableMetadata.class,
+            EmbeddedMetadata.EmbeddedMaxIdleExpirableMetadata.class,
+            MarshalledValueImpl.class,
+            MetaParamsInternalMetadata.class,
+            NumericVersion.class,
+            PersistenceMarshallerImpl.UserBytes.class,
+            SimpleClusteredVersion.class,
+            WrappedByteArray.class
+      );
       buildPojoMarshallers(GENERATED_PROTO_PACKAGE, internalClasses, ctx);
    }
 

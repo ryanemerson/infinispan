@@ -63,7 +63,6 @@ import org.infinispan.filter.CompositeKeyValueFilter;
 import org.infinispan.filter.KeyFilterAsKeyValueFilter;
 import org.infinispan.filter.KeyValueFilterAsKeyFilter;
 import org.infinispan.functional.impl.EntryViews;
-import org.infinispan.functional.impl.MetaParamsInternalMetadata;
 import org.infinispan.functional.impl.StatsEnvelope;
 import org.infinispan.globalstate.ScopeFilter;
 import org.infinispan.globalstate.ScopedState;

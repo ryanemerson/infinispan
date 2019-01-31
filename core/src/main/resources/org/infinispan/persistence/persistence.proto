@@ -4,17 +4,23 @@ message AtomicMap {
     repeated AtomicMapEntry entry = 1;
 }
 
+// Same as annotated Pojo AtomicMapMarshaller.AtomicMapEntry, required for AtomicMap non-generated marshaller impl
 message AtomicMapEntry {
     required bytes key = 1;
     required bytes value = 2;
 }
 
 message AtomicKeySet {
-    required string cachename = 1;
+    required ByteString cachename = 1;
     required bytes group = 2;
 }
 
 message AtomicKeySetKey {
     required bytes group = 1;
     required bytes key = 2;
+}
+
+// Same as annotated Pojo ByteString, required for AtomicKeySet non-generated marshaller impl
+message ByteString {
+    required bytes bytes = 1;
 }

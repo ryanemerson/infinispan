@@ -601,7 +601,7 @@ public final class AtomicKeySetImpl<K> implements MergeOnStore {
 
       @Override
       public AtomicKeySetImpl readFrom(ProtoStreamReader reader) throws IOException {
-         ByteString cacheName1 = ByteString.fromString(reader.readString("cachename"));
+         ByteString cacheName1 = reader.readObject("cachename", ByteString.class);
          Object group = persistenceMarshaller.unmarshallUserBytes(reader.readBytes("group"));
          ComponentRegistry cr = gcr.getNamedComponentRegistry(cacheName1);
          InvocationContextFactory icf = cr.getComponent(InvocationContextFactory.class);
@@ -626,7 +626,7 @@ public final class AtomicKeySetImpl<K> implements MergeOnStore {
 
       @Override
       public void writeTo(ProtoStreamWriter writer, AtomicKeySetImpl atomicKeySet) throws IOException {
-         writer.writeString("cachename", atomicKeySet.cacheName.toString());
+         writer.writeObject("cachename", atomicKeySet.cacheName, ByteString.class);
          writer.writeBytes("group", persistenceMarshaller.marshallUserObject(atomicKeySet.group));
       }
 
