@@ -1,26 +1,18 @@
 package persistence;
 
-message AtomicMap {
-    repeated AtomicMapEntry entry = 1;
-}
+// Must be the same as org.infinispan.marshall.persistence.impl.PersistenceContext.GENERATED_PROTO_PACKAGE + ".proto"
+import "generated.persistence.proto";
 
-// Same as annotated Pojo AtomicMapMarshaller.AtomicMapEntry, required for AtomicMap non-generated marshaller impl
-message AtomicMapEntry {
-    required bytes key = 1;
-    required bytes value = 2;
+message AtomicMap {
+    repeated generated.persistence.AtomicMapEntry entry = 1;
 }
 
 message AtomicKeySet {
-    required ByteString cachename = 1;
+    required generated.persistence.ByteString cachename = 1;
     required bytes group = 2;
 }
 
 message AtomicKeySetKey {
     required bytes group = 1;
     required bytes key = 2;
-}
-
-// Same as annotated Pojo ByteString, required for AtomicKeySet non-generated marshaller impl
-message ByteString {
-    required bytes bytes = 1;
 }

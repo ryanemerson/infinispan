@@ -33,11 +33,6 @@ public class PersistenceContext {
       ClassLoader classLoader = gcr.getGlobalConfiguration().classLoader();
       SerializationContext ctx = pm.getSerializationContext();
 
-      ctx.registerProtoFiles(FileDescriptorSource.fromResources(classLoader, PROTO_FILE));
-      ctx.registerMarshaller(new AtomicKeySetImpl.KeyMarshaller(pm));
-      ctx.registerMarshaller(new AtomicKeySetImpl.Marshaller(gcr, pm));
-      ctx.registerMarshaller(new AtomicMapMarshaller(pm));
-
       Set<Class> internalClasses = Util.asSet(
             AtomicMapMarshaller.AtomicMapEntry.class,
             ByteBufferImpl.class,
@@ -54,6 +49,11 @@ public class PersistenceContext {
             WrappedByteArray.class
       );
       buildPojoMarshallers(GENERATED_PROTO_PACKAGE, internalClasses, ctx);
+
+      ctx.registerProtoFiles(FileDescriptorSource.fromResources(classLoader, PROTO_FILE));
+      ctx.registerMarshaller(new AtomicKeySetImpl.KeyMarshaller(pm));
+      ctx.registerMarshaller(new AtomicKeySetImpl.Marshaller(gcr, pm));
+      ctx.registerMarshaller(new AtomicMapMarshaller(pm));
    }
 
    static void buildPojoMarshallers(String packageName, Set<Class> annotatedPojos, SerializationContext ctx) throws IOException {
