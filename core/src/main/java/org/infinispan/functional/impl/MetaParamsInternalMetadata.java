@@ -32,7 +32,7 @@ public final class MetaParamsInternalMetadata implements InternalMetadata, MetaP
    }
 
    MetaParamsInternalMetadata() {
-      this.params = new MetaParams();
+      this.params = new MetaParams(MetaParams.EMPTY_ARRAY, 0);
    }
 
    private MetaParamsInternalMetadata(MetaParams params) {

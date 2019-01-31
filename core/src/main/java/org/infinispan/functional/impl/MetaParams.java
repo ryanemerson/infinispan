@@ -61,16 +61,11 @@ import net.jcip.annotations.NotThreadSafe;
 @Experimental
 public final class MetaParams implements Iterable<MetaParam<?>> {
 
-   private static final MetaParam<?>[] EMPTY_ARRAY = {};
+   static final MetaParam<?>[] EMPTY_ARRAY = {};
    private MetaParam<?>[] metas;
    private int length;
 
-   public MetaParams() {
-      this.metas = EMPTY_ARRAY;
-      this.length = 0;
-   }
-
-   private MetaParams(MetaParam<?>[] metas, int length) {
+   MetaParams(MetaParam<?>[] metas, int length) {
       this.metas = metas;
       this.length = length;
       assert checkLength();
