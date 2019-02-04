@@ -15,15 +15,14 @@ import org.infinispan.commons.marshall.jboss.ExtendedRiverUnmarshaller;
 import org.infinispan.configuration.global.GlobalConfiguration;
 import org.jboss.marshalling.ByteInput;
 import org.jboss.marshalling.ByteOutput;
-import org.jboss.marshalling.ObjectTable;
 
 final class ExternalJBossMarshaller implements StreamingMarshaller {
 
    final MarshallableTypeHints marshallableTypeHints = new MarshallableTypeHints();
    final JBossMarshaller marshaller;
 
-   ExternalJBossMarshaller(ObjectTable objectTable, GlobalConfiguration globalCfg) {
-      this.marshaller = new JBossMarshaller(objectTable, globalCfg);
+   ExternalJBossMarshaller(GlobalMarshaller marshaller, GlobalConfiguration globalCfg) {
+      this.marshaller = new JBossMarshaller(new JbossInternalObjectTable(marshaller), globalCfg);
    }
 
    @Override

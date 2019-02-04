@@ -20,24 +20,21 @@ import org.jboss.marshalling.Unmarshaller;
 public class JBossUserMarshaller extends JBossMarshaller {
 
    private final ClassToExternalizerMap externalExts;
-   private final ClassToExternalizerMap internalExts;
 
    public JBossUserMarshaller(GlobalComponentRegistry gcr) {
       this.globalCfg = gcr.getGlobalConfiguration();
       this.externalExts = ExternalExternalizers.load(globalCfg);
-      this.internalExts = InternalExternalizers.load(gcr, null);
       this.objectTable = new UserExternalizerObjectTable();
    }
 
    @Override
    public boolean isMarshallable(Object o) throws Exception {
-      // If a class have an internal externalizer, then it should not be marshallable by the user marshaller
-      return internalExts.get(o.getClass()) == null && (externalExts.get(o.getClass()) != null || super.isMarshallable(o));
+      return (externalExts.get(o.getClass()) != null || super.isMarshallable(o));
    }
 
    /**
     * A {@link org.jboss.marshalling.ObjectTable} implementation that creates {@link org.jboss.marshalling.ObjectTable.Writer}
-    * based upon a users configured {@link org.infinispan.marshall.core.MarshalledEntryImpl.Externalizer} implementation.
+    * based upon a users configured {@link org.infinispan.commons.marshall.Externalizer} implementations.
     */
    class UserExternalizerObjectTable implements ObjectTable {
 
