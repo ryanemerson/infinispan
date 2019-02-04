@@ -3,8 +3,6 @@ package org.infinispan.marshall.persistence.impl;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.invoke.SerializedLambda;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -20,7 +18,6 @@ import org.infinispan.factories.GlobalComponentRegistry;
 import org.infinispan.factories.annotations.Inject;
 import org.infinispan.factories.annotations.Start;
 import org.infinispan.marshall.core.JBossUserMarshaller;
-import org.infinispan.marshall.core.MarshallableFunctions;
 import org.infinispan.marshall.core.MarshallingException;
 import org.infinispan.marshall.persistence.PersistenceMarshaller;
 import org.infinispan.metadata.impl.InternalMetadataImpl;
@@ -30,7 +27,6 @@ import org.infinispan.protostream.WrappedMessage;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.impl.RawProtoStreamReaderImpl;
 import org.infinispan.protostream.impl.RawProtoStreamWriterImpl;
-import org.infinispan.util.function.SerializableFunction;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 
@@ -54,17 +50,6 @@ import org.infinispan.util.logging.LogFactory;
 public class PersistenceMarshallerImpl extends AbstractMarshaller implements PersistenceMarshaller {
 
    private static final Log log = LogFactory.getLog(PersistenceMarshallerImpl.class, Log.class);
-   // TODO move to internal marshaller?
-   // TODO remove once the internal marshaller is not based upon jboss-marshalling and externalizers
-   private static Set<String> blackListedClasses = new HashSet<>();
-   static {
-      blackListedClasses.add("org.infinispan.jcache.annotation.DefaultCacheKey");
-      blackListedClasses.add("org.infinispan.server.core.transport.NettyTransportConnectionStats$ConnectionAdderTask");
-      blackListedClasses.add("org.infinispan.server.hotrod.CheckAddressTask");
-      blackListedClasses.add("org.infinispan.server.infinispan.task.DistributedServerTask");
-      blackListedClasses.add("org.infinispan.scripting.impl.DataType");
-      blackListedClasses.add("org.infinispan.scripting.impl.DistributedScript");
-   }
 
    @Inject private GlobalComponentRegistry gcr;
    private final SerializationContext serializationContext = ProtobufUtil.newSerializationContext();
@@ -177,23 +162,7 @@ public class PersistenceMarshallerImpl extends AbstractMarshaller implements Per
 
    @Override
    public boolean isMarshallable(Object o) {
-      return !isBlacklisted(o) && (isPersistenceClass(o) || isUserMarshallable(o));
-   }
-
-   private boolean isBlacklisted(Object o) {
-      Class clazz = o.getClass();
-      if (blackListedClasses.contains(clazz.getName()))
-         return true;
-
-      if (clazz.isArray())
-         return Arrays.stream((Object[]) o).anyMatch(this::isBlacklisted);
-
-      // The persistence marshaller should not handle lambdas as these should never be persisted
-      if (clazz.isSynthetic() || o instanceof SerializedLambda || o instanceof SerializableFunction)
-         return true;
-
-      Class enclosingClass = clazz.getEnclosingClass();
-      return enclosingClass != null && enclosingClass.equals(MarshallableFunctions.class);
+      return isPersistenceClass(o) || isUserMarshallable(o);
    }
 
    private boolean isPersistenceClass(Object o) {

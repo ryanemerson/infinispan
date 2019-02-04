@@ -5,9 +5,12 @@ import static org.infinispan.marshall.core.GlobalMarshaller.ID_INTERNAL;
 import static org.infinispan.marshall.core.GlobalMarshaller.ID_UNKNOWN;
 
 import java.io.IOException;
+import java.lang.invoke.SerializedLambda;
+import java.util.Arrays;
 
 import org.infinispan.commons.marshall.AdvancedExternalizer;
 import org.infinispan.marshall.persistence.PersistenceMarshaller;
+import org.infinispan.util.function.SerializableFunction;
 import org.jboss.marshalling.ObjectTable;
 import org.jboss.marshalling.Unmarshaller;
 
@@ -41,11 +44,24 @@ class JbossInternalObjectTable implements ObjectTable {
          return (out, object) -> GlobalMarshaller.writeExternalClean(object, externalExt, out);
 
       try {
-         if (pm.isMarshallable(obj))
+         // The persistence marshaller should not handle lambdas or functions as these should never be persisted
+         if (!isFunctionOrArrayOf(obj) && pm.isMarshallable(obj))
             return (out, object) -> gm.writeUnknownClean(pm, obj, out);
       } catch (Exception ignore) {
       }
       return null;
+   }
+
+   private boolean isFunctionOrArrayOf(Object o) {
+      Class clazz = o.getClass();
+      if (clazz.isArray())
+         return Arrays.stream((Object[]) o).anyMatch(this::isFunctionOrArrayOf);
+
+      if (clazz.isSynthetic() || o instanceof SerializedLambda || o instanceof SerializableFunction)
+         return true;
+
+      Class enclosingClass = clazz.getEnclosingClass();
+      return enclosingClass != null && enclosingClass.equals(MarshallableFunctions.class);
    }
 
    @Override
