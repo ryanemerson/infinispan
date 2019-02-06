@@ -58,10 +58,11 @@ public class SerializationConfigUtil {
       int majorVersion = props.getMajorVersion();
       switch (majorVersion) {
          case 8:
+         case 9:
             if (props.isTargetStore())
                throw new CacheConfigurationException(String.format("The marshaller associated with Infinispan %d can only be specified for source stores.", majorVersion));
-            return new Infinispan8Marshaller(getExternalizersFromProps(props));
-         case 9:
+            Map<Integer, AdvancedExternalizer<?>> userExts = getExternalizersFromProps(props);
+            return majorVersion == 8 ? new Infinispan8Marshaller(userExts) : new Infinispan9Marshaller(userExts);
          case 10:
             if (props.isTargetStore())
                return null;

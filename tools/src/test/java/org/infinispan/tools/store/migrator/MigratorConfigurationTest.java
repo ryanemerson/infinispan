@@ -16,8 +16,12 @@ import static org.infinispan.tools.store.migrator.Element.MINOR_VERSION;
 import static org.infinispan.tools.store.migrator.Element.SOURCE;
 import static org.infinispan.tools.store.migrator.Element.TARGET;
 import static org.infinispan.tools.store.migrator.Element.TYPE;
+import static org.infinispan.tools.store.migrator.Element.VERSION;
 import static org.infinispan.tools.store.migrator.StoreType.JDBC_MIXED;
 import static org.infinispan.tools.store.migrator.TestUtil.propKey;
+import static org.junit.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
 
 import java.io.IOException;
 import java.io.ObjectInput;
@@ -38,9 +42,11 @@ import org.infinispan.persistence.jdbc.DatabaseType;
 import org.infinispan.persistence.jdbc.configuration.JdbcStringBasedStoreConfiguration;
 import org.infinispan.persistence.jdbc.configuration.JdbcStringBasedStoreConfigurationBuilder;
 import org.infinispan.persistence.jdbc.table.management.TableManagerFactory;
+import org.infinispan.test.Exceptions;
 import org.infinispan.test.data.Person;
 import org.infinispan.tools.store.migrator.jdbc.JdbcConfigurationUtil;
 import org.infinispan.tools.store.migrator.marshaller.Infinispan8Marshaller;
+import org.infinispan.tools.store.migrator.marshaller.Infinispan9Marshaller;
 import org.infinispan.tools.store.migrator.marshaller.MarshallerType;
 import org.infinispan.tools.store.migrator.marshaller.SerializationConfigUtil;
 import org.testng.annotations.BeforeMethod;
@@ -70,8 +76,8 @@ public class MigratorConfigurationTest {
 
       StoreProperties props = new StoreProperties(SOURCE, properties);
       Marshaller marshaller = SerializationConfigUtil.getMarshaller(props);
-      assert marshaller != null;
-      assert marshaller instanceof GenericJBossMarshaller;
+      assertNotNull(marshaller);
+      assertTrue(marshaller instanceof GenericJBossMarshaller);
    }
 
    public void testLegacyMarshallerAndExternalizersLoaded() throws Exception {
@@ -82,14 +88,14 @@ public class MigratorConfigurationTest {
 
       StoreProperties props = new StoreProperties(SOURCE, properties);
       Marshaller marshaller = SerializationConfigUtil.getMarshaller(props);
-      assert marshaller != null;
-      assert marshaller instanceof Infinispan8Marshaller;
+      assertNotNull(marshaller);
+      assertTrue(marshaller instanceof Infinispan8Marshaller);
 
       byte[] bytes = new byte[] {3, 1, -2, 3, -1, 1, 1};
       Object object = marshaller.objectFromByteBuffer(bytes);
-      assert object != null;
-      assert object instanceof Person;
-      assert externalizerReadCount.get() == 1;
+      assertNotNull(object);
+      assertTrue(object instanceof Person);
+      assertEquals(1, externalizerReadCount.get());
    }
 
    public void testCurrentMarshallerLoadedAndExternalizersLoaded() throws Exception {
@@ -100,14 +106,31 @@ public class MigratorConfigurationTest {
 
       StoreProperties props = new StoreProperties(SOURCE, properties);
       Marshaller marshaller = SerializationConfigUtil.getMarshaller(props);
-      assert marshaller != null;
-      assert marshaller instanceof PersistenceMarshaller;
+      assertNotNull(marshaller);
+      assertTrue(marshaller instanceof PersistenceMarshaller);
       byte[] bytes = marshaller.objectToByteBuffer(new Person(Person.class.getName()));
       Person person = (Person) marshaller.objectFromByteBuffer(bytes);
-      assert person != null;
-      assert person.getName().equals(Person.class.getName());
-      assert externalizerReadCount.get() == 1;
-      assert externalizerWriteCount.get() == 1;
+      assertNotNull(person);
+      assertEquals(Person.class.getName(), person.getName());
+      assertEquals(1, externalizerReadCount.get());
+      assertEquals(1, externalizerWriteCount.get());
+   }
+
+   public void testCorrectMarshallerLoadedForVersion() {
+      assertTrue(getMarshallerForVersion(8, SOURCE) instanceof Infinispan8Marshaller);
+      assertTrue(getMarshallerForVersion(9, SOURCE) instanceof Infinispan9Marshaller);
+      Exceptions.expectException(IllegalStateException.class, () -> getMarshallerForVersion(10, SOURCE));
+
+      Exceptions.expectException(IllegalStateException.class, () -> getMarshallerForVersion(8, TARGET));
+      Exceptions.expectException(IllegalStateException.class, () -> getMarshallerForVersion(9, TARGET));
+      assertTrue(getMarshallerForVersion(10, TARGET) instanceof PersistenceMarshaller);
+   }
+
+   private Marshaller getMarshallerForVersion(int version, Element storeType) {
+      Properties properties = new Properties();
+      properties.put(propKey(storeType, VERSION), version);
+      StoreProperties props = new StoreProperties(storeType, properties);
+      return SerializationConfigUtil.getMarshaller(props);
    }
 
    public void testDbPropertiesLoaded() {
@@ -125,15 +148,13 @@ public class MigratorConfigurationTest {
          StoreProperties props = new StoreProperties(storeType, properties);
          JdbcStringBasedStoreConfigurationBuilder builder = new ConfigurationBuilder().persistence()
                .addStore(JdbcStringBasedStoreConfigurationBuilder.class);
-         builder = JdbcConfigurationUtil.configureStore(props, builder);
-         Configuration cacheConfig = builder.build();
+         Configuration cacheConfig = JdbcConfigurationUtil.configureStore(props, builder).build();
          JdbcStringBasedStoreConfiguration config = (JdbcStringBasedStoreConfiguration) cacheConfig.persistence().stores().get(0);
-         assert config.dbMajorVersion() == 1;
-         assert config.dbMinorVersion() == 1;
-         assert Boolean.parseBoolean(config.properties().getProperty(TableManagerFactory.INDEXING_DISABLED));
-         assert Boolean.parseBoolean(config.properties().getProperty(TableManagerFactory.UPSERT_DISABLED));
+         assertEquals((Integer) 1, config.dbMajorVersion());
+         assertEquals((Integer) 1, config.dbMinorVersion());
+         assertTrue(Boolean.parseBoolean(config.properties().getProperty(TableManagerFactory.INDEXING_DISABLED)));
+         assertTrue(Boolean.parseBoolean(config.properties().getProperty(TableManagerFactory.UPSERT_DISABLED)));
       }
-
    }
 
    private Properties createBaseProperties() {

@@ -4,10 +4,12 @@ import static org.infinispan.tools.store.migrator.Element.INDEX_LOCATION;
 import static org.infinispan.tools.store.migrator.Element.LOCATION;
 import static org.infinispan.tools.store.migrator.Element.SOURCE;
 import static org.infinispan.tools.store.migrator.Element.TYPE;
+import static org.infinispan.tools.store.migrator.Element.VERSION;
 import static org.infinispan.tools.store.migrator.TestUtil.propKey;
 
 import java.util.Properties;
 
+import org.infinispan.Version;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.persistence.sifs.configuration.SoftIndexFileStoreConfigurationBuilder;
 import org.infinispan.tools.store.migrator.AbstractReaderTest;
@@ -19,21 +21,25 @@ import org.testng.annotations.Test;
 @Test(testName = "tools.store.migrator.file.SoftIndexFileStoreReaderTest", groups = "functional")
 public class SoftIndexFileStoreReaderTest extends AbstractReaderTest {
 
-   private static final String SOURCE_DIR = "target/test-classes/softindex/";
+   public String getSrcDirectory() {
+      return String.format("target/test-classes/infinispan%d/softindex/", majorVersion);
+   }
 
    public String getTargetDataDirectory() {
-      return SOURCE_DIR + "/target-softindex/data/" + segmentCount + "/";
+      return String.format("%s/target-softindex/data/%d/", getSrcDirectory(), segmentCount);
    }
 
    public String getTargetIndexDirectory() {
-      return SOURCE_DIR + "/target-softindex/index/" + segmentCount + "/";
+      return String.format("%s/target-softindex/index/%d/", getSrcDirectory(), segmentCount);
    }
 
    @Factory
    public Object[] factory() {
       return new Object[] {
-            new SoftIndexFileStoreReaderTest().segmented(37),
-            new SoftIndexFileStoreReaderTest(),
+            new SingleFileStoreReaderTest(),
+            new SingleFileStoreReaderTest().segmented(59),
+            new SingleFileStoreReaderTest().majorVersion(9),
+            new SingleFileStoreReaderTest().majorVersion(9).segmented(59),
       };
    }
 
@@ -55,10 +61,12 @@ public class SoftIndexFileStoreReaderTest extends AbstractReaderTest {
       super.configureStoreProperties(properties, type);
       properties.put(propKey(type, TYPE), StoreType.SOFT_INDEX_FILE_STORE.toString());
       if (type == SOURCE) {
-         properties.put(propKey(type, LOCATION), SOURCE_DIR);
+         properties.put(propKey(type, LOCATION), getSrcDirectory());
+         properties.put(propKey(type, VERSION), majorVersion);
       } else {
          properties.put(propKey(type, LOCATION), getTargetDataDirectory());
          properties.put(propKey(type, INDEX_LOCATION), getTargetIndexDirectory());
+         properties.put(propKey(type, VERSION), Version.getMajor());
       }
    }
 }

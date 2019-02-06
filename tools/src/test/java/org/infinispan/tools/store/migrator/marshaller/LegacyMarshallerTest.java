@@ -10,29 +10,41 @@ import java.util.Map;
 
 import org.infinispan.commons.marshall.AdvancedExternalizer;
 import org.infinispan.commons.marshall.StreamingMarshaller;
+import org.infinispan.test.AbstractInfinispanTest;
 import org.infinispan.tools.store.migrator.TestUtil;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Factory;
 import org.testng.annotations.Test;
 
 /**
- * Tests to ensure that LegacyVersionAwareMarshaller can correctly unmarshall infinispan 8.x bytes. Note, instructions
- * on how to generate the bin file used in this test are found in the comments at the bottom of the test.
+ * Tests to ensure that the configured legacy marshaller can correctly unmarshall bytes from previous versions. Note,
+ * instructions on how to generate the bin file used in this test are found in the comments at the bottom of the test.
  */
 @Test(testName = "tools.Infinispan8MarshallerTest", groups = "functional")
-public class Infinispan8MarshallerTest {
+public class LegacyMarshallerTest extends AbstractInfinispanTest {
 
+   private final int majorVersion;
    private final StreamingMarshaller marshaller;
    private Map<String, byte[]> byteMap;
 
-   public Infinispan8MarshallerTest() {
-      Map<Integer, AdvancedExternalizer<?>> externalizerMap = new HashMap<>();
-      externalizerMap.put(256, new TestUtil.TestObjectExternalizer());
-      marshaller = new Infinispan8Marshaller(externalizerMap);
+   @Factory(dataProvider = "factory")
+   public LegacyMarshallerTest(int majorVersion) {
+      Map<Integer, AdvancedExternalizer<?>> userExts = new HashMap<>();
+      userExts.put(256, new TestUtil.TestObjectExternalizer());
+      this.majorVersion = majorVersion;
+      this.marshaller = majorVersion == 8 ? new Infinispan8Marshaller(userExts) : new Infinispan9Marshaller(userExts);
+   }
+
+   @DataProvider
+   public static Object[][] factory() {
+      return new Object[][] {{8},{9}};
    }
 
    @BeforeClass(alwaysRun = true)
    public void beforeTest() throws Exception {
-      Path path = new File("src/test/resources/marshalled_bytes_8.x.bin").toPath();
+      String filename = String.format("src/test/resources/infinispan%d/marshalled_bytes.bin", majorVersion);
+      Path path = new File(filename).toPath();
       byte[] bytes = Files.readAllBytes(path);
       byteMap = (Map<String, byte[]>) marshaller.objectFromByteBuffer(bytes);
    }
@@ -50,8 +62,8 @@ public class Infinispan8MarshallerTest {
    }
 
    /**
-    * Below is the program to generate the marshalled_bytes_8.x.bin file. It requires infinispan-8.2.6.Final on the classpath
-    * and utilises the {@link TestObject} and {@link TestObjectExternalizer} classes defined above.
+    * Below is the program to generate the marshalled_bytes_<major-version></major-version>.x.bin file.
+    * It utilises the {@link TestObject} and {@link TestObjectExternalizer} classes defined above.
     */
 
    /*
@@ -77,7 +89,7 @@ public class ByteOutputGenerator {
       // Binary file
       ByteOutputMap outputMap = new ByteOutputMap(marshaller);
       generateOutput(outputMap);
-      Files.write(Paths.get("target/marshalled_bytes_8.x.bin"), outputMap.getBytes());
+      Files.write(Paths.get("target/marshalled_bytes.bin"), outputMap.getBytes());
    }
 
 
