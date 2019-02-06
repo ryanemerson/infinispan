@@ -3,6 +3,7 @@ package org.infinispan.util;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.Set;
 
@@ -16,7 +17,7 @@ import org.infinispan.marshall.core.Ids;
  * @author Mircea Markus
  * @since 6.0
  */
-public class KeyValuePair<K,V> {
+public class KeyValuePair<K,V> implements Serializable {
    private final K key;
    private final V value;
 
