@@ -1,4 +1,4 @@
-package org.infinispan.tools.store.migrator.marshaller.externalizers.common;
+package org.infinispan.tools.store.migrator.marshaller.common;
 
 import java.io.IOException;
 import java.io.ObjectInput;

@@ -1,4 +1,4 @@
-package org.infinispan.tools.store.migrator.marshaller;
+package org.infinispan.tools.store.migrator.marshaller.infinispan8;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -7,8 +7,8 @@ import java.io.ObjectInput;
 import java.util.Map;
 
 import org.infinispan.commons.marshall.AdvancedExternalizer;
-import org.infinispan.commons.marshall.StreamingMarshaller;
-import org.infinispan.tools.store.migrator.marshaller.externalizers.infinispan8.ExternalizerTable;
+import org.infinispan.tools.store.migrator.marshaller.LegacyJBossMarshaller;
+import org.infinispan.tools.store.migrator.marshaller.common.AbstractUnsupportedStreamingMarshaller;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 
@@ -16,11 +16,13 @@ import org.infinispan.util.logging.LogFactory;
  * LegacyVersionAwareMarshaller that is used to read bytes marshalled using Infinispan 8.x. This is useful for providing
  * a migration path from 8.x stores.
  */
-public class Infinispan8Marshaller extends AbstractLegacyMarshaller implements StreamingMarshaller {
+public class Infinispan8Marshaller extends AbstractUnsupportedStreamingMarshaller {
    private static final Log log = LogFactory.getLog(Infinispan8Marshaller.class);
 
-   Infinispan8Marshaller(Map<Integer, ? extends AdvancedExternalizer<?>> userExts) {
-      super(new ExternalizerTable(userExts));
+   private final LegacyJBossMarshaller external;
+
+   public Infinispan8Marshaller(Map<Integer, ? extends AdvancedExternalizer> userExts) {
+      this.external = new LegacyJBossMarshaller(new ExternalizerTable(this, userExts));
    }
 
    @Override
@@ -29,7 +31,7 @@ public class Infinispan8Marshaller extends AbstractLegacyMarshaller implements S
       ObjectInput in = startObjectInput(is, false);
       Object o;
       try {
-         o = defaultMarshaller.objectFromObjectStream(in);
+         o = external.objectFromObjectStream(in);
       } finally {
          finishObjectInput(in);
       }
@@ -38,7 +40,7 @@ public class Infinispan8Marshaller extends AbstractLegacyMarshaller implements S
 
    @Override
    public ObjectInput startObjectInput(InputStream is, boolean isReentrant) throws IOException {
-      ObjectInput in = defaultMarshaller.startObjectInput(is, isReentrant);
+      ObjectInput in = external.startObjectInput(is, isReentrant);
       try {
          in.readShort();
       } catch (Exception e) {
@@ -47,5 +49,10 @@ public class Infinispan8Marshaller extends AbstractLegacyMarshaller implements S
          throw new IOException("Unable to read version id from first two bytes of stream: " + e.getMessage());
       }
       return in;
+   }
+
+   @Override
+   public void finishObjectInput(ObjectInput oi) {
+      external.finishObjectInput(oi);
    }
 }

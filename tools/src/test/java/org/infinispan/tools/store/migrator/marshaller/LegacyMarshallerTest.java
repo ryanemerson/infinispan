@@ -12,6 +12,8 @@ import org.infinispan.commons.marshall.AdvancedExternalizer;
 import org.infinispan.commons.marshall.StreamingMarshaller;
 import org.infinispan.test.AbstractInfinispanTest;
 import org.infinispan.tools.store.migrator.TestUtil;
+import org.infinispan.tools.store.migrator.marshaller.infinispan8.Infinispan8Marshaller;
+import org.infinispan.tools.store.migrator.marshaller.infinispan9.Infinispan9Marshaller;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Factory;
@@ -30,7 +32,7 @@ public class LegacyMarshallerTest extends AbstractInfinispanTest {
 
    @Factory(dataProvider = "factory")
    public LegacyMarshallerTest(int majorVersion) {
-      Map<Integer, AdvancedExternalizer<?>> userExts = new HashMap<>();
+      Map<Integer, AdvancedExternalizer> userExts = new HashMap<>();
       userExts.put(256, new TestUtil.TestObjectExternalizer());
       this.majorVersion = majorVersion;
       this.marshaller = majorVersion == 8 ? new Infinispan8Marshaller(userExts) : new Infinispan9Marshaller(userExts);

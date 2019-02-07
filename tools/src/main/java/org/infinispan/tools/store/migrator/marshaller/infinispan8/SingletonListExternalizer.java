@@ -1,4 +1,4 @@
-package org.infinispan.tools.store.migrator.marshaller.externalizers.infinispan8;
+package org.infinispan.tools.store.migrator.marshaller.infinispan8;
 
 import java.io.IOException;
 import java.io.ObjectInput;

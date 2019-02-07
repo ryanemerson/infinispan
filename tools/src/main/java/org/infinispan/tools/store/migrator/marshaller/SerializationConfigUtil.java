@@ -23,6 +23,8 @@ import org.infinispan.marshall.persistence.PersistenceMarshaller;
 import org.infinispan.marshall.persistence.impl.MarshalledEntryFactoryImpl;
 import org.infinispan.persistence.spi.MarshallableEntryFactory;
 import org.infinispan.tools.store.migrator.StoreProperties;
+import org.infinispan.tools.store.migrator.marshaller.infinispan8.Infinispan8Marshaller;
+import org.infinispan.tools.store.migrator.marshaller.infinispan9.Infinispan9Marshaller;
 
 public class SerializationConfigUtil {
 
@@ -61,7 +63,7 @@ public class SerializationConfigUtil {
          case 9:
             if (props.isTargetStore())
                throw new CacheConfigurationException(String.format("The marshaller associated with Infinispan %d can only be specified for source stores.", majorVersion));
-            Map<Integer, AdvancedExternalizer<?>> userExts = getExternalizersFromProps(props);
+            Map<Integer, AdvancedExternalizer> userExts = getExternalizersFromProps(props);
             return majorVersion == 8 ? new Infinispan8Marshaller(userExts) : new Infinispan9Marshaller(userExts);
          case 10:
             if (props.isTargetStore())
@@ -86,17 +88,17 @@ public class SerializationConfigUtil {
    }
 
    private static void configureExternalizers(StoreProperties props, SerializationConfigurationBuilder builder) {
-      Map<Integer, AdvancedExternalizer<?>> externalizerMap = getExternalizersFromProps(props);
+      Map<Integer, AdvancedExternalizer> externalizerMap = getExternalizersFromProps(props);
       if (externalizerMap == null)
          return;
 
-      for (Map.Entry<Integer, AdvancedExternalizer<?>> entry : externalizerMap.entrySet())
+      for (Map.Entry<Integer, AdvancedExternalizer> entry : externalizerMap.entrySet())
          builder.addAdvancedExternalizer(entry.getKey(), entry.getValue());
    }
 
    // Expects externalizer string to be a comma-separated list of "<id>:<class>"
-   private static Map<Integer, AdvancedExternalizer<?>> getExternalizersFromProps(StoreProperties props) {
-      Map<Integer, AdvancedExternalizer<?>> map = new HashMap<>();
+   private static Map<Integer, AdvancedExternalizer> getExternalizersFromProps(StoreProperties props) {
+      Map<Integer, AdvancedExternalizer> map = new HashMap<>();
       String externalizers = props.get(MARSHALLER, EXTERNALIZERS);
       if (externalizers != null) {
          for (String ext : externalizers.split(",")) {
