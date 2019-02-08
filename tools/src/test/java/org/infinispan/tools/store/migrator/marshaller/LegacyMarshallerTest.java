@@ -1,6 +1,7 @@
 package org.infinispan.tools.store.migrator.marshaller;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -15,7 +16,6 @@ import org.infinispan.tools.store.migrator.TestUtil;
 import org.infinispan.tools.store.migrator.marshaller.infinispan8.Infinispan8Marshaller;
 import org.infinispan.tools.store.migrator.marshaller.infinispan9.Infinispan9Marshaller;
 import org.testng.annotations.BeforeClass;
-import org.testng.annotations.DataProvider;
 import org.testng.annotations.Factory;
 import org.testng.annotations.Test;
 
@@ -23,28 +23,36 @@ import org.testng.annotations.Test;
  * Tests to ensure that the configured legacy marshaller can correctly unmarshall bytes from previous versions. Note,
  * instructions on how to generate the bin file used in this test are found in the comments at the bottom of the test.
  */
-@Test(testName = "tools.Infinispan8MarshallerTest", groups = "functional")
+@Test(testName = "org.infinispan.tools.store.migrator.marshaller.LegacyMarshallerTest", groups = "functional")
 public class LegacyMarshallerTest extends AbstractInfinispanTest {
 
-   private final int majorVersion;
-   private final StreamingMarshaller marshaller;
+   private int majorVersion;
+   private StreamingMarshaller marshaller;
    private Map<String, byte[]> byteMap;
 
-   @Factory(dataProvider = "factory")
-   public LegacyMarshallerTest(int majorVersion) {
-      Map<Integer, AdvancedExternalizer> userExts = new HashMap<>();
-      userExts.put(256, new TestUtil.TestObjectExternalizer());
-      this.majorVersion = majorVersion;
-      this.marshaller = majorVersion == 8 ? new Infinispan8Marshaller(userExts) : new Infinispan9Marshaller(userExts);
+   @Factory
+   public Object[] factory() {
+      return new Object[] {
+            new LegacyMarshallerTest().majorVersion(8),
+            new LegacyMarshallerTest().majorVersion(9)
+      };
    }
 
-   @DataProvider
-   public static Object[][] factory() {
-      return new Object[][] {{8},{9}};
+   @Override
+   protected String parameters() {
+      return "[" + majorVersion + "]";
+   }
+
+   private LegacyMarshallerTest majorVersion(int majorVersion) {
+      this.majorVersion = majorVersion;
+      return this;
    }
 
    @BeforeClass(alwaysRun = true)
    public void beforeTest() throws Exception {
+      Map<Integer, AdvancedExternalizer> userExts = new HashMap<>();
+      userExts.put(256, new TestUtil.TestObjectExternalizer());
+      this.marshaller = majorVersion == 8 ? new Infinispan8Marshaller(userExts) : new Infinispan9Marshaller(userExts);
       String filename = String.format("src/test/resources/infinispan%d/marshalled_bytes.bin", majorVersion);
       Path path = new File(filename).toPath();
       byte[] bytes = Files.readAllBytes(path);
@@ -58,7 +66,7 @@ public class LegacyMarshallerTest extends AbstractInfinispanTest {
 
    private void unmarshallAndAssertEquality(String key, Object expectedObj) throws Exception {
       byte[] bytes = byteMap.get(key);
-      assert bytes != null;
+      assertNotNull(bytes);
       Object readObj = marshaller.objectFromByteBuffer(bytes);
       assertEquals(readObj, expectedObj);
    }

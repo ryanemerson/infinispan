@@ -53,7 +53,7 @@ import org.jboss.marshalling.Unmarshaller;
  * @author Galder Zamarreño
  * @since 5.0
  */
-public class ExternalizerTable implements ObjectTable {
+class ExternalizerTable implements ObjectTable {
    private static final Map<Integer, Integer> LEGACY_MAP;
    static {
       HashMap<Integer, Integer> map = new HashMap<>();
@@ -98,7 +98,7 @@ public class ExternalizerTable implements ObjectTable {
    private final Map<Integer, ExternalizerAdapter> readers = new HashMap<>();
    private final StreamingMarshaller marshaller;
 
-   public ExternalizerTable(StreamingMarshaller marshaller, Map<Integer, ? extends AdvancedExternalizer> externalizerMap) {
+   ExternalizerTable(StreamingMarshaller marshaller, Map<Integer, ? extends AdvancedExternalizer> externalizerMap) {
       this.marshaller = marshaller;
       loadInternalMarshallables();
       initForeignMarshallables(externalizerMap);

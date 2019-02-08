@@ -9,12 +9,8 @@ import java.util.Map;
 import org.infinispan.commons.CacheException;
 import org.infinispan.commons.marshall.AdvancedExternalizer;
 import org.infinispan.commons.marshall.Externalizer;
-import org.infinispan.commons.marshall.StreamingMarshaller;
 import org.infinispan.container.entries.InternalCacheValue;
-import org.infinispan.tools.store.migrator.marshaller.LegacyJBossMarshaller;
 import org.infinispan.tools.store.migrator.marshaller.common.AbstractUnsupportedStreamingMarshaller;
-import org.jboss.marshalling.ObjectTable;
-import org.jboss.marshalling.Unmarshaller;
 
 /**
  * Legacy marshaller for reading from Infinispan 9.x stores.
@@ -43,41 +39,21 @@ public class Infinispan9Marshaller extends AbstractUnsupportedStreamingMarshalle
    private static final int FLAG_ARRAY_MEDIUM = 0x80;
    private static final int FLAG_ARRAY_LARGE = 0xC0;
 
-   private final StreamingMarshaller external;
+   private final ExternalJbossMarshaller external;
    private final Map<Integer, AdvancedExternalizer> exts;
 
    public Infinispan9Marshaller(Map<Integer, AdvancedExternalizer> userExts) {
       this.exts = ExternalizerTable.getInternalExternalizers(this);
       this.exts.putAll(userExts);
-      this.external = new LegacyJBossMarshaller(new ObjectTable() {
-         @Override
-         public Writer getObjectWriter(Object object) {
-            return null;
-         }
-
-         @Override
-         public Object readObject(Unmarshaller unmarshaller) throws IOException, ClassNotFoundException {
-            Externalizer<Object> ext = findExternalizerIn(unmarshaller);
-            return ext == null ? null : ext.readObject(unmarshaller);
-         }
-      });
+      this.external = new ExternalJbossMarshaller(this);
    }
 
+   @Override
    public Object objectFromByteBuffer(byte[] buf, int offset, int length) throws IOException, ClassNotFoundException {
-      BytesObjectInput in = new BytesObjectInput(buf, offset, this);
-      return readNullableObject(in);
+      return readNullableObject(new BytesObjectInput(buf, offset, this));
    }
 
-   private Object readWithExternalizer(int id, BytesObjectInput in)
-         throws IOException, ClassNotFoundException {
-      try {
-         return exts.get(id).readObject(in);
-      } catch (NullPointerException e) {
-         throw e;
-      }
-   }
-
-   private <T> Externalizer<T> findExternalizerIn(ObjectInput in) throws IOException {
+   <T> Externalizer<T> findExternalizerIn(ObjectInput in) throws IOException {
       int type = in.readUnsignedByte();
       switch (type) {
          case ID_INTERNAL:
@@ -98,13 +74,13 @@ public class Infinispan9Marshaller extends AbstractUnsupportedStreamingMarshalle
          case ID_PRIMITIVE:
             return Primitives.readPrimitive(in);
          case ID_INTERNAL:
-            return readWithExternalizer(in.readUnsignedByte(), in);
+            return exts.get(in.readUnsignedByte()).readObject(in);
          case ID_EXTERNAL:
-            return readWithExternalizer(in.readInt(), in);
+            return exts.get(in.readInt()).readObject(in);
          case ID_ANNOTATED:
             return readAnnotated(in);
          case ID_UNKNOWN:
-            return readUnknown(in);
+            return external.objectFromObjectStream(in);
          case ID_ARRAY:
             return readArray(in);
          default:
@@ -113,8 +89,7 @@ public class Infinispan9Marshaller extends AbstractUnsupportedStreamingMarshalle
    }
 
    private Object readAnnotated(BytesObjectInput in) throws IOException, ClassNotFoundException {
-      Class<? extends Externalizer> clazz =
-            (Class<? extends Externalizer>) in.readObject();
+      Class<? extends Externalizer> clazz = (Class<? extends Externalizer>) in.readObject();
       try {
          Externalizer ext = clazz.newInstance();
          return ext.readObject(in);
@@ -149,8 +124,7 @@ public class Infinispan9Marshaller extends AbstractUnsupportedStreamingMarshalle
             componentType = (Class<?>) in.readObject();
             break;
          case ID_CLASS:
-            int classId = in.readByte();
-            componentType = getClass(classId);
+            componentType = getClass(in.readByte());
             break;
          default:
             throw new IOException("Unknown component type: " + type);
@@ -181,7 +155,7 @@ public class Infinispan9Marshaller extends AbstractUnsupportedStreamingMarshalle
       boolean singleType = (flags & FLAG_SINGLE_TYPE) != 0;
       boolean componentTypeMatch = (flags & FLAG_COMPONENT_TYPE_MATCH) != 0;
       // If component type match is set, this must be a single type
-      assert componentTypeMatch ? singleType : true;
+      assert !componentTypeMatch || singleType;
       if (singleType) {
          Externalizer<?> ext;
          if (componentTypeMatch) {
@@ -198,7 +172,7 @@ public class Infinispan9Marshaller extends AbstractUnsupportedStreamingMarshalle
             switch (type) {
                case ID_UNKNOWN:
                   for (int i = 0; i < length; ++i) {
-                     Array.set(array, i, readUnknown(in));
+                     Array.set(array, i, external.objectFromObjectStream(in));
                   }
                   return array;
                case ID_PRIMITIVE:
@@ -221,18 +195,12 @@ public class Infinispan9Marshaller extends AbstractUnsupportedStreamingMarshalle
 
    private Class<?> getClass(int id) throws IOException {
       switch (id) {
-         case 0:
-            return Object.class;
-         case 1:
-            return String.class;
-         case 2:
-            return List.class;
-         case 3:
-            return Map.Entry.class;
-         case 16:
-            return InternalCacheValue.class;
-         default:
-            throw new IOException("Unknown class id " + id);
+         case 0: return Object.class;
+         case 1: return String.class;
+         case 2: return List.class;
+         case 3: return Map.Entry.class;
+         case 16: return InternalCacheValue.class;
+         default: throw new IOException("Unknown class id " + id);
       }
    }
 
@@ -281,15 +249,6 @@ public class Infinispan9Marshaller extends AbstractUnsupportedStreamingMarshalle
          return componentExt.getTypeClasses().iterator().next();
       } else {
          return (Class<?>) in.readObject();
-      }
-   }
-
-   private Object readUnknown(BytesObjectInput in) throws IOException, ClassNotFoundException {
-      try {
-         return external.objectFromObjectStream(in);
-      } catch (InterruptedException e) {
-         Thread.currentThread().interrupt();
-         return null;
       }
    }
 }

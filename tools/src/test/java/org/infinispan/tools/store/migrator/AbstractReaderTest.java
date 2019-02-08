@@ -45,7 +45,7 @@ public abstract class AbstractReaderTest extends AbstractInfinispanTest {
 
    @Override
    protected String parameters() {
-      return "[" + segmentCount + "]";
+      return String.format("[version=%d,segments=%d]", majorVersion, segmentCount);
    }
 
    /**
