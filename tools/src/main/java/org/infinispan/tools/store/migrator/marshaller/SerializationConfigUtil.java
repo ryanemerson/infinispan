@@ -4,7 +4,6 @@ import static org.infinispan.tools.store.migrator.Element.CLASS;
 import static org.infinispan.tools.store.migrator.Element.EXTERNALIZERS;
 import static org.infinispan.tools.store.migrator.Element.MARSHALLER;
 import static org.infinispan.tools.store.migrator.Element.SOURCE;
-import static org.infinispan.tools.store.migrator.Element.TYPE;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -43,12 +42,8 @@ public class SerializationConfigUtil {
    }
 
    public static Marshaller getMarshaller(StoreProperties props) {
-      if (isCustomMarshaller(props)) {
-         String marshallerClass = props.get(MARSHALLER, CLASS);
-         if (marshallerClass == null)
-            throw new CacheConfigurationException(
-                  String.format("The property %s.%s must be set if a custom marshaller type is specified", MARSHALLER, CLASS));
-
+      String marshallerClass = props.get(MARSHALLER, CLASS);
+      if (marshallerClass != null) {
          try {
             return (Marshaller) Util.loadClass(marshallerClass, SerializationConfigUtil.class.getClassLoader()).newInstance();
          } catch (IllegalAccessException | InstantiationException e) {
@@ -78,13 +73,6 @@ public class SerializationConfigUtil {
          default:
             throw new IllegalStateException(String.format("Unexpected major version '%d'", majorVersion));
       }
-   }
-
-   private static boolean isCustomMarshaller(StoreProperties props) {
-      String marshallerTypeProp = props.get(MARSHALLER, TYPE);
-      if (marshallerTypeProp != null)
-         return MarshallerType.valueOf(props.get(MARSHALLER, TYPE).toUpperCase()) == MarshallerType.CUSTOM;
-      return false;
    }
 
    private static void configureExternalizers(StoreProperties props, SerializationConfigurationBuilder builder) {

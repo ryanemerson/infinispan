@@ -20,6 +20,7 @@ import static org.infinispan.tools.store.migrator.Element.VERSION;
 import static org.infinispan.tools.store.migrator.StoreType.JDBC_MIXED;
 import static org.infinispan.tools.store.migrator.TestUtil.propKey;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
@@ -31,6 +32,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.infinispan.commons.CacheConfigurationException;
 import org.infinispan.commons.marshall.AdvancedExternalizer;
 import org.infinispan.commons.marshall.MarshallUtil;
 import org.infinispan.commons.marshall.Marshaller;
@@ -45,10 +47,9 @@ import org.infinispan.persistence.jdbc.table.management.TableManagerFactory;
 import org.infinispan.test.Exceptions;
 import org.infinispan.test.data.Person;
 import org.infinispan.tools.store.migrator.jdbc.JdbcConfigurationUtil;
+import org.infinispan.tools.store.migrator.marshaller.SerializationConfigUtil;
 import org.infinispan.tools.store.migrator.marshaller.infinispan8.Infinispan8Marshaller;
 import org.infinispan.tools.store.migrator.marshaller.infinispan9.Infinispan9Marshaller;
-import org.infinispan.tools.store.migrator.marshaller.MarshallerType;
-import org.infinispan.tools.store.migrator.marshaller.SerializationConfigUtil;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -71,7 +72,6 @@ public class MigratorConfigurationTest {
 
    public void testCustomMarshallerLoaded() {
       Properties properties = createBaseProperties();
-      properties.put(propKey(SOURCE, MARSHALLER, TYPE), MarshallerType.CUSTOM.toString());
       properties.put(propKey(SOURCE, MARSHALLER, CLASS), GenericJBossMarshaller.class.getName());
 
       StoreProperties props = new StoreProperties(SOURCE, properties);
@@ -80,10 +80,10 @@ public class MigratorConfigurationTest {
       assertTrue(marshaller instanceof GenericJBossMarshaller);
    }
 
-   public void testLegacyMarshallerAndExternalizersLoaded() throws Exception {
+   public void testInfinipsan8MarshallerAndExternalizersLoaded() throws Exception {
       String externalizers = "1:" + PersonExternalizer.class.getName();
       Properties properties = createBaseProperties();
-      properties.put(propKey(SOURCE, MARSHALLER, TYPE), MarshallerType.LEGACY.toString());
+      properties.put(propKey(SOURCE, VERSION), String.valueOf(8));
       properties.put(propKey(SOURCE, MARSHALLER, EXTERNALIZERS), externalizers);
 
       StoreProperties props = new StoreProperties(SOURCE, properties);
@@ -101,7 +101,6 @@ public class MigratorConfigurationTest {
    public void testCurrentMarshallerLoadedAndExternalizersLoaded() throws Exception {
       String externalizers = "1:" + PersonExternalizer.class.getName();
       Properties properties = createBaseProperties();
-      properties.put(propKey(SOURCE, MARSHALLER, TYPE), MarshallerType.CURRENT.toString());
       properties.put(propKey(SOURCE, MARSHALLER, EXTERNALIZERS), externalizers);
 
       StoreProperties props = new StoreProperties(SOURCE, properties);
@@ -116,19 +115,25 @@ public class MigratorConfigurationTest {
       assertEquals(1, externalizerWriteCount.get());
    }
 
+   public void testExceptionOnMarshallerType() {
+      Properties properties = createBaseProperties();
+      properties.put(propKey(SOURCE, MARSHALLER, TYPE), "CURRENT");
+      Exceptions.expectException(CacheConfigurationException.class, () -> new StoreProperties(SOURCE, properties));
+   }
+
    public void testCorrectMarshallerLoadedForVersion() {
       assertTrue(getMarshallerForVersion(8, SOURCE) instanceof Infinispan8Marshaller);
       assertTrue(getMarshallerForVersion(9, SOURCE) instanceof Infinispan9Marshaller);
-      Exceptions.expectException(IllegalStateException.class, () -> getMarshallerForVersion(10, SOURCE));
+      assertTrue(getMarshallerForVersion(10, SOURCE) instanceof PersistenceMarshaller);
 
-      Exceptions.expectException(IllegalStateException.class, () -> getMarshallerForVersion(8, TARGET));
-      Exceptions.expectException(IllegalStateException.class, () -> getMarshallerForVersion(9, TARGET));
-      assertTrue(getMarshallerForVersion(10, TARGET) instanceof PersistenceMarshaller);
+      Exceptions.expectException(CacheConfigurationException.class, () -> getMarshallerForVersion(8, TARGET));
+      Exceptions.expectException(CacheConfigurationException.class, () -> getMarshallerForVersion(9, TARGET));
+      assertNull(getMarshallerForVersion(10, TARGET));
    }
 
    private Marshaller getMarshallerForVersion(int version, Element storeType) {
-      Properties properties = new Properties();
-      properties.put(propKey(storeType, VERSION), version);
+      Properties properties = createBaseProperties(storeType);
+      properties.put(propKey(storeType, VERSION), String.valueOf(version));
       StoreProperties props = new StoreProperties(storeType, properties);
       return SerializationConfigUtil.getMarshaller(props);
    }

@@ -9,16 +9,12 @@ import java.util.Map;
 import org.infinispan.commons.marshall.AdvancedExternalizer;
 import org.infinispan.tools.store.migrator.marshaller.LegacyJBossMarshaller;
 import org.infinispan.tools.store.migrator.marshaller.common.AbstractUnsupportedStreamingMarshaller;
-import org.infinispan.util.logging.Log;
-import org.infinispan.util.logging.LogFactory;
 
 /**
  * LegacyVersionAwareMarshaller that is used to read bytes marshalled using Infinispan 8.x. This is useful for providing
  * a migration path from 8.x stores.
  */
 public class Infinispan8Marshaller extends AbstractUnsupportedStreamingMarshaller {
-   private static final Log log = LogFactory.getLog(Infinispan8Marshaller.class);
-
    private final LegacyJBossMarshaller external;
 
    public Infinispan8Marshaller(Map<Integer, ? extends AdvancedExternalizer> userExts) {
@@ -45,7 +41,6 @@ public class Infinispan8Marshaller extends AbstractUnsupportedStreamingMarshalle
          in.readShort();
       } catch (Exception e) {
          finishObjectInput(in);
-         log.unableToReadVersionId();
          throw new IOException("Unable to read version id from first two bytes of stream: " + e.getMessage());
       }
       return in;

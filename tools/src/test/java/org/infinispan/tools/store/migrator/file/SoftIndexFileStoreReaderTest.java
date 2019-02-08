@@ -4,12 +4,10 @@ import static org.infinispan.tools.store.migrator.Element.INDEX_LOCATION;
 import static org.infinispan.tools.store.migrator.Element.LOCATION;
 import static org.infinispan.tools.store.migrator.Element.SOURCE;
 import static org.infinispan.tools.store.migrator.Element.TYPE;
-import static org.infinispan.tools.store.migrator.Element.VERSION;
 import static org.infinispan.tools.store.migrator.TestUtil.propKey;
 
 import java.util.Properties;
 
-import org.infinispan.Version;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.persistence.sifs.configuration.SoftIndexFileStoreConfigurationBuilder;
 import org.infinispan.tools.store.migrator.AbstractReaderTest;
@@ -36,10 +34,10 @@ public class SoftIndexFileStoreReaderTest extends AbstractReaderTest {
    @Factory
    public Object[] factory() {
       return new Object[] {
-            new SingleFileStoreReaderTest(),
-            new SingleFileStoreReaderTest().segmented(59),
-            new SingleFileStoreReaderTest().majorVersion(9),
-            new SingleFileStoreReaderTest().majorVersion(9).segmented(59),
+            new SoftIndexFileStoreReaderTest(),
+            new SoftIndexFileStoreReaderTest().segmented(59),
+            new SoftIndexFileStoreReaderTest().majorVersion(9),
+            new SoftIndexFileStoreReaderTest().majorVersion(9).segmented(59),
       };
    }
 
@@ -62,11 +60,9 @@ public class SoftIndexFileStoreReaderTest extends AbstractReaderTest {
       properties.put(propKey(type, TYPE), StoreType.SOFT_INDEX_FILE_STORE.toString());
       if (type == SOURCE) {
          properties.put(propKey(type, LOCATION), getSrcDirectory());
-         properties.put(propKey(type, VERSION), majorVersion);
       } else {
          properties.put(propKey(type, LOCATION), getTargetDataDirectory());
          properties.put(propKey(type, INDEX_LOCATION), getTargetIndexDirectory());
-         properties.put(propKey(type, VERSION), Version.getMajor());
       }
    }
 }

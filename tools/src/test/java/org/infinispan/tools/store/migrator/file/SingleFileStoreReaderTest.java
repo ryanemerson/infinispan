@@ -3,7 +3,6 @@ package org.infinispan.tools.store.migrator.file;
 import static org.infinispan.tools.store.migrator.Element.LOCATION;
 import static org.infinispan.tools.store.migrator.Element.SOURCE;
 import static org.infinispan.tools.store.migrator.Element.TYPE;
-import static org.infinispan.tools.store.migrator.Element.VERSION;
 import static org.infinispan.tools.store.migrator.TestUtil.propKey;
 
 import java.util.Properties;
@@ -43,11 +42,10 @@ public class SingleFileStoreReaderTest extends AbstractReaderTest {
       super.configureStoreProperties(properties, type);
       properties.put(propKey(type, TYPE), StoreType.SINGLE_FILE_STORE.toString());
       properties.put(propKey(type, LOCATION), type == SOURCE ? getSourceDir() : getTargetDir());
-      properties.put(propKey(type, VERSION), majorVersion);
    }
 
    private String getSourceDir() {
-      return String.format("target/test-classes/infinispan%d/singlefilestore", majorVersion);
+      return String.format("target/test-classes/infinispan%d/singlefilestore/", majorVersion);
    }
 
    private String getTargetDir() {

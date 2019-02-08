@@ -64,7 +64,7 @@ public abstract class AbstractReaderTest extends AbstractInfinispanTest {
    protected void configureStoreProperties(Properties properties, Element type) {
       properties.put(propKey(type, CACHE_NAME), TEST_CACHE_NAME);
       properties.put(propKey(type, MARSHALLER, EXTERNALIZERS), "256:" + TestUtil.TestObjectExternalizer.class.getName());
-      properties.put(propKey(type, VERSION), type == SOURCE ? majorVersion : Version.getMajor());
+      properties.put(propKey(type, VERSION), type == SOURCE ? String.valueOf(majorVersion): Version.getMajor());
 
       if (type == TARGET && segmentCount > 0) {
          properties.put(propKey(type, SEGMENT_COUNT), String.valueOf(segmentCount));
@@ -76,11 +76,11 @@ public abstract class AbstractReaderTest extends AbstractInfinispanTest {
       Properties properties = new Properties();
       configureStoreProperties(properties, SOURCE);
       configureStoreProperties(properties, TARGET);
-      // Read from the legacy LevelDB store and populate the new RocksDBStore using latest marshaller
       new StoreMigrator(properties).run();
 
       GlobalConfiguration globalConfig = new GlobalConfigurationBuilder()
-            .serialization().addAdvancedExternalizer(256, new TestUtil.TestObjectExternalizer())
+            .serialization()
+            .addAdvancedExternalizer(256, new TestUtil.TestObjectExternalizer())
             .build();
 
       Configuration config = getTargetCacheConfig().build();
