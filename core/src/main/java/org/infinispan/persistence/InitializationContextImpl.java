@@ -61,7 +61,7 @@ public class InitializationContextImpl implements InitializationContext {
 
    @Override
    public StreamingMarshaller getMarshaller() {
-      return StreamingMarshaller.from(marshaller);
+      return new StreamingMarshallerBridge(marshaller);
    }
 
    @Override
