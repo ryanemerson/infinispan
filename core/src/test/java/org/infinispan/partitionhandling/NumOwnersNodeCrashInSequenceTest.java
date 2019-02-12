@@ -17,6 +17,7 @@ import org.infinispan.manager.CacheContainer;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.partitionhandling.impl.PartitionHandlingManager;
 import org.infinispan.remoting.transport.Address;
+import org.infinispan.remoting.transport.jgroups.JGroupsAddress;
 import org.infinispan.statetransfer.StateResponseCommand;
 import org.infinispan.test.MultipleCacheManagersTest;
 import org.infinispan.test.TestingUtil;
@@ -54,7 +55,7 @@ public class NumOwnersNodeCrashInSequenceTest extends MultipleCacheManagersTest 
       configBuilder.clustering().partitionHandling().whenSplit(PartitionHandling.DENY_READ_WRITES);
       configBuilder.clustering().hash().numSegments(4).stateTransfer().timeout(30000);
       globalBuilder = GlobalConfigurationBuilder.defaultClusteredBuilder();
-      globalBuilder.serialization().addAdvancedExternalizer(new ControlledConsistentHashFactory.Externalizer());
+      globalBuilder.serialization().addAdvancedExternalizer(new JGroupsAddress.Externalizer());
    }
 
    public void testNodeCrashedBeforeStFinished0() throws Exception {
