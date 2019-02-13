@@ -1,9 +1,11 @@
 package org.infinispan.marshall.persistence;
 
+import org.infinispan.commons.marshall.Marshaller;
 import org.infinispan.commons.marshall.StreamAwareMarshaller;
 import org.infinispan.factories.scopes.Scope;
 import org.infinispan.factories.scopes.Scopes;
 import org.infinispan.persistence.spi.InitializationContext;
+import org.infinispan.protostream.ImmutableSerializationContext;
 import org.infinispan.protostream.SerializationContext;
 
 /**
@@ -13,15 +15,13 @@ import org.infinispan.protostream.SerializationContext;
  * @since 10.0
  */
 @Scope(Scopes.GLOBAL)
-public interface PersistenceMarshaller extends StreamAwareMarshaller {
+public interface PersistenceMarshaller extends StreamAwareMarshaller, Marshaller {
 
    /**
-    * The {@link SerializationContext} of the marshaller. This can be use to register custom marshallers for objects
-    * required by the store implementation. This context should not be used to register marshallers for users types, which
+    * The {@link ImmutableSerializationContext} of the marshaller. This context is not used for users types, which
     * should be configured on the user marshaller via {@link org.infinispan.configuration.global.SerializationConfiguration}
     */
-   // TODO don't expose this? Or expose Immutable?
-   SerializationContext getSerializationContext();
+   ImmutableSerializationContext getSerializationContext();
 
    /**
     * Register annotated pojos with the PersistenceMarshallers {@link SerializationContext}. Marshallers are generated
@@ -33,8 +33,4 @@ public interface PersistenceMarshaller extends StreamAwareMarshaller {
     * @param classes the classes of the annotated pojos to add to the {@link SerializationContext}
     */
    void registerAnnotatedPojos(String protoPackage, Class... classes);
-
-   byte[] marshallUserObject(Object object);
-
-   Object unmarshallUserBytes(byte[] bytes);
 }

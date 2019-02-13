@@ -27,11 +27,11 @@ import org.infinispan.util.ByteString;
 public class PersistenceContext {
 
    static final String PROTO_FILE = "org/infinispan/persistence/persistence.proto";
-   static final String GENERATED_PROTO_PACKAGE = "generated.persistence";
+   static final String GENERATED_PROTO_PACKAGE = "g.persistence";
 
    public static void init(GlobalComponentRegistry gcr, PersistenceMarshallerImpl pm) throws IOException {
       ClassLoader classLoader = gcr.getGlobalConfiguration().classLoader();
-      SerializationContext ctx = pm.getSerializationContext();
+      SerializationContext ctx = pm.serializationContext;
 
       Set<Class> internalClasses = Util.asSet(
             AtomicMapMarshaller.AtomicMapEntry.class,

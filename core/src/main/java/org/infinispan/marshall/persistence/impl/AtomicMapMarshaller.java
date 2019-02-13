@@ -15,9 +15,9 @@ import org.infinispan.protostream.annotations.ProtoField;
 
 final class AtomicMapMarshaller implements MessageMarshaller<FastCopyHashMap> {
 
-   private final PersistenceMarshaller marshaller;
+   private final PersistenceMarshallerImpl marshaller;
 
-   AtomicMapMarshaller(PersistenceMarshaller marshaller) {
+   AtomicMapMarshaller(PersistenceMarshallerImpl marshaller) {
       this.marshaller = marshaller;
    }
 

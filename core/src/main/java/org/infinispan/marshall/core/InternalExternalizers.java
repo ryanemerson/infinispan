@@ -15,7 +15,6 @@ import org.infinispan.commons.hash.MurmurHash3;
 import org.infinispan.commons.io.ByteBufferImpl;
 import org.infinispan.commons.marshall.AdminFlagExternalizer;
 import org.infinispan.commons.marshall.AdvancedExternalizer;
-import org.infinispan.commons.marshall.StreamAwareMarshaller;
 import org.infinispan.commons.marshall.WrappedByteArray;
 import org.infinispan.commons.marshall.exts.EquivalenceExternalizer;
 import org.infinispan.commons.tx.XidImpl;
@@ -80,6 +79,7 @@ import org.infinispan.marshall.exts.OptionalExternalizer;
 import org.infinispan.marshall.exts.ReplicableCommandExternalizer;
 import org.infinispan.marshall.exts.TriangleAckExternalizer;
 import org.infinispan.marshall.exts.UuidExternalizer;
+import org.infinispan.marshall.persistence.PersistenceMarshaller;
 import org.infinispan.marshall.persistence.impl.MarshalledEntryImpl;
 import org.infinispan.metadata.EmbeddedMetadata;
 import org.infinispan.notifications.cachelistener.cluster.ClusterEvent;
@@ -134,7 +134,7 @@ final class InternalExternalizers {
    }
 
    static ClassToExternalizerMap load(GlobalComponentRegistry gcr, RemoteCommandsFactory cmdFactory) {
-      final StreamAwareMarshaller persistenceMarshaller = gcr.getComponent(StreamAwareMarshaller.class, KnownComponentNames.PERSISTENCE_MARSHALLER);
+      final PersistenceMarshaller persistenceMarshaller = gcr.getComponent(PersistenceMarshaller.class, KnownComponentNames.PERSISTENCE_MARSHALLER);
       // TODO Add initial value and load factor
       ClassToExternalizerMap exts = new ClassToExternalizerMap(512, 0.6f);
 

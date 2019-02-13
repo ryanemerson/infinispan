@@ -28,7 +28,7 @@ import org.infinispan.factories.ComponentRegistry;
 import org.infinispan.factories.GlobalComponentRegistry;
 import org.infinispan.functional.EntryView;
 import org.infinispan.interceptors.AsyncInterceptorChain;
-import org.infinispan.marshall.persistence.PersistenceMarshaller;
+import org.infinispan.marshall.persistence.impl.PersistenceMarshallerImpl;
 import org.infinispan.protostream.MessageMarshaller;
 import org.infinispan.util.ByteString;
 import org.infinispan.util.logging.Log;
@@ -559,9 +559,9 @@ public final class AtomicKeySetImpl<K> implements MergeOnStore {
 
    public static class KeyMarshaller implements MessageMarshaller<AtomicKeySetImpl.Key> {
 
-      private final PersistenceMarshaller persistenceMarshaller;
+      private final PersistenceMarshallerImpl persistenceMarshaller;
 
-      public KeyMarshaller(PersistenceMarshaller persistenceMarshaller) {
+      public KeyMarshaller(PersistenceMarshallerImpl persistenceMarshaller) {
          this.persistenceMarshaller = persistenceMarshaller;
       }
 
@@ -592,9 +592,9 @@ public final class AtomicKeySetImpl<K> implements MergeOnStore {
    public static class Marshaller implements MessageMarshaller<AtomicKeySetImpl> {
 
       private final GlobalComponentRegistry gcr;
-      private final PersistenceMarshaller persistenceMarshaller;
+      private final PersistenceMarshallerImpl persistenceMarshaller;
 
-      public Marshaller(GlobalComponentRegistry gcr, PersistenceMarshaller persistenceMarshaller) {
+      public Marshaller(GlobalComponentRegistry gcr, PersistenceMarshallerImpl persistenceMarshaller) {
          this.gcr = gcr;
          this.persistenceMarshaller = persistenceMarshaller;
       }

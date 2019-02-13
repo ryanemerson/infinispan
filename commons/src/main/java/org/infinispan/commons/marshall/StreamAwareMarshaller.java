@@ -4,17 +4,19 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import org.infinispan.commons.dataconversion.MediaType;
+
 import net.jcip.annotations.ThreadSafe;
 
 /**
- * An extension of the {@link Marshaller} interface that facilitates the marshalling/unmarshalling of objects from
- * the provided {@link java.io.OutputStream}/{@link java.io.InputStream}
+ * An interface that facilitates the marshalling/unmarshalling of objects from
+ * the provided {@link java.io.OutputStream}/{@link java.io.InputStream}.
  *
  * @author Ryan Emerson
  * @since 10.0
  */
 @ThreadSafe
-public interface StreamAwareMarshaller extends Marshaller {
+public interface StreamAwareMarshaller {
 
    /**
     * Marshall an object to the {@link OutputStream}
@@ -34,4 +36,26 @@ public interface StreamAwareMarshaller extends Marshaller {
     * @throws ClassNotFoundException if the class of the object trying to unmarshall is not found
     */
    Object readObject(InputStream in) throws ClassNotFoundException, IOException;
+
+   /**
+    * A method that checks whether the given object is marshallable as per the rules of this marshaller.
+    *
+    * @param o object to verify whether it's marshallable or not
+    * @return true if the object is marshallable, otherwise false
+    */
+   boolean isMarshallable(Object o);
+
+   /**
+    * An method that provides an estimate of the buffer size that will be required once the object has been
+    * marshalled.
+    *
+    * @param o instance that will be stored in the buffer.
+    * @return int representing the next predicted buffer size.
+    */
+   int sizeEstimate(Object o);
+
+   /**
+    * @return the {@link MediaType} associated with the content produced by the marshaller
+    */
+   MediaType mediaType();
 }

@@ -61,7 +61,7 @@ public class TestObjectStreamMarshaller extends AbstractMarshaller implements Pe
    }
 
    @Override
-   public boolean isMarshallable(Object o) throws Exception {
+   public boolean isMarshallable(Object o) {
       return marshaller.isMarshallable(o);
    }
 
@@ -91,17 +91,12 @@ public class TestObjectStreamMarshaller extends AbstractMarshaller implements Pe
       marshaller.registerAnnotatedPojos(packageName, classes);
    }
 
-   @Override
-   public byte[] marshallUserObject(Object object) {
-      return marshaller.marshallUserObject(object);
-   }
-
-   @Override
-   public Object unmarshallUserBytes(byte[] bytes) {
-      return marshaller.unmarshallUserBytes(bytes);
-   }
-
    public void generateStoreMarshallers() {
       marshaller.generateStoreMarshallers();
+   }
+
+   @Override
+   public int sizeEstimate(Object o) {
+      return marshaller.sizeEstimate(o);
    }
 }
