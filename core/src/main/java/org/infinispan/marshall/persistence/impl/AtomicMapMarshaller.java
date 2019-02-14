@@ -9,7 +9,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.infinispan.commons.util.FastCopyHashMap;
-import org.infinispan.marshall.persistence.PersistenceMarshaller;
 import org.infinispan.protostream.MessageMarshaller;
 import org.infinispan.protostream.annotations.ProtoField;
 
