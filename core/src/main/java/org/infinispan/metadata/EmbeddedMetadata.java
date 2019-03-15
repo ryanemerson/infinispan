@@ -27,7 +27,7 @@ public class EmbeddedMetadata implements Metadata {
 
    EntryVersion version;
 
-   EmbeddedMetadata() {}
+   protected EmbeddedMetadata() {}
 
    private EmbeddedMetadata(EntryVersion version) {
       this.version = version;
@@ -49,7 +49,7 @@ public class EmbeddedMetadata implements Metadata {
    }
 
    @ProtoField(number = 1)
-   NumericVersion getNumericVersion() {
+   public NumericVersion getNumericVersion() {
       return version instanceof NumericVersion ? (NumericVersion) version : null;
    }
 
@@ -58,7 +58,7 @@ public class EmbeddedMetadata implements Metadata {
    }
 
    @ProtoField(number = 2)
-   SimpleClusteredVersion getClusteredVersion() {
+   public SimpleClusteredVersion getClusteredVersion() {
       return version instanceof SimpleClusteredVersion ? (SimpleClusteredVersion) version : null;
    }
 
@@ -236,11 +236,11 @@ public class EmbeddedMetadata implements Metadata {
    public static class EmbeddedLifespanExpirableMetadata extends EmbeddedMetadata {
 
       @ProtoField(number = 3, defaultValue = "-1")
-      long lifespan;
+      public long lifespan;
 
-      EmbeddedLifespanExpirableMetadata() {}
+      protected EmbeddedLifespanExpirableMetadata() {}
 
-      private EmbeddedLifespanExpirableMetadata(long lifespan, TimeUnit lifespanUnit, EntryVersion version) {
+      protected EmbeddedLifespanExpirableMetadata(long lifespan, TimeUnit lifespanUnit, EntryVersion version) {
          super(version);
          this.lifespan = lifespan < 0 ? -1 : lifespanUnit.toMillis(lifespan);
       }
