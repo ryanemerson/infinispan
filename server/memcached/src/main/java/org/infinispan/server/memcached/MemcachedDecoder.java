@@ -822,10 +822,15 @@ public class MemcachedDecoder extends ReplayingDecoder<MemcachedDecoderState> {
       }
    }
 
-   protected Metadata buildMetadata() {
-      MemcachedMetadataBuilder metadata = new MemcachedMetadataBuilder();
-      metadata.version(generateVersion(cache));
-      metadata.flags(params.flags);
+   private Metadata buildMetadata() {
+//      return new MemcachedMetadata.Builder()
+//            .flags(params.flags)
+//            .version(generateVersion(cache))
+//            .lifespan(params.lifespan > 0 ? params.lifespan : null)
+//            .build();
+      MemcachedMetadata.Builder metadata = new MemcachedMetadata.Builder();
+      metadata.flags(params.flags)
+            .version(generateVersion(cache));
       if (params.lifespan > 0)
          metadata.lifespan(toMillis(params.lifespan));
 
