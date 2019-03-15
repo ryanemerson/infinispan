@@ -1,15 +1,9 @@
 package org.infinispan.server.eventlogger;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
 import java.time.Instant;
-import java.util.Collections;
 import java.util.Optional;
-import java.util.Set;
 
-import org.infinispan.commons.marshall.AbstractExternalizer;
-import org.infinispan.commons.marshall.SerializeWith;
+import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.util.logging.events.EventLog;
 import org.infinispan.util.logging.events.EventLogCategory;
 import org.infinispan.util.logging.events.EventLogLevel;
@@ -20,17 +14,24 @@ import org.infinispan.util.logging.events.EventLogLevel;
  * @author Tristan Tarrant
  * @since 8.2
  */
-@SerializeWith(ServerEventImpl.Externalizer.class)
 public class ServerEventImpl implements EventLog {
 
-   private final EventLogLevel level;
-   private final EventLogCategory category;
-   private final Instant when;
-   private final String message;
-   private final Optional<String> detail;
-   private final Optional<String> context;
-   private final Optional<String> who;
-   private final Optional<String> scope;
+   @ProtoField(number = 1, required = true)
+   EventLogLevel level;
+
+   @ProtoField(number = 2, required = true)
+   EventLogCategory category;
+
+   @ProtoField(number = 3, required = true)
+   String message;
+
+   Instant when;
+   Optional<String> detail;
+   Optional<String> context;
+   Optional<String> who;
+   Optional<String> scope;
+
+   ServerEventImpl() {}
 
    ServerEventImpl(EventLogLevel level, EventLogCategory category, Instant when, String message, Optional<String> detail, Optional<String> context, Optional<String> who, Optional<String> scope) {
       this.level = level;
@@ -87,6 +88,51 @@ public class ServerEventImpl implements EventLog {
       return scope;
    }
 
+   @ProtoField(number = 4, name = "epoch", required = true)
+   long getEpoch() {
+      return when.getEpochSecond();
+   }
+
+   @ProtoField(number = 6, name = "detail")
+   String getNullableDetail() {
+      return detail.orElse(null);
+   }
+
+   @ProtoField(number = 7, name = "who")
+   String getNullableWho() {
+      return who.orElse(null);
+   }
+
+   @ProtoField(number = 8, name = "context")
+   String getNullableContext() {
+      return context.orElse(null);
+   }
+
+   @ProtoField(number = 9, name = "scope")
+   String getNullableScope() {
+      return scope.orElse(null);
+   }
+
+   void setEpoch(long epoch) {
+      this.when = Instant.ofEpochSecond(epoch);
+   }
+
+   void setNullableDetail(String detail) {
+      this.detail = Optional.ofNullable(detail);
+   }
+
+   void setNullableContext(String context) {
+      this.context = Optional.ofNullable(context);
+   }
+
+   void setNullableWho(String who) {
+      this.who = Optional.ofNullable(who);
+   }
+
+   void setNullableScope(String scope) {
+      this.scope = Optional.ofNullable(scope);
+   }
+
    @Override
    public int compareTo(EventLog that) {
       // Intentionally backwards
@@ -106,40 +152,4 @@ public class ServerEventImpl implements EventLog {
             ", scope=" + scope +
             '}';
    }
-
-   @SuppressWarnings("serial")
-   public static class Externalizer extends AbstractExternalizer<ServerEventImpl> {
-
-      @Override
-      public void writeObject(ObjectOutput oo, ServerEventImpl event) throws IOException {
-         oo.writeObject(event.level);
-         oo.writeObject(event.category);
-         oo.writeObject(event.when);
-         oo.writeUTF(event.message);
-         oo.writeObject(event.detail);
-         oo.writeObject(event.context);
-         oo.writeObject(event.who);
-         oo.writeObject(event.scope);
-      }
-
-      @Override
-      public ServerEventImpl readObject(ObjectInput oi) throws IOException, ClassNotFoundException {
-         EventLogLevel level = (EventLogLevel) oi.readObject();
-         EventLogCategory category = (EventLogCategory) oi.readObject();
-         Instant when = (Instant) oi.readObject();
-         String message = oi.readUTF();
-         Optional<String> detail = (Optional<String>) oi.readObject();
-         Optional<String> context = (Optional<String>) oi.readObject();
-         Optional<String> who = (Optional<String>) oi.readObject();
-         Optional<String> scope = (Optional<String>) oi.readObject();
-         return new ServerEventImpl(level, category, when, message, detail, context, who, scope);
-      }
-
-      @Override
-      public Set<Class<? extends ServerEventImpl>> getTypeClasses() {
-         return Collections.singleton(ServerEventImpl.class);
-      }
-
-   }
-
 }
