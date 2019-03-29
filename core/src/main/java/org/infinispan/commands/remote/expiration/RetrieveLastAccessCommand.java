@@ -6,14 +6,15 @@ import java.io.ObjectOutput;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
+import org.infinispan.commands.InitializableCommand;
 import org.infinispan.commands.SegmentSpecificCommand;
 import org.infinispan.commands.TopologyAffectedCommand;
 import org.infinispan.commands.remote.BaseRpcCommand;
 import org.infinispan.commons.io.UnsignedNumeric;
+import org.infinispan.commons.time.TimeService;
 import org.infinispan.container.entries.InternalCacheEntry;
 import org.infinispan.container.impl.InternalDataContainer;
 import org.infinispan.util.ByteString;
-import org.infinispan.commons.time.TimeService;
 import org.infinispan.util.concurrent.CompletableFutures;
 
 /**
@@ -21,7 +22,7 @@ import org.infinispan.util.concurrent.CompletableFutures;
  * @author wburns
  * @since 9.3
  */
-public class RetrieveLastAccessCommand extends BaseRpcCommand implements TopologyAffectedCommand, SegmentSpecificCommand {
+public class RetrieveLastAccessCommand extends BaseRpcCommand implements InitializableCommand, TopologyAffectedCommand, SegmentSpecificCommand {
 
    private Object key;
    private Object value;
@@ -51,9 +52,10 @@ public class RetrieveLastAccessCommand extends BaseRpcCommand implements Topolog
       this.segment = segment;
    }
 
-   public void inject(InternalDataContainer container, TimeService timeService) {
-      this.container = container;
-      this.timeService = timeService;
+   @Override
+   public void init(CommandContext context, boolean isRemote) {
+      this.container = context.getDataContainer();
+      this.timeService = context.getTimeService();
    }
 
    @Override

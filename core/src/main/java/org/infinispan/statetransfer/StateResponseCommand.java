@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 
+import org.infinispan.commands.InitializableCommand;
 import org.infinispan.commands.TopologyAffectedCommand;
 import org.infinispan.commands.remote.BaseRpcCommand;
 import org.infinispan.commons.marshall.MarshallUtil;
@@ -23,7 +24,7 @@ import org.infinispan.util.logging.LogFactory;
  * @author anistor@redhat.com
  * @since 5.2
  */
-public class StateResponseCommand extends BaseRpcCommand implements TopologyAffectedCommand {
+public class StateResponseCommand extends BaseRpcCommand implements InitializableCommand, TopologyAffectedCommand {
 
    private static final Log log = LogFactory.getLog(StateResponseCommand.class);
 
@@ -74,9 +75,10 @@ public class StateResponseCommand extends BaseRpcCommand implements TopologyAffe
       this.pushTransfer = pushTransfer;
    }
 
-   public void init(StateConsumer stateConsumer, StateReceiver stateReceiver) {
-      this.stateConsumer = stateConsumer;
-      this.stateReceiver = stateReceiver;
+   @Override
+   public void init(CommandContext context, boolean isRemote) {
+      this.stateConsumer = context.getStateConsumer();
+      this.stateReceiver = context.getStateReceiver();
    }
 
    @Override

@@ -7,6 +7,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
+import org.infinispan.commands.InitializableCommand;
 import org.infinispan.commands.TopologyAffectedCommand;
 import org.infinispan.commands.remote.BaseRpcCommand;
 import org.infinispan.commons.CacheException;
@@ -27,7 +28,7 @@ import org.infinispan.util.logging.LogFactory;
  * @author anistor@redhat.com
  * @since 5.2
  */
-public class StateRequestCommand extends BaseRpcCommand implements TopologyAffectedCommand {
+public class StateRequestCommand extends BaseRpcCommand implements InitializableCommand, TopologyAffectedCommand {
 
    private static final Log log = LogFactory.getLog(StateRequestCommand.class);
 
@@ -72,9 +73,10 @@ public class StateRequestCommand extends BaseRpcCommand implements TopologyAffec
       this.segments = segments;
    }
 
-   public void init(StateProvider stateProvider, BiasManager biasManager) {
-      this.stateProvider = stateProvider;
-      this.biasManager = biasManager;
+   @Override
+   public void init(CommandContext context, boolean isRemote) {
+      this.stateProvider = context.getStateProvider();
+      this.biasManager = context.getBiasManager();
    }
 
    @Override

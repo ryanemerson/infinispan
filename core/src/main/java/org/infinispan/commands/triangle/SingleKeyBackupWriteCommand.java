@@ -14,9 +14,6 @@ import org.infinispan.commands.write.RemoveExpiredCommand;
 import org.infinispan.commands.write.ReplaceCommand;
 import org.infinispan.commands.write.WriteCommand;
 import org.infinispan.commons.marshall.MarshallUtil;
-import org.infinispan.context.InvocationContextFactory;
-import org.infinispan.factories.ComponentRegistry;
-import org.infinispan.interceptors.AsyncInterceptorChain;
 import org.infinispan.metadata.Metadata;
 import org.infinispan.util.ByteString;
 
@@ -36,8 +33,6 @@ public class SingleKeyBackupWriteCommand extends BackupWriteCommand {
    private Object valueOrFunction;
    private Metadata metadata;
 
-   private ComponentRegistry componentRegistry;
-
    //for testing
    @SuppressWarnings("unused")
    public SingleKeyBackupWriteCommand() {
@@ -50,11 +45,6 @@ public class SingleKeyBackupWriteCommand extends BackupWriteCommand {
 
    private static Operation valueOf(int index) {
       return CACHED_OPERATION[index];
-   }
-
-   public void init(InvocationContextFactory factory, AsyncInterceptorChain chain, ComponentRegistry componentRegistry) {
-      injectDependencies(factory, chain);
-      this.componentRegistry = componentRegistry;
    }
 
    @Override

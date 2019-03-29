@@ -5,8 +5,8 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.concurrent.CompletableFuture;
 
+import org.infinispan.commands.InitializableCommand;
 import org.infinispan.commands.remote.BaseRpcCommand;
-import org.infinispan.factories.annotations.Inject;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.util.ByteString;
 import org.infinispan.util.concurrent.CompletableFutures;
@@ -14,10 +14,10 @@ import org.infinispan.util.concurrent.CompletableFutures;
 /**
  * Stream iterator command that unregisters an iterator so it doesn't consume memory unnecessarily
  */
-public class StreamIteratorCloseCommand extends BaseRpcCommand {
+public class StreamIteratorCloseCommand extends BaseRpcCommand implements InitializableCommand {
    public static final byte COMMAND_ID = 72;
 
-   @Inject protected IteratorHandler handler;
+   protected IteratorHandler handler;
 
    protected Object id;
 
@@ -40,6 +40,11 @@ public class StreamIteratorCloseCommand extends BaseRpcCommand {
 
    public void inject(IteratorHandler handler) {
       this.handler = handler;
+   }
+
+   @Override
+   public void init(CommandContext context, boolean isRemote) {
+      this.handler = context.getIteratorHandler();
    }
 
    @Override

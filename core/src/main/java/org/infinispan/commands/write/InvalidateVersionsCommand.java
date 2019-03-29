@@ -1,5 +1,11 @@
 package org.infinispan.commands.write;
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+import java.util.concurrent.CompletableFuture;
+
+import org.infinispan.commands.InitializableCommand;
 import org.infinispan.commands.VisitableCommand;
 import org.infinispan.commands.remote.BaseRpcCommand;
 import org.infinispan.container.DataContainer;
@@ -14,17 +20,12 @@ import org.infinispan.util.concurrent.CompletableFutures;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
-import java.util.concurrent.CompletableFuture;
-
 /**
  * Must be {@link VisitableCommand} as we want to catch it in persistence handling etc.
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public class InvalidateVersionsCommand extends BaseRpcCommand {
+public class InvalidateVersionsCommand extends BaseRpcCommand implements InitializableCommand {
    private static final Log log = LogFactory.getLog(InvalidateVersionsCommand.class);
    private static final boolean trace = log.isTraceEnabled();
 
@@ -61,14 +62,13 @@ public class InvalidateVersionsCommand extends BaseRpcCommand {
       this.removed = removed;
    }
 
-   public void init(DataContainer dataContainer, OrderedUpdatesManager orderedUpdatesManager,
-                    StateTransferLock stateTransferLock, DistributionManager distributionManager,
-                    BiasManager biasManager) {
-      this.dataContainer = dataContainer;
-      this.orderedUpdatesManager = orderedUpdatesManager;
-      this.stateTransferLock = stateTransferLock;
-      this.distributionManager = distributionManager;
-      this.biasManager = biasManager;
+   @Override
+   public void init(CommandContext context, boolean isRemote) {
+      this.dataContainer = context.getDataContainer();
+      this.orderedUpdatesManager = context.getOrderedUpdatesManager();
+      this.stateTransferLock = context.getStateTransferLock();
+      this.distributionManager = context.getDistributionManager();
+      this.biasManager = context.getBiasManager();
    }
 
    @Override

@@ -34,10 +34,10 @@ import org.infinispan.factories.annotations.ComponentName;
 import org.infinispan.factories.annotations.Inject;
 import org.infinispan.factories.annotations.Start;
 import org.infinispan.factories.annotations.Stop;
-import org.infinispan.persistence.spi.MarshallableEntry;
 import org.infinispan.metadata.Metadata;
 import org.infinispan.persistence.manager.OrderedUpdatesManager;
 import org.infinispan.persistence.manager.PersistenceManager;
+import org.infinispan.persistence.spi.MarshallableEntry;
 import org.infinispan.remoting.responses.Response;
 import org.infinispan.remoting.rpc.RpcManager;
 import org.infinispan.remoting.transport.Address;
@@ -505,7 +505,7 @@ public class ScatteredVersionManagerImpl<K> implements ScatteredVersionManager<K
          }
       });
       // remove the entries on self, too
-      removeCommand.init(dataContainer, orderedUpdatesManager, null, null, null);
+      commandsFactory.initializeReplicableCommand(removeCommand, false);
       removeCommand.invokeAsync();
    }
 

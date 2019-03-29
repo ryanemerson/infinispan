@@ -8,11 +8,13 @@ import java.io.ObjectOutput;
 import java.util.concurrent.CompletableFuture;
 
 import org.infinispan.commands.CommandInvocationId;
+import org.infinispan.commands.InitializableCommand;
 import org.infinispan.commands.remote.BaseRpcCommand;
 import org.infinispan.commands.write.WriteCommand;
 import org.infinispan.context.InvocationContext;
 import org.infinispan.context.InvocationContextFactory;
 import org.infinispan.context.impl.FlagBitSets;
+import org.infinispan.factories.ComponentRegistry;
 import org.infinispan.interceptors.AsyncInterceptorChain;
 import org.infinispan.util.ByteString;
 
@@ -26,7 +28,7 @@ import org.infinispan.util.ByteString;
  * @author Pedro Ruivo
  * @since 9.2
  */
-public abstract class BackupWriteCommand extends BaseRpcCommand {
+public abstract class BackupWriteCommand extends BaseRpcCommand implements InitializableCommand {
 
    //common attributes of all write commands
    private CommandInvocationId commandInvocationId;
@@ -39,9 +41,17 @@ public abstract class BackupWriteCommand extends BaseRpcCommand {
 
    private InvocationContextFactory invocationContextFactory;
    private AsyncInterceptorChain interceptorChain;
+   protected ComponentRegistry componentRegistry;
 
    BackupWriteCommand(ByteString cacheName) {
       super(cacheName);
+   }
+
+   @Override
+   public void init(CommandContext context, boolean isRemote) {
+      this.invocationContextFactory = context.getInvocationContextFactory();
+      this.interceptorChain = context.getInterceptorChain();
+      this.componentRegistry = context.getComponentRegistry();
    }
 
    @Override
@@ -124,11 +134,6 @@ public abstract class BackupWriteCommand extends BaseRpcCommand {
             ", commandInvocationId=" + commandInvocationId +
             ", topologyId=" + topologyId +
             ", flags=" + flags;
-   }
-
-   final void injectDependencies(InvocationContextFactory factory, AsyncInterceptorChain chain) {
-      this.invocationContextFactory = factory;
-      this.interceptorChain = chain;
    }
 
    private InvocationContext createContext(WriteCommand command) {

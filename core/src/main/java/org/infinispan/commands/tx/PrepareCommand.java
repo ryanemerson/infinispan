@@ -14,6 +14,8 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
+import org.infinispan.commands.InitializableCommand;
+import org.infinispan.commands.ReplicableCommand;
 import org.infinispan.commands.Visitor;
 import org.infinispan.commands.functional.ReadWriteKeyCommand;
 import org.infinispan.commands.functional.ReadWriteKeyValueCommand;
@@ -55,7 +57,7 @@ import org.infinispan.util.logging.LogFactory;
  * @author Mircea.Markus@jboss.com
  * @since 4.0
  */
-public class PrepareCommand extends AbstractTransactionBoundaryCommand implements TransactionalRemoteLockCommand {
+public class PrepareCommand extends AbstractTransactionBoundaryCommand implements InitializableCommand, TransactionalRemoteLockCommand {
 
    private static final Log log = LogFactory.getLog(PrepareCommand.class);
    private static boolean trace = log.isTraceEnabled();
@@ -71,9 +73,18 @@ public class PrepareCommand extends AbstractTransactionBoundaryCommand implement
 
    private static final WriteCommand[] EMPTY_WRITE_COMMAND_ARRAY = new WriteCommand[0];
 
-   public void initialize(CacheNotifier notifier, RecoveryManager recoveryManager) {
-      this.notifier = notifier;
-      this.recoveryManager = recoveryManager;
+   @Override
+   public void init(CommandContext context, boolean isRemote) {
+      super.init(context, isRemote);
+      this.notifier = context.getCacheNotifier();
+      this.recoveryManager = context.getRecoveryManager();
+
+      if (modifications != null) {
+         for (ReplicableCommand nested : modifications)  {
+            if (nested instanceof InitializableCommand)
+               ((InitializableCommand) nested).init(context, isRemote);
+         }
+      }
    }
 
    private PrepareCommand() {

@@ -163,11 +163,8 @@ public final class ReadWriteManyEntriesCommand<K, V, T, R> extends AbstractWrite
 
    @Override
    public void init(ComponentRegistry componentRegistry) {
-      componentRegistry.wireDependencies(keyDataConversion);
-      componentRegistry.wireDependencies(valueDataConversion);
-
+      super.init(componentRegistry);
       if (f instanceof InjectableComponent)
          ((InjectableComponent) f).inject(componentRegistry);
    }
-
 }

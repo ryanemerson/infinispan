@@ -7,13 +7,14 @@ import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
 import org.infinispan.commands.CommandsFactory;
+import org.infinispan.commands.InitializableCommand;
 import org.infinispan.commands.SegmentSpecificCommand;
 import org.infinispan.commands.read.GetCacheEntryCommand;
 import org.infinispan.commons.io.UnsignedNumeric;
 import org.infinispan.commons.util.EnumUtil;
-import org.infinispan.container.impl.InternalEntryFactory;
 import org.infinispan.container.entries.InternalCacheEntry;
 import org.infinispan.container.entries.MVCCEntry;
+import org.infinispan.container.impl.InternalEntryFactory;
 import org.infinispan.context.Flag;
 import org.infinispan.context.InvocationContext;
 import org.infinispan.context.InvocationContextFactory;
@@ -32,7 +33,7 @@ import org.infinispan.util.logging.LogFactory;
  * @author Mircea.Markus@jboss.com
  * @since 4.0
  */
-public class ClusteredGetCommand extends BaseClusteredReadCommand implements SegmentSpecificCommand {
+public class ClusteredGetCommand extends BaseClusteredReadCommand implements InitializableCommand, SegmentSpecificCommand {
 
    public static final byte COMMAND_ID = 16;
    private static final Log log = LogFactory.getLog(ClusteredGetCommand.class);
@@ -67,12 +68,12 @@ public class ClusteredGetCommand extends BaseClusteredReadCommand implements Seg
       this.segment = segment;
    }
 
-   public void initialize(InvocationContextFactory icf, CommandsFactory commandsFactory,
-                          InternalEntryFactory entryFactory, AsyncInterceptorChain interceptorChain) {
-      this.icf = icf;
-      this.commandsFactory = commandsFactory;
-      this.invoker = interceptorChain;
-      this.entryFactory = entryFactory;
+   @Override
+   public void init(CommandContext context, boolean isRemote) {
+      this.icf = context.getInvocationContextFactory();
+      this.commandsFactory = context.getCommandsFactory();
+      this.invoker = context.getInterceptorChain();
+      this.entryFactory = context.getInternalEntryFactory();
    }
 
    /**

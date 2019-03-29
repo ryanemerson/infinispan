@@ -146,11 +146,8 @@ public final class ReadWriteManyCommand<K, V, R> extends AbstractWriteManyComman
 
    @Override
    public void init(ComponentRegistry componentRegistry) {
-      componentRegistry.wireDependencies(keyDataConversion);
-      componentRegistry.wireDependencies(valueDataConversion);
-      if (f instanceof InjectableComponent) {
+      super.init(componentRegistry);
+      if (f instanceof InjectableComponent)
          ((InjectableComponent) f).inject(componentRegistry);
-      }
    }
-
 }

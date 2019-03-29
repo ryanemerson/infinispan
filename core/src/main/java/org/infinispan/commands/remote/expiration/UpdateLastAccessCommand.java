@@ -5,6 +5,7 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.concurrent.CompletableFuture;
 
+import org.infinispan.commands.InitializableCommand;
 import org.infinispan.commands.SegmentSpecificCommand;
 import org.infinispan.commands.TopologyAffectedCommand;
 import org.infinispan.commands.remote.BaseRpcCommand;
@@ -19,7 +20,7 @@ import org.infinispan.util.concurrent.CompletableFutures;
  * @author wburns
  * @since 9.3
  */
-public class UpdateLastAccessCommand extends BaseRpcCommand implements TopologyAffectedCommand, SegmentSpecificCommand {
+public class UpdateLastAccessCommand extends BaseRpcCommand implements InitializableCommand, TopologyAffectedCommand, SegmentSpecificCommand {
 
    private Object key;
    private long acessTime;
@@ -38,15 +39,17 @@ public class UpdateLastAccessCommand extends BaseRpcCommand implements TopologyA
       segment = -1;
    }
 
-   public UpdateLastAccessCommand(ByteString cacheName, Object key, int segment, long accessTime) {
+   public UpdateLastAccessCommand(ByteString cacheName, Object key, int segment, long accessTime, InternalDataContainer<Object, Object> container) {
       super(cacheName);
       this.key = key;
       this.segment = segment;
       this.acessTime = accessTime;
+      this.container = container;
    }
 
-   public void inject(InternalDataContainer container) {
-      this.container = container;
+   @Override
+   public void init(CommandContext context, boolean isRemote) {
+      this.container = context.getDataContainer();
    }
 
    @Override

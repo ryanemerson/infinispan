@@ -4,11 +4,12 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
+import org.infinispan.commands.InitializableCommand;
 import org.infinispan.commons.marshall.MarshallUtil;
 import org.infinispan.scattered.BiasManager;
 import org.infinispan.util.ByteString;
 
-public class RenewBiasCommand extends BaseRpcCommand {
+public class RenewBiasCommand extends BaseRpcCommand implements InitializableCommand {
    public static final byte COMMAND_ID = 75;
 
    Object[] keys;
@@ -27,8 +28,9 @@ public class RenewBiasCommand extends BaseRpcCommand {
       this.keys = keys;
    }
 
-   public void init(BiasManager biasManager) {
-      this.biasManager = biasManager;
+   @Override
+   public void init(CommandContext context, boolean isRemote) {
+      this.biasManager = context.getBiasManager();
    }
 
    @Override

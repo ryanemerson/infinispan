@@ -19,7 +19,7 @@ import org.infinispan.util.logging.LogFactory;
  * @author Vladimir Blagojevic
  * @since 5.2
  */
-public class CancelCommand extends BaseRpcCommand {
+public class CancelCommand extends BaseRpcCommand implements InitializableCommand {
 
    private static final Log log = LogFactory.getLog(CancelCommand.class);
    public static final byte COMMAND_ID = 34;
@@ -40,8 +40,9 @@ public class CancelCommand extends BaseRpcCommand {
       this.commandToCancel = commandToCancel;
    }
 
-   public void init(CancellationService service) {
-      this.service = service;
+   @Override
+   public void init(CommandContext context, boolean isRemote) {
+      this.service = context.getCancellationService();
    }
 
    @Override

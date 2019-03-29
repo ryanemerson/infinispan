@@ -5,19 +5,19 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.concurrent.CompletableFuture;
 
+import org.infinispan.commands.InitializableCommand;
 import org.infinispan.commands.TopologyAffectedCommand;
 import org.infinispan.commands.remote.BaseRpcCommand;
 import org.infinispan.commons.io.UnsignedNumeric;
-import org.infinispan.factories.annotations.Inject;
 import org.infinispan.util.ByteString;
 
 /**
  * Stream request command that is sent to remote nodes handle execution of remote intermediate and terminal operations.
  */
-public class StreamIteratorNextCommand extends BaseRpcCommand implements TopologyAffectedCommand {
+public class StreamIteratorNextCommand extends BaseRpcCommand implements InitializableCommand, TopologyAffectedCommand {
    public static final byte COMMAND_ID = 71;
 
-   @Inject protected LocalStreamManager lsm;
+   protected LocalStreamManager lsm;
 
    protected Object id;
    protected long batchSize;
@@ -50,8 +50,9 @@ public class StreamIteratorNextCommand extends BaseRpcCommand implements Topolog
       this.batchSize = batchSize;
    }
 
-   public void inject(LocalStreamManager lsm) {
-      this.lsm = lsm;
+   @Override
+   public void init(CommandContext context, boolean isRemote) {
+      this.lsm = context.getLocalStreamManager();
    }
 
    @Override

@@ -3,13 +3,14 @@ package org.infinispan.commands.functional;
 import static org.infinispan.commons.util.Util.toStr;
 
 import org.infinispan.commands.CommandInvocationId;
+import org.infinispan.commands.InitializableCommand;
 import org.infinispan.commands.write.AbstractDataWriteCommand;
 import org.infinispan.commands.write.ValueMatcher;
 import org.infinispan.encoding.DataConversion;
 import org.infinispan.factories.ComponentRegistry;
 import org.infinispan.functional.impl.Params;
 
-public abstract class AbstractWriteKeyCommand<K, V> extends AbstractDataWriteCommand implements FunctionalCommand<K, V> {
+public abstract class AbstractWriteKeyCommand<K, V> extends AbstractDataWriteCommand implements FunctionalCommand<K, V>, InitializableCommand {
 
    Params params;
    ValueMatcher valueMatcher;
@@ -30,6 +31,11 @@ public abstract class AbstractWriteKeyCommand<K, V> extends AbstractDataWriteCom
 
    public AbstractWriteKeyCommand() {
       // No-op
+   }
+
+   @Override
+   public void init(CommandContext context, boolean isRemote) {
+      init(context.getComponentRegistry());
    }
 
    @Override
@@ -79,5 +85,8 @@ public abstract class AbstractWriteKeyCommand<K, V> extends AbstractDataWriteCom
       return valueDataConversion;
    }
 
-   abstract public void init(ComponentRegistry componentRegistry);
+   protected void init(ComponentRegistry componentRegistry) {
+      componentRegistry.wireDependencies(keyDataConversion);
+      componentRegistry.wireDependencies(valueDataConversion);
+   }
 }

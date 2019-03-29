@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
+import org.infinispan.commands.InitializableCommand;
 import org.infinispan.commands.remote.BaseRpcCommand;
 import org.infinispan.util.ByteString;
 import org.infinispan.util.concurrent.CommandAckCollector;
@@ -17,7 +18,7 @@ import org.infinispan.util.concurrent.CommandAckCollector;
  * @author Pedro Ruivo
  * @since 9.0
  */
-public class BackupMultiKeyAckCommand extends BaseRpcCommand {
+public class BackupMultiKeyAckCommand extends BaseRpcCommand implements InitializableCommand {
 
    public static final byte COMMAND_ID = 41;
    private CommandAckCollector commandAckCollector;
@@ -39,6 +40,11 @@ public class BackupMultiKeyAckCommand extends BaseRpcCommand {
       this.id = id;
       this.segment = segment;
       this.topologyId = topologyId;
+   }
+
+   @Override
+   public void init(CommandContext context, boolean isRemote) {
+      this.commandAckCollector = context.getCommandAckCollector();
    }
 
    public void ack() {
@@ -72,10 +78,6 @@ public class BackupMultiKeyAckCommand extends BaseRpcCommand {
       id = input.readLong();
       segment = input.readInt();
       topologyId = input.readInt();
-   }
-
-   public void setCommandAckCollector(CommandAckCollector commandAckCollector) {
-      this.commandAckCollector = commandAckCollector;
    }
 
    @Override

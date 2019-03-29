@@ -5,6 +5,7 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.concurrent.CompletableFuture;
 
+import org.infinispan.commands.InitializableCommand;
 import org.infinispan.commands.ReplicableCommand;
 import org.infinispan.context.InvocationContext;
 import org.infinispan.util.ByteString;
@@ -14,7 +15,7 @@ import org.infinispan.util.ByteString;
  *
  * @author Mircea.Markus@jboss.com
  */
-public class SingleRpcCommand extends BaseRpcInvokingCommand {
+public class SingleRpcCommand extends BaseRpcInvokingCommand implements InitializableCommand {
    public static final int COMMAND_ID = 1;
 
    private ReplicableCommand command;
@@ -30,6 +31,15 @@ public class SingleRpcCommand extends BaseRpcInvokingCommand {
 
    public SingleRpcCommand(ByteString cacheName) {
       super(cacheName);
+   }
+
+   @Override
+   public void init(CommandContext context, boolean isRemote) {
+      this.interceptorChain = context.getInterceptorChain();
+      this.icf = context.getInvocationContextFactory();
+
+      if (command != null && command instanceof InitializableCommand)
+         ((InitializableCommand) command).init(context, isRemote);
    }
 
    @Override

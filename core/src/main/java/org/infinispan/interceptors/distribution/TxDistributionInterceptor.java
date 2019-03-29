@@ -150,7 +150,6 @@ public class TxDistributionInterceptor extends BaseDistributionInterceptor {
             }
             // If max was returned update our time with it, so we don't query again
             UpdateLastAccessCommand ulac = cf.buildUpdateLastAccessCommand(key, command.getSegment(), (long) max);
-            ulac.inject(dataContainer);
             // This command doesn't block
             ulac.invokeAsync().join();
             // Make sure to notify other interceptors the command failed

@@ -6,6 +6,7 @@ import java.io.ObjectOutput;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
+import org.infinispan.commands.InitializableCommand;
 import org.infinispan.commands.remote.BaseRpcCommand;
 import org.infinispan.commons.marshall.MarshallUtil;
 import org.infinispan.util.ByteString;
@@ -17,7 +18,7 @@ import org.infinispan.util.concurrent.CompletableFutures;
  * @author Mircea Markus
  * @since 5.2
  */
-public class XSiteAdminCommand extends BaseRpcCommand {
+public class XSiteAdminCommand extends BaseRpcCommand implements InitializableCommand {
 
    public static final int COMMAND_ID = 32;
 
@@ -63,8 +64,9 @@ public class XSiteAdminCommand extends BaseRpcCommand {
       this.minTimeToWait = minTimeToWait;
    }
 
-   public void init(BackupSender backupSender) {
-      this.backupSender = backupSender;
+   @Override
+   public void init(CommandContext context, boolean isRemote) {
+      this.backupSender = context.getBackupSender();
    }
 
    @Override
