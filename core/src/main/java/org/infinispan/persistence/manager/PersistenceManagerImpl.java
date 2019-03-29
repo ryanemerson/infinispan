@@ -451,7 +451,7 @@ public class PersistenceManagerImpl implements PersistenceManager {
             checkStoreAvailability();
             Consumer<CacheWriter> purgeWriter = writer -> {
                // ISPN-6711 Shared stores should only be purged by the coordinator
-               if (getStoreConfig(writer).shared() && !transport.isCoordinator())
+               if (getStoreConfig(writer).shared() && transport != null && !transport.isCoordinator())
                   return;
 
                if (writer instanceof AdvancedCacheExpirationWriter) {

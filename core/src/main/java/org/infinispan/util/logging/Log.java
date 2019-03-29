@@ -1837,4 +1837,7 @@ public interface Log extends BasicLogger {
    @LogMessage(level = ERROR)
    @Message(value = "Error stopping module %s", id = 538)
    void moduleStopError(String module, @Cause Throwable t);
+
+   @Message(value = "A store cannot be shared when utilised with a local cache.", id = 539)
+   CacheConfigurationException sharedStoreWithLocalCache();
 }
