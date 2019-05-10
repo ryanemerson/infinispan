@@ -23,6 +23,7 @@ import org.infinispan.configuration.global.GlobalConfiguration;
 import org.infinispan.configuration.global.GlobalJmxStatisticsConfiguration;
 import org.infinispan.factories.ComponentRegistry;
 import org.infinispan.factories.GlobalComponentRegistry;
+import org.infinispan.factories.KnownComponentNames;
 import org.infinispan.factories.components.ComponentMetadataRepo;
 import org.infinispan.factories.components.ManageableComponentMetadata;
 import org.infinispan.factories.impl.BasicComponentRegistry;
@@ -30,6 +31,7 @@ import org.infinispan.jmx.ResourceDMBean;
 import org.infinispan.lifecycle.ModuleLifecycle;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.marshall.core.EncoderRegistry;
+import org.infinispan.marshall.persistence.PersistenceMarshaller;
 import org.infinispan.protostream.SerializationContext;
 import org.infinispan.query.backend.QueryInterceptor;
 import org.infinispan.query.remote.ProtobufMetadataManager;
@@ -42,9 +44,9 @@ import org.infinispan.query.remote.impl.filter.IckleBinaryProtobufFilterAndConve
 import org.infinispan.query.remote.impl.filter.IckleContinuousQueryProtobufCacheEventFilterConverter;
 import org.infinispan.query.remote.impl.filter.IckleProtobufCacheEventFilterConverter;
 import org.infinispan.query.remote.impl.filter.IckleProtobufFilterAndConverter;
-import org.infinispan.query.remote.impl.indexing.ProtobufValueWrapper;
 import org.infinispan.query.remote.impl.indexing.ProtobufValueWrapperSearchWorkCreator;
 import org.infinispan.query.remote.impl.logging.Log;
+import org.infinispan.query.remote.impl.persistence.PersistenceContextInitializerImpl;
 import org.infinispan.registry.InternalCacheRegistry;
 import org.infinispan.server.core.dataconversion.ProtostreamBinaryTranscoder;
 import org.infinispan.server.core.dataconversion.ProtostreamJsonTranscoder;
@@ -71,7 +73,6 @@ public final class LifecycleManager implements ModuleLifecycle {
    @Override
    public void cacheManagerStarting(GlobalComponentRegistry gcr, GlobalConfiguration globalCfg) {
       Map<Integer, AdvancedExternalizer<?>> externalizerMap = globalCfg.serialization().advancedExternalizers();
-      externalizerMap.put(ExternalizerIds.PROTOBUF_VALUE_WRAPPER, new ProtobufValueWrapper.Externalizer());
       externalizerMap.put(ExternalizerIds.ICKLE_PROTOBUF_CACHE_EVENT_FILTER_CONVERTER, new IckleProtobufCacheEventFilterConverter.Externalizer());
       externalizerMap.put(ExternalizerIds.ICKLE_PROTOBUF_FILTER_AND_CONVERTER, new IckleProtobufFilterAndConverter.Externalizer());
       externalizerMap.put(ExternalizerIds.ICKLE_CONTINUOUS_QUERY_CACHE_EVENT_FILTER_CONVERTER, new IckleContinuousQueryProtobufCacheEventFilterConverter.Externalizer());
@@ -79,18 +80,20 @@ public final class LifecycleManager implements ModuleLifecycle {
       externalizerMap.put(ExternalizerIds.ICKLE_CONTINUOUS_QUERY_RESULT, new ContinuousQueryResultExternalizer());
       externalizerMap.put(ExternalizerIds.ICKLE_FILTER_RESULT, new FilterResultExternalizer());
 
-      initProtobufMetadataManager(globalCfg, gcr);
+      BasicComponentRegistry bcr = gcr.getComponent(BasicComponentRegistry.class);
+      PersistenceMarshaller persistenceMarshaller = bcr.getComponent(KnownComponentNames.PERSISTENCE_MARSHALLER, PersistenceMarshaller.class).wired();
+      persistenceMarshaller.init(new PersistenceContextInitializerImpl());
+
+      initProtobufMetadataManager(globalCfg, gcr, bcr);
 
       EmbeddedCacheManager cacheManager = gcr.getComponent(EmbeddedCacheManager.class);
       cacheManager.getClassWhiteList()
             .addClasses(QueryRequest.class, QueryRequestExternalizer.class);
    }
 
-   private void initProtobufMetadataManager(GlobalConfiguration globalCfg, GlobalComponentRegistry gcr) {
+   private void initProtobufMetadataManager(GlobalConfiguration globalCfg, GlobalComponentRegistry gcr, BasicComponentRegistry bcr) {
       ProtobufMetadataManagerImpl protobufMetadataManager = new ProtobufMetadataManagerImpl();
-      BasicComponentRegistry basicComponentRegistry = gcr.getComponent(BasicComponentRegistry.class);
-      basicComponentRegistry.registerComponent(ProtobufMetadataManager.class, protobufMetadataManager, true)
-                            .running();
+      bcr.registerComponent(ProtobufMetadataManager.class, protobufMetadataManager, true).running();
       if (globalCfg.globalJmxStatistics().enabled()) {
          registerProtobufMetadataManagerMBean(protobufMetadataManager, gcr);
       }
