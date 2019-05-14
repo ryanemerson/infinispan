@@ -88,6 +88,11 @@ public class TestObjectStreamMarshaller extends AbstractMarshaller implements Pe
    }
 
    @Override
+   public void init(ClassLoader classLoader, SerializationContextInitializer initializer) {
+      marshaller.init(classLoader, initializer);
+   }
+
+   @Override
    public void registerProtoFile(String classPathResource) {
       marshaller.registerProtoFile(classPathResource);
    }

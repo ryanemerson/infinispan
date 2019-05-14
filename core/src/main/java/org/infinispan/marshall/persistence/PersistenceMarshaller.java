@@ -26,6 +26,16 @@ public interface PersistenceMarshaller extends Marshaller, StreamAwareMarshaller
    void init(SerializationContextInitializer initializer);
 
    /**
+    * Initiates the marshallers {@link SerializationContext} using the supplied {@link
+    * SerializationContextInitializer}. The {@link ClassLoader} parameter is used to load the required schema files.
+    *
+    * @param initializer whose schemas and marshallers' will be registered with the {@link PersistenceMarshaller} {@link
+    *                    SerializationContext}
+    * @param classLoader to use in order to read the schema resources.
+    */
+   void init(ClassLoader classLoader, SerializationContextInitializer initializer);
+
+   /**
     * Convenience method to register a proto file on the classpath with the {@link SerializationContext}. The resource
     * must be available to the configured global {@link ClassLoader}.
     */

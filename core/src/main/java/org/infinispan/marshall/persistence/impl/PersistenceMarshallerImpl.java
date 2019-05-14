@@ -12,6 +12,7 @@ import org.infinispan.commons.io.ByteBuffer;
 import org.infinispan.commons.io.ByteBufferImpl;
 import org.infinispan.commons.marshall.BufferSizePredictor;
 import org.infinispan.commons.marshall.Marshaller;
+import org.infinispan.configuration.global.GlobalConfiguration;
 import org.infinispan.factories.GlobalComponentRegistry;
 import org.infinispan.factories.annotations.Inject;
 import org.infinispan.factories.annotations.Start;
@@ -48,6 +49,7 @@ public class PersistenceMarshallerImpl implements PersistenceMarshaller {
    private final SerializationContext serializationContext = ProtobufUtil.newSerializationContext();
 
    private Marshaller userMarshaller;
+   private ClassLoader classLoader;
 
    public PersistenceMarshallerImpl() {
    }
@@ -56,7 +58,9 @@ public class PersistenceMarshallerImpl implements PersistenceMarshaller {
    @Start(priority = 8)
    @Override
    public void start() {
-      this.userMarshaller = gcr.getGlobalConfiguration().serialization().marshaller();
+      GlobalConfiguration globalConfig = gcr.getGlobalConfiguration();
+      classLoader = globalConfig.classLoader();
+      userMarshaller = globalConfig.serialization().marshaller();
       if (userMarshaller == null)
          userMarshaller = new JBossUserMarshaller(gcr);
       userMarshaller.start();
@@ -73,7 +77,7 @@ public class PersistenceMarshallerImpl implements PersistenceMarshaller {
    @Override
    public void registerProtoFile(String classPathResource) {
       try {
-         serializationContext.registerProtoFiles(FileDescriptorSource.fromResources(gcr.getGlobalConfiguration().classLoader(), classPathResource));
+         serializationContext.registerProtoFiles(FileDescriptorSource.fromResources(classLoader, classPathResource));
       } catch (IOException e) {
          String msg = String.format("Exception encountered when attempting to register proto file '%s' with the PersistenceMarshaller's SerializationContext", classPathResource);
          throw new CacheException(msg, e);
@@ -82,8 +86,13 @@ public class PersistenceMarshallerImpl implements PersistenceMarshaller {
 
    @Override
    public void init(SerializationContextInitializer initializer) {
+      init(classLoader, initializer);
+   }
+
+   @Override
+   public void init(ClassLoader classLoader, SerializationContextInitializer initializer) {
       try {
-         initializer.registerSchema(serializationContext);
+         initializer.registerSchema(classLoader, serializationContext);
          initializer.registerMarshallers(serializationContext);
       } catch (IOException e) {
          throw new CacheException("Exception encountered when initialising the PersistenceMarshaller SerializationContext", e);
