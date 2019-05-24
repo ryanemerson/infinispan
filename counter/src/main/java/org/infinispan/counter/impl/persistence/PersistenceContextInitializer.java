@@ -16,14 +16,13 @@ import org.infinispan.protostream.annotations.AutoProtoSchemaBuilder;
  * @since 10.0
  */
 @AutoProtoSchemaBuilder(
-      autoImportClasses = false,
-      classes = {
+      dependsOn = org.infinispan.marshall.persistence.impl.PersistenceContextInitializer.class,
+      includeClasses = {
             CounterState.class,
             CounterValue.class,
             StrongCounterKey.class,
             WeakCounterKey.class
       },
-      dependsOn = org.infinispan.marshall.persistence.impl.PersistenceContextInitializer.class,
       schemaFileName = "persistence.counters.proto",
       schemaFilePath = "schema.generated",
       schemaPackageName = "persistence.counters")

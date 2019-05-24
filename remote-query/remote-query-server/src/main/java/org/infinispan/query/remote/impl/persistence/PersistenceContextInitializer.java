@@ -13,8 +13,7 @@ import org.infinispan.query.remote.impl.indexing.ProtobufValueWrapper;
  * @since 10.0
  */
 @AutoProtoSchemaBuilder(
-      autoImportClasses = false,
-      classes = ProtobufValueWrapper.class,
+      includeClasses = ProtobufValueWrapper.class,
       schemaFileName = "persistence.remote-query.proto",
       schemaFilePath = "schema.generated",
       schemaPackageName = "persistence.remote-query")

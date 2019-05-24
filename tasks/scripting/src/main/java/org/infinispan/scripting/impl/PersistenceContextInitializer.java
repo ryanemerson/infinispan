@@ -12,12 +12,11 @@ import org.infinispan.protostream.annotations.AutoProtoSchemaBuilder;
  * @since 10.0
  */
 @AutoProtoSchemaBuilder(
-      autoImportClasses = false,
-      classes = {
+      dependsOn = org.infinispan.commons.marshall.PersistenceContextInitializer.class,
+      includeClasses = {
             ExecutionMode.class,
             ScriptMetadata.class
       },
-      dependsOn = org.infinispan.commons.marshall.PersistenceContextInitializer.class,
       schemaFileName = "persistence.scripting.proto",
       schemaFilePath = "schema.generated",
       schemaPackageName = "persistence.scripting")

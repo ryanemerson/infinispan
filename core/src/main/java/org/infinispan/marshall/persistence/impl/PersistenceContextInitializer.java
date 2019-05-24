@@ -20,8 +20,8 @@ import org.infinispan.util.logging.events.EventLogLevel;
  * @since 10.0
  */
 @AutoProtoSchemaBuilder(
-      autoImportClasses = false,
-      classes = {
+      dependsOn = org.infinispan.commons.marshall.PersistenceContextInitializer.class,
+      includeClasses = {
             AtomicMapMarshaller.AtomicMapEntry.class,
             ByteString.class,
             EmbeddedMetadata.class,
@@ -36,7 +36,6 @@ import org.infinispan.util.logging.events.EventLogLevel;
             PersistenceMarshallerImpl.UserBytes.class,
             SimpleClusteredVersion.class,
       },
-      dependsOn = org.infinispan.commons.marshall.PersistenceContextInitializer.class,
       schemaFileName = PACKAGE_NAME + ".proto",
       schemaFilePath = "schema.generated",
       schemaPackageName = PACKAGE_NAME)

@@ -12,9 +12,8 @@ import org.infinispan.protostream.annotations.AutoProtoSchemaBuilder;
  * @since 10.0
  */
 @AutoProtoSchemaBuilder(
-      autoImportClasses = false,
-      classes = MemcachedMetadata.class,
       dependsOn = org.infinispan.marshall.persistence.impl.PersistenceContextInitializer.class,
+      includeClasses = MemcachedMetadata.class,
       schemaFileName = "persistence.memcached.proto",
       schemaFilePath = "schema.generated",
       schemaPackageName = "persistence.memcached")

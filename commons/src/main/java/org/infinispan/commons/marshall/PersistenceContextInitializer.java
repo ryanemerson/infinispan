@@ -13,8 +13,7 @@ import org.infinispan.protostream.annotations.AutoProtoSchemaBuilder;
  * @since 10.0
  */
 @AutoProtoSchemaBuilder(
-      autoImportClasses = false,
-      classes = {
+      includeClasses = {
             ByteBufferImpl.class,
             MediaType.class,
             WrappedByteArray.class

@@ -12,9 +12,8 @@ import org.infinispan.protostream.annotations.AutoProtoSchemaBuilder;
  * @since 10.0
  */
 @AutoProtoSchemaBuilder(
-      autoImportClasses = false,
-      classes = ServerEventImpl.class,
       dependsOn = org.infinispan.marshall.persistence.impl.PersistenceContextInitializer.class,
+      includeClasses = ServerEventImpl.class,
       schemaFileName = "persistence.event_logger.proto",
       schemaFilePath = "schema.generated",
       schemaPackageName = "persistence.event_logger")
