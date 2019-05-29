@@ -139,6 +139,17 @@
                </dependenciesToScan>
             </configuration>
          </plugin>
+         <plugin>
+            <groupId>org.infinispan</groupId>
+            <artifactId>proto-schema-compatibility-plugin</artifactId>
+            <executions>
+               <execution>
+                  <goals>
+                     <goal>proto-schema-compatibility-check</goal>
+                  </goals>
+               </execution>
+            </executions>
+         </plugin>
       </plugins>
    </build>
 </project>

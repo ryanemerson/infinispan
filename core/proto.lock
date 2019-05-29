@@ -1,0 +1,325 @@
+{
+  "definitions": [
+    {
+      "protopath": "generated:/:persistence.core.proto",
+      "def": {
+        "enums": [
+          {
+            "name": "EventLogCategory",
+            "enum_fields": [
+              {
+                "name": "LIFECYCLE",
+                "integer": 1
+              },
+              {
+                "name": "CLUSTER",
+                "integer": 2
+              },
+              {
+                "name": "SECURITY",
+                "integer": 3
+              },
+              {
+                "name": "TASKS",
+                "integer": 4
+              }
+            ]
+          },
+          {
+            "name": "EventLogLevel",
+            "enum_fields": [
+              {
+                "name": "INFO",
+                "integer": 1
+              },
+              {
+                "name": "WARN",
+                "integer": 2
+              },
+              {
+                "name": "ERROR",
+                "integer": 3
+              },
+              {
+                "name": "FATAL",
+                "integer": 4
+              }
+            ]
+          }
+        ],
+        "messages": [
+          {
+            "name": "EmbeddedExpirableMetadata",
+            "fields": [
+              {
+                "id": 1,
+                "name": "numericVersion",
+                "type": "NumericVersion"
+              },
+              {
+                "id": 2,
+                "name": "clusteredVersion",
+                "type": "SimpleClusteredVersion"
+              },
+              {
+                "id": 3,
+                "name": "lifespan",
+                "type": "int64",
+                "options": [
+                  {
+                    "name": "default",
+                    "value": "-1"
+                  }
+                ]
+              },
+              {
+                "id": 4,
+                "name": "maxIdle",
+                "type": "int64",
+                "options": [
+                  {
+                    "name": "default",
+                    "value": "-1"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "MarshalledValueImpl",
+            "fields": [
+              {
+                "id": 1,
+                "name": "value",
+                "type": "int32",
+                "is_repeated": true
+              },
+              {
+                "id": 2,
+                "name": "metadata",
+                "type": "int32",
+                "is_repeated": true
+              },
+              {
+                "id": 3,
+                "name": "created",
+                "type": "int64",
+                "options": [
+                  {
+                    "name": "default",
+                    "value": "-1"
+                  }
+                ]
+              },
+              {
+                "id": 4,
+                "name": "lastUsed",
+                "type": "int64",
+                "options": [
+                  {
+                    "name": "default",
+                    "value": "-1"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "UserBytes",
+            "fields": [
+              {
+                "id": 1,
+                "name": "bytes",
+                "type": "int32",
+                "is_repeated": true
+              }
+            ]
+          },
+          {
+            "name": "NumericVersion",
+            "fields": [
+              {
+                "id": 1,
+                "name": "version",
+                "type": "int64",
+                "options": [
+                  {
+                    "name": "default",
+                    "value": "0"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "EmbeddedMetadata",
+            "fields": [
+              {
+                "id": 1,
+                "name": "numericVersion",
+                "type": "NumericVersion"
+              },
+              {
+                "id": 2,
+                "name": "clusteredVersion",
+                "type": "SimpleClusteredVersion"
+              }
+            ]
+          },
+          {
+            "name": "MetaParamsInternalMetadata",
+            "fields": [
+              {
+                "id": 1,
+                "name": "numericVersion",
+                "type": "NumericVersion"
+              },
+              {
+                "id": 2,
+                "name": "clusteredVersion",
+                "type": "SimpleClusteredVersion"
+              },
+              {
+                "id": 3,
+                "name": "created",
+                "type": "int64",
+                "options": [
+                  {
+                    "name": "default",
+                    "value": "-1"
+                  }
+                ]
+              },
+              {
+                "id": 4,
+                "name": "lastUsed",
+                "type": "int64",
+                "options": [
+                  {
+                    "name": "default",
+                    "value": "-1"
+                  }
+                ]
+              },
+              {
+                "id": 5,
+                "name": "lifespan",
+                "type": "int64",
+                "options": [
+                  {
+                    "name": "default",
+                    "value": "-1"
+                  }
+                ]
+              },
+              {
+                "id": 6,
+                "name": "maxIdle",
+                "type": "int64",
+                "options": [
+                  {
+                    "name": "default",
+                    "value": "-1"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "EmbeddedMaxIdleExpirableMetadata",
+            "fields": [
+              {
+                "id": 1,
+                "name": "numericVersion",
+                "type": "NumericVersion"
+              },
+              {
+                "id": 2,
+                "name": "clusteredVersion",
+                "type": "SimpleClusteredVersion"
+              },
+              {
+                "id": 3,
+                "name": "maxIdle",
+                "type": "int64",
+                "options": [
+                  {
+                    "name": "default",
+                    "value": "-1"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "SimpleClusteredVersion",
+            "fields": [
+              {
+                "id": 1,
+                "name": "topologyId",
+                "type": "int32",
+                "options": [
+                  {
+                    "name": "default",
+                    "value": "0"
+                  }
+                ]
+              },
+              {
+                "id": 2,
+                "name": "version",
+                "type": "int64",
+                "options": [
+                  {
+                    "name": "default",
+                    "value": "0"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "EmbeddedLifespanExpirableMetadata",
+            "fields": [
+              {
+                "id": 1,
+                "name": "numericVersion",
+                "type": "NumericVersion"
+              },
+              {
+                "id": 2,
+                "name": "clusteredVersion",
+                "type": "SimpleClusteredVersion"
+              },
+              {
+                "id": 3,
+                "name": "lifespan",
+                "type": "int64",
+                "options": [
+                  {
+                    "name": "default",
+                    "value": "-1"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "ByteString",
+            "fields": [
+              {
+                "id": 1,
+                "name": "bytes",
+                "type": "int32",
+                "is_repeated": true
+              }
+            ]
+          }
+        ],
+        "package": {
+          "name": "org.infinispan.persistence.core"
+        }
+      }
+    }
+  ]
+}

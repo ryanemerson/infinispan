@@ -83,6 +83,7 @@
    <modules>
       <module>build-configuration</module>
       <module>checkstyle</module>
+      <module>plugins/proto-schema-compatibility-plugin</module>
       <module>commons</module>
       <module>commons-test</module>
       <module>plugins/infinispan-defaults-maven-plugin</module>
@@ -4046,6 +4047,12 @@
 
    <build>
       <directory>${buildDirectory}</directory>
+      <extensions>
+         <extension>
+            <groupId>kr.motd.maven</groupId>
+            <artifactId>os-maven-plugin</artifactId>
+         </extension>
+      </extensions>
       <pluginManagement>
          <plugins>
             <plugin>
@@ -4368,6 +4375,11 @@
                <groupId>kr.motd.maven</groupId>
                <artifactId>os-maven-plugin</artifactId>
                <version>1.4.1.Final</version>
+            </plugin>
+            <plugin>
+               <groupId>org.infinispan</groupId>
+               <artifactId>proto-schema-compatibility-plugin</artifactId>
+               <version>${project.version}</version>
             </plugin>
          </plugins>
       </pluginManagement>

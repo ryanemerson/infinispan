@@ -1,0 +1,173 @@
+{
+  "definitions": [
+    {
+      "protopath": "generated:/:persistence.lucene.proto",
+      "def": {
+        "messages": [
+          {
+            "name": "FileListCacheValue",
+            "fields": [
+              {
+                "id": 1,
+                "name": "file_names",
+                "type": "string",
+                "is_repeated": true
+              }
+            ]
+          },
+          {
+            "name": "ChunkCacheKey",
+            "fields": [
+              {
+                "id": 1,
+                "name": "index",
+                "type": "string"
+              },
+              {
+                "id": 2,
+                "name": "segment_id",
+                "type": "int32",
+                "options": [
+                  {
+                    "name": "default",
+                    "value": "0"
+                  }
+                ]
+              },
+              {
+                "id": 3,
+                "name": "chunkId",
+                "type": "int32",
+                "options": [
+                  {
+                    "name": "default",
+                    "value": "0"
+                  }
+                ]
+              },
+              {
+                "id": 4,
+                "name": "file",
+                "type": "string"
+              },
+              {
+                "id": 5,
+                "name": "bufferSize",
+                "type": "int32",
+                "options": [
+                  {
+                    "name": "default",
+                    "value": "0"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "FileListCacheKey",
+            "fields": [
+              {
+                "id": 1,
+                "name": "index",
+                "type": "string"
+              },
+              {
+                "id": 2,
+                "name": "segment_id",
+                "type": "int32",
+                "options": [
+                  {
+                    "name": "default",
+                    "value": "0"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "FileMetadata",
+            "fields": [
+              {
+                "id": 1,
+                "name": "bufferSize",
+                "type": "int32",
+                "options": [
+                  {
+                    "name": "default",
+                    "value": "0"
+                  }
+                ]
+              },
+              {
+                "id": 2,
+                "name": "size",
+                "type": "int64",
+                "options": [
+                  {
+                    "name": "default",
+                    "value": "0"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "FileCacheKey",
+            "fields": [
+              {
+                "id": 1,
+                "name": "index",
+                "type": "string"
+              },
+              {
+                "id": 2,
+                "name": "segment_id",
+                "type": "int32",
+                "options": [
+                  {
+                    "name": "default",
+                    "value": "0"
+                  }
+                ]
+              },
+              {
+                "id": 3,
+                "name": "file",
+                "type": "string"
+              }
+            ]
+          },
+          {
+            "name": "FileReadLockKey",
+            "fields": [
+              {
+                "id": 1,
+                "name": "index",
+                "type": "string"
+              },
+              {
+                "id": 2,
+                "name": "segment_id",
+                "type": "int32",
+                "options": [
+                  {
+                    "name": "default",
+                    "value": "0"
+                  }
+                ]
+              },
+              {
+                "id": 3,
+                "name": "fileName",
+                "type": "string"
+              }
+            ]
+          }
+        ],
+        "package": {
+          "name": "org.infinispan.persistence.lucene"
+        }
+      }
+    }
+  ]
+}
