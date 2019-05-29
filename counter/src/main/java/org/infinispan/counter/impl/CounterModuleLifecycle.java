@@ -134,7 +134,7 @@ public class CounterModuleLifecycle implements ModuleLifecycle {
       InternalCacheRegistry internalCacheRegistry = bcr.getComponent(InternalCacheRegistry.class).running();
 
       PersistenceMarshaller persistenceMarshaller = bcr.getComponent(KnownComponentNames.PERSISTENCE_MARSHALLER, PersistenceMarshaller.class).wired();
-      persistenceMarshaller.init(new PersistenceContextInitializerImpl());
+      persistenceMarshaller.register(new PersistenceContextInitializerImpl());
 
       CounterManagerConfiguration counterManagerConfiguration = extractConfiguration(gcr);
       if (gcr.getGlobalConfiguration().isClustered()) {

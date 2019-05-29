@@ -32,7 +32,8 @@ import org.infinispan.metadata.Metadata;
 public class OffHeapEntryFactoryImpl implements OffHeapEntryFactory {
    private static final OffHeapMemory MEMORY = OffHeapMemory.INSTANCE;
 
-   @Inject @ComponentName(KnownComponentNames.INTERNAL_MARSHALLER) StreamingMarshaller marshaller;
+   @Inject @ComponentName(KnownComponentNames.INTERNAL_MARSHALLER)
+   StreamingMarshaller marshaller;
    @Inject OffHeapMemoryAllocator allocator;
    @Inject TimeService timeService;
    @Inject InternalEntryFactory internalEntryFactory;

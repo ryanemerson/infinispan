@@ -17,10 +17,10 @@ import org.infinispan.util.ByteString;
  */
 public class WeakCounterKey implements CounterKey {
 
-   @ProtoField(number = 1, required = true)
+   @ProtoField(number = 1)
    ByteString counterName;
 
-   @ProtoField(number = 2, required = true)
+   @ProtoField(number = 2, defaultValue = "0")
    int index;
 
    WeakCounterKey() {}

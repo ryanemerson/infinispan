@@ -26,7 +26,7 @@ import org.infinispan.protostream.annotations.AutoProtoSchemaBuilder;
             FileListCacheValue.class
       },
       schemaFileName = "persistence.lucene.proto",
-      schemaFilePath = "schema/generated",
-      schemaPackageName = "persistence.lucene")
+      schemaFilePath = "schema/proto/generated",
+      schemaPackageName = "org.infinispan.persistence.lucene")
 public interface PersistenceContextInitializer extends SerializationContextInitializer {
 }

@@ -30,8 +30,10 @@ import org.infinispan.marshall.persistence.PersistenceMarshaller;
 @DefaultFactoryFor(classes = {EncoderRegistry.class})
 public class EncoderRegistryFactory extends AbstractComponentFactory implements AutoInstantiableFactory {
    // Must not start the global marshaller or it will be too late for modules to register their externalizers
-   @Inject @ComponentName(KnownComponentNames.INTERNAL_MARSHALLER) ComponentRef<StreamingMarshaller> globalMarshaller;
-   @Inject @ComponentName(KnownComponentNames.PERSISTENCE_MARSHALLER) ComponentRef<PersistenceMarshaller> persistenceMarshaller;
+   @Inject @ComponentName(KnownComponentNames.INTERNAL_MARSHALLER)
+   ComponentRef<StreamingMarshaller> globalMarshaller;
+   @Inject @ComponentName(KnownComponentNames.PERSISTENCE_MARSHALLER)
+   ComponentRef<PersistenceMarshaller> persistenceMarshaller;
    @Inject EmbeddedCacheManager embeddedCacheManager;
 
    @Override

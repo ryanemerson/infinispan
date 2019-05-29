@@ -24,7 +24,7 @@ import org.infinispan.protostream.annotations.AutoProtoSchemaBuilder;
             WeakCounterKey.class
       },
       schemaFileName = "persistence.counters.proto",
-      schemaFilePath = "schema/generated",
-      schemaPackageName = "persistence.counters")
+      schemaFilePath = "schema/proto/generated",
+      schemaPackageName = "org.infinispan.persistence.counters")
 interface PersistenceContextInitializer extends SerializationContextInitializer {
 }

@@ -66,11 +66,11 @@ public class ByteString {
    }
 
    @ProtoField(number = 1)
-   public byte[] getBytes() {
+   byte[] getBytes() {
       return bytes;
    }
 
-   public void setBytes(byte[] bytes) {
+   void setBytes(byte[] bytes) {
       this.bytes = bytes;
       this.hash = Arrays.hashCode(bytes);
    }

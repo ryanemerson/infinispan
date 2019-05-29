@@ -24,10 +24,10 @@ public class SimpleClusteredVersion implements IncrementableEntryVersion {
    /**
     * The cache topology id in which it was first created.
     */
-   @ProtoField(number = 1, required = true)
+   @ProtoField(number = 1, defaultValue = "0")
    int topologyId;
 
-   @ProtoField(number = 2, required = true)
+   @ProtoField(number = 2, defaultValue = "0")
    long version;
 
    SimpleClusteredVersion() {}

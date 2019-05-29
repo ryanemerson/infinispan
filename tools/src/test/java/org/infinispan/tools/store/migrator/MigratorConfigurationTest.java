@@ -33,6 +33,7 @@ import org.infinispan.commons.marshall.Marshaller;
 import org.infinispan.commons.marshall.jboss.GenericJBossMarshaller;
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
+import org.infinispan.marshall.core.JBossUserMarshaller;
 import org.infinispan.marshall.persistence.PersistenceMarshaller;
 import org.infinispan.persistence.jdbc.DatabaseType;
 import org.infinispan.persistence.jdbc.configuration.JdbcStringBasedStoreConfiguration;
@@ -93,7 +94,7 @@ public class MigratorConfigurationTest {
    }
 
    public void testCurrentMarshallerLoadedAndExternalizersLoaded() throws Exception {
-      String externalizers = "1:" + PersonExternalizer.class.getName();
+      String externalizers = String.format("%d:%s", JBossUserMarshaller.USER_EXT_ID_MIN, PersonExternalizer.class.getName());
       Properties properties = createBaseProperties();
       properties.put(propKey(SOURCE, MARSHALLER, TYPE), MarshallerType.CURRENT.toString());
       properties.put(propKey(SOURCE, MARSHALLER, EXTERNALIZERS), externalizers);

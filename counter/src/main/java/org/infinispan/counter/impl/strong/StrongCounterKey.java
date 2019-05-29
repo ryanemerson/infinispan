@@ -16,7 +16,7 @@ import org.infinispan.util.ByteString;
  */
 public class StrongCounterKey implements CounterKey {
 
-   @ProtoField(number = 1, required = true)
+   @ProtoField(number = 1)
    ByteString counterName;
 
    StrongCounterKey() {}

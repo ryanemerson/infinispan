@@ -11,8 +11,8 @@ import org.jboss.marshalling.ObjectTable;
 import org.jboss.marshalling.Unmarshaller;
 
 /**
- * An extension of the {@link JBossMarshaller} that utilises {@link InternalExternalizers} as a blacklist.
- * This class can be removed once the {@link GlobalMarshaller} is no longer based upon jboss-marshalling.
+ * An extension of the {@link JBossMarshaller} that loads user defined {@link org.infinispan.commons.marshall.Externalizer}
+ * implementations. This class can be removed if/when we no longer support a jboss-marshalling based user marshaller.
  *
  * @author Ryan Emerson
  * @since 10.0

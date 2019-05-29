@@ -63,7 +63,7 @@
             <directory>${project.build.outputDirectory}/schema</directory>
             <filtering>false</filtering>
             <includes>
-               <include>generated/*.proto</include>
+               <include>proto/**/*.proto</include>
             </includes>
             <targetPath>schema</targetPath>
          </resource>

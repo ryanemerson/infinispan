@@ -12,10 +12,10 @@ import org.infinispan.protostream.annotations.ProtoField;
  */
 public final class FileMetadata {
 
-   @ProtoField(number = 1, required = true)
+   @ProtoField(number = 1, defaultValue = "0")
    int bufferSize;
 
-   @ProtoField(number = 2, defaultValue = "-1")
+   @ProtoField(number = 2, defaultValue = "0")
    long size = 0;
 
    FileMetadata() {}

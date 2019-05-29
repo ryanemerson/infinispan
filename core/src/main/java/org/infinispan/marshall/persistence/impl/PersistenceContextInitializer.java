@@ -1,7 +1,5 @@
 package org.infinispan.marshall.persistence.impl;
 
-import static org.infinispan.marshall.persistence.impl.PersistenceContextInitializer.PACKAGE_NAME;
-
 import org.infinispan.container.versioning.NumericVersion;
 import org.infinispan.container.versioning.SimpleClusteredVersion;
 import org.infinispan.functional.impl.MetaParamsInternalMetadata;
@@ -35,9 +33,8 @@ import org.infinispan.util.logging.events.EventLogLevel;
             PersistenceMarshallerImpl.UserBytes.class,
             SimpleClusteredVersion.class,
       },
-      schemaFileName = PACKAGE_NAME + ".gen.proto",
-      schemaFilePath = "schema/generated",
-      schemaPackageName = PACKAGE_NAME)
+      schemaFileName = "persistence.core.proto",
+      schemaFilePath = "schema/proto/generated",
+      schemaPackageName = "org.infinispan.persistence.core")
 public interface PersistenceContextInitializer extends SerializationContextInitializer {
-      String PACKAGE_NAME = "persistence.core";
 }

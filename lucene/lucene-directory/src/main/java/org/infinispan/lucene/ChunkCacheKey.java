@@ -11,13 +11,13 @@ import org.infinispan.protostream.annotations.ProtoField;
  */
 public final class ChunkCacheKey extends AbstractIndexScopedKey {
 
-   @ProtoField(number = 3, required = true)
+   @ProtoField(number = 3, defaultValue = "0")
    int chunkId;
 
-   @ProtoField(number = 4, name = "file", required = true)
+   @ProtoField(number = 4, name = "file")
    String fileName;
 
-   @ProtoField(number = 5, required = true)
+   @ProtoField(number = 5, defaultValue = "0")
    int bufferSize;
 
    ChunkCacheKey() {}

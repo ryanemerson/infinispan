@@ -16,24 +16,38 @@ import org.infinispan.util.logging.events.EventLogLevel;
  */
 public class ServerEventImpl implements EventLog {
 
-   @ProtoField(number = 1, required = true)
+   private Instant when;
+
+   @ProtoField(number = 1)
    EventLogLevel level;
 
-   @ProtoField(number = 2, required = true)
+   @ProtoField(number = 2)
    EventLogCategory category;
 
-   @ProtoField(number = 3, required = true)
+   @ProtoField(number = 3)
    String message;
 
-   Instant when;
-   Optional<String> detail;
-   Optional<String> context;
-   Optional<String> who;
-   Optional<String> scope;
+   @ProtoField(number = 4, name = "epoch", defaultValue = "0")
+   long getEpoch() {
+      return when.getEpochSecond();
+   }
+
+   @ProtoField(number = 5, name = "detail")
+   String detail;
+
+
+   @ProtoField(number = 6, name = "who")
+   String who;
+
+   @ProtoField(number = 7, name = "context")
+   String context;
+
+   @ProtoField(number = 8, name = "scope")
+   String scope;
 
    ServerEventImpl() {}
 
-   ServerEventImpl(EventLogLevel level, EventLogCategory category, Instant when, String message, Optional<String> detail, Optional<String> context, Optional<String> who, Optional<String> scope) {
+   ServerEventImpl(EventLogLevel level, EventLogCategory category, Instant when, String message, String detail, String context, String who, String scope) {
       this.level = level;
       this.category = category;
       this.message = message;
@@ -45,7 +59,7 @@ public class ServerEventImpl implements EventLog {
    }
 
    ServerEventImpl(EventLogLevel level, EventLogCategory category, Instant when, String message) {
-      this(level, category, when, message, Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
+      this(level, category, when, message, null, null, null, null);
    }
 
    @Override
@@ -70,67 +84,26 @@ public class ServerEventImpl implements EventLog {
 
    @Override
    public Optional<String> getDetail() {
-      return detail;
+      return Optional.ofNullable(detail);
    }
 
    @Override
    public Optional<String> getWho() {
-      return who;
+      return Optional.ofNullable(who);
    }
 
    @Override
    public Optional<String> getContext() {
-      return context;
+      return Optional.ofNullable(context);
    }
 
    @Override
    public Optional<String> getScope() {
-      return scope;
-   }
-
-   @ProtoField(number = 4, name = "epoch", required = true)
-   long getEpoch() {
-      return when.getEpochSecond();
-   }
-
-   @ProtoField(number = 6, name = "detail")
-   String getNullableDetail() {
-      return detail.orElse(null);
-   }
-
-   @ProtoField(number = 7, name = "who")
-   String getNullableWho() {
-      return who.orElse(null);
-   }
-
-   @ProtoField(number = 8, name = "context")
-   String getNullableContext() {
-      return context.orElse(null);
-   }
-
-   @ProtoField(number = 9, name = "scope")
-   String getNullableScope() {
-      return scope.orElse(null);
+      return Optional.ofNullable(scope);
    }
 
    void setEpoch(long epoch) {
       this.when = Instant.ofEpochSecond(epoch);
-   }
-
-   void setNullableDetail(String detail) {
-      this.detail = Optional.ofNullable(detail);
-   }
-
-   void setNullableContext(String context) {
-      this.context = Optional.ofNullable(context);
-   }
-
-   void setNullableWho(String who) {
-      this.who = Optional.ofNullable(who);
-   }
-
-   void setNullableScope(String scope) {
-      this.scope = Optional.ofNullable(scope);
    }
 
    @Override
