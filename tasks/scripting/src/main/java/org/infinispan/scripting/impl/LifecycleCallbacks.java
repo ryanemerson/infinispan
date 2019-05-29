@@ -25,6 +25,6 @@ public class LifecycleCallbacks implements ModuleLifecycle {
 
       BasicComponentRegistry bcr = gcr.getComponent(BasicComponentRegistry.class);
       PersistenceMarshaller persistenceMarshaller = bcr.getComponent(KnownComponentNames.PERSISTENCE_MARSHALLER, PersistenceMarshaller.class).wired();
-      persistenceMarshaller.init(new PersistenceContextInitializerImpl());
+      persistenceMarshaller.register(new PersistenceContextInitializerImpl());
    }
 }

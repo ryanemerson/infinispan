@@ -1,6 +1,0 @@
-package persistence.event_logger;
-
-message UUID {
-    required int64 msb = 1;
-    required int64 lsb = 2;
-}

@@ -118,7 +118,8 @@ public class PersistenceManagerImpl implements PersistenceManager {
    @Inject Configuration configuration;
    @Inject GlobalConfiguration globalConfiguration;
    @Inject ComponentRef<AdvancedCache<Object, Object>> cache;
-   @Inject @ComponentName(KnownComponentNames.PERSISTENCE_MARSHALLER) PersistenceMarshaller m;
+   @Inject @ComponentName(KnownComponentNames.PERSISTENCE_MARSHALLER)
+   PersistenceMarshaller m;
    @Inject TransactionManager transactionManager;
    @Inject TimeService timeService;
    @Inject @ComponentName(PERSISTENCE_EXECUTOR)

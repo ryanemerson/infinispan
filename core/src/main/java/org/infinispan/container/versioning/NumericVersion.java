@@ -18,7 +18,7 @@ import org.infinispan.protostream.annotations.ProtoField;
  */
 public class NumericVersion implements IncrementableEntryVersion {
 
-   @ProtoField(number = 1, required = true)
+   @ProtoField(number = 1, defaultValue = "0")
    long version;
 
    NumericVersion() {}

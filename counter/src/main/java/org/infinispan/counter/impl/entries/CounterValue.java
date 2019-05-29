@@ -23,10 +23,10 @@ public class CounterValue {
    //A valid zero value
    private static final CounterValue ZERO = new CounterValue(0, CounterState.VALID);
 
-   @ProtoField(number = 1, required = true)
+   @ProtoField(number = 1, defaultValue = "0")
    long value;
 
-   @ProtoField(number = 2, required = true)
+   @ProtoField(number = 2)
    CounterState state;
 
    CounterValue() {}

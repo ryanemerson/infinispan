@@ -17,23 +17,11 @@ import org.infinispan.protostream.SerializationContextInitializer;
 public interface PersistenceMarshaller extends Marshaller, StreamAwareMarshaller {
 
    /**
-    * Initiates the marshallers {@link SerializationContext} using the supplied {@link
-    * SerializationContextInitializer}.
+    * Registers the schemas and marshallers defined by the provided {@link SerializationContextInitializer} with the
+    * {@link PersistenceMarshaller}'s {@link SerializationContext}.
     *
     * @param initializer whose schemas and marshallers' will be registered with the {@link PersistenceMarshaller} {@link
     *                    SerializationContext}
     */
-   void init(SerializationContextInitializer initializer);
-
-   /**
-    * Convenience method to register a proto file on the classpath with the {@link SerializationContext}. The resource
-    * must be available to the configured global {@link ClassLoader}.
-    */
-   void registerProtoFile(String classPathResource);
-
-   /**
-    * The {@link SerializationContext} of the marshaller. This context is not used for users types, which should be
-    * configured on the user marshaller via {@link org.infinispan.configuration.global.SerializationConfiguration}
-    */
-   SerializationContext getSerializationContext();
+   void register(SerializationContextInitializer initializer);
 }

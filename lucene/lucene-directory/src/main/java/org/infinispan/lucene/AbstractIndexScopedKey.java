@@ -7,7 +7,7 @@ abstract class AbstractIndexScopedKey implements IndexScopedKey {
    @ProtoField(number = 1, name = "index")
    String indexName;
 
-   @ProtoField(number = 2, name = "segment_id", required = true)
+   @ProtoField(number = 2, name = "segment_id", defaultValue = "0")
    int affinitySegmentId;
 
    AbstractIndexScopedKey() {}

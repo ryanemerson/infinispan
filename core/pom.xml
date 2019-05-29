@@ -170,7 +170,6 @@
             <filtering>false</filtering>
             <includes>
                <include>schema/*-${infinispan.core.schema.version}.xsd</include>
-               <include>schema/*.proto</include>
             </includes>
          </resource>
          <resource>
@@ -189,7 +188,7 @@
             <directory>${project.build.outputDirectory}/schema</directory>
             <filtering>false</filtering>
             <includes>
-               <include>generated/*.proto</include>
+               <include>proto/**/*.proto</include>
             </includes>
             <targetPath>schema</targetPath>
          </resource>
@@ -225,7 +224,6 @@
                      !${project.groupId}.multimap.*,
                      !${project.groupId}.lock.*,
                      !${project.groupId}.protostream.*,
-                     !${project.groupId}.*.generated.*,
                      org.infinispan.marshall.core,
                      ${project.groupId}.*;version=${project.version};-split-package:=error
                   </Export-Package>

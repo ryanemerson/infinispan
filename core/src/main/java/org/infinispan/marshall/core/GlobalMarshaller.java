@@ -101,7 +101,8 @@ public class GlobalMarshaller implements StreamingMarshaller {
 
    @Inject GlobalComponentRegistry gcr;
    @Inject RemoteCommandsFactory cmdFactory;
-   @Inject @ComponentName(KnownComponentNames.PERSISTENCE_MARSHALLER) PersistenceMarshaller persistenceMarshaller;
+   @Inject @ComponentName(KnownComponentNames.PERSISTENCE_MARSHALLER)
+   PersistenceMarshaller persistenceMarshaller;
 
    ClassToExternalizerMap internalExts;
    IdToExternalizerMap reverseInternalExts;

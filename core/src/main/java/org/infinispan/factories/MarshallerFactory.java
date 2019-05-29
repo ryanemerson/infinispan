@@ -5,7 +5,6 @@ import org.infinispan.commons.marshall.StreamingMarshaller;
 import org.infinispan.factories.annotations.DefaultFactoryFor;
 import org.infinispan.factories.impl.ComponentAlias;
 import org.infinispan.marshall.core.GlobalMarshaller;
-import org.infinispan.marshall.persistence.PersistenceMarshaller;
 import org.infinispan.marshall.persistence.impl.PersistenceMarshallerImpl;
 
 /**
@@ -14,7 +13,7 @@ import org.infinispan.marshall.persistence.impl.PersistenceMarshallerImpl;
  * @author Galder Zamarreño
  * @since 4.0
  */
-@DefaultFactoryFor(classes = {StreamingMarshaller.class, StreamAwareMarshaller.class, PersistenceMarshaller.class},
+@DefaultFactoryFor(classes = {StreamingMarshaller.class, StreamAwareMarshaller.class},
       names = {KnownComponentNames.INTERNAL_MARSHALLER, KnownComponentNames.PERSISTENCE_MARSHALLER})
 public class MarshallerFactory extends AbstractComponentFactory implements AutoInstantiableFactory {
 
@@ -23,8 +22,6 @@ public class MarshallerFactory extends AbstractComponentFactory implements AutoI
 
       if (componentName.equals(StreamingMarshaller.class.getName())) {
          return ComponentAlias.of(KnownComponentNames.INTERNAL_MARSHALLER);
-      } else if (componentName.equals(PersistenceMarshaller.class.getName())) {
-         return ComponentAlias.of(KnownComponentNames.PERSISTENCE_MARSHALLER);
       }
 
       switch (componentName) {

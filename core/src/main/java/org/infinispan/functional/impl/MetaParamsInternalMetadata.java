@@ -113,7 +113,7 @@ public final class MetaParamsInternalMetadata implements InternalMetadata, MetaP
       return version instanceof NumericVersion ? (NumericVersion) version : null;
    }
 
-   public void setNumericVersion(NumericVersion version) {
+   void setNumericVersion(NumericVersion version) {
       params.add(new MetaEntryVersion(version));
    }
 
@@ -123,7 +123,7 @@ public final class MetaParamsInternalMetadata implements InternalMetadata, MetaP
       return version instanceof SimpleClusteredVersion ? (SimpleClusteredVersion) version : null;
    }
 
-   public void setClusteredVersion(SimpleClusteredVersion version) {
+   void setClusteredVersion(SimpleClusteredVersion version) {
       params.add(new MetaEntryVersion(version));
    }
 
@@ -132,7 +132,7 @@ public final class MetaParamsInternalMetadata implements InternalMetadata, MetaP
       return created();
    }
 
-   public void setCreated(long created) {
+   void setCreated(long created) {
       if (created > -1)
          params.add(new MetaCreated(created));
    }
@@ -142,7 +142,7 @@ public final class MetaParamsInternalMetadata implements InternalMetadata, MetaP
       return lastUsed();
    }
 
-   public void setLastUsed(long lastUsed) {
+   void setLastUsed(long lastUsed) {
       if (lastUsed > -1)
          params.add(new MetaLastUsed(lastUsed));
    }
@@ -152,7 +152,7 @@ public final class MetaParamsInternalMetadata implements InternalMetadata, MetaP
       return lifespan();
    }
 
-   public void setLifespan(long lifespan) {
+   void setLifespan(long lifespan) {
       if (lifespan > -1)
          params.add(new MetaLifespan(lifespan));
    }
@@ -162,7 +162,7 @@ public final class MetaParamsInternalMetadata implements InternalMetadata, MetaP
       return maxIdle();
    }
 
-   public void setMaxIdle(long maxIdle) {
+   void setMaxIdle(long maxIdle) {
       if (maxIdle > -1)
          params.add(new MetaMaxIdle(maxIdle));
    }

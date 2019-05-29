@@ -17,7 +17,6 @@ import org.infinispan.factories.annotations.Start;
 import org.infinispan.marshall.core.JBossUserMarshaller;
 import org.infinispan.marshall.core.MarshallingException;
 import org.infinispan.marshall.persistence.PersistenceMarshaller;
-import org.infinispan.protostream.FileDescriptorSource;
 import org.infinispan.protostream.ProtobufUtil;
 import org.infinispan.protostream.SerializationContext;
 import org.infinispan.protostream.SerializationContextInitializer;
@@ -60,21 +59,11 @@ public class PersistenceMarshallerImpl implements PersistenceMarshaller {
          userMarshaller = new JBossUserMarshaller(gcr);
       userMarshaller.start();
 
-      init(new PersistenceContextInitializerImpl());
+      register(new PersistenceContextInitializerImpl());
    }
 
    @Override
-   public void registerProtoFile(String classPathResource) {
-      try {
-         serializationContext.registerProtoFiles(FileDescriptorSource.fromResources(gcr.getGlobalConfiguration().classLoader(), classPathResource));
-      } catch (IOException e) {
-         String msg = String.format("Exception encountered when attempting to register proto file '%s' with the PersistenceMarshaller's SerializationContext", classPathResource);
-         throw new CacheException(msg, e);
-      }
-   }
-
-   @Override
-   public void init(SerializationContextInitializer initializer) {
+   public void register(SerializationContextInitializer initializer) {
       try {
          initializer.registerSchema(serializationContext);
          initializer.registerMarshallers(serializationContext);
@@ -86,11 +75,6 @@ public class PersistenceMarshallerImpl implements PersistenceMarshaller {
    @Override
    public void stop() {
       userMarshaller.stop();
-   }
-
-   @Override
-   public SerializationContext getSerializationContext() {
-      return serializationContext;
    }
 
    @Override
@@ -121,8 +105,9 @@ public class PersistenceMarshallerImpl implements PersistenceMarshaller {
          return null;
 
       try {
-         boolean wrapped = isPersistenceClass(o);
-         o = wrap(o, wrapped);
+         boolean requiresWrapping = !isPersistenceClass(o);
+         if (requiresWrapping)
+            o = wrapUserObject(o);
          int size = estimatedSize < 0 ? sizeEstimate(o, true) : estimatedSize;
          ByteArrayOutputStream baos = new ByteArrayOutputStream(size);
          ProtobufUtil.toWrappedStream(serializationContext, baos, o, size);
@@ -152,8 +137,9 @@ public class PersistenceMarshallerImpl implements PersistenceMarshaller {
 
    @Override
    public void writeObject(Object o, OutputStream out) throws IOException {
-      boolean isPersistenceClass = isPersistenceClass(o);
-      o = wrap(o, isPersistenceClass);
+      boolean requiresWrapping = !isPersistenceClass(o);
+      if (requiresWrapping)
+         o = wrapUserObject(o);
       int size = sizeEstimate(o, true);
       ProtobufUtil.toWrappedStream(serializationContext, out, o, size);
    }
@@ -200,8 +186,8 @@ public class PersistenceMarshallerImpl implements PersistenceMarshaller {
       return sizeEstimate(o, isPersistenceClass(o));
    }
 
-   private Object wrap(Object o, boolean persistenceClass) {
-      return persistenceClass ? o : new UserBytes(marshallUserObject(o));
+   private Object wrapUserObject(Object o) {
+      return new UserBytes(marshallUserObject(o));
    }
 
    private int sizeEstimate(Object o, boolean persistenceClass) {

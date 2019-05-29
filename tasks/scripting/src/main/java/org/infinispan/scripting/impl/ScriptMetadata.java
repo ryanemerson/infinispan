@@ -43,13 +43,16 @@ public class ScriptMetadata implements Metadata {
    @ProtoField(number = 5)
    MediaType dataType;
 
-   private Optional<String> language;
-   private Optional<String> role;
+   @ProtoField(number = 6)
+   String language;
+
+   @ProtoField(number = 7)
+   String role;
 
    ScriptMetadata() {}
 
-   ScriptMetadata(String name, Optional<String> language, String extension, ExecutionMode mode, Set<String> parameters,
-                  Optional<String> role, MediaType dataType) {
+   ScriptMetadata(String name, String language, String extension, ExecutionMode mode, Set<String> parameters,
+                  String role, MediaType dataType) {
       this.name = name;
       this.language = language;
       this.extension = extension;
@@ -59,26 +62,8 @@ public class ScriptMetadata implements Metadata {
       this.dataType = dataType;
    }
 
-   @ProtoField(number = 6, name = "language")
-   String getLanguage() {
-      return language.orElse(null);
-   }
-
-   void setLanguage(String language) {
-      this.language = Optional.ofNullable(language);
-   }
-
-   @ProtoField(number = 7, name = "role")
-   String getRole() {
-      return role.orElse(null);
-   }
-
-   void setRole(String role) {
-      this.role = Optional.ofNullable(role);
-   }
-
    public Optional<String> language() {
-      return language;
+      return Optional.ofNullable(language);
    }
 
    public String extension() {
@@ -90,7 +75,7 @@ public class ScriptMetadata implements Metadata {
    }
 
    public Optional<String> role() {
-      return role;
+      return Optional.ofNullable(role);
    }
 
    public String name() {
@@ -144,10 +129,10 @@ public class ScriptMetadata implements Metadata {
    public static class Builder implements Metadata.Builder {
       String name;
       String extension;
-      Optional<String> language = Optional.empty();
+      String language;
+      String role;
       ExecutionMode mode;
       Set<String> parameters = Collections.emptySet();
-      Optional<String> role = Optional.empty();
       MediaType dataType = MediaType.APPLICATION_OBJECT;
 
       public ScriptMetadata.Builder name(String name) {
@@ -166,7 +151,7 @@ public class ScriptMetadata implements Metadata {
       }
 
       public ScriptMetadata.Builder language(String language) {
-         this.language = Optional.of(language);
+         this.language = language;
          return this;
       }
 
@@ -176,7 +161,7 @@ public class ScriptMetadata implements Metadata {
       }
 
       public ScriptMetadata.Builder role(String role) {
-         this.role = Optional.of(role);
+         this.role = role;
          return this;
       }
 

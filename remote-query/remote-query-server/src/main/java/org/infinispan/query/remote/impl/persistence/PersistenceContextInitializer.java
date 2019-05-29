@@ -15,7 +15,7 @@ import org.infinispan.query.remote.impl.indexing.ProtobufValueWrapper;
 @AutoProtoSchemaBuilder(
       includeClasses = ProtobufValueWrapper.class,
       schemaFileName = "persistence.remote-query.proto",
-      schemaFilePath = "schema/generated",
-      schemaPackageName = "persistence.remote-query")
+      schemaFilePath = "schema/proto/generated",
+      schemaPackageName = "org.infinispan.persistence.remote-query")
 interface PersistenceContextInitializer extends SerializationContextInitializer {
 }

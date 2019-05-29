@@ -11,7 +11,7 @@ import org.infinispan.protostream.annotations.ProtoField;
  */
 public final class FileCacheKey extends AbstractIndexScopedKey {
 
-   @ProtoField(number = 3, name = "file", required = true)
+   @ProtoField(number = 3, name = "file")
    String fileName;
 
    FileCacheKey() {}

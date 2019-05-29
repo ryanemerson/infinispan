@@ -107,9 +107,9 @@ public class AsyncStoreTest extends AbstractInfinispanTest {
       underlying.start();
       writer = new SlowAdvancedAsyncCacheWriter(underlying);
       writer.init(ctx);
+      writer.start();
       loader = new AdvancedAsyncCacheLoader(underlying, writer.getState());
       loader.init(ctx);
-      writer.start();
       loader.start();
       eventually(writer::isAvailable);
    }

@@ -163,7 +163,8 @@ public class CacheImpl<K, V> implements AdvancedCache<K, V> {
    @Inject protected ComponentRegistry componentRegistry;
    @Inject protected TransactionManager transactionManager;
    @Inject protected RpcManager rpcManager;
-   @Inject @ComponentName(KnownComponentNames.INTERNAL_MARSHALLER) protected StreamingMarshaller marshaller;
+   @Inject @ComponentName(KnownComponentNames.INTERNAL_MARSHALLER)
+   protected StreamingMarshaller marshaller;
    @Inject protected KeyPartitioner keyPartitioner;
    @Inject EvictionManager evictionManager;
    @Inject InternalExpirationManager<K, V> expirationManager;

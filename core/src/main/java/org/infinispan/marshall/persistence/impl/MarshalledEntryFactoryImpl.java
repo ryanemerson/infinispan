@@ -24,7 +24,8 @@ public class MarshalledEntryFactoryImpl implements MarshalledEntryFactory, Marsh
 
    private static final MarshallableEntry EMPTY = new MarshalledEntryImpl(null, null, (ByteBuffer) null, null);
 
-   @Inject @ComponentName(KnownComponentNames.PERSISTENCE_MARSHALLER) Marshaller marshaller;
+   @Inject @ComponentName(KnownComponentNames.PERSISTENCE_MARSHALLER)
+   Marshaller marshaller;
 
    public MarshalledEntryFactoryImpl() {
    }

@@ -1,7 +1,6 @@
 package org.infinispan.commons.marshall;
 
 import org.infinispan.commons.dataconversion.MediaType;
-import org.infinispan.commons.io.ByteBufferImpl;
 import org.infinispan.protostream.SerializationContextInitializer;
 import org.infinispan.protostream.annotations.AutoProtoSchemaBuilder;
 
@@ -14,12 +13,11 @@ import org.infinispan.protostream.annotations.AutoProtoSchemaBuilder;
  */
 @AutoProtoSchemaBuilder(
       includeClasses = {
-            ByteBufferImpl.class,
             MediaType.class,
             WrappedByteArray.class
       },
       schemaFileName = "persistence.commons.proto",
-      schemaFilePath = "schema/generated",
-      schemaPackageName = "persistence.commons")
+      schemaFilePath = "schema/proto/generated",
+      schemaPackageName = "org.infinispan.persistence.commons")
 public interface PersistenceContextInitializer extends SerializationContextInitializer {
 }

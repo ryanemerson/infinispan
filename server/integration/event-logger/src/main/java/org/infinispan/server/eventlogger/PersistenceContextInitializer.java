@@ -16,6 +16,6 @@ import org.infinispan.protostream.annotations.AutoProtoSchemaBuilder;
       includeClasses = ServerEventImpl.class,
       schemaFileName = "persistence.event_logger.proto",
       schemaFilePath = "schema/generated",
-      schemaPackageName = "persistence.event_logger")
+      schemaPackageName = "org.infinispan.persistence.event_logger")
 interface PersistenceContextInitializer extends SerializationContextInitializer {
 }
