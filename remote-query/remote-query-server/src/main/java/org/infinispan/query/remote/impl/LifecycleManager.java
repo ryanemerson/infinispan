@@ -48,7 +48,6 @@ import org.infinispan.query.remote.impl.indexing.ProtobufValueWrapperSearchWorkC
 import org.infinispan.query.remote.impl.logging.Log;
 import org.infinispan.query.remote.impl.persistence.PersistenceContextInitializerImpl;
 import org.infinispan.registry.InternalCacheRegistry;
-import org.infinispan.server.core.dataconversion.ProtostreamBinaryTranscoder;
 import org.infinispan.server.core.dataconversion.ProtostreamJsonTranscoder;
 import org.infinispan.server.core.dataconversion.ProtostreamObjectTranscoder;
 import org.infinispan.server.core.dataconversion.ProtostreamTextTranscoder;
@@ -106,7 +105,6 @@ public final class LifecycleManager implements ModuleLifecycle {
       encoderRegistry.registerTranscoder(new ProtostreamJsonTranscoder(serCtx));
       encoderRegistry.registerTranscoder(new ProtostreamTextTranscoder(serCtx));
       encoderRegistry.registerTranscoder(new ProtostreamObjectTranscoder(serCtx, classLoader));
-      encoderRegistry.registerTranscoder(new ProtostreamBinaryTranscoder());
    }
 
    private void processProtostreamSerializationContextInitializers(ClassLoader classLoader, SerializationContext serCtx) {

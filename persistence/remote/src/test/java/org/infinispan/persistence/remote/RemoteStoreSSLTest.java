@@ -15,7 +15,6 @@ import org.infinispan.persistence.remote.configuration.RemoteStoreConfigurationB
 import org.infinispan.persistence.remote.configuration.SecurityConfigurationBuilder;
 import org.infinispan.persistence.spi.AdvancedLoadWriteStore;
 import org.infinispan.persistence.spi.PersistenceException;
-import org.infinispan.server.core.dataconversion.ProtostreamBinaryTranscoder;
 import org.infinispan.server.core.security.simple.SimpleServerAuthenticationProvider;
 import org.infinispan.server.hotrod.HotRodServer;
 import org.infinispan.server.hotrod.configuration.HotRodServerConfigurationBuilder;
@@ -49,7 +48,6 @@ public class RemoteStoreSSLTest extends BaseStoreTest {
       TestingUtil.replaceComponent(localCacheManager, TimeService.class, timeService, true);
       localCacheManager.getCache(REMOTE_CACHE).getAdvancedCache().getComponentRegistry().rewire();
       ClassLoader cl = RemoteStoreSSLTest.class.getClassLoader();
-      TestingUtil.registerTranscoders(localCacheManager, new ProtostreamBinaryTranscoder());
       SimpleServerAuthenticationProvider sap = new SimpleServerAuthenticationProvider();
       HotRodServerConfigurationBuilder serverBuilder = HotRodTestingUtil.getDefaultHotRodConfiguration();
       serverBuilder

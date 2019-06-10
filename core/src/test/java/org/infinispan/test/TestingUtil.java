@@ -70,7 +70,6 @@ import org.infinispan.commands.CommandsFactory;
 import org.infinispan.commands.VisitableCommand;
 import org.infinispan.commons.CacheException;
 import org.infinispan.commons.api.Lifecycle;
-import org.infinispan.commons.dataconversion.Transcoder;
 import org.infinispan.commons.jmx.PerThreadMBeanServerLookup;
 import org.infinispan.commons.marshall.StreamAwareMarshaller;
 import org.infinispan.commons.marshall.StreamingMarshaller;
@@ -100,7 +99,6 @@ import org.infinispan.lifecycle.ComponentStatus;
 import org.infinispan.lifecycle.ModuleLifecycle;
 import org.infinispan.manager.CacheContainer;
 import org.infinispan.manager.EmbeddedCacheManager;
-import org.infinispan.marshall.core.EncoderRegistry;
 import org.infinispan.marshall.core.GlobalMarshaller;
 import org.infinispan.marshall.persistence.PersistenceMarshaller;
 import org.infinispan.marshall.persistence.impl.MarshalledEntryUtil;
@@ -1880,11 +1878,5 @@ public class TestingUtil {
       StreamAwareMarshaller marshaller = extractPersistenceMarshaller(cm);
       for (Object o : objects)
          marshaller.isMarshallable(o);
-   }
-
-   public static void registerTranscoders(EmbeddedCacheManager cm, Transcoder... transcoders) {
-      EncoderRegistry encoderRegistry = TestingUtil.extractGlobalComponent(cm, EncoderRegistry.class);
-      for (Transcoder t : transcoders)
-         encoderRegistry.registerTranscoder(t);
    }
 }
