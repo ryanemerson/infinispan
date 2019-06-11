@@ -187,14 +187,6 @@
                <exclude>schema/**</exclude>
             </excludes>
          </resource>
-         <resource>
-            <directory>${project.build.outputDirectory}/schema</directory>
-            <filtering>false</filtering>
-            <includes>
-               <include>proto/**/*.proto</include>
-            </includes>
-            <targetPath>schema</targetPath>
-         </resource>
       </resources>
       <testResources>
          <testResource>
@@ -240,6 +232,7 @@
                   </Import-Package>
                   <Include-Resource>
                      {maven-resources},
+                     /proto=${project.basedir}/target/classes/proto,
                      /META-INF/services=${project.basedir}/target/classes/META-INF/services,
                      /OSGI-INF/blueprint/blueprint.xml=${project.basedir}/target/classes/OSGI-INF/blueprint/blueprint.xml
                   </Include-Resource>

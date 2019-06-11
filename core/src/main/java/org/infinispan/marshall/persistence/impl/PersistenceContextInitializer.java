@@ -34,7 +34,7 @@ import org.infinispan.util.logging.events.EventLogLevel;
             SimpleClusteredVersion.class,
       },
       schemaFileName = "persistence.core.proto",
-      schemaFilePath = "schema/proto/generated",
+      schemaFilePath = "proto/generated",
       schemaPackageName = "org.infinispan.persistence.core")
 public interface PersistenceContextInitializer extends SerializationContextInitializer {
 }

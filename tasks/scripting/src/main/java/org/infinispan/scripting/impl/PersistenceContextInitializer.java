@@ -18,7 +18,7 @@ import org.infinispan.protostream.annotations.AutoProtoSchemaBuilder;
             ScriptMetadata.class
       },
       schemaFileName = "persistence.scripting.proto",
-      schemaFilePath = "schema/proto/generated",
+      schemaFilePath = "proto/generated",
       schemaPackageName = "org.infinispan.persistence.scripting")
 interface PersistenceContextInitializer extends SerializationContextInitializer {
 }

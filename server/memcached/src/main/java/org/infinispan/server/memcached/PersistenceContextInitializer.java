@@ -15,7 +15,7 @@ import org.infinispan.protostream.annotations.AutoProtoSchemaBuilder;
       dependsOn = org.infinispan.marshall.persistence.impl.PersistenceContextInitializer.class,
       includeClasses = MemcachedMetadata.class,
       schemaFileName = "persistence.memcached.proto",
-      schemaFilePath = "schema/proto/generated",
+      schemaFilePath = "proto/generated",
       schemaPackageName = "org.infinispan.persistence.memcached")
 interface PersistenceContextInitializer extends SerializationContextInitializer {
 }
