@@ -433,11 +433,6 @@
             </dependency>
             <dependency>
                 <groupId>org.infinispan.protostream</groupId>
-                <artifactId>protostream-processor</artifactId>
-                <version>${version.protostream}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.infinispan.protostream</groupId>
                 <artifactId>sample-domain-definition</artifactId>
                 <version>${version.protostream}</version>
             </dependency>

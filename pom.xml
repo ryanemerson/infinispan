@@ -2491,6 +2491,13 @@
             <type>test-jar</type>
             <scope>test</scope>
          </dependency>
+          <dependency>
+              <groupId>org.infinispan.protostream</groupId>
+              <artifactId>protostream-processor</artifactId>
+              <version>${version.protostream}</version>
+              <!-- compile-only dependency -->
+              <scope>provided</scope>
+          </dependency>
          <dependency>
             <groupId>org.jacoco</groupId>
             <artifactId>org.jacoco.agent</artifactId>

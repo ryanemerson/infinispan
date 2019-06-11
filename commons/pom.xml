@@ -22,7 +22,6 @@
       <dependency>
          <groupId>org.infinispan.protostream</groupId>
          <artifactId>protostream-processor</artifactId>
-         <scope>compile</scope>
       </dependency>
 
       <dependency>
