@@ -1,9 +1,10 @@
-package org.infinispan.commons.marshall;
+package org.infinispan.jboss.marshalling;
 
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
+import org.infinispan.commons.marshall.PojoWithAttributes;
 import org.jboss.marshalling.Externalize;
 
 /**

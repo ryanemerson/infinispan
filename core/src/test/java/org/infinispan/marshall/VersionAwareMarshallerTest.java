@@ -1,7 +1,6 @@
 package org.infinispan.marshall;
 
 import static org.infinispan.test.TestingUtil.extractGlobalMarshaller;
-import static org.infinispan.test.TestingUtil.k;
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertTrue;
 import static org.testng.internal.junit.ArrayAsserts.assertArrayEquals;
@@ -12,7 +11,6 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.io.Serializable;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -50,8 +48,6 @@ import org.infinispan.commands.write.RemoveCommand;
 import org.infinispan.commands.write.ReplaceCommand;
 import org.infinispan.commons.hash.MurmurHash3;
 import org.infinispan.commons.marshall.AdvancedExternalizer;
-import org.infinispan.commons.marshall.NotSerializableException;
-import org.infinispan.commons.marshall.PojoWithJBossExternalize;
 import org.infinispan.commons.marshall.PojoWithSerializeWith;
 import org.infinispan.commons.marshall.SerializeWith;
 import org.infinispan.commons.marshall.StreamingMarshaller;
@@ -110,7 +106,7 @@ import org.testng.annotations.Test;
 public class VersionAwareMarshallerTest extends AbstractInfinispanTest {
 
    private static final Log log = LogFactory.getLog(VersionAwareMarshallerTest.class);
-   private StreamingMarshaller marshaller;
+   protected StreamingMarshaller marshaller;
    private EmbeddedCacheManager cm;
 
    private final TransactionFactory gtf = new TransactionFactory();
@@ -378,30 +374,16 @@ public class VersionAwareMarshallerTest extends AbstractInfinispanTest {
       assert rEntry.contentType.equals(entry.contentType);
    }
 
-   public void testNestedNonSerializable() throws Exception {
+   @Test(expectedExceptions = MarshallingException.class)
+   public void testNestedNonMarshallable() throws Exception {
       PutKeyValueCommand cmd = new PutKeyValueCommand("k", new Object(), false, new EmbeddedMetadata.Builder().build(), 0,
             EnumUtil.EMPTY_BIT_SET, CommandInvocationId.generateId(null));
-      try {
-         marshaller.objectToByteBuffer(cmd);
-      } catch (NotSerializableException e) {
-         log.info("Log exception for output format verification", e);
-         TraceInformation inf = (TraceInformation) e.getCause();
-         if (inf != null) {
-            assert inf.toString().contains("in object java.lang.Object@");
-         }
-      }
+      marshaller.objectToByteBuffer(cmd);
    }
 
-   public void testNonSerializable() throws Exception {
-      try {
-         marshaller.objectToByteBuffer(new Object());
-      } catch (NotSerializableException e) {
-         log.info("Log exception for output format verification", e);
-         TraceInformation inf = (TraceInformation) e.getCause();
-         if (inf != null) {
-            assert inf.toString().contains("in object java.lang.Object@");
-         }
-      }
+   @Test(expectedExceptions = MarshallingException.class)
+   public void testNonMarshallable() throws Exception {
+      marshaller.objectToByteBuffer(new Object());
    }
 
    public void testConcurrentHashMap() throws Exception {
@@ -460,11 +442,6 @@ public class VersionAwareMarshallerTest extends AbstractInfinispanTest {
       assertEquals("1234", readChild2.getChild1Obj().getId());
    }
 
-   public void testPojoWithJBossMarshallingExternalizer(Method m) throws Exception {
-      PojoWithJBossExternalize pojo = new PojoWithJBossExternalize(27, k(m));
-      marshallAndAssertEquality(pojo);
-   }
-
    public void testErrorUnmarshallInputStreamAvailable() throws Exception {
       byte[] bytes = marshaller.objectToByteBuffer("23");
       Object o = marshaller.objectFromInputStream(new ByteArrayInputStream(bytes){
@@ -499,11 +476,6 @@ public class VersionAwareMarshallerTest extends AbstractInfinispanTest {
 
    public void testSerializableWithAnnotation() throws Exception {
       marshallAndAssertEquality(new PojoWithSerializeWith(20, "k2"));
-   }
-
-   public void testIsMarshallableJBossExternalizeAnnotation() throws Exception {
-      PojoWithJBossExternalize pojo = new PojoWithJBossExternalize(34, "k2");
-      assertTrue(marshaller.isMarshallable(pojo));
    }
 
    public void testListArray() throws Exception {

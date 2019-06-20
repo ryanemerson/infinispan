@@ -4,17 +4,19 @@ package org.infinispan.distribution;
 import static org.testng.AssertJUnit.assertTrue;
 import static org.testng.AssertJUnit.fail;
 
-import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.infinispan.Cache;
-import org.infinispan.commons.marshall.NotSerializableException;
+import org.infinispan.commons.marshall.AbstractExternalizer;
+import org.infinispan.commons.marshall.SerializeWith;
 import org.infinispan.manager.EmbeddedCacheManager;
-import org.infinispan.marshall.core.ExternalPojo;
+import org.infinispan.marshall.core.MarshallingException;
 import org.infinispan.remoting.RemoteException;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.test.Exceptions;
@@ -82,9 +84,9 @@ public class SingleOwnerTest extends BaseDistFunctionalTest<Object, String> {
       ownerCache.put("yourkey", new Object());
       try {
          nonOwnerCache.get("yourkey");
-         fail("Should have failed with a org.infinispan.marshall.NotSerializableException");
+         fail("Should have failed with a org.infinispan.marshall.core.MarshallingException");
       } catch (RemoteException e) {
-         assertTrue(e.getCause() instanceof NotSerializableException);
+         assertTrue(e.getCause() instanceof MarshallingException);
       }
    }
 
@@ -96,21 +98,27 @@ public class SingleOwnerTest extends BaseDistFunctionalTest<Object, String> {
       assert nonOwners.length == 1;
       Cache ownerCache = owners[0];
       Cache nonOwnerCache = nonOwners[0];
-      ownerCache.put("diffkey", new ExceptionExternalizable());
-      Exceptions
-            .expectException(RemoteException.class, TestException.class, () -> nonOwnerCache.get("diffkey"));
+      ownerCache.put("diffkey", new ExceptionClass());
+      Exceptions.expectException(RemoteException.class, TestException.class, () -> nonOwnerCache.get("diffkey"));
    }
 
-   private static class ExceptionExternalizable implements Externalizable, ExternalPojo {
-      private static final long serialVersionUID = -483939825697574242L;
+   @SerializeWith(ExceptionExternalizable.class)
+   private static class ExceptionClass {}
+
+   public static class ExceptionExternalizable extends AbstractExternalizer<ExceptionClass> {
+      @Override
+      public Set<Class<? extends ExceptionClass>> getTypeClasses() {
+         return Collections.singleton(ExceptionClass.class);
+      }
 
       @Override
-      public void writeExternal(ObjectOutput out) throws IOException {
+      public void writeObject(ObjectOutput output, ExceptionClass object) throws IOException {
          throw new TestException();
       }
 
       @Override
-      public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+      public ExceptionClass readObject(ObjectInput input) throws IOException, ClassNotFoundException {
+         return null;
       }
    }
 }

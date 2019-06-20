@@ -134,8 +134,17 @@ public class GlobalMarshaller implements StreamingMarshaller {
       }
 
       classIdentifiers = ClassIdentifiers.load(globalCfg);
-      external = new ExternalJBossMarshaller(this, globalCfg);
-      external.start();
+      // TODO uncomment when jboss-marshaller module is in place
+//      try {
+//         Util.loadClassStrict("org.infinispan.marshall.core.ExternalJBossMarshaller", globalCfg.classLoader());
+//         external = new org.infinispan.marshall.core.ExternalJBossMarshaller(this, globalCfg);
+//         external.start();
+//         // TODO warn deprecated
+//      } catch (ClassNotFoundException e) {
+//         // When GlobalMarshaller is protostream based, external can just be protostream marshaller SerializationContext
+//         external = persistenceMarshaller;
+//      }
+      external = persistenceMarshaller;
    }
 
    @Override
@@ -273,8 +282,7 @@ public class GlobalMarshaller implements StreamingMarshaller {
       try {
          return external.isMarshallable(o);
       } catch (Exception e) {
-         throw new NotSerializableException(
-               "Object of type " + o.getClass() + " expected to be marshallable", e);
+         throw new MarshallingException("Object of type " + o.getClass() + " expected to be marshallable", e);
       }
    }
 

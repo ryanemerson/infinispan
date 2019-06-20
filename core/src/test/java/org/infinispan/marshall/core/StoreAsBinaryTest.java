@@ -23,7 +23,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.infinispan.Cache;
 import org.infinispan.cache.impl.EncoderCache;
-import org.infinispan.commons.marshall.NotSerializableException;
 import org.infinispan.commons.marshall.StreamingMarshaller;
 import org.infinispan.commons.marshall.WrappedByteArray;
 import org.infinispan.commons.marshall.WrappedBytes;
@@ -81,13 +80,13 @@ public class StoreAsBinaryTest extends MultipleCacheManagersTest {
       Pojo.deserializationCount = 0;
    }
 
-   public void testNonSerializable() {
+   public void testNonMarshallable() {
       Cache<Object, Object> cache1 = cache(0, "replSync");
       cache(1, "replSync");
 
-      Exceptions.expectException(NotSerializableException.class, () -> cache1.put("Hello", new Object()));
+      Exceptions.expectException(MarshallingException.class, () -> cache1.put("Hello", new Object()));
 
-      Exceptions.expectException(NotSerializableException.class, () -> cache1.put(new Object(), "Hello"));
+      Exceptions.expectException(MarshallingException.class, () -> cache1.put(new Object(), "Hello"));
    }
 
    public void testReleaseObjectValueReferences() {
