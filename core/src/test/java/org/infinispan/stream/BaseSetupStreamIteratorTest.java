@@ -3,7 +3,6 @@ package org.infinispan.stream;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.spy;
 
-import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -25,8 +24,9 @@ import org.infinispan.distribution.ch.impl.DefaultConsistentHash;
 import org.infinispan.distribution.ch.impl.ScatteredConsistentHash;
 import org.infinispan.filter.Converter;
 import org.infinispan.manager.EmbeddedCacheManager;
-import org.infinispan.marshall.core.ExternalPojo;
 import org.infinispan.metadata.Metadata;
+import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.protostream.annotations.ProtoName;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.stream.impl.ClusterStreamManager;
 import org.infinispan.test.MultipleCacheManagersTest;
@@ -93,11 +93,17 @@ public abstract class BaseSetupStreamIteratorTest extends MultipleCacheManagersT
       return stream.collect(() -> Collectors.toMap(CacheEntry::getKey, CacheEntry::getValue));
    }
 
-   protected static class StringTruncator implements Converter<Object, String, String>, Serializable, ExternalPojo {
-      private final int beginning;
-      private final int length;
+   @ProtoName("BaseSetupStreamStringTrunctator")
+   public static class StringTruncator implements Converter<Object, String, String> {
+      @ProtoField(number = 1, defaultValue = "0")
+      int beginning;
 
-      public StringTruncator(int beginning, int length) {
+      @ProtoField(number = 2, defaultValue = "0")
+      int length;
+
+      StringTruncator() {}
+
+      StringTruncator(int beginning, int length) {
          this.beginning = beginning;
          this.length = length;
       }
@@ -112,7 +118,7 @@ public abstract class BaseSetupStreamIteratorTest extends MultipleCacheManagersT
       }
    }
 
-   private static class TestDefaultConsistentHashFactory
+   public static class TestDefaultConsistentHashFactory
          extends BaseControlledConsistentHashFactory<DefaultConsistentHash> {
       TestDefaultConsistentHashFactory() {
          super(new DefaultTrait(), 3);
@@ -133,7 +139,7 @@ public abstract class BaseSetupStreamIteratorTest extends MultipleCacheManagersT
       }
    }
 
-   private static class TestScatteredConsistentHashFactory
+   public static class TestScatteredConsistentHashFactory
          extends BaseControlledConsistentHashFactory<ScatteredConsistentHash> {
       TestScatteredConsistentHashFactory() {
          super(new ScatteredTrait(), 3);

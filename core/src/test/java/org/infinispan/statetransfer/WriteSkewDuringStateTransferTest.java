@@ -320,7 +320,7 @@ public class WriteSkewDuringStateTransferTest extends MultipleCacheManagersTest 
 
    public static class ConsistentHashFactoryImpl extends BaseControlledConsistentHashFactory.Default {
 
-      public ConsistentHashFactoryImpl() {
+      ConsistentHashFactoryImpl() {
          super(1);
       }
 

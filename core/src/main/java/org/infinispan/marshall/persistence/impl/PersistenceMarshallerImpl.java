@@ -4,6 +4,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 import org.infinispan.commons.CacheException;
 import org.infinispan.commons.dataconversion.MediaType;
@@ -11,13 +13,14 @@ import org.infinispan.commons.io.ByteBuffer;
 import org.infinispan.commons.io.ByteBufferImpl;
 import org.infinispan.commons.marshall.BufferSizePredictor;
 import org.infinispan.commons.marshall.Marshaller;
+import org.infinispan.commons.marshall.MarshallingException;
+import org.infinispan.commons.marshall.proto.ProtoStreamUserMarshaller;
+import org.infinispan.configuration.global.GlobalConfiguration;
 import org.infinispan.factories.GlobalComponentRegistry;
 import org.infinispan.factories.annotations.Inject;
 import org.infinispan.factories.annotations.Start;
 import org.infinispan.factories.scopes.Scope;
 import org.infinispan.factories.scopes.Scopes;
-import org.infinispan.marshall.core.JBossUserMarshaller;
-import org.infinispan.marshall.core.MarshallingException;
 import org.infinispan.marshall.persistence.PersistenceMarshaller;
 import org.infinispan.protostream.ProtobufUtil;
 import org.infinispan.protostream.SerializationContext;
@@ -56,9 +59,27 @@ public class PersistenceMarshallerImpl implements PersistenceMarshaller {
    @Start
    @Override
    public void start() {
-      this.userMarshaller = gcr.getGlobalConfiguration().serialization().marshaller();
-      if (userMarshaller == null)
-         userMarshaller = new JBossUserMarshaller(gcr);
+      GlobalConfiguration globalCfg = gcr.getGlobalConfiguration();
+      this.userMarshaller = globalCfg.serialization().marshaller();
+      if (userMarshaller != null) {
+         Class<? extends Marshaller> marshallerClass = userMarshaller.getClass();
+         if (marshallerClass.getName().equals("org.infinispan.jboss.marshalling.core.JBossUserMarshaller")) {
+            try {
+               Method initMetod = marshallerClass.getMethod("init", GlobalConfiguration.class);
+               initMetod.invoke(userMarshaller, globalCfg);
+            } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+               log.jbossMarshallingDetected();
+            }
+         }
+      } else {
+         // TODO is it overkill to have separate SerializationContext for persistence AND user?
+         // If we have to support persistence objects indefinitely, potential user use of Objects is Ok and we avoid additional wrapping
+         SerializationContext userSerCtx = ProtobufUtil.newSerializationContext();
+         SerializationContextInitializer sci = globalCfg.serialization().contextInitializer();
+         register(userSerCtx, sci);
+         userMarshaller = new ProtoStreamUserMarshaller(userSerCtx);
+
+      }
       userMarshaller.start();
 
       register(new PersistenceContextInitializerImpl());
@@ -66,11 +87,16 @@ public class PersistenceMarshallerImpl implements PersistenceMarshaller {
 
    @Override
    public void register(SerializationContextInitializer initializer) {
+      register(serializationContext, initializer);
+   }
+
+   private void register(SerializationContext ctx, SerializationContextInitializer initializer) {
+      if (initializer == null) return;
       try {
-         initializer.registerSchema(serializationContext);
-         initializer.registerMarshallers(serializationContext);
+         initializer.registerSchema(ctx);
+         initializer.registerMarshallers(ctx);
       } catch (IOException e) {
-         throw new CacheException("Exception encountered when initialising the PersistenceMarshaller SerializationContext", e);
+         throw new CacheException("Exception encountered when initialising SerializationContext", e);
       }
    }
 
@@ -117,6 +143,8 @@ public class PersistenceMarshallerImpl implements PersistenceMarshaller {
          return new ByteBufferImpl(bytes, 0, bytes.length);
       } catch (Throwable t) {
          log.warnf(t, "Cannot marshall %s", o.getClass().getName());
+         if (t instanceof MarshallingException)
+            throw (MarshallingException) t;
          throw new MarshallingException(t.getMessage(), t.getCause());
       }
    }
@@ -218,6 +246,10 @@ public class PersistenceMarshallerImpl implements PersistenceMarshaller {
       } catch (Exception ignore) {
          return false;
       }
+   }
+
+   Marshaller getUserMarshaller() {
+      return userMarshaller;
    }
 
    static class UserBytes {

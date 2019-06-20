@@ -2,7 +2,6 @@ package org.infinispan.distribution;
 
 import static org.infinispan.distribution.DistributionTestHelper.addressOf;
 
-import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -18,7 +17,7 @@ import java.util.stream.Stream;
 
 import org.infinispan.Cache;
 import org.infinispan.distribution.ch.ConsistentHash;
-import org.infinispan.marshall.core.ExternalPojo;
+import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.remoting.transport.Address;
 
 /**
@@ -28,7 +27,7 @@ import org.infinispan.remoting.transport.Address;
  * Note that this only works if all the caches have joined a single cluster before creating the key.
  * If the cluster membership changes then the keys may move to other servers.
  */
-public class MagicKey implements Serializable, ExternalPojo {
+public class MagicKey {
    /**
     * The serialVersionUID
     */
@@ -40,14 +39,24 @@ public class MagicKey implements Serializable, ExternalPojo {
    /**
     * The name is used only for easier debugging and may be null. It is not part of equals()/hashCode().
     */
-   private final String name;
-   private final int hashcode;
+   @ProtoField(number = 1)
+   String name;
+
+   @ProtoField(number = 2, defaultValue = "0")
+   int hashcode;
    /**
     * As hash codes can collide, using counter makes the key unique.
     */
-   private final long unique;
-   private final int segment;
-   private final String address;
+   @ProtoField(number = 3, defaultValue = "0")
+   long unique;
+
+   @ProtoField(number = 4, defaultValue = "0")
+   int segment;
+
+   @ProtoField(number = 5)
+   String address;
+
+   MagicKey() {}
 
    public MagicKey(String name, Cache<?, ?> primaryOwner) {
       this.name = name;

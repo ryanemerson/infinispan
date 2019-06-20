@@ -14,6 +14,7 @@ import java.util.Set;
 import org.infinispan.commons.logging.Log;
 import org.infinispan.commons.logging.LogFactory;
 import org.infinispan.commons.marshall.JavaSerializationMarshaller;
+import org.infinispan.commons.marshall.Marshaller;
 import org.infinispan.commons.marshall.WrappedByteArray;
 import org.infinispan.commons.marshall.jboss.GenericJBossMarshaller;
 
@@ -85,7 +86,7 @@ public final class DefaultTranscoder implements Transcoder {
          if (contentType.match(TEXT_PLAIN)) {
             return StandardConversions.convertTextToOctetStream(content, contentType);
          }
-         return StandardConversions.convertJavaToOctetStream(content, contentType, jbossMarshaller);
+         return StandardConversions.convertJavaToOctetStream(content, contentType, javaMarshaller);
       } catch (EncodingException | InterruptedException | IOException e) {
          throw log.unsupportedContent(content);
       }
@@ -158,14 +159,22 @@ public final class DefaultTranscoder implements Transcoder {
    }
 
    private Object tryDeserialize(byte[] content) {
+      // jbossMarshaller will be null if jboss-marshalling is not present on the classpath
+      if (jbossMarshaller == null)
+         return deseralize(content, javaMarshaller);
+
       try {
          return jbossMarshaller.objectFromByteBuffer(content);
       } catch (IOException | ClassNotFoundException e1) {
-         try {
-            return javaMarshaller.objectFromByteBuffer(content);
-         } catch (IOException | ClassNotFoundException e) {
-            return new String(content, UTF_8);
-         }
+         return deseralize(content, javaMarshaller);
+      }
+   }
+
+   private Object deseralize(byte[] content, Marshaller marshaller){
+      try {
+         return marshaller.objectFromByteBuffer(content);
+      } catch (IOException | ClassNotFoundException e1) {
+         return new String(content, UTF_8);
       }
    }
 

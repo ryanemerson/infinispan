@@ -22,6 +22,7 @@ import org.infinispan.distribution.BlockingInterceptor;
 import org.infinispan.interceptors.impl.EntryWrappingInterceptor;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.partitionhandling.AvailabilityMode;
+import org.infinispan.protostream.annotations.ProtoName;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.test.MultipleCacheManagersTest;
 import org.infinispan.test.TestingUtil;
@@ -178,8 +179,9 @@ public class NonTxPrimaryOwnerBecomingNonOwnerTest extends MultipleCacheManagers
       assertFalse(cache2.getAdvancedCache().getLockManager().isLocked(key));
    }
 
-   private static class CustomConsistentHashFactory extends BaseControlledConsistentHashFactory.Default {
-      private CustomConsistentHashFactory() {
+   @ProtoName("PrimaryOwnerCustomConsistentHashFactory")
+   public static class CustomConsistentHashFactory extends BaseControlledConsistentHashFactory.Default {
+      CustomConsistentHashFactory() {
          super(1);
       }
 

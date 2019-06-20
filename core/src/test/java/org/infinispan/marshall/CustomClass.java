@@ -1,11 +1,13 @@
 package org.infinispan.marshall;
 
-import java.io.Serializable;
+import org.infinispan.protostream.annotations.ProtoField;
 
-import org.infinispan.marshall.core.ExternalPojo;
+public class CustomClass {
 
-public class CustomClass implements Serializable, ExternalPojo {
-   final String val;
+   @ProtoField(number = 1)
+   String val;
+
+   CustomClass() {}
 
    public CustomClass(String val) {
       this.val = val;

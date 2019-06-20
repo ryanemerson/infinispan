@@ -1875,4 +1875,8 @@ public interface Log extends BasicLogger {
    @LogMessage(level = WARN)
    @Message(value = "Module '%s' provides an instance of the deprecated ModuleCommandInitializer. Commands that require initialization should implement the InitializableCommand interface", id = 552)
    void warnModuleCommandInitializerDeprecated(String module);
+
+   @LogMessage(level = WARN)
+   @Message(value = "infinispan-boss-marshalling dependency detected, jboss-marshalling has been deprecated and will be removed in the future", id = 553)
+   void jbossMarshallingDetected();
 }

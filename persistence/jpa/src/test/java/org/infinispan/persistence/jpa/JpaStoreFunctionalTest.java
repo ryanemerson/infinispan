@@ -7,6 +7,7 @@ import org.infinispan.persistence.BaseStoreFunctionalTest;
 import org.infinispan.persistence.jpa.configuration.JpaStoreConfigurationBuilder;
 import org.infinispan.persistence.jpa.entity.KeyValueEntity;
 import org.infinispan.persistence.spi.PersistenceException;
+import org.infinispan.protostream.SerializationContextInitializer;
 import org.testng.annotations.Test;
 
 /**
@@ -14,6 +15,9 @@ import org.testng.annotations.Test;
  */
 @Test(groups = {"unit", "smoke"}, testName = "persistence.JpaStoreFunctionalTest")
 public class JpaStoreFunctionalTest extends BaseStoreFunctionalTest {
+
+   private static final SerializationContextInitializer CONTEXT_INITIALIZER = new TestSerializationContextInitializerImpl();
+
    @Override
    protected PersistenceConfigurationBuilder createCacheStoreConfig(PersistenceConfigurationBuilder persistence, boolean preload) {
       persistence.addStore(JpaStoreConfigurationBuilder.class)
@@ -22,6 +26,11 @@ public class JpaStoreFunctionalTest extends BaseStoreFunctionalTest {
             .preload(preload)
             .create();
       return persistence;
+   }
+
+   @Override
+   protected SerializationContextInitializer getSerializationContextInitializer() {
+      return CONTEXT_INITIALIZER;
    }
 
    @Override

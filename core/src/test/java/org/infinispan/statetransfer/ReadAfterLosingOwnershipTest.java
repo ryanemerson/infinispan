@@ -14,6 +14,7 @@ import org.infinispan.Cache;
 import org.infinispan.commons.util.IntSet;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
+import org.infinispan.protostream.annotations.ProtoName;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.test.MultipleCacheManagersTest;
 import org.infinispan.test.TestingUtil;
@@ -155,9 +156,10 @@ public class ReadAfterLosingOwnershipTest extends MultipleCacheManagersTest {
       }
    }
 
+   @ProtoName("ReadAfterSingleKeyConsistentHashFactory")
    public static class SingleKeyConsistentHashFactory extends BaseControlledConsistentHashFactory.Default {
 
-      public SingleKeyConsistentHashFactory() {
+      SingleKeyConsistentHashFactory() {
          super(1);
       }
 

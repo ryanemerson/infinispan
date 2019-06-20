@@ -2,11 +2,18 @@ package org.infinispan.test.data;
 
 import java.io.Serializable;
 
+import org.infinispan.protostream.annotations.ProtoField;
+
 public class Address implements Serializable {
    private static final long serialVersionUID = 5943073369866339615L;
 
+   @ProtoField(number = 1)
    String street = null;
+
+   @ProtoField(number = 2)
    String city = "San Jose";
+
+   @ProtoField(number = 3, defaultValue = "0")
    int zip = 0;
 
    public String getStreet() {
@@ -36,10 +43,6 @@ public class Address implements Serializable {
    public String toString() {
       return "street=" + getStreet() + ", city=" + getCity() + ", zip=" + getZip();
    }
-
-//    public Object writeReplace() {
-// return this;
-//    }
 
    public boolean equals(Object o) {
       if (this == o) return true;
