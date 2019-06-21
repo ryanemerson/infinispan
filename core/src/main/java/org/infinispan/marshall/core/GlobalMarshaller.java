@@ -34,6 +34,7 @@ import org.infinispan.factories.scopes.Scope;
 import org.infinispan.factories.scopes.Scopes;
 import org.infinispan.marshall.core.ClassToExternalizerMap.IdToExternalizerMap;
 import org.infinispan.marshall.persistence.PersistenceMarshaller;
+import org.infinispan.util.function.SerializableFunction;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 
@@ -79,6 +80,7 @@ public class GlobalMarshaller implements StreamingMarshaller {
     */
    static final int ID_ARRAY                       = 0x06;
    static final int ID_CLASS                       = 0x07;
+   static final int ID_LAMBDA                      = 0x08;
 
    // Type is in last 3 bits
    static final int TYPE_MASK                      = 0x07;
@@ -375,10 +377,14 @@ public class GlobalMarshaller implements StreamingMarshaller {
                writeExternal(obj, ext, out);
             } else {
                Externalizer annotExt = findAnnotatedExternalizer(clazz);
-               if (annotExt != null)
+               if (annotExt != null) {
                   writeAnnotated(obj, out, annotExt);
-               else
-                  writeUnknown(obj, out);
+               } else {
+                  if (isLambda(clazz, obj))
+                     writeUnknownLambda(obj, out);
+                  else
+                     writeUnknown(obj, out);
+               }
             }
          }
       }
@@ -575,6 +581,15 @@ public class GlobalMarshaller implements StreamingMarshaller {
       }
    }
 
+   private boolean isLambda(Class<?> clazz, Object obj) {
+      return clazz.isSynthetic() || obj instanceof SerializableFunction;
+   }
+
+   private void writeUnknownLambda(Object obj, ObjectOutput out) throws IOException {
+      out.writeByte(ID_LAMBDA);
+      LambdaMarshaller.write(out, obj);
+   }
+
    void writeUnknownClean(Marshaller marshaller, Object obj, ObjectOutput out) {
       try {
          writeUnknown(marshaller, obj, out);
@@ -684,6 +699,8 @@ public class GlobalMarshaller implements StreamingMarshaller {
             return readUnknown(in);
          case ID_ARRAY:
             return readArray(in);
+         case ID_LAMBDA:
+            return LambdaMarshaller.read(in);
          default:
             throw new IOException("Unknown type: " + type);
       }
