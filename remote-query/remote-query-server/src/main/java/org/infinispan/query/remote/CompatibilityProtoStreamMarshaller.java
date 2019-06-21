@@ -5,7 +5,7 @@ import org.infinispan.factories.scopes.Scope;
 import org.infinispan.factories.scopes.Scopes;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.protostream.SerializationContext;
-import org.infinispan.query.remote.client.BaseProtoStreamMarshaller;
+import org.infinispan.commons.marshall.proto.ProtoStreamMarshaller;
 import org.infinispan.query.remote.impl.ProtobufMetadataManagerImpl;
 
 /**
@@ -16,7 +16,7 @@ import org.infinispan.query.remote.impl.ProtobufMetadataManagerImpl;
  * @since 6.0
  */
 @Scope(Scopes.GLOBAL)
-public class CompatibilityProtoStreamMarshaller extends BaseProtoStreamMarshaller {
+public class CompatibilityProtoStreamMarshaller extends ProtoStreamMarshaller {
 
    @Inject protected EmbeddedCacheManager cacheManager;
 

@@ -1,4 +1,4 @@
-package org.infinispan.query.remote.client;
+package org.infinispan.commons.marshall.proto;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -9,7 +9,6 @@ import java.time.Instant;
 import java.util.Date;
 
 import org.infinispan.protostream.ProtobufUtil;
-import org.infinispan.protostream.SerializationContext;
 import org.junit.Test;
 
 /**
@@ -18,7 +17,7 @@ import org.junit.Test;
  *
  * @author anistor@redhat.com
  */
-public class BaseProtoStreamMarshallerTest {
+public class ProtoStreamMarshallerTest {
 
    @Test
    public void testBasicTypesAreMarshallable() throws Exception {
@@ -37,7 +36,7 @@ public class BaseProtoStreamMarshallerTest {
    }
 
    private void roundtrip(Object in) throws Exception {
-      BaseProtoStreamMarshaller marshaller = makeInstance();
+      ProtoStreamMarshaller marshaller = new ProtoStreamMarshaller(ProtobufUtil.newSerializationContext());
 
       assertTrue(marshaller.isMarshallable(in));
 
@@ -54,20 +53,5 @@ public class BaseProtoStreamMarshallerTest {
       } else {
          assertEquals(in, out);
       }
-   }
-
-   /**
-    * BaseProtoStreamMarshaller is abstract. To test it we need to extend it and make it a concrete class.
-    */
-   private BaseProtoStreamMarshaller makeInstance() {
-      return new BaseProtoStreamMarshaller() {
-
-         private final SerializationContext serCtx = ProtobufUtil.newSerializationContext();
-
-         @Override
-         protected SerializationContext getSerializationContext() {
-            return serCtx;
-         }
-      };
    }
 }

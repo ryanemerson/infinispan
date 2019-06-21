@@ -1,4 +1,4 @@
-package org.infinispan.query.remote.client;
+package org.infinispan.commons.marshall.proto;
 
 import java.io.IOException;
 
@@ -16,17 +16,20 @@ import org.infinispan.protostream.SerializationContext;
  * @author anistor@redhat.com
  * @since 6.0
  */
-public abstract class BaseProtoStreamMarshaller extends AbstractMarshaller {
+public class ProtoStreamMarshaller extends AbstractMarshaller {
 
-   protected BaseProtoStreamMarshaller() {
+   protected final SerializationContext serializationContext;
+
+   public ProtoStreamMarshaller(SerializationContext serializationContext) {
+      this.serializationContext = serializationContext;
    }
 
    /**
-    * Subclasses must implement this method in order to provide a way to lookup the {@link SerializationContext}
-    *
     * @return the SerializationContext instance to use
     */
-   protected abstract SerializationContext getSerializationContext();
+   public SerializationContext getSerializationContext() {
+      return serializationContext;
+   }
 
    @Override
    public Object objectFromByteBuffer(byte[] buf, int offset, int length) throws IOException, ClassNotFoundException {
