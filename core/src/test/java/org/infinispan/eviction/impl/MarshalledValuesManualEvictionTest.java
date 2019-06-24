@@ -68,6 +68,7 @@ public class MarshalledValuesManualEvictionTest extends SingleCacheManagerTest {
       assertEquals(1, ManualEvictionPojo.reads.get());
    }
 
+   // TODO how to handle this? Add manual marshaller in test?
    public static class ManualEvictionPojo implements Externalizable, ExternalPojo {
       static AtomicInteger writes = new AtomicInteger();
       static AtomicInteger reads = new AtomicInteger();

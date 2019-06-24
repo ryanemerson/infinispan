@@ -28,6 +28,7 @@ import org.infinispan.factories.threads.DefaultThreadFactory;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.remoting.transport.jgroups.JGroupsTransport;
+import org.infinispan.test.TestSerializationContextInitializerImpl;
 import org.infinispan.transaction.TransactionMode;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
@@ -240,6 +241,7 @@ public class TestCacheManagerFactory {
    }
 
    public static void amendGlobalConfiguration(GlobalConfigurationBuilder gcb, TransportFlags flags) {
+      initSerializationCtx(gcb);
       amendDefaultCache(gcb);
       amendMarshaller(gcb);
       minimizeThreads(gcb);
@@ -247,7 +249,8 @@ public class TestCacheManagerFactory {
    }
 
    public static EmbeddedCacheManager createCacheManager(ConfigurationBuilder builder) {
-      return createCacheManager(new GlobalConfigurationBuilder().nonClusteredDefault(), builder);
+      GlobalConfigurationBuilder globalBuilder = initSerializationCtx(new GlobalConfigurationBuilder().nonClusteredDefault());
+      return createCacheManager(globalBuilder, builder);
    }
 
    public static EmbeddedCacheManager createCacheManager() {
@@ -275,7 +278,8 @@ public class TestCacheManagerFactory {
    }
 
    public static EmbeddedCacheManager createCacheManager(boolean start) {
-      return newDefaultCacheManager(start, new GlobalConfigurationBuilder().nonClusteredDefault(), new ConfigurationBuilder(), false);
+      GlobalConfigurationBuilder globalBuilder = initSerializationCtx(new GlobalConfigurationBuilder().nonClusteredDefault());
+      return newDefaultCacheManager(start, globalBuilder, new ConfigurationBuilder(), false);
    }
 
    public static EmbeddedCacheManager createCacheManager(GlobalConfigurationBuilder globalBuilder, ConfigurationBuilder builder) {
@@ -351,6 +355,7 @@ public class TestCacheManagerFactory {
          MBeanServerLookup mBeanServerLookup) {
 
       amendGlobalConfiguration(globalBuilder, new TransportFlags());
+      initSerializationCtx(globalBuilder);
       globalBuilder.globalJmxStatistics()
             .jmxDomain(jmxDomain)
             .mBeanServerLookup(mBeanServerLookup)
@@ -385,6 +390,11 @@ public class TestCacheManagerFactory {
       ConfigurationBuilder configuration = new ConfigurationBuilder();
       configuration.jmxStatistics().enabled(exposeCacheJmx);
       return createCacheManager(globalConfiguration, configuration, true);
+   }
+
+   public static GlobalConfigurationBuilder initSerializationCtx(GlobalConfigurationBuilder builder) {
+      builder.serialization().contextInitializer(new TestSerializationContextInitializerImpl());
+      return builder;
    }
 
    public static ConfigurationBuilder getDefaultCacheConfiguration(boolean transactional) {

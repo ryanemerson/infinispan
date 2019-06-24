@@ -215,9 +215,7 @@ public class MigratorConfigurationTest {
       @Override
       public Person readObject(ObjectInput input) throws IOException {
          externalizerReadCount.incrementAndGet();
-         Person person = new Person();
-         person.setName(MarshallUtil.unmarshallString(input));
-         return person;
+         return new Person(MarshallUtil.unmarshallString(input));
       }
    }
 }

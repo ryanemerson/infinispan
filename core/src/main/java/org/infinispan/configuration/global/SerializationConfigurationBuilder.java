@@ -1,6 +1,7 @@
 package org.infinispan.configuration.global;
 
 import static org.infinispan.configuration.global.SerializationConfiguration.CLASS_RESOLVER;
+import static org.infinispan.configuration.global.SerializationConfiguration.CONTEXT_INITIALIZER;
 import static org.infinispan.configuration.global.SerializationConfiguration.MARSHALLER;
 import static org.infinispan.configuration.global.SerializationConfiguration.VERSION;
 
@@ -13,6 +14,7 @@ import org.infinispan.commons.configuration.Builder;
 import org.infinispan.commons.configuration.attributes.AttributeSet;
 import org.infinispan.commons.marshall.AdvancedExternalizer;
 import org.infinispan.commons.marshall.Marshaller;
+import org.infinispan.protostream.SerializationContextInitializer;
 import org.jboss.marshalling.ClassResolver;
 
 /**
@@ -120,9 +122,16 @@ public class SerializationConfigurationBuilder extends AbstractGlobalConfigurati
     * Class resolver to use when unmarshalling objects.
     *
     * @param classResolver
+    * @deprecated since 10.0 {@link ClassResolver} is specific to jboss-marshalling and will be removed in a future version.
     */
+   @Deprecated
    public SerializationConfigurationBuilder classResolver(ClassResolver classResolver) {
       attributes.attribute(CLASS_RESOLVER).set(classResolver);
+      return this;
+   }
+
+   public SerializationConfigurationBuilder contextInitializer(SerializationContextInitializer initializer) {
+      attributes.attribute(CONTEXT_INITIALIZER).set(initializer);
       return this;
    }
 

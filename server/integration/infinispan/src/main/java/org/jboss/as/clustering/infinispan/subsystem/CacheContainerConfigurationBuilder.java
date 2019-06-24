@@ -154,6 +154,7 @@ public class CacheContainerConfigurationBuilder implements Builder<GlobalConfigu
 
         GlobalConfigurationBuilder builder = new GlobalConfigurationBuilder();
         ModuleLoader moduleLoader = this.loader.getValue();
+        // TODO add jboss-marshalling module as server dependency
         builder.serialization().classResolver(ModularClassResolver.getInstance(moduleLoader));
         ClassLoader loader;
         try {

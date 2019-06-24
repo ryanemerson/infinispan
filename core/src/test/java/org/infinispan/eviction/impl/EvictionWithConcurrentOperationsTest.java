@@ -6,12 +6,7 @@ import static org.testng.AssertJUnit.assertNull;
 import static org.testng.AssertJUnit.assertTrue;
 import static org.testng.AssertJUnit.fail;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
-import java.io.Serializable;
 import java.util.Arrays;
-import java.util.Set;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -24,8 +19,6 @@ import org.infinispan.commands.VisitableCommand;
 import org.infinispan.commands.read.GetCacheEntryCommand;
 import org.infinispan.commands.read.GetKeyValueCommand;
 import org.infinispan.commands.write.PutKeyValueCommand;
-import org.infinispan.commons.marshall.AbstractExternalizer;
-import org.infinispan.commons.marshall.MarshallUtil;
 import org.infinispan.commons.util.Util;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.container.DataContainer;
@@ -37,7 +30,6 @@ import org.infinispan.interceptors.AsyncInterceptorChain;
 import org.infinispan.interceptors.base.BaseCustomInterceptor;
 import org.infinispan.interceptors.impl.EntryWrappingInterceptor;
 import org.infinispan.manager.EmbeddedCacheManager;
-import org.infinispan.marshall.core.ExternalPojo;
 import org.infinispan.notifications.Listener;
 import org.infinispan.notifications.cachelistener.annotation.CacheEntriesEvicted;
 import org.infinispan.notifications.cachelistener.event.CacheEntriesEvictedEvent;
@@ -45,6 +37,7 @@ import org.infinispan.persistence.dummy.DummyInMemoryStoreConfigurationBuilder;
 import org.infinispan.persistence.spi.CacheLoader;
 import org.infinispan.persistence.spi.MarshallableEntry;
 import org.infinispan.persistence.spi.PersistenceException;
+import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.test.SingleCacheManagerTest;
 import org.infinispan.test.TestingUtil;
 import org.infinispan.test.fwk.TestCacheManagerFactory;
@@ -467,11 +460,15 @@ public class EvictionWithConcurrentOperationsTest extends SingleCacheManagerTest
                  Arrays.toString(expectedValues));
    }
 
-//   @SerializeWith(SameHashCodeKeyExternalizer.class)
-   public static class SameHashCodeKey implements Serializable, ExternalPojo {
+   public static class SameHashCodeKey {
 
-      private final String name;
-      private final int hashCode;
+      @ProtoField(number = 1)
+      String name;
+
+      @ProtoField(number = 2, defaultValue = "0")
+      int hashCode;
+
+      SameHashCodeKey() {}
 
       //same hash code to force the keys to be in the same segment.
       SameHashCodeKey(String name) {
@@ -501,26 +498,6 @@ public class EvictionWithConcurrentOperationsTest extends SingleCacheManagerTest
       @Override
       public String toString() {
          return name;
-      }
-   }
-
-   public static class SameHashCodeKeyExternalizer extends AbstractExternalizer<SameHashCodeKey> {
-      @Override
-      public Set<Class<? extends SameHashCodeKey>> getTypeClasses() {
-         return Util.asSet(SameHashCodeKey.class);
-      }
-
-      @Override
-      public void writeObject(ObjectOutput output, SameHashCodeKey object) throws IOException {
-         MarshallUtil.marshallString(object.name, output);
-         output.writeInt(object.hashCode);
-      }
-
-      @Override
-      public SameHashCodeKey readObject(ObjectInput input) throws IOException, ClassNotFoundException {
-         String name = MarshallUtil.unmarshallString(input);
-         int hashcode = input.readInt();
-         return new SameHashCodeKey(name, hashcode);
       }
    }
 

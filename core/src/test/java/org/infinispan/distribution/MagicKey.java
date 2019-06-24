@@ -2,9 +2,6 @@ package org.infinispan.distribution;
 
 import static org.infinispan.distribution.DistributionTestHelper.addressOf;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -19,11 +16,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.infinispan.Cache;
-import org.infinispan.commons.marshall.AbstractExternalizer;
-import org.infinispan.commons.marshall.MarshallUtil;
-import org.infinispan.commons.marshall.SerializeWith;
-import org.infinispan.commons.util.Util;
 import org.infinispan.distribution.ch.ConsistentHash;
+import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.remoting.transport.Address;
 
 /**
@@ -33,7 +27,6 @@ import org.infinispan.remoting.transport.Address;
  * Note that this only works if all the caches have joined a single cluster before creating the key.
  * If the cluster membership changes then the keys may move to other servers.
  */
-@SerializeWith(MagicKey.Externalizer.class)
 public class MagicKey {
    /**
     * The serialVersionUID
@@ -46,22 +39,24 @@ public class MagicKey {
    /**
     * The name is used only for easier debugging and may be null. It is not part of equals()/hashCode().
     */
-   private final String name;
-   private final int hashcode;
+   @ProtoField(number = 1)
+   String name;
+
+   @ProtoField(number = 2, defaultValue = "0")
+   int hashcode;
    /**
     * As hash codes can collide, using counter makes the key unique.
     */
-   private final long unique;
-   private final int segment;
-   private final String address;
+   @ProtoField(number = 3, defaultValue = "0")
+   long unique;
 
-   private MagicKey(String name, int hashcode, long unique, int segment, String address) {
-      this.name = name;
-      this.hashcode = hashcode;
-      this.unique = unique;
-      this.segment = segment;
-      this.address = address;
-   }
+   @ProtoField(number = 4, defaultValue = "0")
+   int segment;
+
+   @ProtoField(number = 5)
+   String address;
+
+   MagicKey() {}
 
    public MagicKey(String name, Cache<?, ?> primaryOwner) {
       this.name = name;
@@ -175,31 +170,5 @@ public class MagicKey {
    public String toString() {
       return String.format("MagicKey%s{%X/%08X/%d@%s}", name == null ? "" : "#" + name,
          unique, hashcode, segment, address);
-   }
-
-   public static class Externalizer extends AbstractExternalizer<MagicKey> {
-      @Override
-      public Set<Class<? extends MagicKey>> getTypeClasses() {
-         return Util.asSet(MagicKey.class);
-      }
-
-      @Override
-      public void writeObject(ObjectOutput out, MagicKey key) throws IOException {
-         MarshallUtil.marshallString(key.name, out);
-         out.writeInt(key.hashcode);
-         out.writeLong(key.unique);
-         out.writeInt(key.segment);
-         MarshallUtil.marshallString(key.address, out);
-      }
-
-      @Override
-      public MagicKey readObject(ObjectInput in) throws IOException, ClassNotFoundException {
-         String name = MarshallUtil.unmarshallString(in);
-         int hashcode = in.readInt();
-         long unique = in.readLong();
-         int segment = in.readInt();
-         String address = MarshallUtil.unmarshallString(in);
-         return new MagicKey(name, hashcode, unique, segment, address);
-      }
    }
 }

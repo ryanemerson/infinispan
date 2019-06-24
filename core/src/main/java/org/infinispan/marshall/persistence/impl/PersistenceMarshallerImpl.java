@@ -68,7 +68,12 @@ public class PersistenceMarshallerImpl implements PersistenceMarshaller {
 //            // When GlobalMarshaller is protostream based, external can just be protostream marshaller SerializationContext
 //            external = persistenceMarshaller;
 //         }
-         userMarshaller = new ProtoStreamMarshaller(ProtobufUtil.newSerializationContext());
+         // TODO is it overkill to have separate SerializationContext for persistence AND user?
+         // If we have to support persistence objects indefinitely, potential user use of Objects is Ok and we avoid additional wrapping
+         SerializationContext serializationContext = ProtobufUtil.newSerializationContext();
+         SerializationContextInitializer sci = globalCfg.serialization().contextInitializer();
+         register(serializationContext, sci);
+         userMarshaller = new ProtoStreamMarshaller(serializationContext);
       }
       userMarshaller.start();
 
@@ -77,11 +82,16 @@ public class PersistenceMarshallerImpl implements PersistenceMarshaller {
 
    @Override
    public void register(SerializationContextInitializer initializer) {
+      register(serializationContext, initializer);
+   }
+
+   private void register(SerializationContext ctx, SerializationContextInitializer initializer) {
+      if (initializer == null) return;
       try {
-         initializer.registerSchema(serializationContext);
-         initializer.registerMarshallers(serializationContext);
+         initializer.registerSchema(ctx);
+         initializer.registerMarshallers(ctx);
       } catch (IOException e) {
-         throw new CacheException("Exception encountered when initialising the PersistenceMarshaller SerializationContext", e);
+         throw new CacheException("Exception encountered when initialising SerializationContext", e);
       }
    }
 
@@ -229,6 +239,10 @@ public class PersistenceMarshallerImpl implements PersistenceMarshaller {
       } catch (Exception ignore) {
          return false;
       }
+   }
+
+   Marshaller getUserMarshaller() {
+      return userMarshaller;
    }
 
    static class UserBytes {
