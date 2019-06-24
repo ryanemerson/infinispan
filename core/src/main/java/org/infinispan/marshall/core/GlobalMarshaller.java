@@ -33,6 +33,7 @@ import org.infinispan.factories.annotations.Stop;
 import org.infinispan.factories.scopes.Scope;
 import org.infinispan.factories.scopes.Scopes;
 import org.infinispan.marshall.core.ClassToExternalizerMap.IdToExternalizerMap;
+import org.infinispan.marshall.exts.ThrowableExternalizer;
 import org.infinispan.marshall.persistence.PersistenceMarshaller;
 import org.infinispan.util.function.SerializableFunction;
 import org.infinispan.util.logging.Log;
@@ -136,6 +137,7 @@ public class GlobalMarshaller implements StreamingMarshaller {
       }
 
       classIdentifiers = ClassIdentifiers.load(globalCfg);
+      // TODO do we want this here? Or just plug in user marshaller to persistenceMarshaller?
       // TODO uncomment when jboss-marshaller module is in place
 //      try {
 //         Util.loadClassStrict("org.infinispan.marshall.core.ExternalJBossMarshaller", globalCfg.classLoader());
@@ -368,7 +370,7 @@ public class GlobalMarshaller implements StreamingMarshaller {
       } else if (clazz.isArray()) {
          writeArray(clazz, obj, out);
       } else {
-         AdvancedExternalizer ext = getExternalizer(internalExts, clazz);
+         AdvancedExternalizer ext = getExternalizer(internalExts, clazz, obj);
          if (ext != null) {
             writeInternal(obj, ext, out);
          } else {
@@ -388,6 +390,14 @@ public class GlobalMarshaller implements StreamingMarshaller {
             }
          }
       }
+   }
+
+   AdvancedExternalizer getExternalizer(ClassToExternalizerMap class2ExternalizerMap, Class<?> clazz, Object o) {
+      AdvancedExternalizer ext = getExternalizer(class2ExternalizerMap, clazz);
+      if (ext != null)
+         return ext;
+
+      return o instanceof Throwable ? ThrowableExternalizer.INSTANCE : null;
    }
 
    AdvancedExternalizer getExternalizer(ClassToExternalizerMap class2ExternalizerMap, Class<?> clazz) {

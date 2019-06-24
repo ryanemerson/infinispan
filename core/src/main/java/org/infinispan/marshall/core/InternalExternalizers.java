@@ -64,6 +64,7 @@ import org.infinispan.globalstate.ScopedState;
 import org.infinispan.interceptors.distribution.VersionedResult;
 import org.infinispan.interceptors.distribution.VersionedResults;
 import org.infinispan.marshall.exts.CacheRpcCommandExternalizer;
+import org.infinispan.marshall.exts.ClassExternalizer;
 import org.infinispan.marshall.exts.CollectionExternalizer;
 import org.infinispan.marshall.exts.DoubleSummaryStatisticsExternalizer;
 import org.infinispan.marshall.exts.EnumSetExternalizer;
@@ -73,6 +74,7 @@ import org.infinispan.marshall.exts.MapExternalizer;
 import org.infinispan.marshall.exts.MetaParamExternalizers;
 import org.infinispan.marshall.exts.OptionalExternalizer;
 import org.infinispan.marshall.exts.ReplicableCommandExternalizer;
+import org.infinispan.marshall.exts.ThrowableExternalizer;
 import org.infinispan.marshall.exts.TriangleAckExternalizer;
 import org.infinispan.marshall.exts.UuidExternalizer;
 import org.infinispan.marshall.persistence.PersistenceMarshaller;
@@ -101,6 +103,7 @@ import org.infinispan.remoting.transport.jgroups.JGroupsAddress;
 import org.infinispan.remoting.transport.jgroups.JGroupsTopologyAwareAddress;
 import org.infinispan.statetransfer.StateChunk;
 import org.infinispan.statetransfer.TransactionInfo;
+import org.infinispan.stats.impl.ClusterCacheStatsImpl;
 import org.infinispan.stream.StreamMarshalling;
 import org.infinispan.stream.impl.AbstractCacheStream;
 import org.infinispan.stream.impl.CacheStreamIntermediateReducer;
@@ -260,6 +263,9 @@ final class InternalExternalizers {
       addInternalExternalizer(new SegmentPublisherResult.Externalizer(), exts);
       addInternalExternalizer(new PublisherReducers.PublisherReducersExternalizer(), exts);
       addInternalExternalizer(new CacheStreamIntermediateReducer.ReducerExternalizer(), exts);
+      addInternalExternalizer(new ClassExternalizer(), exts);
+      addInternalExternalizer(new ClusterCacheStatsImpl.DistributedCacheStatsCallableExternalizer(), exts);
+      addInternalExternalizer(ThrowableExternalizer.INSTANCE, exts);
 
       return exts;
    }

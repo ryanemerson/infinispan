@@ -6,8 +6,12 @@ import static org.testng.AssertJUnit.assertNull;
 import static org.testng.AssertJUnit.assertTrue;
 import static org.testng.AssertJUnit.fail;
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.Set;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -20,6 +24,8 @@ import org.infinispan.commands.VisitableCommand;
 import org.infinispan.commands.read.GetCacheEntryCommand;
 import org.infinispan.commands.read.GetKeyValueCommand;
 import org.infinispan.commands.write.PutKeyValueCommand;
+import org.infinispan.commons.marshall.AbstractExternalizer;
+import org.infinispan.commons.marshall.MarshallUtil;
 import org.infinispan.commons.util.Util;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.container.DataContainer;
@@ -50,6 +56,7 @@ import org.testng.annotations.Test;
  * @author Pedro Ruivo
  * @since 6.0
  */
+// TODO update so that Protobuf context is registered with UserMarshaller. Required as uses a store
 @Test(groups = "functional", testName = "eviction.EvictionWithConcurrentOperationsTest")
 public class EvictionWithConcurrentOperationsTest extends SingleCacheManagerTest {
 
@@ -460,12 +467,20 @@ public class EvictionWithConcurrentOperationsTest extends SingleCacheManagerTest
                  Arrays.toString(expectedValues));
    }
 
+//   @SerializeWith(SameHashCodeKeyExternalizer.class)
    public static class SameHashCodeKey implements Serializable, ExternalPojo {
 
       private final String name;
+      private final int hashCode;
 
-      public SameHashCodeKey(String name) {
+      //same hash code to force the keys to be in the same segment.
+      SameHashCodeKey(String name) {
+         this(name, 0);
+      }
+
+      SameHashCodeKey(String name, int hashCode) {
          this.name = name;
+         this.hashCode = hashCode;
       }
 
       @Override
@@ -476,17 +491,36 @@ public class EvictionWithConcurrentOperationsTest extends SingleCacheManagerTest
          SameHashCodeKey that = (SameHashCodeKey) o;
 
          return name.equals(that.name);
-
       }
 
       @Override
       public int hashCode() {
-         return 0; //same hash code to force the keys to be in the same segment.
+         return hashCode;
       }
 
       @Override
       public String toString() {
          return name;
+      }
+   }
+
+   public static class SameHashCodeKeyExternalizer extends AbstractExternalizer<SameHashCodeKey> {
+      @Override
+      public Set<Class<? extends SameHashCodeKey>> getTypeClasses() {
+         return Util.asSet(SameHashCodeKey.class);
+      }
+
+      @Override
+      public void writeObject(ObjectOutput output, SameHashCodeKey object) throws IOException {
+         MarshallUtil.marshallString(object.name, output);
+         output.writeInt(object.hashCode);
+      }
+
+      @Override
+      public SameHashCodeKey readObject(ObjectInput input) throws IOException, ClassNotFoundException {
+         String name = MarshallUtil.unmarshallString(input);
+         int hashcode = input.readInt();
+         return new SameHashCodeKey(name, hashcode);
       }
    }
 

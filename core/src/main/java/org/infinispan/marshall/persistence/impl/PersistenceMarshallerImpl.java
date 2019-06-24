@@ -11,12 +11,13 @@ import org.infinispan.commons.io.ByteBuffer;
 import org.infinispan.commons.io.ByteBufferImpl;
 import org.infinispan.commons.marshall.BufferSizePredictor;
 import org.infinispan.commons.marshall.Marshaller;
+import org.infinispan.commons.marshall.proto.ProtoStreamMarshaller;
+import org.infinispan.configuration.global.GlobalConfiguration;
 import org.infinispan.factories.GlobalComponentRegistry;
 import org.infinispan.factories.annotations.Inject;
 import org.infinispan.factories.annotations.Start;
 import org.infinispan.factories.scopes.Scope;
 import org.infinispan.factories.scopes.Scopes;
-import org.infinispan.marshall.core.JBossUserMarshaller;
 import org.infinispan.marshall.core.MarshallingException;
 import org.infinispan.marshall.persistence.PersistenceMarshaller;
 import org.infinispan.protostream.ProtobufUtil;
@@ -56,9 +57,19 @@ public class PersistenceMarshallerImpl implements PersistenceMarshaller {
    @Start
    @Override
    public void start() {
-      this.userMarshaller = gcr.getGlobalConfiguration().serialization().marshaller();
-      if (userMarshaller == null)
-         userMarshaller = new JBossUserMarshaller(gcr);
+      GlobalConfiguration globalCfg = gcr.getGlobalConfiguration();
+      this.userMarshaller = globalCfg.serialization().marshaller();
+      if (userMarshaller == null) {
+//         userMarshaller = new JBossUserMarshaller(gcr);
+//         try {
+//            Util.loadClassStrict("org.infinispan.marshall.core.JBossUserMarshaller", globalCfg.classLoader());
+//            userMarshaller = new org.infinispan.marshall.core.JBossUserMarshaller(gcr);
+//         } catch (ClassNotFoundException e) {
+//            // When GlobalMarshaller is protostream based, external can just be protostream marshaller SerializationContext
+//            external = persistenceMarshaller;
+//         }
+         userMarshaller = new ProtoStreamMarshaller(ProtobufUtil.newSerializationContext());
+      }
       userMarshaller.start();
 
       register(new PersistenceContextInitializerImpl());

@@ -25,6 +25,7 @@ import org.infinispan.commons.dataconversion.IdentityWrapper;
 import org.infinispan.commons.dataconversion.JavaSerializationEncoder;
 import org.infinispan.commons.dataconversion.MediaType;
 import org.infinispan.commons.dataconversion.UTF8Encoder;
+import org.infinispan.commons.marshall.AbstractExternalizer;
 import org.infinispan.commons.marshall.JavaSerializationMarshaller;
 import org.infinispan.commons.marshall.Marshaller;
 import org.infinispan.commons.marshall.jboss.GenericJBossMarshaller;
@@ -124,7 +125,6 @@ public class DataConversionTest extends AbstractInfinispanTest {
 
    @Test
    public void testObjectEncoder() {
-      GenericJbossMarshallerEncoder encoder = new GenericJbossMarshallerEncoder(DataConversionTest.class.getClassLoader());
       withCacheManager(new CacheManagerCallable(
             createCacheManager(new ConfigurationBuilder())) {
 
@@ -141,7 +141,7 @@ public class DataConversionTest extends AbstractInfinispanTest {
 
          @Override
          public void call() {
-            cm.getClassWhiteList().addClasses(Person.class);
+            cm.getClassWhiteList().addClasses(Person.class, Person.Externalizer.class, AbstractExternalizer.class);
             Cache<byte[], byte[]> cache = cm.getCache();
 
             // Write encoded content to the cache

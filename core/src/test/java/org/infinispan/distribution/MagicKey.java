@@ -2,7 +2,9 @@ package org.infinispan.distribution;
 
 import static org.infinispan.distribution.DistributionTestHelper.addressOf;
 
-import java.io.Serializable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -17,8 +19,11 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.infinispan.Cache;
+import org.infinispan.commons.marshall.AbstractExternalizer;
+import org.infinispan.commons.marshall.MarshallUtil;
+import org.infinispan.commons.marshall.SerializeWith;
+import org.infinispan.commons.util.Util;
 import org.infinispan.distribution.ch.ConsistentHash;
-import org.infinispan.marshall.core.ExternalPojo;
 import org.infinispan.remoting.transport.Address;
 
 /**
@@ -28,7 +33,8 @@ import org.infinispan.remoting.transport.Address;
  * Note that this only works if all the caches have joined a single cluster before creating the key.
  * If the cluster membership changes then the keys may move to other servers.
  */
-public class MagicKey implements Serializable, ExternalPojo {
+@SerializeWith(MagicKey.Externalizer.class)
+public class MagicKey {
    /**
     * The serialVersionUID
     */
@@ -48,6 +54,14 @@ public class MagicKey implements Serializable, ExternalPojo {
    private final long unique;
    private final int segment;
    private final String address;
+
+   private MagicKey(String name, int hashcode, long unique, int segment, String address) {
+      this.name = name;
+      this.hashcode = hashcode;
+      this.unique = unique;
+      this.segment = segment;
+      this.address = address;
+   }
 
    public MagicKey(String name, Cache<?, ?> primaryOwner) {
       this.name = name;
@@ -161,5 +175,31 @@ public class MagicKey implements Serializable, ExternalPojo {
    public String toString() {
       return String.format("MagicKey%s{%X/%08X/%d@%s}", name == null ? "" : "#" + name,
          unique, hashcode, segment, address);
+   }
+
+   public static class Externalizer extends AbstractExternalizer<MagicKey> {
+      @Override
+      public Set<Class<? extends MagicKey>> getTypeClasses() {
+         return Util.asSet(MagicKey.class);
+      }
+
+      @Override
+      public void writeObject(ObjectOutput out, MagicKey key) throws IOException {
+         MarshallUtil.marshallString(key.name, out);
+         out.writeInt(key.hashcode);
+         out.writeLong(key.unique);
+         out.writeInt(key.segment);
+         MarshallUtil.marshallString(key.address, out);
+      }
+
+      @Override
+      public MagicKey readObject(ObjectInput in) throws IOException, ClassNotFoundException {
+         String name = MarshallUtil.unmarshallString(in);
+         int hashcode = in.readInt();
+         long unique = in.readLong();
+         int segment = in.readInt();
+         String address = MarshallUtil.unmarshallString(in);
+         return new MagicKey(name, hashcode, unique, segment, address);
+      }
    }
 }
