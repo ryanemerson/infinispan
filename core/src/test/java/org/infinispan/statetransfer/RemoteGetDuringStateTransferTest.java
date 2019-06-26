@@ -34,6 +34,7 @@ import org.infinispan.globalstate.NoOpGlobalConfigurationManager;
 import org.infinispan.interceptors.BaseCustomAsyncInterceptor;
 import org.infinispan.interceptors.DDAsyncInterceptor;
 import org.infinispan.manager.EmbeddedCacheManager;
+import org.infinispan.protostream.annotations.ProtoName;
 import org.infinispan.remoting.responses.Response;
 import org.infinispan.remoting.responses.UnsureResponse;
 import org.infinispan.remoting.transport.Address;
@@ -817,10 +818,10 @@ public class RemoteGetDuringStateTransferTest extends MultipleCacheManagersTest 
       return controlledRpcManager;
    }
 
-   @SuppressWarnings("unchecked")
+   @ProtoName("RemoteGetSingleKeyConsistentHashFactory")
    public static class SingleKeyConsistentHashFactory extends BaseControlledConsistentHashFactory.Default {
 
-      public SingleKeyConsistentHashFactory() {
+      SingleKeyConsistentHashFactory() {
          super(1);
       }
 

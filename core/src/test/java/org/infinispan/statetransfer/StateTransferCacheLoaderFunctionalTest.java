@@ -2,19 +2,14 @@ package org.infinispan.statetransfer;
 
 import static org.testng.Assert.assertEquals;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
-
 import org.infinispan.Cache;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.context.Flag;
 import org.infinispan.manager.EmbeddedCacheManager;
-import org.infinispan.marshall.core.ExternalPojo;
 import org.infinispan.persistence.dummy.DummyInMemoryStoreConfigurationBuilder;
 import org.infinispan.persistence.spi.CacheLoader;
+import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.test.TestingUtil;
 import org.testng.annotations.Test;
 
@@ -161,17 +156,18 @@ public class StateTransferCacheLoaderFunctionalTest extends StateTransferFunctio
       }
    }
 
-   public static class DelayedUnmarshal implements Serializable, ExternalPojo {
+   public static class DelayedUnmarshal {
 
-      private static final long serialVersionUID = 1L;
+      DelayedUnmarshal() {}
 
-      private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-         TestingUtil.sleepThread(2000);
-         in.defaultReadObject();
+      @ProtoField(number = 1, defaultValue = "false")
+      public boolean isIgnore() {
+         return false;
       }
 
-      private void writeObject(ObjectOutputStream out) throws IOException {
-         out.defaultWriteObject();
+      // Should only be called by protostream when unmarshalling
+      public void setIgnore(boolean ignore) {
+         TestingUtil.sleepThread(2000);
       }
    }
 

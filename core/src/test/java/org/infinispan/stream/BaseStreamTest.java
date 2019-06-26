@@ -5,7 +5,6 @@ import static org.testng.AssertJUnit.assertFalse;
 import static org.testng.AssertJUnit.assertTrue;
 import static org.testng.AssertJUnit.fail;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.DoubleSummaryStatistics;
@@ -46,7 +45,7 @@ import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.container.entries.ImmortalCacheEntry;
 import org.infinispan.distribution.ch.KeyPartitioner;
 import org.infinispan.manager.EmbeddedCacheManager;
-import org.infinispan.marshall.core.ExternalPojo;
+import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.test.MultipleCacheManagersTest;
 import org.infinispan.test.fwk.TestCacheManagerFactory;
 import org.infinispan.transaction.TransactionMode;
@@ -288,23 +287,35 @@ public abstract class BaseStreamTest extends MultipleCacheManagersTest {
       }
    }
 
-   private static class ForEachInjected<E> implements Consumer<E>,
-         CacheAware<Integer, String>, Serializable, ExternalPojo {
-      private transient Cache<?, ?> cache;
-      private final int cacheOffset;
-      private final int atomicOffset;
+   abstract static class AbstractForEachInjected<K, V> implements CacheAware<K,V>{
+      protected transient Cache<?, ?> cache;
+      @ProtoField(number = 1, defaultValue = "0")
+      int cacheOffset;
 
-      private final ToIntFunction<? super E> function;
+      @ProtoField(number = 2, defaultValue = "0")
+      int atomicOffset;
 
-      private ForEachInjected(int cacheOffset, int atomicOffset, SerializableToIntFunction<? super E> function) {
+      AbstractForEachInjected() {}
+
+      AbstractForEachInjected(int cacheOffset, int atomicOffset) {
          this.cacheOffset = cacheOffset;
          this.atomicOffset = atomicOffset;
-         this.function = function;
       }
 
       @Override
-      public void injectCache(Cache<Integer, String> cache) {
+      public void injectCache(Cache<K, V> cache) {
          this.cache = cache;
+      }
+   }
+
+   public static class ForEachInjected<E> extends AbstractForEachInjected<Integer, String> implements Consumer<E> {
+      private ToIntFunction<? super E> function;
+
+      ForEachInjected() {}
+
+      private ForEachInjected(int cacheOffset, int atomicOffset, SerializableToIntFunction<? super E> function) {
+         super(cacheOffset, atomicOffset);
+         this.function = function;
       }
 
       @Override
@@ -856,20 +867,12 @@ public abstract class BaseStreamTest extends MultipleCacheManagersTest {
       }
    }
 
-   private static class ForEachIntInjected implements IntConsumer,
-         CacheAware<Integer, String>, Serializable, ExternalPojo {
-      private transient Cache<?, ?> cache;
-      private final int cacheOffset;
-      private final int atomicOffset;
+   public static class ForEachIntInjected extends AbstractForEachInjected<Integer, String> implements IntConsumer {
+
+      ForEachIntInjected() {}
 
       private ForEachIntInjected(int cacheOffset, int atomicOffset) {
-         this.cacheOffset = cacheOffset;
-         this.atomicOffset = atomicOffset;
-      }
-
-      @Override
-      public void injectCache(Cache<Integer, String> cache) {
-         this.cache = cache;
+         super(cacheOffset, atomicOffset);
       }
 
       @Override
@@ -1318,20 +1321,12 @@ public abstract class BaseStreamTest extends MultipleCacheManagersTest {
       }
    }
 
-   private static class ForEachLongInjected implements LongConsumer,
-         CacheAware<Long, String>, Serializable, ExternalPojo {
-      private transient Cache<?, ?> cache;
-      private final int cacheOffset;
-      private final int atomicOffset;
+   public static class ForEachLongInjected extends AbstractForEachInjected<Long, String> implements LongConsumer {
+
+      ForEachLongInjected() {}
 
       private ForEachLongInjected(int cacheOffset, int atomicOffset) {
-         this.cacheOffset = cacheOffset;
-         this.atomicOffset = atomicOffset;
-      }
-
-      @Override
-      public void injectCache(Cache<Long, String> cache) {
-         this.cache = cache;
+         super(cacheOffset, atomicOffset);
       }
 
       @Override
@@ -1789,20 +1784,12 @@ public abstract class BaseStreamTest extends MultipleCacheManagersTest {
       }
    }
 
-   private static class ForEachDoubleInjected<E> implements DoubleConsumer,
-         CacheAware<Double, String>, Serializable, ExternalPojo {
-      private transient Cache<?, ?> cache;
-      private final int cacheOffset;
-      private final int atomicOffset;
+   public static class ForEachDoubleInjected<E> extends AbstractForEachInjected<Double, String> implements DoubleConsumer {
+
+      ForEachDoubleInjected() {}
 
       private ForEachDoubleInjected(int cacheOffset, int atomicOffset) {
-         this.cacheOffset = cacheOffset;
-         this.atomicOffset = atomicOffset;
-      }
-
-      @Override
-      public void injectCache(Cache<Double, String> cache) {
-         this.cache = cache;
+         super(cacheOffset, atomicOffset);
       }
 
       @Override

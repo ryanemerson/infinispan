@@ -1,19 +1,19 @@
 package org.infinispan.test.data;
 
-import java.io.Externalizable;
 import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.concurrent.TimeUnit;
 
-import org.infinispan.marshall.core.ExternalPojo;
+import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.util.concurrent.ReclosableLatch;
 
-public class Key implements Externalizable, ExternalPojo {
-   private static final long serialVersionUID = 4745232904453872125L;
+public class Key {
 
-   private String value;
+   @ProtoField(number = 1)
+   String value;
+
    private final ReclosableLatch latch = new ReclosableLatch(false);
    private final boolean lockable;
 

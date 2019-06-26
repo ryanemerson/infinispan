@@ -33,9 +33,9 @@ import org.infinispan.remoting.transport.Address;
 import org.infinispan.test.MultipleCacheManagersTest;
 import org.infinispan.test.TestingUtil;
 import org.infinispan.topology.CacheTopology;
-import org.infinispan.util.ControlledRpcManager;
 import org.infinispan.util.BaseControlledConsistentHashFactory;
 import org.infinispan.util.BlockingLocalTopologyManager;
+import org.infinispan.util.ControlledRpcManager;
 import org.infinispan.util.concurrent.IsolationLevel;
 import org.infinispan.util.logging.LogFactory;
 import org.testng.annotations.AfterMethod;
@@ -318,7 +318,7 @@ public class WriteSkewDuringStateTransferTest extends MultipleCacheManagersTest 
 
    public static class ConsistentHashFactoryImpl extends BaseControlledConsistentHashFactory.Default {
 
-      public ConsistentHashFactoryImpl() {
+      ConsistentHashFactoryImpl() {
          super(1);
       }
 

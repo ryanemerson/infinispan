@@ -37,6 +37,7 @@ import org.infinispan.statetransfer.OutdatedTopologyException;
 import org.infinispan.topology.CacheJoinException;
 import org.infinispan.transaction.WriteSkewException;
 import org.infinispan.transaction.xa.InvalidTransactionException;
+import org.infinispan.util.UserRaisedFunctionalException;
 import org.infinispan.util.concurrent.locks.DeadlockDetectedException;
 
 public class ThrowableExternalizer implements AdvancedExternalizer<Throwable> {
@@ -70,7 +71,8 @@ public class ThrowableExternalizer implements AdvancedExternalizer<Throwable> {
    private static final short RPC = 21;
    private static final short SUSPECT = 22;
    private static final short TIMEOUT = 23;
-   private static final short WRITE_SKEW = 24;
+   private static final short USER_RAISED_FUNCTIONAL = 24;
+   private static final short WRITE_SKEW = 25;
    private final Map<Class<?>, Short> numbers = new HashMap<>(24);
 
    public ThrowableExternalizer() {
@@ -96,6 +98,7 @@ public class ThrowableExternalizer implements AdvancedExternalizer<Throwable> {
       numbers.put(RpcException.class, RPC);
       numbers.put(SuspectException.class, SUSPECT);
       numbers.put(TimeoutException.class, TIMEOUT);
+      numbers.put(UserRaisedFunctionalException.class, USER_RAISED_FUNCTIONAL);
       numbers.put(WriteSkewException.class, WRITE_SKEW);
       numbers.put(OutdatedTopologyException.class, OUTDATED_TOPOLOGY);
    }
@@ -146,6 +149,9 @@ public class ThrowableExternalizer implements AdvancedExternalizer<Throwable> {
          case OUTDATED_TOPOLOGY:
             OutdatedTopologyException ote = (OutdatedTopologyException) t;
             out.writeBoolean(ote.topologyIdDelta == 0);
+            break;
+         case USER_RAISED_FUNCTIONAL:
+            out.writeObject(t.getCause());
             break;
          case WRITE_SKEW:
             WriteSkewException wse = (WriteSkewException) t;
@@ -243,6 +249,9 @@ public class ThrowableExternalizer implements AdvancedExternalizer<Throwable> {
          case TIMEOUT:
             msg = MarshallUtil.unmarshallString(in);
             return new TimeoutException(msg);
+         case USER_RAISED_FUNCTIONAL:
+            t = (Throwable) in.readObject();
+            return new UserRaisedFunctionalException(t);
          case WRITE_SKEW:
             msg = MarshallUtil.unmarshallString(in);
             t = (Throwable) in.readObject();
@@ -268,10 +277,21 @@ public class ThrowableExternalizer implements AdvancedExternalizer<Throwable> {
       String msg = MarshallUtil.unmarshallString(in);
       Throwable t = (Throwable) in.readObject();
       try {
-         Constructor<?> ctor = Class.forName(impl).getConstructor(String.class, Throwable.class);
-         return (Throwable) ctor.newInstance(new Object[]{msg, t});
+         Class clazz = Class.forName(impl);
+         return getConstrucor(clazz, msg, t);
       } catch (IllegalAccessException | InstantiationException | InvocationTargetException | NoSuchMethodException e) {
          throw new MarshallingException(e);
       }
+   }
+
+   private Throwable getConstrucor(Class<?> clazz, String msg, Throwable t) throws IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException {
+      if (t == null && msg == null) {
+         return (Throwable) clazz.getConstructor().newInstance();
+      } else if (t == null) {
+         return (Throwable) clazz.getConstructor(String.class).newInstance(msg);
+      } else if (msg == null) {
+         return (Throwable) clazz.getConstructor(Throwable.class).newInstance(t);
+      }
+      return (Throwable) clazz.getConstructor(String.class, Throwable.class).newInstance(msg, t);
    }
 }

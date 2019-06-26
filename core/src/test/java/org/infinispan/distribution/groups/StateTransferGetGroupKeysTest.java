@@ -20,6 +20,7 @@ import org.infinispan.distribution.ch.ConsistentHash;
 import org.infinispan.interceptors.AsyncInterceptorChain;
 import org.infinispan.interceptors.base.CommandInterceptor;
 import org.infinispan.interceptors.impl.EntryWrappingInterceptor;
+import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.test.fwk.CheckPoint;
 import org.infinispan.util.BaseControlledConsistentHashFactory;
@@ -149,8 +150,12 @@ public class StateTransferGetGroupKeysTest extends BaseUtilGroupTest {
    }
 
 
-   private static class CustomConsistentHashFactory<CH extends ConsistentHash> extends BaseControlledConsistentHashFactory<CH> {
-      private final CacheMode cacheMode;
+   public static class CustomConsistentHashFactory<CH extends ConsistentHash> extends BaseControlledConsistentHashFactory<CH> {
+
+      @ProtoField(number = 2)
+      CacheMode cacheMode;
+
+      CustomConsistentHashFactory() {}
 
       private CustomConsistentHashFactory(Trait<CH> trait, CacheMode cacheMode) {
          super(trait, 1);

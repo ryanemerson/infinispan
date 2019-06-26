@@ -1,16 +1,16 @@
 package org.infinispan.statetransfer;
 
-import java.io.Serializable;
+import org.infinispan.protostream.annotations.ProtoField;
 
-import org.infinispan.marshall.core.ExternalPojo;
+public class BigObject {
 
-public class BigObject implements Serializable, ExternalPojo {
+    @ProtoField(number = 1)
+    String name;
 
-    private static final long serialVersionUID = 1L;
+    @ProtoField(number = 2)
+    String value;
 
-    private String name;
-
-    private String value;
+    BigObject() {}
 
     public String getName() {
         return name;
