@@ -76,7 +76,7 @@ import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.marshall.core.ExternalPojo;
 import org.infinispan.marshall.core.JBossMarshallingTest.CustomReadObjectMethod;
 import org.infinispan.marshall.core.JBossMarshallingTest.ObjectThatContainsACustomReadObjectMethod;
-import org.infinispan.marshall.core.MarshallingException;
+import org.infinispan.commons.marshall.MarshallingException;
 import org.infinispan.metadata.EmbeddedMetadata;
 import org.infinispan.remoting.MIMECacheEntry;
 import org.infinispan.remoting.responses.ExceptionResponse;

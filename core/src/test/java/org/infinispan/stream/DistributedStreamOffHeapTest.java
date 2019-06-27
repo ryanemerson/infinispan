@@ -7,6 +7,7 @@ import org.testng.annotations.Test;
 /**
  * Verifies stream tests work on a regular distrbuted stream with off heap enabled
  */
+// TODO fix problem with NullPointerException
 @Test(groups = "functional", testName = "streams.DistributedStreamOffHeapTest")
 public class DistributedStreamOffHeapTest extends DistributedStreamTest {
    @Override

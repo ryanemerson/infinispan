@@ -19,7 +19,7 @@ import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.context.InvocationContext;
 import org.infinispan.interceptors.base.CommandInterceptor;
 import org.infinispan.marshall.core.ExternalPojo;
-import org.infinispan.marshall.core.MarshallingException;
+import org.infinispan.commons.marshall.MarshallingException;
 import org.infinispan.test.MultipleCacheManagersTest;
 import org.infinispan.test.TestingUtil;
 import org.infinispan.transaction.lookup.EmbeddedTransactionManagerLookup;

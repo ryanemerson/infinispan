@@ -45,7 +45,7 @@ public class AsyncAPITxSyncReplTest extends MultipleCacheManagersTest {
       String v5 = "v5";
       String v6 = "v6";
       String v_null = "v_nonexistent";
-      Key key = new Key("k", false);
+      Key key = new Key("k");
       TransactionManager tm = TestingUtil.getTransactionManager(c1);
 
       // put

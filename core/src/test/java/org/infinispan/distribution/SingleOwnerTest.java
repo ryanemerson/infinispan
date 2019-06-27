@@ -16,7 +16,7 @@ import org.infinispan.Cache;
 import org.infinispan.commons.marshall.AbstractExternalizer;
 import org.infinispan.commons.marshall.SerializeWith;
 import org.infinispan.manager.EmbeddedCacheManager;
-import org.infinispan.marshall.core.MarshallingException;
+import org.infinispan.commons.marshall.MarshallingException;
 import org.infinispan.remoting.RemoteException;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.test.Exceptions;
@@ -84,7 +84,7 @@ public class SingleOwnerTest extends BaseDistFunctionalTest<Object, String> {
       ownerCache.put("yourkey", new Object());
       try {
          nonOwnerCache.get("yourkey");
-         fail("Should have failed with a org.infinispan.marshall.core.MarshallingException");
+         fail("Should have failed with a org.infinispan.commons.marshall.MarshallingException");
       } catch (RemoteException e) {
          assertTrue(e.getCause() instanceof MarshallingException);
       }

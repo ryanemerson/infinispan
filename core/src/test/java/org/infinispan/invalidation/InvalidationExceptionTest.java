@@ -3,7 +3,7 @@ package org.infinispan.invalidation;
 import org.infinispan.AdvancedCache;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
-import org.infinispan.marshall.core.MarshallingException;
+import org.infinispan.commons.marshall.MarshallingException;
 import org.infinispan.replication.ReplicationExceptionTest;
 import org.infinispan.test.MultipleCacheManagersTest;
 import org.testng.annotations.Test;

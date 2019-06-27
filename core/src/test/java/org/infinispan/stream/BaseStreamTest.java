@@ -287,7 +287,7 @@ public abstract class BaseStreamTest extends MultipleCacheManagersTest {
       }
    }
 
-   abstract static class AbstractForEachInjected<K, V> implements CacheAware<K,V>{
+   abstract static class AbstractForEachInjected<K, V> implements CacheAware<K,V> {
       protected transient Cache<?, ?> cache;
       @ProtoField(number = 1, defaultValue = "0")
       int cacheOffset;

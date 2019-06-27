@@ -14,6 +14,7 @@ import org.infinispan.commons.marshall.AdvancedExternalizer;
 import org.infinispan.commons.marshall.WrappedByteArray;
 import org.infinispan.commons.marshall.exts.EquivalenceExternalizer;
 import org.infinispan.commons.tx.XidImpl;
+import org.infinispan.commons.util.ImmutableListCopy;
 import org.infinispan.commons.util.Immutables;
 import org.infinispan.compat.BiFunctionMapper;
 import org.infinispan.compat.FunctionMapper;
@@ -266,6 +267,7 @@ final class InternalExternalizers {
       addInternalExternalizer(new ClassExternalizer(), exts);
       addInternalExternalizer(new ClusterCacheStatsImpl.DistributedCacheStatsCallableExternalizer(), exts);
       addInternalExternalizer(ThrowableExternalizer.INSTANCE, exts);
+      addInternalExternalizer(new ImmutableListCopy.Externalizer(), exts);
 
       return exts;
    }

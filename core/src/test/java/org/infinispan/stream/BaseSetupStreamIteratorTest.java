@@ -26,6 +26,7 @@ import org.infinispan.filter.Converter;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.metadata.Metadata;
 import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.protostream.annotations.ProtoName;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.stream.impl.ClusterStreamManager;
 import org.infinispan.test.MultipleCacheManagersTest;
@@ -92,6 +93,7 @@ public abstract class BaseSetupStreamIteratorTest extends MultipleCacheManagersT
       return stream.collect(() -> Collectors.toMap(CacheEntry::getKey, CacheEntry::getValue));
    }
 
+   @ProtoName("BaseSetupStreamStringTrunctator")
    public static class StringTruncator implements Converter<Object, String, String> {
       @ProtoField(number = 1, defaultValue = "0")
       int beginning;
@@ -137,7 +139,7 @@ public abstract class BaseSetupStreamIteratorTest extends MultipleCacheManagersT
       }
    }
 
-   private static class TestScatteredConsistentHashFactory
+   public static class TestScatteredConsistentHashFactory
          extends BaseControlledConsistentHashFactory<ScatteredConsistentHash> {
       TestScatteredConsistentHashFactory() {
          super(new ScatteredTrait(), 3);

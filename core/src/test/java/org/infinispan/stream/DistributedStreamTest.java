@@ -8,6 +8,7 @@ import org.testng.annotations.Test;
 /**
  * Verifies stream tests work on a regular distrbuted stream
  */
+// TODO fix problem with NullPointerException
 @Test(groups = "functional", testName = "streams.DistributedStreamTest")
 public class DistributedStreamTest extends BaseStreamTest {
 

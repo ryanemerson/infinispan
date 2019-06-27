@@ -4,7 +4,6 @@ package org.infinispan.marshall.exts;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
@@ -24,7 +23,7 @@ import org.infinispan.interceptors.distribution.ConcurrentChangeException;
 import org.infinispan.interceptors.impl.ContainerFullException;
 import org.infinispan.manager.EmbeddedCacheManagerStartupException;
 import org.infinispan.marshall.core.Ids;
-import org.infinispan.marshall.core.MarshallingException;
+import org.infinispan.commons.marshall.MarshallingException;
 import org.infinispan.notifications.IncorrectListenerException;
 import org.infinispan.partitionhandling.AvailabilityException;
 import org.infinispan.persistence.spi.PersistenceException;
@@ -265,6 +264,7 @@ public class ThrowableExternalizer implements AdvancedExternalizer<Throwable> {
    private void writeMessageAndCause(ObjectOutput out, Throwable t) throws IOException {
       MarshallUtil.marshallString(t.getMessage(), out);
       out.writeObject(t.getCause());
+      // TODO add StackTraceElement externalizer and write
    }
 
    private void writeGenericThrowable(ObjectOutput out, Throwable t) throws IOException {
@@ -272,26 +272,22 @@ public class ThrowableExternalizer implements AdvancedExternalizer<Throwable> {
       writeMessageAndCause(out, t);
    }
 
-   private Throwable readGenericThrowable(ObjectInput in) throws IOException, ClassNotFoundException{
+   private Throwable readGenericThrowable(ObjectInput in) throws IOException, ClassNotFoundException {
       String impl = in.readUTF();
       String msg = MarshallUtil.unmarshallString(in);
       Throwable t = (Throwable) in.readObject();
       try {
-         Class clazz = Class.forName(impl);
-         return getConstrucor(clazz, msg, t);
+         Class<?> clazz = Class.forName(impl);
+         if (t == null && msg == null) {
+            return (Throwable) clazz.getConstructor().newInstance(new Object[]{});
+         } else if (t == null) {
+            return (Throwable) clazz.getConstructor(String.class).newInstance(msg);
+         } else if (msg == null) {
+            return (Throwable) clazz.getConstructor(Throwable.class).newInstance(t);
+         }
+         return (Throwable) clazz.getConstructor(String.class, Throwable.class).newInstance(msg, t);
       } catch (IllegalAccessException | InstantiationException | InvocationTargetException | NoSuchMethodException e) {
          throw new MarshallingException(e);
       }
-   }
-
-   private Throwable getConstrucor(Class<?> clazz, String msg, Throwable t) throws IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException {
-      if (t == null && msg == null) {
-         return (Throwable) clazz.getConstructor().newInstance();
-      } else if (t == null) {
-         return (Throwable) clazz.getConstructor(String.class).newInstance(msg);
-      } else if (msg == null) {
-         return (Throwable) clazz.getConstructor(Throwable.class).newInstance(t);
-      }
-      return (Throwable) clazz.getConstructor(String.class, Throwable.class).newInstance(msg, t);
    }
 }
