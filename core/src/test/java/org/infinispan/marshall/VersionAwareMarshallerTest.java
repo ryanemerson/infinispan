@@ -48,6 +48,7 @@ import org.infinispan.commands.write.RemoveCommand;
 import org.infinispan.commands.write.ReplaceCommand;
 import org.infinispan.commons.hash.MurmurHash3;
 import org.infinispan.commons.marshall.AdvancedExternalizer;
+import org.infinispan.commons.marshall.MarshallingException;
 import org.infinispan.commons.marshall.PojoWithSerializeWith;
 import org.infinispan.commons.marshall.SerializeWith;
 import org.infinispan.commons.marshall.StreamingMarshaller;
@@ -74,10 +75,8 @@ import org.infinispan.distribution.ch.impl.DefaultConsistentHash;
 import org.infinispan.distribution.ch.impl.DefaultConsistentHashFactory;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.marshall.core.ExternalPojo;
-import org.infinispan.marshall.core.JBossMarshallingTest.CustomReadObjectMethod;
-import org.infinispan.marshall.core.JBossMarshallingTest.ObjectThatContainsACustomReadObjectMethod;
-import org.infinispan.commons.marshall.MarshallingException;
 import org.infinispan.metadata.EmbeddedMetadata;
+import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.remoting.MIMECacheEntry;
 import org.infinispan.remoting.responses.ExceptionResponse;
 import org.infinispan.remoting.responses.UnsuccessfulResponse;
@@ -87,6 +86,7 @@ import org.infinispan.remoting.transport.jgroups.JGroupsAddress;
 import org.infinispan.statetransfer.StateRequestCommand;
 import org.infinispan.test.AbstractInfinispanTest;
 import org.infinispan.test.TestingUtil;
+import org.infinispan.test.data.BrokenMarshallingPojo;
 import org.infinispan.test.fwk.TestCacheManagerFactory;
 import org.infinispan.test.fwk.TestInternalCacheEntryFactory;
 import org.infinispan.transaction.xa.GlobalTransaction;
@@ -95,7 +95,6 @@ import org.infinispan.util.ByteString;
 import org.infinispan.util.concurrent.TimeoutException;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
-import org.jboss.marshalling.TraceInformation;
 import org.jgroups.stack.IpAddress;
 import org.jgroups.util.UUID;
 import org.testng.annotations.AfterClass;
@@ -191,14 +190,6 @@ public class VersionAwareMarshallerTest extends AbstractInfinispanTest {
       }
       marshallAndAssertEquality(s1);
       marshallAndAssertEquality(s2);
-   }
-
-   public void testTreeSetWithComparator() throws Exception {
-      Set<Human> treeSet = new TreeSet<>(new HumanComparator());
-      for (int i = 0; i < 10; i++) {
-         treeSet.add(new Human().age(i));
-      }
-      marshallAndAssertEquality(treeSet);
    }
 
    public void testSingletonListMarshalling() throws Exception {
@@ -360,12 +351,6 @@ public class VersionAwareMarshallerTest extends AbstractInfinispanTest {
       assert rer.getException().getClass().equals(er.getException().getClass()) : "Writen[" + er.getException().getClass() + "] and read[" + rer.getException().getClass() + "] objects should be the same";
    }
 
-   public void testMarshallObjectThatContainsACustomReadObjectMethod() throws Exception {
-      ObjectThatContainsACustomReadObjectMethod obj = new ObjectThatContainsACustomReadObjectMethod();
-      obj.anObjectWithCustomReadObjectMethod = new CustomReadObjectMethod();
-      marshallAndAssertEquality(obj);
-   }
-
    public void testMIMECacheEntryMarshalling() throws Exception {
       MIMECacheEntry entry = new MIMECacheEntry("rm", new byte[] {1, 2, 3});
       byte[] bytes = marshaller.objectToByteBuffer(entry);
@@ -408,38 +393,11 @@ public class VersionAwareMarshallerTest extends AbstractInfinispanTest {
 
    }
 
+   @Test(expectedExceptions = MarshallingException.class)
    public void testErrorUnmarshalling() throws Exception {
-      Pojo pojo = new PojoWhichFailsOnUnmarshalling();
-      byte[] bytes = marshaller.objectToByteBuffer(pojo);
-      try {
-         marshaller.objectFromByteBuffer(bytes);
-      } catch (MarshallingException e) {
-         log.info("Log exception for output format verification", e);
-         IOException ioEx = (IOException) e.getCause();
-         TraceInformation inf = (TraceInformation) ioEx.getCause();
-         if (inf != null)
-            assert inf.toString().contains("in object of type org.infinispan.marshall.VersionAwareMarshallerTest$PojoWhichFailsOnUnmarshalling");
-      }
-
-   }
-
-   public void testMarshallingSerializableSubclass() throws Exception {
-      Child1 child1Obj = new Child1(1234, "1234");
-      byte[] bytes = marshaller.objectToByteBuffer(child1Obj);
-      Child1 readChild1 = (Child1) marshaller.objectFromByteBuffer(bytes);
-      assertEquals(1234, readChild1.someInt);
-      assertEquals("1234", readChild1.getId());
-   }
-
-   public void testMarshallingNestedSerializableSubclass() throws Exception {
-      Child1 child1Obj = new Child1(1234, "1234");
-      Child2 child2Obj = new Child2(2345, "2345", child1Obj);
-      byte[] bytes = marshaller.objectToByteBuffer(child2Obj);
-      Child2 readChild2 = (Child2) marshaller.objectFromByteBuffer(bytes);
-      assertEquals(2345, readChild2.someInt);
-      assertEquals("2345", readChild2.getId());
-      assertEquals(1234, readChild2.getChild1Obj().someInt);
-      assertEquals("1234", readChild2.getChild1Obj().getId());
+      BrokenMarshallingPojo bmp = new BrokenMarshallingPojo(false);
+      byte[] bytes = marshaller.objectToByteBuffer(bmp);
+      marshaller.objectFromByteBuffer(bytes);
    }
 
    public void testErrorUnmarshallInputStreamAvailable() throws Exception {
@@ -583,10 +541,13 @@ public class VersionAwareMarshallerTest extends AbstractInfinispanTest {
    }
 
    public static class Pojo implements I, Externalizable, ExternalPojo {
-      int i;
-      boolean b;
-      static int serializationCount, deserializationCount;
       private static final long serialVersionUID = 9032309454840083326L;
+
+      @ProtoField(number = 1, defaultValue = "0")
+      int i;
+
+      @ProtoField(number = 2, defaultValue = "false")
+      boolean b;
 
       public Pojo() {}
 
@@ -628,14 +589,12 @@ public class VersionAwareMarshallerTest extends AbstractInfinispanTest {
       public void writeExternal(ObjectOutput out) throws IOException {
          out.writeInt(i);
          out.writeBoolean(b);
-         serializationCount++;
       }
 
       @Override
       public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
          i = in.readInt();
          b = in.readBoolean();
-         deserializationCount++;
       }
    }
 
@@ -728,47 +687,14 @@ public class VersionAwareMarshallerTest extends AbstractInfinispanTest {
       }
    }
 
-   static class Parent implements Serializable, ExternalPojo {
-       private final String id;
-       private final Child1 child1Obj;
+   public static class Human implements Serializable, ExternalPojo {
 
-       public Parent(String id, Child1 child1Obj) {
-           this.id = id;
-           this.child1Obj = child1Obj;
-       }
-
-       public String getId() {
-           return id;
-       }
-       public Child1 getChild1Obj() {
-           return child1Obj;
-       }
-   }
-
-   static class Child1 extends Parent {
-       private final int someInt;
-
-       public Child1(int someInt, String parentStr) {
-           super(parentStr, null);
-           this.someInt = someInt;
-       }
-
-   }
-
-   static class Child2 extends Parent {
-       private final int someInt;
-
-       public Child2(int someInt, String parentStr, Child1 child1Obj) {
-           super(parentStr, child1Obj);
-           this.someInt = someInt;
-       }
-   }
-
-   static class Human implements Serializable, ExternalPojo {
-
+      @ProtoField(number = 1, defaultValue = "0")
       int age;
 
-      Human age(int age) {
+      Human() {}
+
+      public Human age(int age) {
          this.age = age;
          return this;
       }
@@ -790,7 +716,7 @@ public class VersionAwareMarshallerTest extends AbstractInfinispanTest {
       }
    }
 
-   static class HumanComparator implements Comparator<Human>, Serializable, ExternalPojo {
+   public static class HumanComparator implements Comparator<Human>, Serializable, ExternalPojo {
 
       @Override
       public int compare(Human o1, Human o2) {
@@ -801,9 +727,15 @@ public class VersionAwareMarshallerTest extends AbstractInfinispanTest {
 
    }
 
-   static class PojoWithExternalAndInternal {
-      final Human human;
-      final String value;
+   public static class PojoWithExternalAndInternal {
+
+      @ProtoField(number = 1)
+      Human human;
+
+      @ProtoField(number = 2)
+      String value;
+
+      PojoWithExternalAndInternal() {}
 
       PojoWithExternalAndInternal(Human human, String value) {
          this.human = human;

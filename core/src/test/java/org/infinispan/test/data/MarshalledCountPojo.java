@@ -6,6 +6,7 @@ import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 
+// TODO rename CountMarshallingPojo
 public class MarshalledCountPojo {
    private static final Log log = LogFactory.getLog(MarshalledCountPojo.class);
 

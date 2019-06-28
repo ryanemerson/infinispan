@@ -17,6 +17,7 @@ import org.infinispan.notifications.cachelistener.event.CacheEntryEvent;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.test.Exceptions;
 import org.infinispan.test.MultipleCacheManagersTest;
+import org.infinispan.test.data.BrokenMarshallingPojo;
 import org.testng.annotations.Test;
 
 // TODO fix tests
@@ -129,19 +130,6 @@ public class TransportSenderExceptionHandlingTest extends MultipleCacheManagersT
             throw new ClassCircularityError();
          else
             return super.visitPutKeyValueCommand(ctx, command);
-      }
-   }
-
-   public static class BrokenMarshallingPojo {
-
-      BrokenMarshallingPojo() {}
-
-      @ProtoField(number = 1, defaultValue = "true")
-      public boolean getIgnored() {
-         throw new MarshallingException();
-      }
-
-      public void setIgnored(boolean ignore) {
       }
    }
 }

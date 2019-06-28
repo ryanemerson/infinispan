@@ -9,8 +9,8 @@ import org.infinispan.context.Flag;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.persistence.dummy.DummyInMemoryStoreConfigurationBuilder;
 import org.infinispan.persistence.spi.CacheLoader;
-import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.test.TestingUtil;
+import org.infinispan.test.data.DelayedMarshallingPojo;
 import org.testng.annotations.Test;
 
 @Test(groups = "functional", testName = "statetransfer.StateTransferCacheLoaderFunctionalTest")
@@ -112,9 +112,9 @@ public class StateTransferCacheLoaderFunctionalTest extends StateTransferFunctio
          verifyNoData(cache1);
 
          // write initial data
-         cache1.put("A", new DelayedUnmarshal());
-         cache1.put("B", new DelayedUnmarshal());
-         cache1.put("C", new DelayedUnmarshal());
+         cache1.put("A", new DelayedMarshallingPojo(0, 2000));
+         cache1.put("B", new DelayedMarshallingPojo(0, 2000));
+         cache1.put("C", new DelayedMarshallingPojo(0, 2000));
          assertEquals(cache1.size(), 3);
          cm1.stop();
 
@@ -155,20 +155,4 @@ public class StateTransferCacheLoaderFunctionalTest extends StateTransferFunctio
          sharedCacheLoader.set(false);
       }
    }
-
-   public static class DelayedUnmarshal {
-
-      DelayedUnmarshal() {}
-
-      @ProtoField(number = 1, defaultValue = "false")
-      public boolean isIgnore() {
-         return false;
-      }
-
-      // Should only be called by protostream when unmarshalling
-      public void setIgnore(boolean ignore) {
-         TestingUtil.sleepThread(2000);
-      }
-   }
-
 }
