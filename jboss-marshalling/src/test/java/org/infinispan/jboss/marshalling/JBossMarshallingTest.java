@@ -1,4 +1,4 @@
-package org.infinispan.marshall.core;
+package org.infinispan.jboss.marshalling;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
 
+import org.infinispan.marshall.core.ExternalPojo;
 import org.infinispan.test.AbstractInfinispanTest;
 import org.jboss.marshalling.ByteInput;
 import org.jboss.marshalling.ByteOutput;

@@ -8,7 +8,6 @@ import static org.junit.Assert.assertTrue;
 import java.time.Instant;
 import java.util.Date;
 
-import org.infinispan.protostream.ProtobufUtil;
 import org.junit.Test;
 
 /**
@@ -36,7 +35,7 @@ public class ProtoStreamMarshallerTest {
    }
 
    private void roundtrip(Object in) throws Exception {
-      ProtoStreamMarshaller marshaller = new ProtoStreamMarshaller(ProtobufUtil.newSerializationContext());
+      ProtoStreamMarshaller marshaller = new ProtoStreamMarshaller();
 
       assertTrue(marshaller.isMarshallable(in));
 

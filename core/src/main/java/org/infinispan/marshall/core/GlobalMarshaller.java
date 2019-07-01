@@ -35,7 +35,9 @@ import org.infinispan.factories.annotations.Start;
 import org.infinispan.factories.annotations.Stop;
 import org.infinispan.factories.scopes.Scope;
 import org.infinispan.factories.scopes.Scopes;
-import org.infinispan.marshall.core.ClassToExternalizerMap.IdToExternalizerMap;
+import org.infinispan.marshall.core.impl.ClassToExternalizerMap;
+import org.infinispan.marshall.core.impl.ClassToExternalizerMap.IdToExternalizerMap;
+import org.infinispan.marshall.core.impl.ExternalExternalizers;
 import org.infinispan.marshall.exts.ThrowableExternalizer;
 import org.infinispan.marshall.persistence.PersistenceMarshaller;
 import org.infinispan.util.function.SerializableFunction;
@@ -56,14 +58,14 @@ public class GlobalMarshaller implements StreamingMarshaller {
    private static final Log log = LogFactory.getLog(GlobalMarshaller.class);
    private static final boolean trace = log.isTraceEnabled();
 
-   static final int NOT_FOUND                      = -1;
+   public static final int NOT_FOUND                      = -1;
 
-   static final int ID_NULL                        = 0x00;
-   static final int ID_PRIMITIVE                   = 0x01;
-   static final int ID_INTERNAL                    = 0x02;
-   static final int ID_EXTERNAL                    = 0x03;
-   static final int ID_ANNOTATED                   = 0x04;
-   static final int ID_UNKNOWN                     = 0x05;
+   public static final int ID_NULL                        = 0x00;
+   public static final int ID_PRIMITIVE                   = 0x01;
+   public static final int ID_INTERNAL                    = 0x02;
+   public static final int ID_EXTERNAL                    = 0x03;
+   public static final int ID_ANNOTATED                   = 0x04;
+   public static final int ID_UNKNOWN                     = 0x05;
    /**
     * The array will be encoded as follows:
     *
@@ -694,8 +696,6 @@ public class GlobalMarshaller implements StreamingMarshaller {
          throw new CacheException(e);
       }
    }
-
-
 
    private void writePrimitive(Object obj, BytesObjectOutput out, int id) throws IOException {
       out.writeByte(ID_PRIMITIVE);

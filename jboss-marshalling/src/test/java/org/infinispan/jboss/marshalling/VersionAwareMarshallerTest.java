@@ -6,14 +6,27 @@ import static org.testng.AssertJUnit.assertTrue;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;
-import java.util.Comparator;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.infinispan.commons.marshall.NotSerializableException;
 import org.infinispan.marshall.core.ExternalPojo;
-import org.infinispan.marshall.core.JBossMarshallingTest;
+import org.testng.annotations.Test;
 
 public class VersionAwareMarshallerTest extends org.infinispan.marshall.VersionAwareMarshallerTest {
+
+   @Override
+   @Test(expectedExceptions = NotSerializableException.class)
+   public void testNestedNonMarshallable() throws Exception {
+      super.testNestedNonMarshallable();
+   }
+
+   @Override
+   @Test(expectedExceptions = NotSerializableException.class)
+   public void testNonMarshallable() throws Exception {
+      super.testNonMarshallable();
+   }
+
    public void testPojoWithJBossMarshallingExternalizer(Method m) throws Exception {
       PojoWithJBossExternalize pojo = new PojoWithJBossExternalize(27, k(m));
       marshallAndAssertEquality(pojo);

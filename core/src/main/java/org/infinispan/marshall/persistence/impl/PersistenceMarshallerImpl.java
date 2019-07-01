@@ -14,7 +14,7 @@ import org.infinispan.commons.io.ByteBufferImpl;
 import org.infinispan.commons.marshall.BufferSizePredictor;
 import org.infinispan.commons.marshall.Marshaller;
 import org.infinispan.commons.marshall.MarshallingException;
-import org.infinispan.commons.marshall.proto.ProtoStreamMarshaller;
+import org.infinispan.commons.marshall.proto.ProtoStreamUserMarshaller;
 import org.infinispan.configuration.global.GlobalConfiguration;
 import org.infinispan.factories.GlobalComponentRegistry;
 import org.infinispan.factories.annotations.Inject;
@@ -77,7 +77,7 @@ public class PersistenceMarshallerImpl implements PersistenceMarshaller {
          SerializationContext userSerCtx = ProtobufUtil.newSerializationContext();
          SerializationContextInitializer sci = globalCfg.serialization().contextInitializer();
          register(userSerCtx, sci);
-         userMarshaller = new ProtoStreamMarshaller(userSerCtx);
+         userMarshaller = new ProtoStreamUserMarshaller(userSerCtx);
 
       }
       userMarshaller.start();

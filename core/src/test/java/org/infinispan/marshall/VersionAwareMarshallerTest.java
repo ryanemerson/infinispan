@@ -692,7 +692,7 @@ public class VersionAwareMarshallerTest extends AbstractInfinispanTest {
       @ProtoField(number = 1, defaultValue = "0")
       int age;
 
-      Human() {}
+      public Human() {}
 
       public Human age(int age) {
          this.age = age;

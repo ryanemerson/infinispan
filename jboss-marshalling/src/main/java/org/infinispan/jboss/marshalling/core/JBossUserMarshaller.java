@@ -7,8 +7,8 @@ import java.io.IOException;
 
 import org.infinispan.commons.marshall.AdvancedExternalizer;
 import org.infinispan.factories.GlobalComponentRegistry;
-import org.infinispan.marshall.core.ClassToExternalizerMap;
-import org.infinispan.marshall.core.ExternalExternalizers;
+import org.infinispan.marshall.core.impl.ClassToExternalizerMap;
+import org.infinispan.marshall.core.impl.ExternalExternalizers;
 import org.jboss.marshalling.ObjectTable;
 import org.jboss.marshalling.Unmarshaller;
 
@@ -19,6 +19,7 @@ import org.jboss.marshalling.Unmarshaller;
  * @author Ryan Emerson
  * @since 10.0
  */
+@SuppressWarnings("unused")
 public class JBossUserMarshaller extends JBossMarshaller {
 
    public static final int USER_EXT_ID_MIN = 2500;

@@ -31,7 +31,7 @@ public class JBossMarshaller extends AbstractJBossMarshaller implements Streamin
    GlobalConfiguration globalCfg;
    ObjectTable objectTable;
 
-   public JBossMarshaller() {
+   JBossMarshaller() {
       this(null, null);
    }
 

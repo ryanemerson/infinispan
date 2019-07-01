@@ -1,11 +1,11 @@
 package org.infinispan.query.remote;
 
+import org.infinispan.commons.marshall.proto.ProtoStreamMarshaller;
 import org.infinispan.factories.annotations.Inject;
 import org.infinispan.factories.scopes.Scope;
 import org.infinispan.factories.scopes.Scopes;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.protostream.SerializationContext;
-import org.infinispan.commons.marshall.proto.ProtoStreamMarshaller;
 import org.infinispan.query.remote.impl.ProtobufMetadataManagerImpl;
 
 /**
@@ -24,7 +24,7 @@ public class CompatibilityProtoStreamMarshaller extends ProtoStreamMarshaller {
    }
 
    @Override
-   protected SerializationContext getSerializationContext() {
+   public SerializationContext getSerializationContext() {
       if (cacheManager == null) {
          throw new IllegalStateException("cacheManager not set");
       }

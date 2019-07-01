@@ -1,4 +1,4 @@
-package org.infinispan.marshall.core;
+package org.infinispan.marshall.core.impl;
 
 import java.io.IOException;
 import java.io.ObjectInput;
@@ -12,21 +12,21 @@ import org.infinispan.configuration.global.GlobalConfiguration;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 
-final class ExternalExternalizers {
+public final class ExternalExternalizers {
 
    private static final Log log = LogFactory.getLog(ExternalExternalizers.class);
 
    private ExternalExternalizers() {
    }
 
-   static ClassToExternalizerMap load(GlobalConfiguration globalCfg) {
+   public static ClassToExternalizerMap load(GlobalConfiguration globalCfg) {
       return load(globalCfg, 0, Integer.MAX_VALUE);
    }
 
    /**
     * Load the {@link AdvancedExternalizer} instances with Ids inclusive of the specified bounds.
     */
-   static ClassToExternalizerMap load(GlobalConfiguration globalCfg, int lowerBound, int upperBound) {
+   public static ClassToExternalizerMap load(GlobalConfiguration globalCfg, int lowerBound, int upperBound) {
       ClassToExternalizerMap exts = new ClassToExternalizerMap(4, 0.375f);
 
       Map<Integer, AdvancedExternalizer<?>> cfgExts = globalCfg.serialization().advancedExternalizers();

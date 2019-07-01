@@ -64,6 +64,7 @@ import org.infinispan.globalstate.ScopeFilter;
 import org.infinispan.globalstate.ScopedState;
 import org.infinispan.interceptors.distribution.VersionedResult;
 import org.infinispan.interceptors.distribution.VersionedResults;
+import org.infinispan.marshall.core.impl.ClassToExternalizerMap;
 import org.infinispan.marshall.exts.CacheRpcCommandExternalizer;
 import org.infinispan.marshall.exts.ClassExternalizer;
 import org.infinispan.marshall.exts.CollectionExternalizer;
