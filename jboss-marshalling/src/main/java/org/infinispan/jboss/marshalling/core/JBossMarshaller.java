@@ -1,4 +1,4 @@
-package org.infinispan.marshall.core;
+package org.infinispan.jboss.marshalling.core;
 
 import org.infinispan.commons.marshall.SerializeWith;
 import org.infinispan.commons.marshall.StreamingMarshaller;
@@ -46,7 +46,7 @@ public class JBossMarshaller extends AbstractJBossMarshaller implements Streamin
       baseCfg.setClassExternalizerFactory(new SerializeWithExtFactory());
       baseCfg.setObjectTable(objectTable);
 
-      ClassResolver classResolver = globalCfg.serialization().classResolver();
+      ClassResolver classResolver = (ClassResolver) globalCfg.serialization().classResolver();
       if (classResolver == null) {
          // Override the class resolver with one that can detect injected
          // classloaders via AdvancedCache.with(ClassLoader) calls.

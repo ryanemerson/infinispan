@@ -1,4 +1,4 @@
-package org.infinispan.marshall.core;
+package org.infinispan.jboss.marshalling.core;
 
 import static org.infinispan.marshall.core.GlobalMarshaller.ID_EXTERNAL;
 import static org.infinispan.marshall.core.GlobalMarshaller.writeExternalClean;
@@ -7,6 +7,8 @@ import java.io.IOException;
 
 import org.infinispan.commons.marshall.AdvancedExternalizer;
 import org.infinispan.factories.GlobalComponentRegistry;
+import org.infinispan.marshall.core.ClassToExternalizerMap;
+import org.infinispan.marshall.core.ExternalExternalizers;
 import org.jboss.marshalling.ObjectTable;
 import org.jboss.marshalling.Unmarshaller;
 
@@ -21,9 +23,9 @@ public class JBossUserMarshaller extends JBossMarshaller {
 
    public static final int USER_EXT_ID_MIN = 2500;
 
-   private final ClassToExternalizerMap externalExts;
+   private ClassToExternalizerMap externalExts;
 
-   public JBossUserMarshaller(GlobalComponentRegistry gcr) {
+   public void init(GlobalComponentRegistry gcr) {
       this.globalCfg = gcr.getGlobalConfiguration();
       // Only load the externalizers outside of the ISPN reserved range, this ensures that we don't accidentally persist internal types
       this.externalExts = ExternalExternalizers.load(globalCfg, USER_EXT_ID_MIN, Integer.MAX_VALUE);

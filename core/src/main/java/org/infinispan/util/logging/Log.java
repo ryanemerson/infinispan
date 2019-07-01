@@ -1871,4 +1871,8 @@ public interface Log extends BasicLogger {
    @LogMessage(level = WARN)
    @Message(value = "The custom interceptors configuration has been deprecated and will be ignored in the future", id = 551)
    void customInterceptorsDeprecated();
+
+   @LogMessage(level = WARN)
+   @Message(value = "infinispan-boss-marshalling dependency detected, jboss-marshalling has been deprecated and will be removed in the future", id = 552)
+   void jbossMarshallingDetected();
 }

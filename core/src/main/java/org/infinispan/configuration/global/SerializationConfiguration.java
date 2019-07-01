@@ -9,14 +9,13 @@ import org.infinispan.commons.configuration.attributes.AttributeSet;
 import org.infinispan.commons.marshall.AdvancedExternalizer;
 import org.infinispan.commons.marshall.Marshaller;
 import org.infinispan.protostream.SerializationContextInitializer;
-import org.jboss.marshalling.ClassResolver;
 
 public class SerializationConfiguration {
    public static final AttributeDefinition<Marshaller> MARSHALLER = AttributeDefinition.builder("marshaller", null, Marshaller.class)
          .immutable().build();
    public static final AttributeDefinition<Short> VERSION = AttributeDefinition.builder("version", Version.getMarshallVersion()).immutable().build();
    @Deprecated
-   public static final AttributeDefinition<ClassResolver> CLASS_RESOLVER = AttributeDefinition.builder("classResolver", null, ClassResolver.class).immutable().build();
+   public static final AttributeDefinition<Object> CLASS_RESOLVER = AttributeDefinition.builder("classResolver", null, Object.class).immutable().build();
 
    public static final AttributeDefinition<SerializationContextInitializer> CONTEXT_INITIALIZER = AttributeDefinition.builder("contextInitializer", null, SerializationContextInitializer.class).immutable().build();
 
@@ -25,7 +24,7 @@ public class SerializationConfiguration {
    }
 
    private final Map<Integer, AdvancedExternalizer<?>> advancedExternalizers;
-   private final Attribute<ClassResolver> classResolver;
+   private final Attribute<Object> classResolver;
    private final Attribute<Marshaller> marshaller;
    private final Attribute<Short> version;
    private final Attribute<SerializationContextInitializer> contextInitializer;
@@ -52,8 +51,11 @@ public class SerializationConfiguration {
       return advancedExternalizers;
    }
 
+   /**
+    * @throws {@link ClassNotFoundException} if the infinispan-jboss-marshalling or jboss-marshalling jar are not on the classpath
+    */
    @Deprecated
-   public ClassResolver classResolver() {
+   public Object classResolver() {
       return classResolver.get();
    }
 

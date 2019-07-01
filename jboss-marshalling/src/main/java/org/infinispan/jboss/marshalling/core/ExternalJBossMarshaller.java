@@ -1,4 +1,4 @@
-package org.infinispan.marshall.core;
+package org.infinispan.jboss.marshalling.core;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -13,15 +13,16 @@ import org.infinispan.commons.marshall.MarshallableTypeHints;
 import org.infinispan.commons.marshall.StreamingMarshaller;
 import org.infinispan.commons.marshall.jboss.ExtendedRiverUnmarshaller;
 import org.infinispan.configuration.global.GlobalConfiguration;
+import org.infinispan.marshall.core.GlobalMarshaller;
 import org.jboss.marshalling.ByteInput;
 import org.jboss.marshalling.ByteOutput;
 
-final class ExternalJBossMarshaller implements StreamingMarshaller {
+public final class ExternalJBossMarshaller implements StreamingMarshaller {
 
    final MarshallableTypeHints marshallableTypeHints = new MarshallableTypeHints();
    final JBossMarshaller marshaller;
 
-   ExternalJBossMarshaller(GlobalMarshaller marshaller, GlobalConfiguration globalCfg) {
+   public ExternalJBossMarshaller(GlobalMarshaller marshaller, GlobalConfiguration globalCfg) {
       this.marshaller = new JBossMarshaller(new JbossInternalObjectTable(marshaller), globalCfg);
    }
 
