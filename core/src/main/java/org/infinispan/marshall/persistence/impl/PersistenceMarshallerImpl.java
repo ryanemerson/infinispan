@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 
 import org.infinispan.commons.CacheException;
 import org.infinispan.commons.dataconversion.MediaType;
@@ -15,7 +14,9 @@ import org.infinispan.commons.marshall.BufferSizePredictor;
 import org.infinispan.commons.marshall.Marshaller;
 import org.infinispan.commons.marshall.MarshallingException;
 import org.infinispan.commons.marshall.proto.ProtoStreamUserMarshaller;
+import org.infinispan.commons.util.Util;
 import org.infinispan.configuration.global.GlobalConfiguration;
+import org.infinispan.configuration.global.SerializationConfiguration;
 import org.infinispan.factories.GlobalComponentRegistry;
 import org.infinispan.factories.annotations.Inject;
 import org.infinispan.factories.annotations.Start;
@@ -59,30 +60,45 @@ public class PersistenceMarshallerImpl implements PersistenceMarshaller {
    @Start
    @Override
    public void start() {
-      GlobalConfiguration globalCfg = gcr.getGlobalConfiguration();
-      this.userMarshaller = globalCfg.serialization().marshaller();
-      if (userMarshaller != null) {
-         Class<? extends Marshaller> marshallerClass = userMarshaller.getClass();
-         if (marshallerClass.getName().equals("org.infinispan.jboss.marshalling.core.JBossUserMarshaller")) {
-            try {
-               Method initMetod = marshallerClass.getMethod("init", GlobalConfiguration.class);
-               initMetod.invoke(userMarshaller, globalCfg);
-            } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-               log.jbossMarshallingDetected();
-            }
-         }
-      } else {
-         // TODO is it overkill to have separate SerializationContext for persistence AND user?
-         // If we have to support persistence objects indefinitely, potential user use of Objects is Ok and we avoid additional wrapping
-         SerializationContext userSerCtx = ProtobufUtil.newSerializationContext();
-         SerializationContextInitializer sci = globalCfg.serialization().contextInitializer();
-         register(userSerCtx, sci);
-         userMarshaller = new ProtoStreamUserMarshaller(userSerCtx);
-
-      }
+      userMarshaller = createUserMarshaller();
       userMarshaller.start();
 
       register(new PersistenceContextInitializerImpl());
+   }
+
+   private Marshaller createUserMarshaller() {
+      GlobalConfiguration globalConfig = gcr.getGlobalConfiguration();
+      SerializationConfiguration serializationConfig = globalConfig.serialization();
+      Marshaller marshaller = serializationConfig.marshaller();
+      if (marshaller != null)
+         return marshaller;
+
+      // The user has specified a SerializationContextInitializer, then jboss-marshalling is always ignored
+      if (serializationConfig.contextInitializer() != null)
+         return createProtoStreamUserMarshaller(serializationConfig);
+
+      // If no marshaller or SerializationContextInitializer specified, then we attempt to load `infinispan-jboss-marshalling`
+      // and the JBossUserMarshaller, however if it does not exist then we default to the new ProtostreamUserMarshaller
+      try {
+         Class<Marshaller> clazz = Util.loadClassStrict("org.infinispan.jboss.marshalling.core.JBossUserMarshaller", globalConfig.classLoader());
+         try {
+            log.jbossMarshallingDetected();
+            return clazz.getConstructor(GlobalComponentRegistry.class).newInstance(gcr);
+         } catch (InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
+            throw new CacheException("Unable to start PersistenceMarshaller with JBossUserMarshaller", e);
+         }
+      } catch (ClassNotFoundException e) {
+         return createProtoStreamUserMarshaller(serializationConfig);
+      }
+   }
+
+   private Marshaller createProtoStreamUserMarshaller(SerializationConfiguration serializationConfig) {
+      // TODO is it overkill to have separate SerializationContext for persistence AND user?
+      // If we have to support persistence objects indefinitely, potential user use of Objects is Ok and we avoid additional wrapping
+      SerializationContext userSerCtx = ProtobufUtil.newSerializationContext();
+      SerializationContextInitializer sci = serializationConfig.contextInitializer();
+      register(userSerCtx, sci);
+      return new ProtoStreamUserMarshaller(userSerCtx);
    }
 
    @Override
