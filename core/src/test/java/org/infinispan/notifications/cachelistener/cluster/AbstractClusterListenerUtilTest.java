@@ -44,6 +44,8 @@ import org.infinispan.notifications.cachelistener.filter.CacheEventFilter;
 import org.infinispan.notifications.cachelistener.filter.CacheEventFilterConverter;
 import org.infinispan.notifications.cachelistener.filter.EventType;
 import org.infinispan.notifications.cachemanagerlistener.CacheManagerNotifier;
+import org.infinispan.protostream.SerializationContextInitializer;
+import org.infinispan.protostream.annotations.AutoProtoSchemaBuilder;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.test.MultipleCacheManagersTest;
@@ -67,6 +69,7 @@ public abstract class AbstractClusterListenerUtilTest extends MultipleCacheManag
    protected final static String SECOND_VALUE = "second-value";
 
    protected ConfigurationBuilder builderUsed;
+   protected SerializationContextInitializer sci;
    protected final boolean tx;
    protected final CacheMode cacheMode;
 
@@ -79,6 +82,14 @@ public abstract class AbstractClusterListenerUtilTest extends MultipleCacheManag
       cleanup = CleanupPhase.AFTER_METHOD;
       this.tx = tx;
       this.cacheMode = cacheMode;
+      this.sci = new ListenerSerializationContextImpl();
+   }
+
+   protected void addClusteredCacheManager() {
+      // First we add the new node, but block the dist exec execution
+      log.info("Adding a new node ..");
+      addClusterEnabledCacheManager(sci, builderUsed);
+      log.info("Added a new node");
    }
 
    @Override
@@ -90,7 +101,7 @@ public abstract class AbstractClusterListenerUtilTest extends MultipleCacheManag
          builderUsed.locking().isolationLevel(IsolationLevel.READ_COMMITTED);
       }
       builderUsed.expiration().disableReaper();
-      createClusteredCaches(3, CACHE_NAME, builderUsed);
+      createClusteredCaches(3, CACHE_NAME, sci, builderUsed);
       injectTimeServices();
    }
 
@@ -418,5 +429,22 @@ public abstract class AbstractClusterListenerUtilTest extends MultipleCacheManag
          }
       }).when(mockNotifier).notifyViewChange(anyList(), anyList(), any(Address.class), anyInt());
       TestingUtil.replaceComponent(cacheContainer, CacheManagerNotifier.class, mockNotifier, true);
+   }
+
+   @AutoProtoSchemaBuilder(
+         // TODO use this or just explicitly add required classes?
+         dependsOn = org.infinispan.test.TestDataSerializationContextInitializer.class,
+         includeClasses = {
+               AbstractClusterListenerUtilTest.FilterConverter.class,
+               AbstractClusterListenerUtilTest.LifespanConverter.class,
+               AbstractClusterListenerUtilTest.LifespanFilter.class,
+               AbstractClusterListenerUtilTest.NewLifespanLargerFilter.class,
+               AbstractClusterListenerUtilTest.StringAppender.class,
+               AbstractClusterListenerUtilTest.StringTruncator.class,
+         },
+         schemaFileName = "core.listeners.proto",
+         schemaFilePath = "proto/generated",
+         schemaPackageName = "org.infinispan.test.core.notifications")
+   interface ListenerSerializationContext extends SerializationContextInitializer {
    }
 }

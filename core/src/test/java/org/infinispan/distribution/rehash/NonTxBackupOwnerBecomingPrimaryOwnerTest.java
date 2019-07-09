@@ -28,6 +28,7 @@ import org.infinispan.interceptors.distribution.TriangleDistributionInterceptor;
 import org.infinispan.interceptors.impl.EntryWrappingInterceptor;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.partitionhandling.AvailabilityMode;
+import org.infinispan.protostream.SerializationContextInitializer;
 import org.infinispan.protostream.annotations.ProtoName;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.statetransfer.StateTransferInterceptor;
@@ -52,12 +53,12 @@ import org.testng.annotations.Test;
 @CleanupAfterMethod
 public class NonTxBackupOwnerBecomingPrimaryOwnerTest extends MultipleCacheManagersTest {
 
+   private SerializationContextInitializer sci = new DistributionRehashSCIImpl();
+
    @Override
    protected void createCacheManagers() throws Throwable {
       ConfigurationBuilder c = getConfigurationBuilder();
-
-      addClusterEnabledCacheManager(c);
-      addClusterEnabledCacheManager(c);
+      createCluster(sci, c, 2);
       waitForClusterToForm();
    }
 
@@ -125,7 +126,7 @@ public class NonTxBackupOwnerBecomingPrimaryOwnerTest extends MultipleCacheManag
       } else {
          stateTransferLatch.countDown();
       }
-      addClusterEnabledCacheManager(c);
+      addClusterEnabledCacheManager(sci, c);
       addBlockingLocalTopologyManager(manager(2), checkPoint, preJoinTopologyId);
 
 

@@ -32,7 +32,7 @@ public class JpaConfigurationTest {
       ExternallyMarshallable.addToWhiteList(User.class.getName());
       GlobalConfiguration globalConfig = new GlobalConfigurationBuilder()
             .globalJmxStatistics().transport().defaultTransport()
-            .serialization().contextInitializer(new TestSerializationContextInitializerImpl()).build();
+            .serialization().contextInitializer(new TestDataSerializationContextInitializerImpl()).build();
 
       Configuration cacheConfig = new ConfigurationBuilder().persistence()
             .addStore(JpaStoreConfigurationBuilder.class)

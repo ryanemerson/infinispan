@@ -17,6 +17,7 @@ import org.infinispan.context.impl.TxInvocationContext;
 import org.infinispan.interceptors.DDAsyncInterceptor;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.test.MultipleCacheManagersTest;
+import org.infinispan.test.TestDataSerializationContextInitializerImpl;
 import org.infinispan.transaction.LockingMode;
 import org.testng.annotations.Test;
 
@@ -35,7 +36,7 @@ public class SinglePhaseCommitForPessimisticCachesTest extends MultipleCacheMana
       c
          .clustering().hash().numOwners(3)
          .transaction().lockingMode(LockingMode.PESSIMISTIC);
-      createCluster(c, 3);
+      createCluster(new TestDataSerializationContextInitializerImpl(), c, 3);
       waitForClusterToForm();
    }
 

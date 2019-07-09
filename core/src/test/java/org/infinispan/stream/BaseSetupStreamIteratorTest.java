@@ -25,6 +25,8 @@ import org.infinispan.distribution.ch.impl.ScatteredConsistentHash;
 import org.infinispan.filter.Converter;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.metadata.Metadata;
+import org.infinispan.protostream.SerializationContextInitializer;
+import org.infinispan.protostream.annotations.AutoProtoSchemaBuilder;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoName;
 import org.infinispan.remoting.transport.Address;
@@ -46,6 +48,7 @@ import org.testng.annotations.Test;
 public abstract class BaseSetupStreamIteratorTest extends MultipleCacheManagersTest {
    protected final String CACHE_NAME = "testCache";
    protected ConfigurationBuilder builderUsed;
+   protected SerializationContextInitializer sci;
 
    public BaseSetupStreamIteratorTest(boolean tx, CacheMode mode) {
       transactional = tx;
@@ -59,6 +62,7 @@ public abstract class BaseSetupStreamIteratorTest extends MultipleCacheManagersT
    @Override
    protected void createCacheManagers() throws Throwable {
       builderUsed = new ConfigurationBuilder();
+      sci = new StreamSerializationContextImpl();
       HashConfigurationBuilder hashConfiguration = builderUsed.clustering().cacheMode(cacheMode).hash().numSegments(3);
       if (!cacheMode.isReplicated()) {
          BaseControlledConsistentHashFactory<? extends ConsistentHash> chf =
@@ -71,10 +75,10 @@ public abstract class BaseSetupStreamIteratorTest extends MultipleCacheManagersT
       if (cacheMode.isClustered()) {
          builderUsed.clustering().stateTransfer().chunkSize(50);
          enhanceConfiguration(builderUsed);
-         createClusteredCaches(3, CACHE_NAME, builderUsed);
+         createClusteredCaches(3, CACHE_NAME, sci, builderUsed);
       } else {
          enhanceConfiguration(builderUsed);
-         EmbeddedCacheManager cm = TestCacheManagerFactory.createCacheManager(builderUsed);
+         EmbeddedCacheManager cm = TestCacheManagerFactory.createCacheManager(sci, builderUsed);
          cacheManagers.add(cm);
          cm.defineConfiguration(CACHE_NAME, builderUsed.build());
       }
@@ -178,5 +182,19 @@ public abstract class BaseSetupStreamIteratorTest extends MultipleCacheManagersT
          set.add(new ImmortalCacheEntry(value.getKey(), value.getValue()));
       }
       return returnMap;
+   }
+
+   @AutoProtoSchemaBuilder(
+         // TODO use this or just explicitly add required classes?
+         dependsOn = org.infinispan.test.TestDataSerializationContextInitializer.class,
+         includeClasses = {
+               BaseSetupStreamIteratorTest.StringTruncator.class,
+               BaseSetupStreamIteratorTest.TestDefaultConsistentHashFactory.class,
+               BaseSetupStreamIteratorTest.TestScatteredConsistentHashFactory.class,
+         },
+         schemaFileName = "core.stream.proto",
+         schemaFilePath = "proto/generated",
+         schemaPackageName = "org.infinispan.test.core.stream")
+   interface StreamSerializationContext extends SerializationContextInitializer {
    }
 }

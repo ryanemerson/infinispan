@@ -35,6 +35,8 @@ import org.infinispan.notifications.cachelistener.annotation.CacheEntryModified;
 import org.infinispan.notifications.cachelistener.event.CacheEntryCreatedEvent;
 import org.infinispan.notifications.cachelistener.event.CacheEntryModifiedEvent;
 import org.infinispan.persistence.dummy.DummyInMemoryStoreConfigurationBuilder;
+import org.infinispan.protostream.SerializationContextInitializer;
+import org.infinispan.protostream.annotations.AutoProtoSchemaBuilder;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.test.Exceptions;
 import org.infinispan.test.MultipleCacheManagersTest;
@@ -62,7 +64,7 @@ public class StoreAsBinaryTest extends MultipleCacheManagersTest {
       ConfigurationBuilder replSync = getDefaultClusteredCacheConfig(CacheMode.REPL_SYNC, false);
       replSync.memory().storageType(StorageType.BINARY);
 
-      createClusteredCaches(2, "replSync", replSync);
+      createClusteredCaches(2, "replSync", new StoreAsBinarySCIImpl(), replSync);
    }
 
    @Override
@@ -672,5 +674,17 @@ public class StoreAsBinaryTest extends MultipleCacheManagersTest {
          result = result * 31 + ssn.hashCode();
          return result;
       }
+   }
+
+   @AutoProtoSchemaBuilder(
+         includeClasses = {
+               CountMarshallingPojo.class,
+               CustomReadObjectMethod.class,
+               ObjectThatContainsACustomReadObjectMethod.class
+         },
+         schemaFileName = "test.core.StoreAsBinaryTestSCI.proto",
+         schemaFilePath = "proto/generated",
+         schemaPackageName = "org.infinispan.test.core.StoreAsBinaryTestSCI")
+   interface StoreAsBinarySCI extends SerializationContextInitializer {
    }
 }

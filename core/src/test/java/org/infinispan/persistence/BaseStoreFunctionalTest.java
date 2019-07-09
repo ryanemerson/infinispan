@@ -35,7 +35,7 @@ import org.infinispan.persistence.spi.MarshallableEntry;
 import org.infinispan.persistence.spi.PersistenceException;
 import org.infinispan.protostream.SerializationContextInitializer;
 import org.infinispan.test.SingleCacheManagerTest;
-import org.infinispan.test.TestSerializationContextInitializerImpl;
+import org.infinispan.test.TestDataSerializationContextInitializerImpl;
 import org.infinispan.test.TestingUtil;
 import org.infinispan.test.data.Person;
 import org.infinispan.test.fwk.TestCacheManagerFactory;
@@ -52,7 +52,7 @@ import org.testng.annotations.Test;
 @Test(groups = {"unit", "smoke"}, testName = "persistence.BaseStoreFunctionalTest")
 public abstract class BaseStoreFunctionalTest extends SingleCacheManagerTest {
 
-   private static final SerializationContextInitializer CONTEXT_INITIALIZER = new TestSerializationContextInitializerImpl();
+   private static final SerializationContextInitializer CONTEXT_INITIALIZER = new TestDataSerializationContextInitializerImpl();
 
    protected abstract PersistenceConfigurationBuilder createCacheStoreConfig(PersistenceConfigurationBuilder persistence, boolean preload);
 
@@ -185,7 +185,7 @@ public abstract class BaseStoreFunctionalTest extends SingleCacheManagerTest {
    public void testRemoveCache() {
       ConfigurationBuilder cb = TestCacheManagerFactory.getDefaultCacheConfiguration(false);
       createCacheStoreConfig(cb.persistence(), true);
-      EmbeddedCacheManager local = TestCacheManagerFactory.createCacheManager(cb, getSerializationContextInitializer());
+      EmbeddedCacheManager local = TestCacheManagerFactory.createCacheManager(getSerializationContextInitializer(), cb);
       try {
          final String cacheName = "to-be-removed";
          local.defineConfiguration(cacheName, local.getDefaultCacheConfiguration());
@@ -203,7 +203,7 @@ public abstract class BaseStoreFunctionalTest extends SingleCacheManagerTest {
    public void testRemoveCacheWithPassivation() {
       ConfigurationBuilder cb = TestCacheManagerFactory.getDefaultCacheConfiguration(false);
       createCacheStoreConfig(cb.persistence().passivation(true), true);
-      EmbeddedCacheManager local = TestCacheManagerFactory.createCacheManager(cb, getSerializationContextInitializer());
+      EmbeddedCacheManager local = TestCacheManagerFactory.createCacheManager(getSerializationContextInitializer(), cb);
       try {
          final String cacheName = "to-be-removed";
          local.defineConfiguration(cacheName, local.getDefaultCacheConfiguration());

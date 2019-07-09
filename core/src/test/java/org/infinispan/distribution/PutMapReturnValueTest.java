@@ -9,6 +9,7 @@ import java.util.Map;
 import org.infinispan.AdvancedCache;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.test.MultipleCacheManagersTest;
+import org.infinispan.test.TestDataSerializationContextInitializerImpl;
 import org.infinispan.test.fwk.InCacheMode;
 import org.testng.annotations.Test;
 
@@ -21,7 +22,7 @@ public class PutMapReturnValueTest extends MultipleCacheManagersTest {
 
    @Override
    protected void createCacheManagers() throws Throwable {
-      createCluster(getDefaultClusteredCacheConfig(cacheMode), 2);
+      createCluster(new TestDataSerializationContextInitializerImpl(), getDefaultClusteredCacheConfig(cacheMode), 2);
       c1 = this.<Object, String>cache(0).getAdvancedCache();
       c2 = this.<Object, String>cache(1).getAdvancedCache();
    }

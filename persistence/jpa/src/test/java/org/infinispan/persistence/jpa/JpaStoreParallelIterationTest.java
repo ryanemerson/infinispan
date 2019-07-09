@@ -10,7 +10,7 @@ import org.testng.annotations.Test;
 @Test(groups = "functional", testName = "persistence.JpaStoreParallelIterationTest")
 public class JpaStoreParallelIterationTest extends ParallelIterationTest {
 
-   private static final SerializationContextInitializer CONTEXT_INITIALIZER = new TestSerializationContextInitializerImpl();
+   private static final SerializationContextInitializer CONTEXT_INITIALIZER = new TestDataSerializationContextInitializerImpl();
 
    @Override
    protected void configurePersistence(ConfigurationBuilder cb) {

@@ -303,7 +303,7 @@ public class ManualEvictionWithSizeBasedAndConcurrentOperationsInPrimaryOwnerTes
             .hash().numOwners(2).numSegments(2);
       configurePersistence(builder);
       configureEviction(builder);
-      return TestCacheManagerFactory.createClusteredCacheManager(builder);
+      return TestCacheManagerFactory.createClusteredCacheManager(new EvictionWithConcurrentOperationsSCIImpl(), builder);
    }
 
    protected Object createSameHashCodeKey(String name) {

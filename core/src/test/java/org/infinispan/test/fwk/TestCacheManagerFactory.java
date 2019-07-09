@@ -190,6 +190,12 @@ public class TestCacheManagerFactory {
       return createClusteredCacheManager(GlobalConfigurationBuilder.defaultClusteredBuilder(), defaultCacheConfig, flags);
    }
 
+   public static EmbeddedCacheManager createClusteredCacheManager(SerializationContextInitializer sci, ConfigurationBuilder defaultCacheConfig) {
+      GlobalConfigurationBuilder globalBuilder = GlobalConfigurationBuilder.defaultClusteredBuilder();
+      globalBuilder.serialization().contextInitializer(sci);
+      return createClusteredCacheManager(globalBuilder, defaultCacheConfig, new TransportFlags());
+   }
+
    public static EmbeddedCacheManager createClusteredCacheManager(GlobalConfigurationBuilder gcb, ConfigurationBuilder defaultCacheConfig) {
       return createClusteredCacheManager(gcb, defaultCacheConfig, new TransportFlags());
    }
@@ -251,7 +257,7 @@ public class TestCacheManagerFactory {
       return createCacheManager(new GlobalConfigurationBuilder().nonClusteredDefault(), builder);
    }
 
-   public static EmbeddedCacheManager createCacheManager(ConfigurationBuilder builder, SerializationContextInitializer sci) {
+   public static EmbeddedCacheManager createCacheManager(SerializationContextInitializer sci, ConfigurationBuilder builder) {
       GlobalConfigurationBuilder globalBuilder = new GlobalConfigurationBuilder().nonClusteredDefault();
       globalBuilder.serialization().contextInitializer(sci);
       return createCacheManager(globalBuilder, builder);

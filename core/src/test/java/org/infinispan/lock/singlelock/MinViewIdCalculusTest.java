@@ -6,7 +6,9 @@ import static org.testng.Assert.assertTrue;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.distribution.DistributionManager;
+import org.infinispan.protostream.SerializationContextInitializer;
 import org.infinispan.test.MultipleCacheManagersTest;
+import org.infinispan.test.TestDataSerializationContextInitializerImpl;
 import org.infinispan.test.TestingUtil;
 import org.infinispan.test.fwk.CleanupAfterMethod;
 import org.infinispan.transaction.LockingMode;
@@ -24,6 +26,7 @@ import org.testng.annotations.Test;
 @CleanupAfterMethod
 public class MinViewIdCalculusTest extends MultipleCacheManagersTest {
 
+   private final SerializationContextInitializer sci = new TestDataSerializationContextInitializerImpl();
    private ConfigurationBuilder c;
 
    @Override
@@ -35,8 +38,16 @@ public class MinViewIdCalculusTest extends MultipleCacheManagersTest {
                .transactionManagerLookup(new EmbeddedTransactionManagerLookup())
          .clustering()
             .hash().numOwners(3);
-      createCluster(c, 2);
+      createCluster(sci, c, 2);
       waitForClusterToForm();
+   }
+
+   private void createNewNode() {
+      //add a new cache and check that min view is updated
+      log.trace("Adding new node ..");
+      addClusterEnabledCacheManager(sci, c);
+      waitForClusterToForm();
+      log.trace("New node added.");
    }
 
    public void testMinViewId1() throws Exception {
@@ -49,11 +60,7 @@ public class MinViewIdCalculusTest extends MultipleCacheManagersTest {
       assertEquals(tt0.getMinTopologyId(), topologyId);
       assertEquals(tt1.getMinTopologyId(), topologyId);
 
-      //add a new cache and check that min view is updated
-      log.trace("Adding new node ..");
-      addClusterEnabledCacheManager(c);
-      waitForClusterToForm();
-      log.trace("New node added.");
+      createNewNode();
 
       final int topologyId2 = distributionManager0.getCacheTopology().getTopologyId();
       assertTrue(topologyId2 > topologyId);
@@ -79,11 +86,7 @@ public class MinViewIdCalculusTest extends MultipleCacheManagersTest {
 
       eventually(() -> checkTxCount(0, 0, 1));
 
-      log.trace("Adding new node ..");
-      //add a new cache and check that min view is updated
-      addClusterEnabledCacheManager(c);
-      waitForClusterToForm();
-      log.trace("New node added.");
+      createNewNode();
 
       final int topologyId2 = distributionManager0.getCacheTopology().getTopologyId();
       assertTrue(topologyId2 > topologyId);

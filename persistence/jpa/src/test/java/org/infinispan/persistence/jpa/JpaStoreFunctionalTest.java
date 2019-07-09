@@ -16,7 +16,7 @@ import org.testng.annotations.Test;
 @Test(groups = {"unit", "smoke"}, testName = "persistence.JpaStoreFunctionalTest")
 public class JpaStoreFunctionalTest extends BaseStoreFunctionalTest {
 
-   private static final SerializationContextInitializer CONTEXT_INITIALIZER = new TestSerializationContextInitializerImpl();
+   private static final SerializationContextInitializer CONTEXT_INITIALIZER = new TestDataSerializationContextInitializerImpl();
 
    @Override
    protected PersistenceConfigurationBuilder createCacheStoreConfig(PersistenceConfigurationBuilder persistence, boolean preload) {

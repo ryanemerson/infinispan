@@ -76,6 +76,8 @@ import org.infinispan.distribution.ch.impl.DefaultConsistentHashFactory;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.marshall.core.ExternalPojo;
 import org.infinispan.metadata.EmbeddedMetadata;
+import org.infinispan.protostream.SerializationContextInitializer;
+import org.infinispan.protostream.annotations.AutoProtoSchemaBuilder;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.remoting.MIMECacheEntry;
 import org.infinispan.remoting.responses.ExceptionResponse;
@@ -84,9 +86,11 @@ import org.infinispan.remoting.responses.UnsureResponse;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.remoting.transport.jgroups.JGroupsAddress;
 import org.infinispan.statetransfer.StateRequestCommand;
+import org.infinispan.statetransfer.WriteSkewDuringStateTransferTest;
 import org.infinispan.test.AbstractInfinispanTest;
 import org.infinispan.test.TestingUtil;
 import org.infinispan.test.data.BrokenMarshallingPojo;
+import org.infinispan.test.data.Key;
 import org.infinispan.test.fwk.TestCacheManagerFactory;
 import org.infinispan.test.fwk.TestInternalCacheEntryFactory;
 import org.infinispan.transaction.xa.GlobalTransaction;
@@ -121,6 +125,7 @@ public class VersionAwareMarshallerTest extends AbstractInfinispanTest {
       globalBuilder.serialization().addAdvancedExternalizer(new PojoWithExternalAndInternal.Externalizer());
       globalBuilder.serialization().addAdvancedExternalizer(new PojoWithExternalizer.Externalizer());
       globalBuilder.serialization().addAdvancedExternalizer(new PojoWithMultiExternalizer.Externalizer());
+      globalBuilder.serialization().serialization().contextInitializer(new VersionAwareMarshallerSCIImpl());
       ConfigurationBuilder builder = new ConfigurationBuilder();
       builder.clustering().cacheMode(CacheMode.DIST_SYNC);
       cm = TestCacheManagerFactory.createClusteredCacheManager(globalBuilder, builder);
@@ -788,4 +793,18 @@ public class VersionAwareMarshallerTest extends AbstractInfinispanTest {
       }
    }
 
+   @AutoProtoSchemaBuilder(
+         includeClasses = {
+               Key.class,
+               VersionAwareMarshallerTest.Human.class,
+               VersionAwareMarshallerTest.Pojo.class,
+               VersionAwareMarshallerTest.PojoExtended.class,
+               VersionAwareMarshallerTest.PojoWithExternalAndInternal.class,
+               WriteSkewDuringStateTransferTest.ConsistentHashFactoryImpl.class
+         },
+         schemaFileName = "test.core.VersionAwareMarshallerTest.proto",
+         schemaFilePath = "proto/generated",
+         schemaPackageName = "org.infinispan.test.core.VersionAwareMarshallerTest")
+   interface VersionAwareMarshallerSCI extends SerializationContextInitializer {
+   }
 }

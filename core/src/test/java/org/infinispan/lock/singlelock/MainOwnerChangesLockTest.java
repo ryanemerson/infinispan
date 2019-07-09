@@ -13,7 +13,9 @@ import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.container.entries.InternalCacheEntry;
 import org.infinispan.distribution.LocalizedCacheTopology;
+import org.infinispan.protostream.SerializationContextInitializer;
 import org.infinispan.test.MultipleCacheManagersTest;
+import org.infinispan.test.TestDataSerializationContextInitializerImpl;
 import org.infinispan.test.TestingUtil;
 import org.infinispan.test.fwk.CleanupAfterMethod;
 import org.infinispan.transaction.lookup.EmbeddedTransactionManagerLookup;
@@ -31,6 +33,7 @@ import org.testng.annotations.Test;
 public class MainOwnerChangesLockTest extends MultipleCacheManagersTest {
 
    public static final int NUM_KEYS = 100;
+   private final SerializationContextInitializer sci = new TestDataSerializationContextInitializerImpl();
    private ConfigurationBuilder dccc;
 
    @Override
@@ -39,7 +42,7 @@ public class MainOwnerChangesLockTest extends MultipleCacheManagersTest {
       dccc.transaction().transactionManagerLookup(new EmbeddedTransactionManagerLookup());
       dccc.clustering().hash().l1().disable().locking().lockAcquisitionTimeout(TestingUtil.shortTimeoutMillis());
       dccc.clustering().stateTransfer().fetchInMemoryState(true);
-      createCluster(dccc, 2);
+      createCluster(sci, dccc, 2);
       waitForClusterToForm();
    }
 
@@ -69,7 +72,7 @@ public class MainOwnerChangesLockTest extends MultipleCacheManagersTest {
 
       log.trace("Lock transfer happens here");
 
-      addClusterEnabledCacheManager(dccc);
+      addClusterEnabledCacheManager(sci, dccc);
       waitForClusterToForm();
 
       Object migratedKey = null;

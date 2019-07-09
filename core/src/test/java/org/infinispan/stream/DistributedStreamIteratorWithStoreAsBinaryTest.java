@@ -20,6 +20,8 @@ import org.infinispan.distribution.MagicKey;
 import org.infinispan.filter.CacheFilters;
 import org.infinispan.filter.KeyValueFilter;
 import org.infinispan.metadata.Metadata;
+import org.infinispan.protostream.SerializationContextInitializer;
+import org.infinispan.protostream.annotations.AutoProtoSchemaBuilder;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.test.MultipleCacheManagersTest;
 import org.infinispan.test.fwk.InCacheMode;
@@ -42,7 +44,7 @@ public class DistributedStreamIteratorWithStoreAsBinaryTest extends MultipleCach
       builderUsed.clustering().cacheMode(cacheMode);
       builderUsed.clustering().hash().numOwners(1);
       builderUsed.memory().storageType(StorageType.BINARY);
-      createClusteredCaches(3, builderUsed);
+      createClusteredCaches(3, new StreamStoreAsBinarySerializationContextImpl(), builderUsed);
    }
 
    @Test
@@ -99,8 +101,7 @@ public class DistributedStreamIteratorWithStoreAsBinaryTest extends MultipleCach
    }
 
 
-   // TODO register with SerializationContextInitializer once  https://issues.jboss.org/browse/IPROTO-100 has been fixed.
-   public static class MagicKeyStringFilter implements KeyValueFilter<MagicKey, String> {
+   static class MagicKeyStringFilter implements KeyValueFilter<MagicKey, String> {
 
       Map<MagicKey, String> allowedEntries;
 
@@ -126,7 +127,7 @@ public class DistributedStreamIteratorWithStoreAsBinaryTest extends MultipleCach
       }
    }
 
-   public static class MapPair {
+   static class MapPair {
 
       @ProtoField(number = 1)
       MagicKey key;
@@ -140,5 +141,19 @@ public class DistributedStreamIteratorWithStoreAsBinaryTest extends MultipleCach
          this.key = entry.getKey();
          this.value = entry.getValue();
       }
+   }
+
+   @AutoProtoSchemaBuilder(
+         // TODO use this or just explicitly add required classes?
+         dependsOn = org.infinispan.test.TestDataSerializationContextInitializer.class,
+         includeClasses = {
+               // TODO register with SerializationContextInitializer once  https://issues.jboss.org/browse/IPROTO-100 has been fixed.
+//               MagicKeyStringFilter.class,
+               MapPair.class,
+         },
+         schemaFileName = "core.stream.binary.proto",
+         schemaFilePath = "proto/generated",
+         schemaPackageName = "org.infinispan.test.core.stream.binary")
+   interface StreamStoreAsBinarySerializationContext extends SerializationContextInitializer {
    }
 }

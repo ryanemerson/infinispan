@@ -44,7 +44,7 @@ public abstract class AbstractJpaStoreTest extends AbstractInfinispanTest {
    }
 
    protected EmbeddedCacheManager createCacheManager() {
-      return TestCacheManagerFactory.createCacheManager(new TestSerializationContextInitializerImpl());
+      return TestCacheManagerFactory.createCacheManager(new TestDataSerializationContextInitializerImpl());
    }
 
    protected JpaStore createCacheStore() {

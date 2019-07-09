@@ -63,6 +63,6 @@ public class JpaStoreTest extends BaseStoreTest {
 
    @Override
    protected SerializationContextInitializer getSerializationContextInitializer() {
-      return new TestSerializationContextInitializerImpl();
+      return new TestDataSerializationContextInitializerImpl();
    }
 }

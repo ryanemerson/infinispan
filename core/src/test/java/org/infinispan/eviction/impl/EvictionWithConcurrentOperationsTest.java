@@ -37,6 +37,8 @@ import org.infinispan.persistence.dummy.DummyInMemoryStoreConfigurationBuilder;
 import org.infinispan.persistence.spi.CacheLoader;
 import org.infinispan.persistence.spi.MarshallableEntry;
 import org.infinispan.persistence.spi.PersistenceException;
+import org.infinispan.protostream.SerializationContextInitializer;
+import org.infinispan.protostream.annotations.AutoProtoSchemaBuilder;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.test.SingleCacheManagerTest;
 import org.infinispan.test.TestingUtil;
@@ -424,7 +426,7 @@ public class EvictionWithConcurrentOperationsTest extends SingleCacheManagerTest
       ConfigurationBuilder builder = getDefaultStandaloneCacheConfig(false);
       configurePersistence(builder);
       configureEviction(builder);
-      return TestCacheManagerFactory.createCacheManager(builder);
+      return TestCacheManagerFactory.createCacheManager(new EvictionWithConcurrentOperationsSCIImpl(), builder);
    }
 
    protected void configureEviction(ConfigurationBuilder builder) {
@@ -674,7 +676,13 @@ public class EvictionWithConcurrentOperationsTest extends SingleCacheManagerTest
          }
 
       }
+   }
 
-
+   @AutoProtoSchemaBuilder(
+         includeClasses = SameHashCodeKey.class,
+         schemaFileName = "test.core.eviction.proto",
+         schemaFilePath = "proto/generated",
+         schemaPackageName = "org.infinispan.test.core.eviction")
+   interface EvictionWithConcurrentOperationsSCI extends SerializationContextInitializer {
    }
 }
