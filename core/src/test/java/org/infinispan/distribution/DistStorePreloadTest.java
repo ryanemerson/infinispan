@@ -9,7 +9,7 @@ import org.infinispan.persistence.PersistenceUtil;
 import org.infinispan.persistence.spi.AdvancedCacheLoader;
 import org.infinispan.persistence.spi.AdvancedLoadWriteStore;
 import org.infinispan.persistence.spi.PersistenceException;
-import org.infinispan.test.TestDataSerializationContextInitializerImpl;
+import org.infinispan.test.TestDataSCI;
 import org.infinispan.test.TestingUtil;
 import org.infinispan.test.fwk.InTransactionMode;
 import org.infinispan.transaction.TransactionMode;
@@ -63,7 +63,7 @@ public class DistStorePreloadTest<D extends DistStorePreloadTest> extends BaseDi
       AdvancedCacheLoader cs = TestingUtil.getFirstLoader(c1);
       assert PersistenceUtil.count(cs, null) == NUM_KEYS;
 
-      addClusterEnabledCacheManager(new TestDataSerializationContextInitializerImpl());
+      addClusterEnabledCacheManager(TestDataSCI.INSTANCE);
       EmbeddedCacheManager cm2 = cacheManagers.get(1);
       cm2.defineConfiguration(cacheName, buildConfiguration().build());
       c2 = cache(1, cacheName);

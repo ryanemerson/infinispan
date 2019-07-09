@@ -11,7 +11,7 @@ import org.infinispan.container.entries.InternalCacheEntry;
 import org.infinispan.encoding.DataConversion;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.test.AbstractInfinispanTest;
-import org.infinispan.test.TestDataSerializationContextInitializerImpl;
+import org.infinispan.test.TestDataSCI;
 import org.infinispan.test.TestingUtil;
 import org.infinispan.test.data.Key;
 import org.infinispan.test.data.Person;
@@ -39,7 +39,7 @@ public class MarshalledValuesFineGrainedTest extends AbstractInfinispanTest {
    public void testStoreAsBinaryOnBoth() {
       ConfigurationBuilder c = new ConfigurationBuilder();
       c.memory().storageType(StorageType.BINARY).build();
-      ecm = TestCacheManagerFactory.createCacheManager(new TestDataSerializationContextInitializerImpl(), c);
+      ecm = TestCacheManagerFactory.createCacheManager(TestDataSCI.INSTANCE, c);
       ecm.getCache().put(key, value);
       DataConversion keyDataConversion = ecm.getCache().getAdvancedCache().getKeyDataConversion();
       DataConversion valueDataConversion = ecm.getCache().getAdvancedCache().getValueDataConversion();

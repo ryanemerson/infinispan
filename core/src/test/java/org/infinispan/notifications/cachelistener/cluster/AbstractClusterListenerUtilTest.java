@@ -433,7 +433,7 @@ public abstract class AbstractClusterListenerUtilTest extends MultipleCacheManag
 
    @AutoProtoSchemaBuilder(
          // TODO use this or just explicitly add required classes?
-         dependsOn = org.infinispan.test.TestDataSerializationContextInitializer.class,
+         dependsOn = org.infinispan.test.TestDataSCI.class,
          includeClasses = {
                AbstractClusterListenerUtilTest.FilterConverter.class,
                AbstractClusterListenerUtilTest.LifespanConverter.class,

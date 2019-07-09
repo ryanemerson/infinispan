@@ -23,7 +23,7 @@ import org.infinispan.persistence.spi.AdvancedCacheWriter;
 import org.infinispan.persistence.spi.MarshallableEntry;
 import org.infinispan.protostream.SerializationContextInitializer;
 import org.infinispan.test.SingleCacheManagerTest;
-import org.infinispan.test.TestDataSerializationContextInitializerImpl;
+import org.infinispan.test.TestDataSCI;
 import org.infinispan.test.TestingUtil;
 import org.infinispan.test.fwk.TestCacheManagerFactory;
 import org.infinispan.util.concurrent.WithinThreadExecutor;
@@ -41,7 +41,7 @@ import io.reactivex.subscribers.TestSubscriber;
 @Test (groups = "functional", testName = "persistence.ParallelIterationTest")
 public abstract class ParallelIterationTest extends SingleCacheManagerTest {
 
-   private static final SerializationContextInitializer CONTEXT_INITIALIZER = new TestDataSerializationContextInitializerImpl();
+   private static final SerializationContextInitializer CONTEXT_INITIALIZER = TestDataSCI.INSTANCE;
 
    private static final int NUM_THREADS = 10;
    private static final int NUM_ENTRIES = 200;

@@ -42,8 +42,6 @@ import org.testng.annotations.Test;
 @Test(groups = "functional", testName = "distribution.groups.StateTransferGetGroupKeysTest")
 public class StateTransferGetGroupKeysTest extends BaseUtilGroupTest {
 
-   private final SerializationContextInitializer sci = new StateTransferGetGroupKeysSCIImpl();
-
    @Override
    public Object[] factory() {
       return new Object[] {
@@ -79,7 +77,7 @@ public class StateTransferGetGroupKeysTest extends BaseUtilGroupTest {
 
       interceptor.awaitCommandBlock();
 
-      addClusterEnabledCacheManager(sci, createConfigurationBuilder());
+      addClusterEnabledCacheManager(StateTransferGetGroupKeysSCI.INSTANCE, createConfigurationBuilder());
       waitForClusterToForm();
 
       interceptor.unblockCommandAndOpen();
@@ -99,7 +97,7 @@ public class StateTransferGetGroupKeysTest extends BaseUtilGroupTest {
             killMember(3);
          }
          while (getCacheManagers().size() < 3) {
-            addClusterEnabledCacheManager(sci, createConfigurationBuilder());
+            addClusterEnabledCacheManager(StateTransferGetGroupKeysSCI.INSTANCE, createConfigurationBuilder());
          }
          waitForClusterToForm();
       }
@@ -227,5 +225,6 @@ public class StateTransferGetGroupKeysTest extends BaseUtilGroupTest {
          schemaFilePath = "proto/generated",
          schemaPackageName = "org.infinispan.test.core.StateTransferGetGroupKeysTest")
    interface StateTransferGetGroupKeysSCI extends SerializationContextInitializer {
+      StateTransferGetGroupKeysSCI INSTANCE = new StateTransferGetGroupKeysSCIImpl();
    }
 }

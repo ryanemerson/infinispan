@@ -11,6 +11,7 @@ import org.infinispan.persistence.spi.AdvancedLoadWriteStore;
 import org.infinispan.persistence.spi.InitializationContext;
 import org.infinispan.persistence.spi.PersistenceException;
 import org.infinispan.protostream.SerializationContextInitializer;
+import org.infinispan.test.TestDataSCI;
 import org.infinispan.test.fwk.TestCacheManagerFactory;
 import org.testng.annotations.Test;
 
@@ -63,6 +64,6 @@ public class JpaStoreTest extends BaseStoreTest {
 
    @Override
    protected SerializationContextInitializer getSerializationContextInitializer() {
-      return new TestDataSerializationContextInitializerImpl();
+      return TestDataSCI.INSTANCE;
    }
 }

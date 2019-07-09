@@ -145,7 +145,7 @@ public class DistributedStreamIteratorWithStoreAsBinaryTest extends MultipleCach
 
    @AutoProtoSchemaBuilder(
          // TODO use this or just explicitly add required classes?
-         dependsOn = org.infinispan.test.TestDataSerializationContextInitializer.class,
+         dependsOn = org.infinispan.test.TestDataSCI.class,
          includeClasses = {
                // TODO register with SerializationContextInitializer once  https://issues.jboss.org/browse/IPROTO-100 has been fixed.
 //               MagicKeyStringFilter.class,

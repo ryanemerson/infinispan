@@ -186,7 +186,7 @@ public abstract class BaseSetupStreamIteratorTest extends MultipleCacheManagersT
 
    @AutoProtoSchemaBuilder(
          // TODO use this or just explicitly add required classes?
-         dependsOn = org.infinispan.test.TestDataSerializationContextInitializer.class,
+         dependsOn = org.infinispan.test.TestDataSCI.class,
          includeClasses = {
                BaseSetupStreamIteratorTest.StringTruncator.class,
                BaseSetupStreamIteratorTest.TestDefaultConsistentHashFactory.class,

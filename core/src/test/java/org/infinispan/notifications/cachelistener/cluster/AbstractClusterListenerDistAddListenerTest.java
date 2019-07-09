@@ -16,7 +16,7 @@ import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.distribution.MagicKey;
 import org.infinispan.statetransfer.StateProvider;
-import org.infinispan.test.TestDataSerializationContextInitializerImpl;
+import org.infinispan.test.TestDataSCI;
 import org.infinispan.test.TestingUtil;
 import org.infinispan.test.fwk.CheckPoint;
 import org.infinispan.transaction.TransactionMode;
@@ -47,7 +47,7 @@ public abstract class AbstractClusterListenerDistAddListenerTest extends Abstrac
          builderUsed.locking().isolationLevel(IsolationLevel.READ_COMMITTED);
       }
       builderUsed.expiration().disableReaper();
-      createClusteredCaches(3, CACHE_NAME, new TestDataSerializationContextInitializerImpl(), builderUsed);
+      createClusteredCaches(3, CACHE_NAME, TestDataSCI.INSTANCE, builderUsed);
       injectTimeServices();
    }
 

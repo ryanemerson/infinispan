@@ -12,7 +12,7 @@ import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.container.entries.InternalCacheEntry;
 import org.infinispan.distribution.LocalizedCacheTopology;
 import org.infinispan.test.MultipleCacheManagersTest;
-import org.infinispan.test.TestDataSerializationContextInitializerImpl;
+import org.infinispan.test.TestDataSCI;
 import org.infinispan.test.TestingUtil;
 import org.infinispan.test.fwk.CleanupAfterMethod;
 import org.infinispan.transaction.LockingMode;
@@ -42,7 +42,7 @@ public class MainOwnerChangesPessimisticLockTest extends MultipleCacheManagersTe
             .clustering().hash().numOwners(1).numSegments(3)
             .l1().disable()
             .stateTransfer().fetchInMemoryState(true);
-      createCluster(new TestDataSerializationContextInitializerImpl(), dccc, 2);
+      createCluster(TestDataSCI.INSTANCE, dccc, 2);
       waitForClusterToForm();
    }
 

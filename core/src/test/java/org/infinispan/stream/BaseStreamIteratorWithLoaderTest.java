@@ -18,7 +18,7 @@ import org.infinispan.persistence.dummy.DummyInMemoryStoreConfigurationBuilder;
 import org.infinispan.persistence.manager.PersistenceManager;
 import org.infinispan.protostream.SerializationContextInitializer;
 import org.infinispan.test.MultipleCacheManagersTest;
-import org.infinispan.test.TestDataSerializationContextInitializerImpl;
+import org.infinispan.test.TestDataSCI;
 import org.infinispan.test.TestingUtil;
 import org.infinispan.transaction.TransactionMode;
 import org.testng.annotations.Test;
@@ -44,7 +44,7 @@ public abstract class BaseStreamIteratorWithLoaderTest extends MultipleCacheMana
 
    @Override
    protected void createCacheManagers() throws Throwable {
-      sci = new TestDataSerializationContextInitializerImpl();
+      sci = TestDataSCI.INSTANCE;
       builderUsed = new ConfigurationBuilder();
       builderUsed.clustering().cacheMode(cacheMode);
       builderUsed.clustering().hash().numOwners(1);

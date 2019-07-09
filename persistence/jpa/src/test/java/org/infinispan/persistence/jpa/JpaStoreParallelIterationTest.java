@@ -5,12 +5,11 @@ import org.infinispan.persistence.ParallelIterationTest;
 import org.infinispan.persistence.jpa.configuration.JpaStoreConfigurationBuilder;
 import org.infinispan.persistence.jpa.entity.KeyValueEntity;
 import org.infinispan.protostream.SerializationContextInitializer;
+import org.infinispan.test.TestDataSCI;
 import org.testng.annotations.Test;
 
 @Test(groups = "functional", testName = "persistence.JpaStoreParallelIterationTest")
 public class JpaStoreParallelIterationTest extends ParallelIterationTest {
-
-   private static final SerializationContextInitializer CONTEXT_INITIALIZER = new TestDataSerializationContextInitializerImpl();
 
    @Override
    protected void configurePersistence(ConfigurationBuilder cb) {
@@ -22,7 +21,7 @@ public class JpaStoreParallelIterationTest extends ParallelIterationTest {
 
    @Override
    protected SerializationContextInitializer getSerializationContextInitializer() {
-      return CONTEXT_INITIALIZER;
+      return TestDataSCI.INSTANCE;
    }
 
    @Override

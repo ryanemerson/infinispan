@@ -14,7 +14,7 @@ import org.infinispan.persistence.dummy.DummyInMemoryStoreConfigurationBuilder;
 import org.infinispan.protostream.SerializationContextInitializer;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.test.MultipleCacheManagersTest;
-import org.infinispan.test.TestDataSerializationContextInitializerImpl;
+import org.infinispan.test.TestDataSCI;
 import org.testng.annotations.Test;
 
 /**
@@ -27,7 +27,7 @@ import org.testng.annotations.Test;
 public class DistStoreTxDisjointSetTest extends MultipleCacheManagersTest {
    @Override
    protected void createCacheManagers() throws Throwable {
-      SerializationContextInitializer sci = new TestDataSerializationContextInitializerImpl();
+      SerializationContextInitializer sci = TestDataSCI.INSTANCE;
       addClusterEnabledCacheManager(sci, buildCacheConfig("DistCacheStoreTxDisjointSetTest0"));
       addClusterEnabledCacheManager(sci, buildCacheConfig("DistCacheStoreTxDisjointSetTest1"));
       addClusterEnabledCacheManager(sci, buildCacheConfig("DistCacheStoreTxDisjointSetTest2"));

@@ -60,7 +60,6 @@ import org.testng.annotations.Test;
 @Test(groups = "functional", testName = "statetransfer.RemoteGetDuringStateTransferTest")
 @CleanupAfterMethod
 public class RemoteGetDuringStateTransferTest extends MultipleCacheManagersTest {
-   private final SerializationContextInitializer sci = new RemoteGetDuringStateTransferSCIImpl();
    private final List<BlockingLocalTopologyManager> topologyManagerList =
          Collections.synchronizedList(new ArrayList<>(4));
    private final List<ControlledRpcManager> rpcManagerList =
@@ -742,7 +741,7 @@ public class RemoteGetDuringStateTransferTest extends MultipleCacheManagersTest 
 
    @Override
    protected void createCacheManagers() throws Throwable {
-      createClusteredCaches(2, sci, configuration());
+      createClusteredCaches(2, RemoteGetDuringStateTransferSCI.INSTANCE, configuration());
    }
 
    @Override
@@ -776,7 +775,7 @@ public class RemoteGetDuringStateTransferTest extends MultipleCacheManagersTest 
       if (modifyConfiguration != null) {
          modifyConfiguration.accept(configurationBuilder);
       }
-      EmbeddedCacheManager embeddedCacheManager = addClusterEnabledCacheManager(sci, configurationBuilder);
+      EmbeddedCacheManager embeddedCacheManager = addClusterEnabledCacheManager(RemoteGetDuringStateTransferSCI.INSTANCE, configurationBuilder);
       newNode.topologyManager = replaceTopologyManager(embeddedCacheManager);
       newNode.joinerFuture = fork(() -> {
          waitForClusterToForm();
@@ -902,5 +901,6 @@ public class RemoteGetDuringStateTransferTest extends MultipleCacheManagersTest 
          schemaFilePath = "proto/generated",
          schemaPackageName = "org.infinispan.test.core.RemoteGetDuringStateTransferTest")
    interface RemoteGetDuringStateTransferSCI extends SerializationContextInitializer {
+      RemoteGetDuringStateTransferSCI INSTANCE = new RemoteGetDuringStateTransferSCIImpl();
    }
 }

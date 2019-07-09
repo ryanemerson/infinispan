@@ -12,6 +12,7 @@ import org.infinispan.persistence.jpa.configuration.JpaStoreConfigurationBuilder
 import org.infinispan.persistence.spi.MarshallableEntry;
 import org.infinispan.persistence.spi.MarshallableEntryFactory;
 import org.infinispan.test.AbstractInfinispanTest;
+import org.infinispan.test.TestDataSCI;
 import org.infinispan.test.fwk.TestCacheManagerFactory;
 import org.infinispan.util.concurrent.WithinThreadExecutor;
 import org.testng.annotations.AfterMethod;
@@ -44,7 +45,7 @@ public abstract class AbstractJpaStoreTest extends AbstractInfinispanTest {
    }
 
    protected EmbeddedCacheManager createCacheManager() {
-      return TestCacheManagerFactory.createCacheManager(new TestDataSerializationContextInitializerImpl());
+      return TestCacheManagerFactory.createCacheManager(TestDataSCI.INSTANCE);
    }
 
    protected JpaStore createCacheStore() {

@@ -10,7 +10,7 @@ import org.infinispan.distribution.MagicKey;
 import org.infinispan.interceptors.AsyncInterceptorChain;
 import org.infinispan.interceptors.distribution.TxDistributionInterceptor;
 import org.infinispan.test.MultipleCacheManagersTest;
-import org.infinispan.test.TestDataSerializationContextInitializerImpl;
+import org.infinispan.test.TestDataSCI;
 import org.infinispan.test.TestingUtil;
 import org.infinispan.test.fwk.CleanupAfterMethod;
 import org.infinispan.transaction.LockingMode;
@@ -33,7 +33,7 @@ public class StaleEagerLocksOnPrepareFailureTest extends MultipleCacheManagersTe
                .disable()
          .locking()
             .lockAcquisitionTimeout(TestingUtil.shortTimeoutMillis());
-      createCluster(new TestDataSerializationContextInitializerImpl(), cfg, 2);
+      createCluster(TestDataSCI.INSTANCE, cfg, 2);
       waitForClusterToForm();
       c1 = cache(0);
       c2 = cache(1);

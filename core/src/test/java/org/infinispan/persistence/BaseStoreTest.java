@@ -39,7 +39,7 @@ import org.infinispan.protostream.ProtobufUtil;
 import org.infinispan.protostream.SerializationContext;
 import org.infinispan.protostream.SerializationContextInitializer;
 import org.infinispan.test.AbstractInfinispanTest;
-import org.infinispan.test.TestDataSerializationContextInitializerImpl;
+import org.infinispan.test.TestDataSCI;
 import org.infinispan.test.TestingUtil;
 import org.infinispan.test.data.Key;
 import org.infinispan.test.data.Person;
@@ -116,7 +116,7 @@ public abstract class BaseStoreTest extends AbstractInfinispanTest {
     * @return the {@link SerializationContextInitializer} used to initiate the user marshaller
     */
    protected SerializationContextInitializer getSerializationContextInitializer() {
-      return new TestDataSerializationContextInitializerImpl();
+      return TestDataSCI.INSTANCE;
    }
 
    /**
@@ -536,7 +536,7 @@ public abstract class BaseStoreTest extends AbstractInfinispanTest {
       assertIsEmpty();
 
       SerializationContext ctx = ProtobufUtil.newSerializationContext();
-      SerializationContextInitializer sci = new TestDataSerializationContextInitializerImpl();
+      SerializationContextInitializer sci = TestDataSCI.INSTANCE;
       sci.registerSchema(ctx);
       sci.registerMarshallers(ctx);
       Marshaller userMarshaller = new ProtoStreamMarshaller(ctx);

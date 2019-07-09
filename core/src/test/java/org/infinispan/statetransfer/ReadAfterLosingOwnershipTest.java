@@ -33,7 +33,6 @@ import org.testng.annotations.Test;
 @Test(groups = "functional", testName = "statetransfer.ReadAfterLosingOwnershipTest")
 @CleanupAfterMethod
 public class ReadAfterLosingOwnershipTest extends MultipleCacheManagersTest {
-   private final SerializationContextInitializer sci = new ReadAfterLostOwnershipTestSCIImpl();
    private boolean l1 = false;
 
    @Override
@@ -74,7 +73,7 @@ public class ReadAfterLosingOwnershipTest extends MultipleCacheManagersTest {
 
    @Override
    protected void createCacheManagers() throws Throwable {
-      createClusteredCaches(2, sci, createConfigurationBuilder());
+      createClusteredCaches(2, ReadAfterLostOwnershipTestSCI.INSTANCE, createConfigurationBuilder());
    }
 
    protected final ConfigurationBuilder createConfigurationBuilder() {
@@ -96,7 +95,7 @@ public class ReadAfterLosingOwnershipTest extends MultipleCacheManagersTest {
       stateConsumer.setKeyInvalidationListener(listener);
 
       log.debug("Add a 3rd node");
-      addClusterEnabledCacheManager(sci, createConfigurationBuilder());
+      addClusterEnabledCacheManager(ReadAfterLostOwnershipTestSCI.INSTANCE, createConfigurationBuilder());
       Future<Void> join = fork(() -> {
          waitForClusterToForm();
          log.debug("3rd has join");
@@ -202,5 +201,6 @@ public class ReadAfterLosingOwnershipTest extends MultipleCacheManagersTest {
          schemaFilePath = "proto/generated",
          schemaPackageName = "org.infinispan.test.core.ReadAfterLostOwnershipTest")
    interface ReadAfterLostOwnershipTestSCI extends SerializationContextInitializer {
+      ReadAfterLostOwnershipTestSCI INSTANCE = new ReadAfterLostOwnershipTestSCIImpl();
    }
 }

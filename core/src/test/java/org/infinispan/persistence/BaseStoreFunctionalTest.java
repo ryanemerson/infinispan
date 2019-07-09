@@ -35,7 +35,7 @@ import org.infinispan.persistence.spi.MarshallableEntry;
 import org.infinispan.persistence.spi.PersistenceException;
 import org.infinispan.protostream.SerializationContextInitializer;
 import org.infinispan.test.SingleCacheManagerTest;
-import org.infinispan.test.TestDataSerializationContextInitializerImpl;
+import org.infinispan.test.TestDataSCI;
 import org.infinispan.test.TestingUtil;
 import org.infinispan.test.data.Person;
 import org.infinispan.test.fwk.TestCacheManagerFactory;
@@ -52,7 +52,7 @@ import org.testng.annotations.Test;
 @Test(groups = {"unit", "smoke"}, testName = "persistence.BaseStoreFunctionalTest")
 public abstract class BaseStoreFunctionalTest extends SingleCacheManagerTest {
 
-   private static final SerializationContextInitializer CONTEXT_INITIALIZER = new TestDataSerializationContextInitializerImpl();
+   private static final SerializationContextInitializer CONTEXT_INITIALIZER = TestDataSCI.INSTANCE;
 
    protected abstract PersistenceConfigurationBuilder createCacheStoreConfig(PersistenceConfigurationBuilder persistence, boolean preload);
 

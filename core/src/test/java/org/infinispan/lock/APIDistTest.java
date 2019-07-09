@@ -14,7 +14,7 @@ import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.distribution.MagicKey;
 import org.infinispan.test.MultipleCacheManagersTest;
-import org.infinispan.test.TestDataSerializationContextInitializerImpl;
+import org.infinispan.test.TestDataSCI;
 import org.infinispan.test.TestingUtil;
 import org.infinispan.test.fwk.CleanupAfterMethod;
 import org.infinispan.transaction.LockingMode;
@@ -28,7 +28,7 @@ public class APIDistTest extends MultipleCacheManagersTest {
 
    @Override
    protected void createCacheManagers() throws Throwable {
-      createCluster(new TestDataSerializationContextInitializerImpl(), createConfig(), 2);
+      createCluster(TestDataSCI.INSTANCE, createConfig(), 2);
       waitForClusterToForm();
       key = new MagicKey("Key mapped to Cache2", cache(1));
    }

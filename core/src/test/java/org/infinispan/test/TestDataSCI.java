@@ -36,5 +36,6 @@ import org.infinispan.xsite.BringSiteOnlineResponse;
       schemaFileName = "test.proto",
       schemaFilePath = "proto/generated",
       schemaPackageName = "org.infinispan.test.core")
-public interface TestDataSerializationContextInitializer extends SerializationContextInitializer {
+public interface TestDataSCI extends SerializationContextInitializer {
+   TestDataSCI INSTANCE = new TestDataSCIImpl();
 }

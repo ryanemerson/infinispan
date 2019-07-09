@@ -14,10 +14,10 @@ import org.infinispan.configuration.global.GlobalConfigurationBuilder;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.marshall.core.ExternallyMarshallable;
-import org.infinispan.persistence.jpa.TestSerializationContextInitializerImpl;
 import org.infinispan.persistence.jpa.entity.User;
 import org.infinispan.persistence.jpa.entity.Vehicle;
 import org.infinispan.persistence.jpa.entity.VehicleId;
+import org.infinispan.test.TestDataSCI;
 import org.testng.annotations.Test;
 
 /**
@@ -32,7 +32,7 @@ public class JpaConfigurationTest {
       ExternallyMarshallable.addToWhiteList(User.class.getName());
       GlobalConfiguration globalConfig = new GlobalConfigurationBuilder()
             .globalJmxStatistics().transport().defaultTransport()
-            .serialization().contextInitializer(new TestDataSerializationContextInitializerImpl()).build();
+            .serialization().contextInitializer(TestDataSCI.INSTANCE).build();
 
       Configuration cacheConfig = new ConfigurationBuilder().persistence()
             .addStore(JpaStoreConfigurationBuilder.class)
