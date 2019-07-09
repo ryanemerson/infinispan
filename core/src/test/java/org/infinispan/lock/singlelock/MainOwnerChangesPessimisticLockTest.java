@@ -84,7 +84,7 @@ public class MainOwnerChangesPessimisticLockTest extends MultipleCacheManagersTe
       log.trace("Lock transfer happens here");
 
       // add a third node hoping that some of the previously created keys will be migrated to it
-      addClusterEnabledCacheManager(dccc);
+      addClusterEnabledCacheManager(TestDataSCI.INSTANCE, dccc);
       waitForClusterToForm();
 
       // search for a key that was migrated to third node and the suspended TX that locked it

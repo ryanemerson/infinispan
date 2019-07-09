@@ -20,6 +20,7 @@ import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.test.MultipleCacheManagersTest;
 import org.infinispan.test.TestingUtil;
+import org.infinispan.test.data.DelayedMarshallingPojo;
 import org.infinispan.test.fwk.TransportFlags;
 import org.infinispan.transaction.LockingMode;
 import org.infinispan.util.logging.Log;
@@ -354,7 +355,10 @@ public class StateTransferFunctionalTest extends MultipleCacheManagersTest {
    }
 
    @AutoProtoSchemaBuilder(
-         includeClasses = DelayTransfer.class,
+         includeClasses = {
+               DelayedMarshallingPojo.class,
+               DelayTransfer.class
+         },
          schemaFileName = "test.core.StateTransferFunctionalTest.proto",
          schemaFilePath = "proto/generated",
          schemaPackageName = "org.infinispan.test.core.StateTransferFunctionalTest")

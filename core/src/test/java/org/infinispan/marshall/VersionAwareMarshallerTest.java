@@ -86,7 +86,6 @@ import org.infinispan.remoting.responses.UnsureResponse;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.remoting.transport.jgroups.JGroupsAddress;
 import org.infinispan.statetransfer.StateRequestCommand;
-import org.infinispan.statetransfer.WriteSkewDuringStateTransferTest;
 import org.infinispan.test.AbstractInfinispanTest;
 import org.infinispan.test.TestingUtil;
 import org.infinispan.test.data.BrokenMarshallingPojo;
@@ -799,8 +798,7 @@ public class VersionAwareMarshallerTest extends AbstractInfinispanTest {
                VersionAwareMarshallerTest.Human.class,
                VersionAwareMarshallerTest.Pojo.class,
                VersionAwareMarshallerTest.PojoExtended.class,
-               VersionAwareMarshallerTest.PojoWithExternalAndInternal.class,
-               WriteSkewDuringStateTransferTest.ConsistentHashFactoryImpl.class
+               VersionAwareMarshallerTest.PojoWithExternalAndInternal.class
          },
          schemaFileName = "test.core.VersionAwareMarshallerTest.proto",
          schemaFilePath = "proto/generated",

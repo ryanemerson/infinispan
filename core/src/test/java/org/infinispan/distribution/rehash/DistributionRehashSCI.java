@@ -11,5 +11,6 @@ import org.infinispan.protostream.annotations.AutoProtoSchemaBuilder;
       schemaFileName = "test.core.distribution.rehash.proto",
       schemaFilePath = "proto/generated",
       schemaPackageName = "org.infinispan.test.core.distribution.rehash")
-interface DistributionRehashSCI extends SerializationContextInitializer {
+public interface DistributionRehashSCI extends SerializationContextInitializer {
+   DistributionRehashSCI INSTANCE = new DistributionRehashSCIImpl();
 }
