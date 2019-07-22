@@ -179,12 +179,50 @@ public abstract class CacheConfigurationAdd extends AbstractAddStepHandler imple
     }
 
     @Override
+    protected Resource createResource(OperationContext context, ModelNode operation) {
+        Resource resource = super.createResource(context, operation);
+        resource.requireChild(PersistenceConfigurationResource.PATH);
+//        context.addStep((ctx, modelNode) -> {
+//            PathAddress persistenceAddr = PathAddress.EMPTY_ADDRESS;
+//            Resource persistenceResource = context.createResource(persistenceAddr);
+//            Resource r = ctx.getOriginalRootResource();
+//            r.requireChild()
+//            context.addResource(persistenceAddr, new PersistenceConfigurationResource(ctx.getResourceRegistrationForUpdate(), null));
+////            resource.registerChild(PersistenceConfigurationResource.PATH, persistenceResource);
+//        }, OperationContext.Stage.MODEL, false);
+
+//        context.addStep((ctx, modelNode) -> {
+//        PathAddress persistenceAddr = context.getCurrentAddress().append(PersistenceConfigurationResource.PATH);
+//        persistenceAddr = PathAddress.pathAddress(PersistenceConfigurationResource.PATH);
+//        persistenceAddr = PathAddress.EMPTY_ADDRESS;
+//        Resource persistenceResource = context.createResource(persistenceAddr);
+//        context.addResource(persistenceAddr, persistenceResource);
+////            resource.registerChild(PersistenceConfigurationResource.PATH, persistenceResource);
+//        }, OperationContext.Stage.MODEL, false);
+        return resource;
+    }
+
+    @Override
     protected void populateModel(ModelNode operation, ModelNode model) throws OperationFailedException {
         this.populate(operation, model);
     }
 
     @Override
     protected void performRuntime(OperationContext context, ModelNode operation, ModelNode model) throws OperationFailedException {
+
+//        context.getResourceRegistrationForUpdate().getOperationHandler().
+//        PathAddress persistenceAddr = context.getCurrentAddress().append(PersistenceConfigurationResource.PATH);
+//        ModelNode addPersistence = Util.createAddOperation(persistenceAddr);
+//        Resource persistenceResource = context.createResource(context.getCurrentAddress().append(PersistenceConfigurationResource.PATH));
+//
+//        context.readResource(PathAddress.EMPTY_ADDRESS).registerChild(PersistenceConfigurationResource.PATH, persistenceResource);
+//        context.addStep(addPersistence, new OperationStepHandler() {
+//            @Override
+//            public void execute(OperationContext operationContext, ModelNode modelNode) throws OperationFailedException {
+//
+//            }
+//        }, OperationContext.Stage.MODEL);
+
 
         // Because we use child resources in a read-only manner to configure the cache, replace the local model with the full model
         ModelNode cacheModel = Resource.Tools.readModel(context.readResource(PathAddress.EMPTY_ADDRESS));

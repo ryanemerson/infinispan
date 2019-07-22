@@ -7,6 +7,7 @@ import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP_ADDR;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OUTCOME;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.READ_ATTRIBUTE_OPERATION;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.READ_RESOURCE_OPERATION;
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
@@ -65,6 +66,14 @@ public class OperationTestCaseBase extends AbstractSubsystemTest {
         readOp.get(OP_ADDR).set(transportAddress.toModelNode());
         // required attributes
         readOp.get(NAME).set(name);
+        return readOp ;
+    }
+
+    protected static ModelNode getReadResourceOperation(PathAddress address) {
+        // create the address of the subsystem
+        ModelNode readOp = new ModelNode() ;
+        readOp.get(OP).set(READ_RESOURCE_OPERATION);
+        readOp.get(OP_ADDR).set(address.toModelNode());
         return readOp ;
     }
 

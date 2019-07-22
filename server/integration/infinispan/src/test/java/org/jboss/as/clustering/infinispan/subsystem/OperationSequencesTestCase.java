@@ -3,6 +3,8 @@ package org.jboss.as.clustering.infinispan.subsystem;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.FAILED;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.SUCCESS;
 
+import org.jboss.as.controller.PathAddress;
+import org.jboss.as.controller.operations.common.Util;
 import org.jboss.as.subsystem.test.KernelServices;
 import org.jboss.dmr.ModelNode;
 import org.junit.Test;
@@ -79,5 +81,16 @@ public class OperationSequencesTestCase extends OperationTestCaseBase {
         executeAndAssertOutcome(servicesA, addOp, SUCCESS); // add a local cache
         executeAndAssertOutcome(servicesA, removeOp, SUCCESS); // remove the local cache
         executeAndAssertOutcome(servicesA, removeOp, FAILED); // remove the same local cache
+    }
+
+    @Test
+    public void testCacheConfigurationCreateAndRead() throws Exception {
+        String subsystemXml = getSubsystemXml() ;
+        KernelServices servicesA = createKernelServicesBuilder().setSubsystemXml(subsystemXml).build();
+
+        PathAddress configAddr = getCacheConfigurationAddress("minimal", ModelKeys.LOCAL_CACHE_CONFIGURATION, "example");
+        executeAndAssertOutcome(servicesA, Util.createAddOperation(configAddr), SUCCESS); // Create config
+//        executeAndAssertOutcome(servicesA, Util.createAddOperation(configAddr.append(ModelKeys.PERSISTENCE, ModelKeys.PERSISTENCE_NAME)), SUCCESS); // Create config
+        executeAndAssertOutcome(servicesA, getReadResourceOperation(configAddr), SUCCESS); // Read config
     }
 }
