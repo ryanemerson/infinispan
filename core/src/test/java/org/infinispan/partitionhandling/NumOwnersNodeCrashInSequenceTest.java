@@ -14,7 +14,6 @@ import org.infinispan.configuration.global.GlobalConfigurationBuilder;
 import org.infinispan.distribution.MagicKey;
 import org.infinispan.distribution.ch.ConsistentHash;
 import org.infinispan.manager.EmbeddedCacheManager;
-import org.infinispan.marshall.core.JBossUserMarshaller;
 import org.infinispan.partitionhandling.impl.PartitionHandlingManager;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.remoting.transport.jgroups.JGroupsAddress;
@@ -56,7 +55,7 @@ public class NumOwnersNodeCrashInSequenceTest extends MultipleCacheManagersTest 
       configBuilder.clustering().hash().numSegments(4).stateTransfer().timeout(30000);
       globalBuilder = GlobalConfigurationBuilder.defaultClusteredBuilder();
       // Must explicitly add with id >= 2500 so that the user marshaller is able to store it
-      globalBuilder.serialization().addAdvancedExternalizer(JBossUserMarshaller.USER_EXT_ID_MIN, new JGroupsAddress.Externalizer());
+      globalBuilder.serialization().addAdvancedExternalizer(2500, new JGroupsAddress.Externalizer());
    }
 
    public void testNodeCrashedBeforeStFinished0() throws Exception {
