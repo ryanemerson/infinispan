@@ -1880,5 +1880,5 @@ public interface Log extends BasicLogger {
 
    @LogMessage(level = ERROR)
    @Message(value = "Unable to set method %s accessible", id = 555)
-   void unableToSetAccesible(Method m, @Cause Exception e);
+   void unableToSetAccessible(Method m, @Cause Exception e);
 }

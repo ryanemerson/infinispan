@@ -3,6 +3,7 @@ package org.infinispan.marshall.core;
 import java.lang.reflect.Method;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
+import java.util.function.Consumer;
 
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
@@ -26,22 +27,22 @@ final class SecurityActions {
 
    static Method getMethodAndSetAccessible(Class<?> clazz, String methodName, Class<?>... parameterTypes) throws NoSuchMethodException {
       Method method = clazz.getDeclaredMethod(methodName, parameterTypes);
-      setAccessible(method);
+      doPrivileged(() -> method.setAccessible(true), e -> log.unableToSetAccessible(method, e));
       return method;
    }
 
-   private static void setAccessible(Method method) {
+   private static void doPrivileged(Runnable privilegedAction, Consumer<Exception> exceptionHandler) {
       try {
          if (System.getSecurityManager() != null) {
             AccessController.doPrivileged((PrivilegedAction<Void>) () -> {
-               method.setAccessible(true);
+               privilegedAction.run();
                return null;
             });
          } else {
-            method.setAccessible(true);
+            privilegedAction.run();
          }
       } catch (Exception e) {
-         log.unableToSetAccesible(method, e);
+         exceptionHandler.accept(e);
       }
    }
 }
