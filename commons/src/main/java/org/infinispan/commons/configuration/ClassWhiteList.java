@@ -80,7 +80,7 @@ public final class ClassWhiteList {
       this(Collections.emptySet(), regexps);
    }
 
-   private ClassWhiteList(Collection<String> classes, List<String> regexps) {
+   public ClassWhiteList(Collection<String> classes, List<String> regexps) {
       Collection<String> classList = requireNonNull(classes, "Classes must not be null");
       Collection<String> regexList = requireNonNull(regexps, "Regexps must not be null");
       this.classes.addAll(classList);
@@ -110,13 +110,5 @@ public final class ClassWhiteList {
    public void addRegexps(String... regexps) {
       this.regexps.addAll(asList(regexps));
       this.compiled.addAll(stream(regexps).map(Pattern::compile).collect(Collectors.toList()));
-   }
-
-   public Set<String> getClasses() {
-      return classes;
-   }
-
-   public List<String> getRegexps() {
-      return regexps;
    }
 }

@@ -4,7 +4,6 @@ import static org.infinispan.configuration.global.SerializationConfiguration.ADV
 import static org.infinispan.configuration.global.SerializationConfiguration.CLASS_RESOLVER;
 import static org.infinispan.configuration.global.SerializationConfiguration.MARSHALLER;
 import static org.infinispan.configuration.global.SerializationConfiguration.VERSION;
-import static org.infinispan.configuration.global.SerializationConfiguration.WHITE_LIST;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -12,7 +11,6 @@ import java.util.Map;
 import org.infinispan.Version;
 import org.infinispan.commons.CacheConfigurationException;
 import org.infinispan.commons.configuration.Builder;
-import org.infinispan.commons.configuration.ClassWhiteList;
 import org.infinispan.commons.configuration.attributes.AttributeSet;
 import org.infinispan.commons.marshall.AdvancedExternalizer;
 import org.infinispan.commons.marshall.Marshaller;
@@ -22,11 +20,13 @@ import org.infinispan.commons.marshall.Marshaller;
  */
 public class SerializationConfigurationBuilder extends AbstractGlobalConfigurationBuilder implements Builder<SerializationConfiguration> {
    private final AttributeSet attributes;
+   private final WhiteListConfigurationBuilder whiteListBuilder;
    private Map<Integer, AdvancedExternalizer<?>> advancedExternalizers = new HashMap<>();
 
    SerializationConfigurationBuilder(GlobalConfigurationBuilder globalConfig) {
       super(globalConfig);
-      attributes = SerializationConfiguration.attributeDefinitionSet();
+      this.whiteListBuilder = new WhiteListConfigurationBuilder();
+      this.attributes = SerializationConfiguration.attributeDefinitionSet();
    }
 
    /**
@@ -119,31 +119,6 @@ public class SerializationConfigurationBuilder extends AbstractGlobalConfigurati
    }
 
    /**
-    * Helper method that allows for quick registration of classes to the {@link ClassWhiteList}.
-    */
-   public <T> SerializationConfigurationBuilder addClassesToWhiteList(Class<?>... classes) {
-      attributes.attribute(WHITE_LIST).get().addClasses(classes);
-      return this;
-   }
-
-   /**
-    * Helper method that allows for quick registration of classes to the {@link ClassWhiteList}.
-    */
-   public <T> SerializationConfigurationBuilder addClassesToWhiteList(String... classes) {
-      attributes.attribute(WHITE_LIST).get().addClasses(classes);
-      return this;
-   }
-
-
-   /**
-    * Helper method that allows for quick registration of classes to the {@link ClassWhiteList}.
-    */
-   public <T> SerializationConfigurationBuilder addRegexToWhiteList(String... regexps) {
-      attributes.attribute(WHITE_LIST).get().addRegexps(regexps);
-      return this;
-   }
-
-   /**
     * Class resolver to use when unmarshalling objects.
     *
     * @param classResolver
@@ -155,6 +130,10 @@ public class SerializationConfigurationBuilder extends AbstractGlobalConfigurati
       return this;
    }
 
+   public WhiteListConfigurationBuilder whiteList() {
+      return whiteListBuilder;
+   }
+
    @Override
    public void validate() {
       // No-op, no validation required
@@ -164,7 +143,7 @@ public class SerializationConfigurationBuilder extends AbstractGlobalConfigurati
    public
    SerializationConfiguration create() {
       if (!advancedExternalizers.isEmpty()) attributes.attribute(ADVANCED_EXTERNALIZERS).set(advancedExternalizers);
-      return new SerializationConfiguration(attributes.protect());
+      return new SerializationConfiguration(attributes.protect(), whiteListBuilder.create());
    }
 
    @Override

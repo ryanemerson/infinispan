@@ -62,6 +62,7 @@ import org.infinispan.configuration.global.ThreadPoolBuilderAdapter;
 import org.infinispan.configuration.global.ThreadPoolConfiguration;
 import org.infinispan.configuration.global.ThreadsConfigurationBuilder;
 import org.infinispan.configuration.global.TransportConfigurationBuilder;
+import org.infinispan.configuration.global.WhiteListConfigurationBuilder;
 import org.infinispan.conflict.EntryMergePolicy;
 import org.infinispan.conflict.MergePolicy;
 import org.infinispan.eviction.EvictionStrategy;
@@ -169,7 +170,7 @@ public class Parser implements ConfigurationParser {
             }
             case WHITE_LIST: {
                if (reader.getSchema().since(10, 0)) {
-                  parseWhiteList(reader, builder.serialization());
+                  parseWhiteList(reader, builder.serialization().whiteList());
                   break;
                } else {
                   throw ParseUtils.unexpectedElement(reader);
@@ -182,13 +183,23 @@ public class Parser implements ConfigurationParser {
       }
    }
 
-   private void parseWhiteList(final XMLExtendedStreamReader reader, final SerializationConfigurationBuilder builder) throws XMLStreamException {
-      String value = ParseUtils.requireSingleAttribute(reader, Attribute.CLASS, Attribute.REGEX);
-      Attribute attribute = Attribute.forName(reader.getAttributeLocalName(0));
-      if (Attribute.CLASS == attribute)
-         builder.addClassesToWhiteList(value);
-      else
-         builder.addRegexToWhiteList(value);
+   private void parseWhiteList(final XMLExtendedStreamReader reader, final WhiteListConfigurationBuilder builder) throws XMLStreamException {
+      while (reader.hasNext() && (reader.nextTag() != XMLStreamConstants.END_ELEMENT)) {
+         Element element = Element.forName(reader.getLocalName());
+         switch (element) {
+            case CLASS: {
+               builder.addClasses(reader.getElementText());
+               break;
+            }
+            case REGEX: {
+               builder.addRegexps(reader.getElementText());
+               break;
+            }
+            default: {
+               throw ParseUtils.unexpectedElement(reader);
+            }
+         }
+      }
       ParseUtils.requireNoContent(reader);
    }
 

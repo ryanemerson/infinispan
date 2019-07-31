@@ -1,10 +1,12 @@
 package org.infinispan.configuration.global;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.infinispan.Version;
-import org.infinispan.commons.configuration.ClassWhiteList;
 import org.infinispan.commons.configuration.ConfigurationBuilderInfo;
 import org.infinispan.commons.configuration.ConfigurationInfo;
 import org.infinispan.commons.configuration.attributes.Attribute;
@@ -34,34 +36,38 @@ public class SerializationConfiguration implements ConfigurationInfo {
          .copier(CollectionAttributeCopier.INSTANCE)
          .initializer(HashMap::new).immutable().build();
 
-   public static final AttributeDefinition<ClassWhiteList> WHITE_LIST = AttributeDefinition.builder("whiteList", new ClassWhiteList(), ClassWhiteList.class)
-         .immutable().build();
-
    static ElementDefinition ELEMENT_DEFINITION = new DefaultElementDefinition(Element.SERIALIZATION.getLocalName());
 
    static AttributeSet attributeDefinitionSet() {
-      return new AttributeSet(SerializationConfiguration.class, MARSHALLER, VERSION, CLASS_RESOLVER, ADVANCED_EXTERNALIZERS, WHITE_LIST);
+      return new AttributeSet(SerializationConfiguration.class, MARSHALLER, VERSION, CLASS_RESOLVER, ADVANCED_EXTERNALIZERS);
    }
 
    private final Attribute<Map<Integer, AdvancedExternalizer<?>>> advancedExternalizers;
    private final Attribute<Object> classResolver;
    private final Attribute<Marshaller> marshaller;
    private final Attribute<Short> version;
-   private final Attribute<ClassWhiteList> whiteList;
    private final AttributeSet attributes;
+   private final WhiteListConfiguration whiteListConfig;
+   private final List<ConfigurationInfo> subElements;
 
-   SerializationConfiguration(AttributeSet attributes) {
+   SerializationConfiguration(AttributeSet attributes, WhiteListConfiguration whiteListConfig) {
       this.attributes = attributes.checkProtection();
       this.marshaller = attributes.attribute(MARSHALLER);
       this.version = attributes.attribute(VERSION);
       this.classResolver = attributes.attribute(CLASS_RESOLVER);
       this.advancedExternalizers = attributes.attribute(ADVANCED_EXTERNALIZERS);
-      this.whiteList = attributes.attribute(WHITE_LIST);
+      this.whiteListConfig = whiteListConfig;
+      this.subElements = Collections.singletonList(whiteListConfig);
    }
 
    @Override
    public ElementDefinition getElementDefinition() {
       return ELEMENT_DEFINITION;
+   }
+
+   @Override
+   public List<ConfigurationInfo> subElements() {
+      return subElements;
    }
 
    public Marshaller marshaller() {
@@ -81,12 +87,13 @@ public class SerializationConfiguration implements ConfigurationInfo {
       return classResolver.get();
    }
 
-   public ClassWhiteList classWhiteList() {
-      return whiteList.get();
-   }
-
+   @Override
    public AttributeSet attributes() {
       return attributes;
+   }
+
+   public WhiteListConfiguration whiteList() {
+      return whiteListConfig;
    }
 
    @Override
@@ -102,8 +109,7 @@ public class SerializationConfiguration implements ConfigurationInfo {
       if (o == null || getClass() != o.getClass()) return false;
 
       SerializationConfiguration that = (SerializationConfiguration) o;
-
-      return attributes != null ? attributes.equals(that.attributes) : that.attributes == null;
+      return Objects.equals(attributes, that.attributes);
    }
 
    @Override
