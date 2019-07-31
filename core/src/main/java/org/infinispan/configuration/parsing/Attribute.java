@@ -115,6 +115,7 @@ public enum Attribute {
     READ_ONLY,
     REAPER_WAKE_UP_INTERVAL("reaper-interval"),
     RECOVERY_INFO_CACHE_NAME("recovery-cache"),
+    REGEX,
     RELATIVE_TO,
     REMOTE_CACHE,
     REMOTE_COMMAND_EXECUTOR,

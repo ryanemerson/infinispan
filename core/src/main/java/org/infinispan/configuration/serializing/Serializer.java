@@ -14,6 +14,7 @@ import java.util.concurrent.ThreadFactory;
 import javax.xml.stream.XMLStreamException;
 
 import org.infinispan.Version;
+import org.infinispan.commons.configuration.ClassWhiteList;
 import org.infinispan.commons.configuration.ConfigurationFor;
 import org.infinispan.commons.configuration.attributes.AttributeSet;
 import org.infinispan.commons.dataconversion.MediaType;
@@ -428,17 +429,33 @@ public class Serializer extends AbstractStoreSerializer implements Configuration
          if (attributes.attribute(SerializationConfiguration.VERSION).isModified()) {
             writer.writeAttribute(Attribute.VERSION, Version.decodeVersion(serialization.version()));
          }
-         writeAdvancedSerializers(writer, globalConfiguration);
+         SerializationConfiguration config = globalConfiguration.serialization();
+         writeAdvancedSerializers(writer, config);
+         writeClassWhiteList(writer, config);
          writer.writeEndElement();
       }
    }
 
-   private void writeAdvancedSerializers(XMLExtendedStreamWriter writer, GlobalConfiguration globalConfiguration) throws XMLStreamException {
-      Map<Integer, AdvancedExternalizer<?>> externalizers = globalConfiguration.serialization().advancedExternalizers();
+   private void writeAdvancedSerializers(XMLExtendedStreamWriter writer, SerializationConfiguration config) throws XMLStreamException {
+      Map<Integer, AdvancedExternalizer<?>> externalizers = config.advancedExternalizers();
       for (Entry<Integer, AdvancedExternalizer<?>> externalizer : externalizers.entrySet()) {
          writer.writeStartElement(Element.ADVANCED_EXTERNALIZER);
          writer.writeAttribute(Attribute.ID, Integer.toString(externalizer.getKey()));
          writer.writeAttribute(Attribute.CLASS, externalizer.getValue().getClass().getName());
+         writer.writeEndElement();
+      }
+   }
+
+   private void writeClassWhiteList(XMLExtendedStreamWriter writer, SerializationConfiguration config) throws XMLStreamException {
+      ClassWhiteList whiteList = config.classWhiteList();
+      writeClassWhiteListElements(writer, Attribute.CLASS, whiteList.getClasses());
+      writeClassWhiteListElements(writer, Attribute.REGEX, whiteList.getRegexps());
+   }
+
+   private void writeClassWhiteListElements(XMLExtendedStreamWriter writer, Attribute attr, Collection<String> values) throws XMLStreamException {
+      for (String value : values) {
+         writer.writeStartElement(Element.WHITE_LIST);
+         writer.writeAttribute(attr, value);
          writer.writeEndElement();
       }
    }

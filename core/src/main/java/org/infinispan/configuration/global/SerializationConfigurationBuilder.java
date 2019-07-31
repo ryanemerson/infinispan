@@ -4,6 +4,7 @@ import static org.infinispan.configuration.global.SerializationConfiguration.ADV
 import static org.infinispan.configuration.global.SerializationConfiguration.CLASS_RESOLVER;
 import static org.infinispan.configuration.global.SerializationConfiguration.MARSHALLER;
 import static org.infinispan.configuration.global.SerializationConfiguration.VERSION;
+import static org.infinispan.configuration.global.SerializationConfiguration.WHITE_LIST;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -11,6 +12,7 @@ import java.util.Map;
 import org.infinispan.Version;
 import org.infinispan.commons.CacheConfigurationException;
 import org.infinispan.commons.configuration.Builder;
+import org.infinispan.commons.configuration.ClassWhiteList;
 import org.infinispan.commons.configuration.attributes.AttributeSet;
 import org.infinispan.commons.marshall.AdvancedExternalizer;
 import org.infinispan.commons.marshall.Marshaller;
@@ -113,6 +115,31 @@ public class SerializationConfigurationBuilder extends AbstractGlobalConfigurati
       for (AdvancedExternalizer<T> advancedExternalizer : advancedExternalizers) {
          this.addAdvancedExternalizer(advancedExternalizer);
       }
+      return this;
+   }
+
+   /**
+    * Helper method that allows for quick registration of classes to the {@link ClassWhiteList}.
+    */
+   public <T> SerializationConfigurationBuilder addClassesToWhiteList(Class<?>... classes) {
+      attributes.attribute(WHITE_LIST).get().addClasses(classes);
+      return this;
+   }
+
+   /**
+    * Helper method that allows for quick registration of classes to the {@link ClassWhiteList}.
+    */
+   public <T> SerializationConfigurationBuilder addClassesToWhiteList(String... classes) {
+      attributes.attribute(WHITE_LIST).get().addClasses(classes);
+      return this;
+   }
+
+
+   /**
+    * Helper method that allows for quick registration of classes to the {@link ClassWhiteList}.
+    */
+   public <T> SerializationConfigurationBuilder addRegexToWhiteList(String... regexps) {
+      attributes.attribute(WHITE_LIST).get().addRegexps(regexps);
       return this;
    }
 

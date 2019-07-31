@@ -56,6 +56,7 @@ import org.infinispan.configuration.global.GlobalAuthorizationConfigurationBuild
 import org.infinispan.configuration.global.GlobalConfigurationBuilder;
 import org.infinispan.configuration.global.GlobalRoleConfigurationBuilder;
 import org.infinispan.configuration.global.GlobalStateConfigurationBuilder;
+import org.infinispan.configuration.global.SerializationConfigurationBuilder;
 import org.infinispan.configuration.global.ShutdownHookBehavior;
 import org.infinispan.configuration.global.ThreadPoolBuilderAdapter;
 import org.infinispan.configuration.global.ThreadPoolConfiguration;
@@ -159,51 +160,68 @@ public class Parser implements ConfigurationParser {
          }
       }
 
-      parseAdvancedExternalizers(reader, holder);
-   }
-
-   private void parseAdvancedExternalizers(final XMLExtendedStreamReader reader, final ConfigurationBuilderHolder holder)
-         throws XMLStreamException {
-      GlobalConfigurationBuilder builder = holder.getGlobalConfigurationBuilder();
       while (reader.hasNext() && (reader.nextTag() != XMLStreamConstants.END_ELEMENT)) {
          Element element = Element.forName(reader.getLocalName());
          switch (element) {
             case ADVANCED_EXTERNALIZER: {
-               int attributes = reader.getAttributeCount();
-               AdvancedExternalizer<?> advancedExternalizer = null;
-               Integer id = null;
-               ParseUtils.requireAttributes(reader, Attribute.CLASS.getLocalName());
-               for (int i = 0; i < attributes; i++) {
-                  String value = reader.getAttributeValue(i);
-                  Attribute attribute = Attribute.forName(reader.getAttributeLocalName(i));
-                  switch (attribute) {
-                     case CLASS: {
-                        advancedExternalizer = Util.getInstance(value, holder.getClassLoader());
-                        break;
-                     }
-                     case ID: {
-                        id = Integer.valueOf(value);
-                        break;
-                     }
-                     default: {
-                        throw ParseUtils.unexpectedAttribute(reader, i);
-                     }
-                  }
-               }
-
-               ParseUtils.requireNoContent(reader);
-
-               if (id != null) {
-                  builder.serialization().addAdvancedExternalizer(id, advancedExternalizer);
-               } else {
-                  builder.serialization().addAdvancedExternalizer(advancedExternalizer);
-               }
+               parseAdvancedExternalizer(reader, holder.getClassLoader(), builder.serialization());
                break;
+            }
+            case WHITE_LIST: {
+               if (reader.getSchema().since(10, 0)) {
+                  parseWhiteList(reader, builder.serialization());
+                  break;
+               } else {
+                  throw ParseUtils.unexpectedElement(reader);
+               }
             }
             default: {
                throw ParseUtils.unexpectedElement(reader);
             }
          }
+      }
+   }
+
+   private void parseWhiteList(final XMLExtendedStreamReader reader, final SerializationConfigurationBuilder builder) throws XMLStreamException {
+      String value = ParseUtils.requireSingleAttribute(reader, Attribute.CLASS, Attribute.REGEX);
+      Attribute attribute = Attribute.forName(reader.getAttributeLocalName(0));
+      if (Attribute.CLASS == attribute)
+         builder.addClassesToWhiteList(value);
+      else
+         builder.addRegexToWhiteList(value);
+      ParseUtils.requireNoContent(reader);
+   }
+
+   private void parseAdvancedExternalizer(final XMLExtendedStreamReader reader, final ClassLoader classLoader,
+                                          final SerializationConfigurationBuilder builder) throws XMLStreamException {
+      int attributes = reader.getAttributeCount();
+      AdvancedExternalizer<?> advancedExternalizer = null;
+      Integer id = null;
+      ParseUtils.requireAttributes(reader, Attribute.CLASS.getLocalName());
+      for (int i = 0; i < attributes; i++) {
+         String value = reader.getAttributeValue(i);
+         Attribute attribute = Attribute.forName(reader.getAttributeLocalName(i));
+         switch (attribute) {
+            case CLASS: {
+               advancedExternalizer = Util.getInstance(value, classLoader);
+               break;
+            }
+            case ID: {
+               id = Integer.valueOf(value);
+               break;
+            }
+            default: {
+               throw ParseUtils.unexpectedAttribute(reader, i);
+            }
+         }
+      }
+
+      ParseUtils.requireNoContent(reader);
+
+      if (id != null) {
+         builder.addAdvancedExternalizer(id, advancedExternalizer);
+      } else {
+         builder.addAdvancedExternalizer(advancedExternalizer);
       }
    }
 

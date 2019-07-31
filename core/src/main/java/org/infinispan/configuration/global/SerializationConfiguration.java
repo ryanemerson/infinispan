@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.infinispan.Version;
+import org.infinispan.commons.configuration.ClassWhiteList;
 import org.infinispan.commons.configuration.ConfigurationBuilderInfo;
 import org.infinispan.commons.configuration.ConfigurationInfo;
 import org.infinispan.commons.configuration.attributes.Attribute;
@@ -33,16 +34,20 @@ public class SerializationConfiguration implements ConfigurationInfo {
          .copier(CollectionAttributeCopier.INSTANCE)
          .initializer(HashMap::new).immutable().build();
 
+   public static final AttributeDefinition<ClassWhiteList> WHITE_LIST = AttributeDefinition.builder("whiteList", new ClassWhiteList(), ClassWhiteList.class)
+         .immutable().build();
+
    static ElementDefinition ELEMENT_DEFINITION = new DefaultElementDefinition(Element.SERIALIZATION.getLocalName());
 
    static AttributeSet attributeDefinitionSet() {
-      return new AttributeSet(SerializationConfiguration.class, MARSHALLER, VERSION, CLASS_RESOLVER, ADVANCED_EXTERNALIZERS);
+      return new AttributeSet(SerializationConfiguration.class, MARSHALLER, VERSION, CLASS_RESOLVER, ADVANCED_EXTERNALIZERS, WHITE_LIST);
    }
 
    private final Attribute<Map<Integer, AdvancedExternalizer<?>>> advancedExternalizers;
    private final Attribute<Object> classResolver;
    private final Attribute<Marshaller> marshaller;
    private final Attribute<Short> version;
+   private final Attribute<ClassWhiteList> whiteList;
    private final AttributeSet attributes;
 
    SerializationConfiguration(AttributeSet attributes) {
@@ -51,6 +56,7 @@ public class SerializationConfiguration implements ConfigurationInfo {
       this.version = attributes.attribute(VERSION);
       this.classResolver = attributes.attribute(CLASS_RESOLVER);
       this.advancedExternalizers = attributes.attribute(ADVANCED_EXTERNALIZERS);
+      this.whiteList = attributes.attribute(WHITE_LIST);
    }
 
    @Override
@@ -73,6 +79,10 @@ public class SerializationConfiguration implements ConfigurationInfo {
    @Deprecated
    public Object classResolver() {
       return classResolver.get();
+   }
+
+   public ClassWhiteList classWhiteList() {
+      return whiteList.get();
    }
 
    public AttributeSet attributes() {

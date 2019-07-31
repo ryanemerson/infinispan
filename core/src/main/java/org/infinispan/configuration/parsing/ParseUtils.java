@@ -4,9 +4,12 @@ import static javax.xml.stream.XMLStreamConstants.END_ELEMENT;
 import static org.infinispan.commons.util.StringPropertyReplacer.replaceProperties;
 
 import java.io.File;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.xml.XMLConstants;
 import javax.xml.stream.Location;
@@ -87,16 +90,8 @@ public final class ParseUtils {
      * @return the exception
      */
     public static XMLStreamException missingRequired(final XMLStreamReader reader, final Set<?> required) {
-        final StringBuilder b = new StringBuilder();
-        Iterator<?> iterator = required.iterator();
-        while (iterator.hasNext()) {
-            final Object o = iterator.next();
-            b.append(o.toString());
-            if (iterator.hasNext()) {
-                b.append(", ");
-            }
-        }
-        return new XMLStreamException("Missing required attribute(s): " + b, reader.getLocation());
+        String msg = String.format("Missing required attribute(s): %s", formatCollection(required));
+        return new XMLStreamException(msg, reader.getLocation());
     }
 
     /**
@@ -107,16 +102,22 @@ public final class ParseUtils {
      * @return the exception
      */
     public static XMLStreamException missingRequiredElement(final XMLStreamReader reader, final Set<?> required) {
-        final StringBuilder b = new StringBuilder();
-        Iterator<?> iterator = required.iterator();
+        String msg = String.format("Missing required element(s): %s", formatCollection(required));
+        return new XMLStreamException(msg, reader.getLocation());
+    }
+
+
+    private static String formatCollection(Collection<?> collection) {
+        final StringBuilder sb = new StringBuilder();
+        Iterator<?> iterator = collection.iterator();
         while (iterator.hasNext()) {
             final Object o = iterator.next();
-            b.append(o.toString());
+            sb.append(o.toString());
             if (iterator.hasNext()) {
-                b.append(", ");
+                sb.append(", ");
             }
         }
-        return new XMLStreamException("Missing required element(s): " + b, reader.getLocation());
+        return sb.toString();
     }
 
     /**
@@ -228,6 +229,27 @@ public final class ParseUtils {
         return requireSingleAttribute(reader, attribute.toString());
     }
 
+    public static String requireSingleAttribute(final XMLStreamReader reader, final Attribute... attributes)
+          throws XMLStreamException {
+
+        Set<String> attrNames = Arrays.stream(attributes)
+              .map(Attribute::getLocalName)
+              .collect(Collectors.toSet());
+
+        if (reader.getAttributeCount() > 1) {
+            String msg = String.format("Only one of the following attributes are expected '%s'", formatCollection(attrNames));
+            throw new XMLStreamException(msg, reader.getLocation());
+        }
+        requireNoNamespaceAttribute(reader, 0);
+        String name = reader.getAttributeLocalName(0);
+        if (!attrNames.contains(name)) {
+            String msg = String.format("One of the following attributes are expected '%s'", formatCollection(attrNames));
+            throw new XMLStreamException(msg, reader.getLocation());
+        }
+
+        return reader.getAttributeValue(0);
+    }
+
     /**
      * Require all the named attributes, returning their values in order.
      * @param reader the reader
@@ -263,6 +285,7 @@ public final class ParseUtils {
         }
         return requireAttributes(reader, true, attributeNames);
     }
+
 
     public static boolean isNoNamespaceAttribute(final XMLStreamReader reader, final int index) {
         String namespace = reader.getAttributeNamespace(index);

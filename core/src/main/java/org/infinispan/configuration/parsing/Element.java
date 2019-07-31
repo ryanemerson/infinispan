@@ -108,6 +108,7 @@ public enum Element {
     VALUE_DATA_TYPE("value"),
     VERSIONING,
     VOLATILE_CONFIGURATION_STORAGE,
+    WHITE_LIST,
     WRITE_BEHIND,
     ;
 

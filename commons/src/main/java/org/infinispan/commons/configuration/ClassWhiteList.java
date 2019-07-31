@@ -5,6 +5,7 @@ import static java.util.Arrays.stream;
 import static java.util.Objects.requireNonNull;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -102,8 +103,20 @@ public final class ClassWhiteList {
       stream(classes).forEach(c -> this.classes.add(c.getName()));
    }
 
+   public void addClasses(String... classes) {
+      this.classes.addAll(Arrays.asList(classes));
+   }
+
    public void addRegexps(String... regexps) {
       this.regexps.addAll(asList(regexps));
       this.compiled.addAll(stream(regexps).map(Pattern::compile).collect(Collectors.toList()));
+   }
+
+   public Set<String> getClasses() {
+      return classes;
+   }
+
+   public List<String> getRegexps() {
+      return regexps;
    }
 }
