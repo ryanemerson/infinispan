@@ -12,20 +12,16 @@ import org.infinispan.commons.configuration.BuiltBy;
 import org.infinispan.commons.configuration.ClassWhiteList;
 import org.infinispan.commons.configuration.ConfigurationInfo;
 import org.infinispan.commons.configuration.attributes.AttributeDefinition;
-import org.infinispan.commons.configuration.attributes.AttributeSerializer;
 import org.infinispan.commons.configuration.attributes.AttributeSet;
-import org.infinispan.commons.configuration.attributes.NestingAttributeSerializer;
 import org.infinispan.commons.configuration.elements.DefaultElementDefinition;
 import org.infinispan.commons.configuration.elements.ElementDefinition;
 
 @BuiltBy(WhiteListConfigurationBuilder.class)
 public class WhiteListConfiguration implements ConfigurationInfo {
-   private static final AttributeSerializer<List<String>, ?, ?> UNDER_LIST = new NestingAttributeSerializer<>(WHITE_LIST.getLocalName());
-
    static final AttributeDefinition<Set<String>> CLASSES = AttributeDefinition.builder("classes", new HashSet<>(), (Class<Set<String>>) (Class<?>) Set.class)
          .immutable().build();
    static final AttributeDefinition<List<String>> REGEXPS = AttributeDefinition.builder("regexps", new ArrayList<>(), (Class<List<String>>) (Class<?>) List.class)
-         .serializer(UNDER_LIST).immutable().build();
+         .immutable().build();
 
    static ElementDefinition ELEMENT_DEFINITION = new DefaultElementDefinition(WHITE_LIST.getLocalName());
 
