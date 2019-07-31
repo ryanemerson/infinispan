@@ -200,7 +200,6 @@ public class Parser implements ConfigurationParser {
             }
          }
       }
-      ParseUtils.requireNoContent(reader);
    }
 
    private void parseAdvancedExternalizer(final XMLExtendedStreamReader reader, final ClassLoader classLoader,
