@@ -2,7 +2,7 @@ package org.infinispan.tools.store.migrator.marshaller.infinispan9;
 
 import java.io.IOException;
 
-import org.infinispan.marshall.core.AbstractBytesObjectInput;
+import org.infinispan.marshall.core.impl.AbstractBytesObjectInput;
 
 class BytesObjectInput extends AbstractBytesObjectInput {
 

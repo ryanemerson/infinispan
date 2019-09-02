@@ -1,21 +1,20 @@
-package org.infinispan.marshall.core;
+package org.infinispan.marshall.core.impl;
 
 import java.io.EOFException;
 import java.io.ObjectInput;
 
 /**
- * Array backed {@link ObjectInput} implementation.
+ * Array backed abstract {@link ObjectInput} implementation that provides all methods of {@link ObjectInput}, except
+ * {@link ObjectInput#readObject()}.
  *
  * {@link #skip(long)} and {@link #skipBytes(int)} have been enhanced so that
  * if a negative number is passed in, they skip backwards effectively
  * providing rewind capabilities.
- *
- * This should be removed when the {@link GlobalMarshaller} is no longer based on {@link org.infinispan.commons.marshall.StreamingMarshaller}.
  */
-abstract public class AbstractBytesObjectInput implements ObjectInput {
-   final byte bytes[];
-   int pos;
-   int offset; // needed for external JBoss Marshalling, to be able to rewind correctly when the bytes are prepended :(
+public abstract class AbstractBytesObjectInput implements ObjectInput {
+   protected final byte[] bytes;
+   protected int pos;
+   protected int offset; // needed for external JBoss Marshalling, to be able to rewind correctly when the bytes are prepended :(
 
    protected AbstractBytesObjectInput(byte[] bytes, int offset) {
       this.bytes = bytes;

@@ -91,7 +91,7 @@ final class StreamBytesObjectOutput implements ObjectOutput {
 
    @Override
    public void flush() throws IOException {
-      stream.write(out.bytes);
+      stream.write(out.bytes());
       stream.flush();
    }
 
