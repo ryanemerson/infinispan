@@ -11,7 +11,6 @@ import org.infinispan.commons.dataconversion.MediaType;
 import org.infinispan.commons.io.ByteBuffer;
 import org.infinispan.commons.io.ByteBufferImpl;
 import org.infinispan.commons.marshall.BufferSizePredictor;
-import org.infinispan.commons.marshall.JavaSerializationMarshaller;
 import org.infinispan.commons.marshall.Marshaller;
 import org.infinispan.commons.marshall.MarshallingException;
 import org.infinispan.commons.util.Util;
@@ -23,6 +22,7 @@ import org.infinispan.factories.annotations.Inject;
 import org.infinispan.factories.annotations.Start;
 import org.infinispan.factories.scopes.Scope;
 import org.infinispan.factories.scopes.Scopes;
+import org.infinispan.marshall.core.impl.ExternalizerAwareSerializationMarshaller;
 import org.infinispan.marshall.persistence.PersistenceMarshaller;
 import org.infinispan.protostream.ProtobufUtil;
 import org.infinispan.protostream.SerializationContext;
@@ -98,7 +98,7 @@ public class PersistenceMarshallerImpl implements PersistenceMarshaller {
             throw new CacheException("Unable to start PersistenceMarshaller with JBossUserMarshaller", e);
          }
       } catch (ClassNotFoundException e) {
-         return new JavaSerializationMarshaller(gcr.getCacheManager().getClassWhiteList());
+         return new ExternalizerAwareSerializationMarshaller(gcr);
       }
    }
 

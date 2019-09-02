@@ -3,12 +3,10 @@ package org.infinispan.marshall.core;
 import java.io.IOException;
 import java.io.ObjectInput;
 
+import org.infinispan.marshall.core.impl.AbstractBytesObjectInput;
+
 /**
- * Array backed {@link ObjectInput} implementation.
- *
- * {@link #skip(long)} and {@link #skipBytes(int)} have been enhanced so that
- * if a negative number is passed in, they skip backwards effectively
- * providing rewind capabilities.
+ * Array backed {@link ObjectInput} implementation that utilises the {@link GlobalMarshaller} to read objects.
  */
 final class BytesObjectInput extends AbstractBytesObjectInput {
 

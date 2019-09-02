@@ -192,7 +192,7 @@ public class GlobalMarshaller implements StreamingMarshaller {
    private BytesObjectOutput writeObjectOutput(Object obj) throws IOException {
       BufferSizePredictor sizePredictor = marshallableTypeHints.getBufferSizePredictor(obj);
       BytesObjectOutput out = writeObjectOutput(obj, sizePredictor.nextSize(obj));
-      sizePredictor.recordSize(out.pos);
+      sizePredictor.recordSize(out.size());
       return out;
    }
 

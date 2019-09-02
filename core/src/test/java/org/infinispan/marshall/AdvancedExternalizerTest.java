@@ -1,22 +1,28 @@
 package org.infinispan.marshall;
 
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertNotNull;
+
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.lang.reflect.Method;
 import java.util.Date;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import org.infinispan.Cache;
 import org.infinispan.commons.marshall.AbstractExternalizer;
 import org.infinispan.commons.marshall.AdvancedExternalizer;
+import org.infinispan.commons.marshall.SerializeWith;
 import org.infinispan.commons.util.Util;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.configuration.global.GlobalConfigurationBuilder;
-import org.infinispan.manager.CacheContainer;
+import org.infinispan.marshall.persistence.PersistenceMarshaller;
 import org.infinispan.test.MultipleCacheManagersTest;
-import org.infinispan.test.fwk.TestCacheManagerFactory;
+import org.infinispan.test.TestingUtil;
 import org.testng.annotations.Test;
 
 /**
@@ -30,13 +36,9 @@ public class AdvancedExternalizerTest extends MultipleCacheManagersTest {
 
    @Override
    protected void createCacheManagers() throws Throwable {
-      GlobalConfigurationBuilder globalCfg1 = createForeignExternalizerGlobalConfig();
-      GlobalConfigurationBuilder globalCfg2 = createForeignExternalizerGlobalConfig();
+      GlobalConfigurationBuilder globalConfig = createForeignExternalizerGlobalConfig();
       ConfigurationBuilder cfg = getDefaultClusteredCacheConfig(CacheMode.REPL_SYNC, false);
-      CacheContainer cm1 = TestCacheManagerFactory.createClusteredCacheManager(globalCfg1, cfg);
-      CacheContainer cm2 = TestCacheManagerFactory.createClusteredCacheManager(globalCfg2, cfg);
-      registerCacheManager(cm1, cm2);
-      defineConfigurationOnAllManagers(getCacheName(), cfg);
+      createCluster(globalConfig, cfg, 2);
       waitForClusterToForm(getCacheName());
    }
 
@@ -47,7 +49,7 @@ public class AdvancedExternalizerTest extends MultipleCacheManagersTest {
    protected GlobalConfigurationBuilder createForeignExternalizerGlobalConfig() {
       GlobalConfigurationBuilder builder = new GlobalConfigurationBuilder().clusteredDefault();
       builder.serialization()
-         .addAdvancedExternalizer(1234, new IdViaConfigObj.Externalizer())
+         .addAdvancedExternalizer(AdvancedExternalizer.USER_EXT_ID_MIN, new IdViaConfigObj.Externalizer())
          .addAdvancedExternalizer(new IdViaAnnotationObj.Externalizer())
          .addAdvancedExternalizer(3456, new IdViaBothObj.Externalizer());
       return builder;
@@ -59,15 +61,48 @@ public class AdvancedExternalizerTest extends MultipleCacheManagersTest {
       IdViaConfigObj configObj = new IdViaConfigObj().setName("Galder");
       String key = "k-" + m.getName() + "-viaConfig";
       cache1.put(key, configObj);
-      assert configObj.name.equals(((IdViaConfigObj)cache2.get(key)).name);
+      assertEquals(configObj.name, ((IdViaConfigObj)cache2.get(key)).name);
       IdViaAnnotationObj annotationObj = new IdViaAnnotationObj().setDate(new Date(System.currentTimeMillis()));
       key = "k-" + m.getName() + "-viaAnnotation";
       cache1.put(key, annotationObj);
-      assert annotationObj.date.equals(((IdViaAnnotationObj)cache2.get(key)).date);
+      assertEquals(annotationObj.date, ((IdViaAnnotationObj)cache2.get(key)).date);
       IdViaBothObj bothObj = new IdViaBothObj().setAge(30);
       key = "k-" + m.getName() + "-viaBoth";
       cache1.put(key, bothObj);
-      assert bothObj.age == ((IdViaBothObj)cache2.get(key)).age;
+      assertEquals(bothObj.age, ((IdViaBothObj)cache2.get(key)).age);
+   }
+
+   public void testExternalizerConfigInfo() {
+      Map<Integer, AdvancedExternalizer<?>> advExts =
+            manager(0).getCacheManagerConfiguration().serialization().advancedExternalizers();
+
+      assertEquals(3, advExts.size());
+      assertExternalizer(advExts, AdvancedExternalizer.USER_EXT_ID_MIN, IdViaConfigObj.Externalizer.class, false);
+      assertExternalizer(advExts, 3456, IdViaBothObj.Externalizer.class, false);
+      assertExternalizer(advExts, 5678, IdViaAnnotationObj.Externalizer.class, true);
+   }
+
+   private void assertExternalizer(Map<Integer, AdvancedExternalizer<?>> exts, Integer id, Class expectedClass, boolean assertId) {
+      AdvancedExternalizer<?> ext = exts.get(id);
+      assertNotNull(ext);
+      assertEquals(expectedClass, ext.getClass());
+      if (assertId)
+         assertEquals(id, ext.getId());
+   }
+
+   public void testPersistenceMarshallerWithExternalizer() throws Exception {
+      testMarshallObjectWithPersistenceMarshaller(new IdViaConfigObj().setName("Test"));
+   }
+
+   public void testPersistenceMarshallerWithAnnotatedExternalizer() throws Exception {
+      testMarshallObjectWithPersistenceMarshaller(new AnnotatedObject().setName("Test"));
+   }
+
+   private void testMarshallObjectWithPersistenceMarshaller(Object obj) throws Exception {
+      PersistenceMarshaller pm = TestingUtil.extractPersistenceMarshaller(manager(0));
+      byte[] bytes = pm.objectToByteBuffer(obj);
+      Object deserialized = pm.objectFromByteBuffer(bytes);
+      assertEquals(obj, deserialized);
    }
 
    public static class IdViaConfigObj {
@@ -76,6 +111,26 @@ public class AdvancedExternalizerTest extends MultipleCacheManagersTest {
       public IdViaConfigObj setName(String name) {
          this.name = name;
          return this;
+      }
+
+      @Override
+      public boolean equals(Object o) {
+         if (this == o) return true;
+         if (o == null || getClass() != o.getClass()) return false;
+         IdViaConfigObj that = (IdViaConfigObj) o;
+         return Objects.equals(name, that.name);
+      }
+
+      @Override
+      public int hashCode() {
+         return Objects.hash(name);
+      }
+
+      @Override
+      public String toString() {
+         return "IdViaConfigObj{" +
+               "name='" + name + '\'' +
+               '}';
       }
 
       public static class Externalizer extends AbstractExternalizer<IdViaConfigObj> {
@@ -158,4 +213,43 @@ public class AdvancedExternalizerTest extends MultipleCacheManagersTest {
       }
    }
 
+   @SerializeWith(AnnotatedObject.Externalizer.class)
+   public static class AnnotatedObject {
+
+      String name;
+
+      AnnotatedObject setName(String name) {
+         this.name = name;
+         return this;
+      }
+
+      @Override
+      public boolean equals(Object o) {
+         if (this == o) return true;
+         if (o == null || getClass() != o.getClass()) return false;
+         AnnotatedObject that = (AnnotatedObject) o;
+         return Objects.equals(name, that.name);
+      }
+
+      @Override
+      public int hashCode() {
+         return Objects.hash(name);
+      }
+
+      public static class Externalizer implements org.infinispan.commons.marshall.Externalizer<AnnotatedObject> {
+
+         public Externalizer() {
+         }
+
+         @Override
+         public void writeObject(ObjectOutput output, AnnotatedObject object) throws IOException {
+            output.writeUTF(object.name);
+         }
+
+         @Override
+         public AnnotatedObject readObject(ObjectInput input) throws IOException, ClassNotFoundException {
+            return new AnnotatedObject().setName(input.readUTF());
+         }
+      }
+   }
 }
