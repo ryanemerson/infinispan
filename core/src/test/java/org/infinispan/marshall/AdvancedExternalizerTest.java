@@ -15,11 +15,13 @@ import java.util.Set;
 import org.infinispan.Cache;
 import org.infinispan.commons.marshall.AbstractExternalizer;
 import org.infinispan.commons.marshall.AdvancedExternalizer;
+import org.infinispan.commons.marshall.MarshallingException;
 import org.infinispan.commons.marshall.SerializeWith;
 import org.infinispan.commons.util.Util;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.configuration.global.GlobalConfigurationBuilder;
+import org.infinispan.marshall.core.GlobalMarshaller;
 import org.infinispan.marshall.persistence.PersistenceMarshaller;
 import org.infinispan.test.MultipleCacheManagersTest;
 import org.infinispan.test.TestingUtil;
@@ -88,6 +90,14 @@ public class AdvancedExternalizerTest extends MultipleCacheManagersTest {
       assertEquals(expectedClass, ext.getClass());
       if (assertId)
          assertEquals(id, ext.getId());
+   }
+
+   @Test(expectedExceptions = MarshallingException.class)
+   public void testGlobalMarshallerPmWithExternalizer() throws Exception {
+      GlobalMarshaller gm = TestingUtil.extractGlobalMarshaller(manager(0));
+      PersistenceMarshaller pm = gm.getPersistenceMarshaller();
+      // Should fail as GlobalMarshaller's PersistenceMarshaller directly uses JavaSerializationMarshaller by default
+      pm.objectToByteBuffer(new IdViaConfigObj().setName("Expect Fail"));
    }
 
    public void testPersistenceMarshallerWithExternalizer() throws Exception {

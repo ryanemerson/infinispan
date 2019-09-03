@@ -11,6 +11,7 @@ import org.infinispan.commons.dataconversion.MediaType;
 import org.infinispan.commons.io.ByteBuffer;
 import org.infinispan.commons.io.ByteBufferImpl;
 import org.infinispan.commons.marshall.BufferSizePredictor;
+import org.infinispan.commons.marshall.JavaSerializationMarshaller;
 import org.infinispan.commons.marshall.Marshaller;
 import org.infinispan.commons.marshall.MarshallingException;
 import org.infinispan.commons.util.Util;
@@ -20,6 +21,7 @@ import org.infinispan.configuration.internal.PrivateGlobalConfiguration;
 import org.infinispan.factories.GlobalComponentRegistry;
 import org.infinispan.factories.annotations.Inject;
 import org.infinispan.factories.annotations.Start;
+import org.infinispan.factories.annotations.Stop;
 import org.infinispan.factories.scopes.Scope;
 import org.infinispan.factories.scopes.Scopes;
 import org.infinispan.marshall.core.impl.ExternalizerAwareSerializationMarshaller;
@@ -52,11 +54,27 @@ public class PersistenceMarshallerImpl implements PersistenceMarshaller {
    private static final Log log = LogFactory.getLog(PersistenceMarshallerImpl.class, Log.class);
 
    @Inject GlobalComponentRegistry gcr;
-   private final SerializationContext serializationContext = ProtobufUtil.newSerializationContext();
+   private final SerializationContext serializationContext;
 
    private Marshaller userMarshaller;
 
+   // Should only be used by GlobalMarshaller, can be removed when ISPN-. Allows direct use of JavaSerializationMarshaller.
+   public static PersistenceMarshaller getGlobalMarshallerDelegate(PersistenceMarshallerImpl pm) {
+      if (pm.userMarshaller instanceof ExternalizerAwareSerializationMarshaller) {
+         Marshaller userMarshaller = new JavaSerializationMarshaller(pm.gcr.getCacheManager().getClassWhiteList());
+         return new PersistenceMarshallerImpl(pm.gcr, pm.serializationContext, userMarshaller);
+      }
+      return pm;
+   }
+
+   private PersistenceMarshallerImpl(GlobalComponentRegistry gcr, SerializationContext serializationContext, Marshaller userMarshaller) {
+      this.gcr = gcr;
+      this.serializationContext = serializationContext;
+      this.userMarshaller = userMarshaller;
+   }
+
    public PersistenceMarshallerImpl() {
+      this.serializationContext = ProtobufUtil.newSerializationContext();
    }
 
    @Start
@@ -98,7 +116,7 @@ public class PersistenceMarshallerImpl implements PersistenceMarshaller {
             throw new CacheException("Unable to start PersistenceMarshaller with JBossUserMarshaller", e);
          }
       } catch (ClassNotFoundException e) {
-         return new ExternalizerAwareSerializationMarshaller(gcr);
+         return new ExternalizerAwareSerializationMarshaller(globalConfig, gcr.getCacheManager().getClassWhiteList());
       }
    }
 
@@ -115,6 +133,7 @@ public class PersistenceMarshallerImpl implements PersistenceMarshaller {
    }
 
    @Override
+   @Stop
    public void stop() {
       if (userMarshaller != null)
          userMarshaller.stop();
