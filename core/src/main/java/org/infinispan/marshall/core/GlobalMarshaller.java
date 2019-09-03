@@ -41,6 +41,7 @@ import org.infinispan.marshall.core.impl.ClassToExternalizerMap.IdToExternalizer
 import org.infinispan.marshall.core.impl.ExternalExternalizers;
 import org.infinispan.marshall.exts.ThrowableExternalizer;
 import org.infinispan.marshall.persistence.PersistenceMarshaller;
+import org.infinispan.marshall.persistence.impl.PersistenceMarshallerImpl;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 
@@ -109,8 +110,9 @@ public class GlobalMarshaller implements StreamingMarshaller {
 
    @Inject GlobalComponentRegistry gcr;
    @Inject RemoteCommandsFactory cmdFactory;
+   // Should only be used to initialize globalPersistenceMarshaller in start()
    @Inject @ComponentName(KnownComponentNames.PERSISTENCE_MARSHALLER)
-   PersistenceMarshaller persistenceMarshaller;
+   PersistenceMarshallerImpl persistenceMarshaller;
 
    ClassToExternalizerMap internalExts;
    IdToExternalizerMap reverseInternalExts;
@@ -119,13 +121,14 @@ public class GlobalMarshaller implements StreamingMarshaller {
    private ClassIdentifiers classIdentifiers;
    private ClassLoader classLoader;
 
+   private PersistenceMarshaller globalPersistenceMarshaller;
    private Marshaller external;
 
    public GlobalMarshaller() {
    }
 
    @Override
-   @Start(priority = 8) // Should start after the externalizer table and before transport
+   @Start // Should start after the externalizer table and before transport
    public void start() {
       GlobalConfiguration globalCfg = gcr.getGlobalConfiguration();
       classLoader = globalCfg.classLoader();
@@ -144,6 +147,11 @@ public class GlobalMarshaller implements StreamingMarshaller {
       }
 
       classIdentifiers = ClassIdentifiers.load(globalCfg);
+
+      // Create clone of the PersistenceMarshaller which utilises the same SerializationContext as the injected
+      // marshaller, but directly uses JavaSerializationMarshaller as the userMarshaller if ExternalizerAwareSerializationMarshaller
+      // is configured as there is no need for the additional externalizer checks in the GlobalMarshaller context.
+      globalPersistenceMarshaller = PersistenceMarshallerImpl.getGlobalMarshallerDelegate(persistenceMarshaller);
       try {
          Class<StreamingMarshaller> clazz = Util.loadClassStrict("org.infinispan.jboss.marshalling.core.ExternalJBossMarshaller", globalCfg.classLoader());
          try {
@@ -157,9 +165,9 @@ public class GlobalMarshaller implements StreamingMarshaller {
             throw new CacheException("Unable to start GlobalMarshaller with ExternalJbossMarshaller", e);
          }
       } catch (ClassNotFoundException e) {
-         // When GlobalMarshaller is not dependent on jboss-marshalling, just load the PersistenceMarshaller which loads
+         // When GlobalMarshaller is not dependent on jboss-marshalling, just load the globalPersistenceMarshaller which loads
          // and initialises the configured user marshaller.
-         external = persistenceMarshaller;
+         external = globalPersistenceMarshaller;
       }
    }
 
@@ -175,7 +183,7 @@ public class GlobalMarshaller implements StreamingMarshaller {
    }
 
    public PersistenceMarshaller getPersistenceMarshaller() {
-      return persistenceMarshaller;
+      return globalPersistenceMarshaller;
    }
 
    @Override

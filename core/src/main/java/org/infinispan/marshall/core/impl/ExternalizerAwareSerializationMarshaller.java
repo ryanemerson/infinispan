@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.ObjectInput;
 
 import org.infinispan.commons.CacheException;
+import org.infinispan.commons.configuration.ClassWhiteList;
 import org.infinispan.commons.dataconversion.MediaType;
 import org.infinispan.commons.io.ByteBuffer;
 import org.infinispan.commons.marshall.AbstractMarshaller;
@@ -13,7 +14,6 @@ import org.infinispan.commons.marshall.JavaSerializationMarshaller;
 import org.infinispan.commons.marshall.SerializeWith;
 import org.infinispan.commons.util.Util;
 import org.infinispan.configuration.global.GlobalConfiguration;
-import org.infinispan.factories.GlobalComponentRegistry;
 import org.infinispan.persistence.spi.InitializationContext;
 
 /**
@@ -46,12 +46,11 @@ public class ExternalizerAwareSerializationMarshaller extends AbstractMarshaller
    private final ClassToExternalizerMap.IdToExternalizerMap reverseExts;
    private final JavaSerializationMarshaller serializationMarshaller;
 
-   public ExternalizerAwareSerializationMarshaller(GlobalComponentRegistry gcr) {
-      GlobalConfiguration globalCfg = gcr.getGlobalConfiguration();
+   public ExternalizerAwareSerializationMarshaller(GlobalConfiguration globalCfg, ClassWhiteList whiteList) {
       this.classLoader = globalCfg.classLoader();
       this.externalExts = ExternalExternalizers.load(globalCfg, AdvancedExternalizer.USER_EXT_ID_MIN, Integer.MAX_VALUE);
       this.reverseExts = externalExts.reverseMap();
-      this.serializationMarshaller = new JavaSerializationMarshaller(gcr.getCacheManager().getClassWhiteList());
+      this.serializationMarshaller = new JavaSerializationMarshaller(whiteList);
    }
 
    @Override
