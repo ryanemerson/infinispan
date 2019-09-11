@@ -25,4 +25,30 @@ public class UserMarshallerBytes {
    public byte[] getBytes() {
       return bytes;
    }
+
+   public static int size(int objectBytes) {
+      int typeId = ProtoStreamTypeIds.USER_MARSHALLER_BYTES;
+      int typeIdSize = tagSize(19, 1) + computeUInt32SizeNoTag(typeId);
+      int userBytesFieldSize = tagSize(1, 2) + computeUInt32SizeNoTag(objectBytes) + objectBytes;
+      int wrappedMessageSize = tagSize(17, 2) + computeUInt32SizeNoTag(objectBytes);
+
+      return typeIdSize + userBytesFieldSize + wrappedMessageSize;
+   }
+
+   private static int tagSize(int fieldNumber, int wireType) {
+      return computeUInt32SizeNoTag(fieldNumber << 3 | wireType);
+   }
+
+   // Protobuf logic included to avoid requiring a dependency on com.google.protobuf.CodedOutputStream
+   private static int computeUInt32SizeNoTag(int value) {
+      if ((value & -128) == 0) {
+         return 1;
+      } else if ((value & -16384) == 0) {
+         return 2;
+      } else if ((value & -2097152) == 0) {
+         return 3;
+      } else {
+         return (value & -268435456) == 0 ? 4 : 5;
+      }
+   }
 }

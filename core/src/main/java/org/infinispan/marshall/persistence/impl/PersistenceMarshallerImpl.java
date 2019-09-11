@@ -264,19 +264,17 @@ public class PersistenceMarshallerImpl implements PersistenceMarshaller {
    }
 
    private int sizeEstimate(Object o, boolean persistenceClass) {
-      // hardcoded for now in order to avoid requiring a dependency on com.google.protobuf.CodedOutputStream
-      // Dynamic estimates will be provided in future protostream version
-      int wrapperEstimate = 40;
       if (persistenceClass) {
          if (o instanceof UserMarshallerBytes) {
             byte[] user = ((UserMarshallerBytes) o).getBytes();
-            return wrapperEstimate + user.length;
+            return UserMarshallerBytes.size(user.length);
          }
          // Return the CodedOutputStream.DEFAULT_BUFFER_SIZE as this is equivalent to passing no estimate
+         // Dynamic estimates will be provided in a future protostream version IPROTO-89
          return 4096;
       }
       int userBytesEstimate = userMarshaller.getBufferSizePredictor(o.getClass()).nextSize(o);
-      return wrapperEstimate + userBytesEstimate;
+      return UserMarshallerBytes.size(userBytesEstimate);
    }
 
    private boolean isPersistenceClass(Object o) {
