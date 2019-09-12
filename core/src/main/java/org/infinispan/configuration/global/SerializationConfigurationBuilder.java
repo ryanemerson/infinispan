@@ -3,7 +3,7 @@ package org.infinispan.configuration.global;
 import static org.infinispan.configuration.global.SerializationConfiguration.ADVANCED_EXTERNALIZERS;
 import static org.infinispan.configuration.global.SerializationConfiguration.CLASS_RESOLVER;
 import static org.infinispan.configuration.global.SerializationConfiguration.MARSHALLER;
-import static org.infinispan.configuration.global.SerializationConfiguration.SERIALIZATION_CONTEXT_INITIALIZERS;
+import static org.infinispan.configuration.global.SerializationConfiguration.PROTOSTREAM_CTX_INITIALIZERS;
 import static org.infinispan.configuration.global.SerializationConfiguration.VERSION;
 
 import java.util.ArrayList;
@@ -18,6 +18,7 @@ import org.infinispan.commons.configuration.attributes.AttributeSet;
 import org.infinispan.commons.marshall.AdvancedExternalizer;
 import org.infinispan.commons.marshall.Marshaller;
 import org.infinispan.commons.util.Version;
+import org.infinispan.marshall.protostream.DefaultProtoStreamContextInitializer;
 import org.infinispan.protostream.SerializationContextInitializer;
 
 /**
@@ -135,20 +136,25 @@ public class SerializationConfigurationBuilder extends AbstractGlobalConfigurati
       return this;
    }
 
-   public SerializationConfigurationBuilder addContextInitializer(SerializationContextInitializer sci) {
-      Collection<SerializationContextInitializer> scis = attributes.attribute(SERIALIZATION_CONTEXT_INITIALIZERS).get();
-      if (scis == null)
-         scis = new ArrayList<>();
-      scis.add(sci);
+   /**
+    * Convenience method for when ProtoStream marshalling is desired for primitive types, but no user
+    * {@link SerializationContextInitializer} is required for additional types.
+    */
+   public SerializationConfigurationBuilder useProtoStream() {
+      return addProtoStreamContextInitializer(new DefaultProtoStreamContextInitializer());
+   }
+
+   public SerializationConfigurationBuilder addProtoStreamContextInitializer(SerializationContextInitializer sci) {
+      attributes.attribute(PROTOSTREAM_CTX_INITIALIZERS).computeIfAbsent(ArrayList::new).add(sci);
       return this;
    }
 
-   public SerializationConfigurationBuilder addContextInitializers(SerializationContextInitializer... scis) {
-      return addContextInitializers(Arrays.asList(scis));
+   public SerializationConfigurationBuilder addProtoStreamContextInitializers(SerializationContextInitializer... scis) {
+      return addProtoStreamContextInitializers(Arrays.asList(scis));
    }
 
-   public SerializationConfigurationBuilder addContextInitializers(Collection<SerializationContextInitializer> scis) {
-      attributes.attribute(SERIALIZATION_CONTEXT_INITIALIZERS).set(scis);
+   public SerializationConfigurationBuilder addProtoStreamContextInitializers(Collection<SerializationContextInitializer> scis) {
+      attributes.attribute(PROTOSTREAM_CTX_INITIALIZERS).set(scis);
       return this;
    }
 

@@ -114,7 +114,7 @@ public final class LifecycleManager implements ModuleLifecycle {
 
       SerializationContext serCtx = protobufMetadataManager.getSerializationContext();
       ClassLoader classLoader = globalCfg.classLoader();
-      processSerializationContextInitializer(globalCfg.serialization().contextInitializers(), serCtx);
+      processSerializationContextInitializer(globalCfg.serialization().protostreamCtxInitializers(), serCtx);
       processProtostreamSerializationContextInitializers(classLoader, serCtx);
 
       EncoderRegistry encoderRegistry = gcr.getComponent(EncoderRegistry.class);

@@ -65,6 +65,7 @@ import org.infinispan.conflict.EntryMergePolicy;
 import org.infinispan.conflict.MergePolicy;
 import org.infinispan.distribution.group.Grouper;
 import org.infinispan.factories.threads.DefaultThreadFactory;
+import org.infinispan.marshall.protostream.DefaultProtoStreamContextInitializer;
 import org.infinispan.protostream.SerializationContextInitializer;
 import org.infinispan.remoting.transport.jgroups.EmbeddedJGroupsChannelConfigurator;
 import org.infinispan.remoting.transport.jgroups.FileJGroupsChannelConfigurator;
@@ -450,11 +451,14 @@ public class Serializer extends AbstractStoreSerializer implements Configuration
    }
 
    private void writeSerializationContextInitializers(XMLExtendedStreamWriter writer, SerializationConfiguration config) throws XMLStreamException {
-      Collection<SerializationContextInitializer> scis = config.contextInitializers();
+      Collection<SerializationContextInitializer> scis = config.protostreamCtxInitializers();
       if (scis != null) {
-         for (SerializationContextInitializer sci : config.contextInitializers()) {
-            writer.writeStartElement(Element.SERIALIZATION_CONTEXT_INITIALIZER);
-            writer.writeAttribute(Attribute.CLASS, sci.getClass().getName());
+         for (SerializationContextInitializer sci : config.protostreamCtxInitializers()) {
+            writer.writeStartElement(Element.PROTOSTREAM_CTX_INITIALIZER);
+            String sciName = sci.getClass().getName();
+            if (!DefaultProtoStreamContextInitializer.class.getName().equals(sciName)) {
+               writer.writeAttribute(Attribute.CLASS, sciName);
+            }
             writer.writeEndElement();
          }
       }

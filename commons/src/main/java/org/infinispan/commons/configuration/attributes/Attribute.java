@@ -3,6 +3,7 @@ package org.infinispan.commons.configuration.attributes;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Supplier;
 
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
@@ -63,6 +64,12 @@ public final class Attribute<T> implements Cloneable, Matchable<Attribute<?>> {
       this.value = value;
       this.modified = true;
       this.fireValueChanged(oldValue);
+   }
+
+   public T computeIfAbsent(Supplier<T> supplier) {
+      if (value == null)
+         set(supplier.get());
+      return value;
    }
 
    public boolean isImmutable() {

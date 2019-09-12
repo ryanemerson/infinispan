@@ -38,13 +38,13 @@ public class SerializationConfiguration implements ConfigurationInfo {
          .copier(CollectionAttributeCopier.INSTANCE)
          .initializer(HashMap::new).immutable().build();
 
-   public static final AttributeDefinition<Collection<SerializationContextInitializer>> SERIALIZATION_CONTEXT_INITIALIZERS =
-         AttributeDefinition.builder("contextInitializers", null, (Class<Collection<SerializationContextInitializer>>) (Class<?>) Collection.class).immutable().build();
+   public static final AttributeDefinition<Collection<SerializationContextInitializer>> PROTOSTREAM_CTX_INITIALIZERS =
+         AttributeDefinition.builder("protostreamCtxInitializers", null, (Class<Collection<SerializationContextInitializer>>) (Class<?>) Collection.class).immutable().build();
 
    static ElementDefinition ELEMENT_DEFINITION = new DefaultElementDefinition(Element.SERIALIZATION.getLocalName());
 
    static AttributeSet attributeDefinitionSet() {
-      return new AttributeSet(SerializationConfiguration.class, MARSHALLER, VERSION, CLASS_RESOLVER, ADVANCED_EXTERNALIZERS, SERIALIZATION_CONTEXT_INITIALIZERS);
+      return new AttributeSet(SerializationConfiguration.class, MARSHALLER, VERSION, CLASS_RESOLVER, ADVANCED_EXTERNALIZERS, PROTOSTREAM_CTX_INITIALIZERS);
    }
 
    private final Attribute<Map<Integer, AdvancedExternalizer<?>>> advancedExternalizers;
@@ -62,7 +62,7 @@ public class SerializationConfiguration implements ConfigurationInfo {
       this.version = attributes.attribute(VERSION);
       this.classResolver = attributes.attribute(CLASS_RESOLVER);
       this.advancedExternalizers = attributes.attribute(ADVANCED_EXTERNALIZERS);
-      this.contextInitializers = attributes.attribute(SERIALIZATION_CONTEXT_INITIALIZERS);
+      this.contextInitializers = attributes.attribute(PROTOSTREAM_CTX_INITIALIZERS);
       this.whiteListConfig = whiteListConfig;
       this.subElements = Collections.singletonList(whiteListConfig);
    }
@@ -94,7 +94,7 @@ public class SerializationConfiguration implements ConfigurationInfo {
       return classResolver.get();
    }
 
-   public Collection<SerializationContextInitializer> contextInitializers() {
+   public Collection<SerializationContextInitializer> protostreamCtxInitializers() {
       return contextInitializers.get();
    }
 

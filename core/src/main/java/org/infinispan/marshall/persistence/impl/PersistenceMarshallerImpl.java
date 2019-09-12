@@ -98,7 +98,7 @@ public class PersistenceMarshallerImpl implements PersistenceMarshaller {
          return marshaller;
 
       // The user has specified a SerializationContextInitializer, so jboss-marshalling is ignored and serializationContext updated
-      Collection<SerializationContextInitializer> scis = serializationConfig.contextInitializers();
+      Collection<SerializationContextInitializer> scis = serializationConfig.protostreamCtxInitializers();
       if (scis != null) {
          for (SerializationContextInitializer sci : scis)
             register(serializationContext, sci);
@@ -121,6 +121,10 @@ public class PersistenceMarshallerImpl implements PersistenceMarshaller {
       } catch (ClassNotFoundException e) {
          return new ExternalizerAwareSerializationMarshaller(globalConfig, gcr.getCacheManager().getClassWhiteList());
       }
+   }
+
+   public Marshaller getUserMarshaller() {
+      return userMarshaller;
    }
 
    @Override

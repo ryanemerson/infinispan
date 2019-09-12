@@ -554,25 +554,19 @@
               </xs:documentation>
             </xs:annotation>
           </xs:attribute>
-          <xs:attribute name="context-initializer" type="xs:string">
-            <xs:annotation>
-              <xs:documentation>
-                The FQN of a SerializationContextInitializer implementation which is used to initialize a Protostream based marshaller for user types.
-              </xs:documentation>
-            </xs:annotation>
-          </xs:attribute>
         </xs:complexType>
       </xs:element>
     </xs:sequence>
     <xs:sequence>
-      <xs:element name="context-initializer" minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="protostream-ctx-initializer" minOccurs="0" maxOccurs="unbounded">
         <xs:annotation>
           <xs:documentation>
             SerializationContextInitializer implementation which is used to initialize a Protostream based marshaller for user types.
+            If no class attribute is provided, then the protostream marshaller is loaded with only support for basic java primitives.
           </xs:documentation>
         </xs:annotation>
         <xs:complexType>
-          <xs:attribute name="class" type="xs:string">
+          <xs:attribute name="class" type="xs:string" >
             <xs:annotation>
               <xs:documentation>
                 Class of the SerializationContextInitializer implementation

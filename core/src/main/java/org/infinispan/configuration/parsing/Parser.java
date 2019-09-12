@@ -72,6 +72,7 @@ import org.infinispan.eviction.EvictionType;
 import org.infinispan.factories.threads.DefaultThreadFactory;
 import org.infinispan.globalstate.ConfigurationStorage;
 import org.infinispan.globalstate.LocalConfigurationStorage;
+import org.infinispan.marshall.protostream.DefaultProtoStreamContextInitializer;
 import org.infinispan.partitionhandling.PartitionHandling;
 import org.infinispan.persistence.cluster.ClusterLoader;
 import org.infinispan.persistence.file.SingleFileStore;
@@ -174,8 +175,8 @@ public class Parser implements ConfigurationParser {
                parseAdvancedExternalizer(reader, holder.getClassLoader(), builder.serialization());
                break;
             }
-            case SERIALIZATION_CONTEXT_INITIALIZER: {
-               parseSerializationContextInitializer(reader, holder.getClassLoader(), builder.serialization());
+            case PROTOSTREAM_CTX_INITIALIZER: {
+               parseProtostreamContextInitializer(reader, holder.getClassLoader(), builder.serialization());
                break;
             }
             case WHITE_LIST: {
@@ -193,16 +194,17 @@ public class Parser implements ConfigurationParser {
       }
    }
 
-   private void parseSerializationContextInitializer(final XMLExtendedStreamReader reader, final ClassLoader classLoader,
-                                                     final SerializationConfigurationBuilder builder) throws XMLStreamException {
+   private void parseProtostreamContextInitializer(final XMLExtendedStreamReader reader, final ClassLoader classLoader,
+                                                   final SerializationConfigurationBuilder builder) throws XMLStreamException {
       int attributes = reader.getAttributeCount();
-      ParseUtils.requireAttributes(reader, Attribute.CLASS.getLocalName());
+      int sciCount = 0;
       for (int i = 0; i < attributes; i++) {
          String value = reader.getAttributeValue(i);
          Attribute attribute = Attribute.forName(reader.getAttributeLocalName(i));
          switch (attribute) {
             case CLASS: {
-               builder.addContextInitializer(Util.getInstance(value, classLoader));
+               builder.addProtoStreamContextInitializer(Util.getInstance(value, classLoader));
+               sciCount++;
                break;
             }
             default: {
@@ -211,6 +213,9 @@ public class Parser implements ConfigurationParser {
          }
       }
       ParseUtils.requireNoContent(reader);
+      // Add default SCI if element is present but no class specified
+      if (sciCount == 0)
+         builder.addProtoStreamContextInitializer(new DefaultProtoStreamContextInitializer());
    }
 
    private void parseWhiteList(final XMLExtendedStreamReader reader, final WhiteListConfigurationBuilder builder) throws XMLStreamException {
