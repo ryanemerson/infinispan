@@ -89,6 +89,9 @@ public class Configuration {
       this.transaction = transaction;
       this.statistics = statistics;
       this.features = features;
+
+      if (marshaller != null)
+         marshaller.initialize(classWhiteList);
    }
 
    public ExecutorFactoryConfiguration asyncExecutorFactory() {
