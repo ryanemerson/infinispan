@@ -7,6 +7,7 @@ import java.util.function.Function;
 
 import org.hibernate.service.ServiceRegistry;
 import org.infinispan.AdvancedCache;
+import org.infinispan.commons.time.TimeService;
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.configuration.parsing.ConfigurationBuilderHolder;
 import org.infinispan.factories.impl.BasicComponentRegistry;
@@ -17,7 +18,7 @@ import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.test.hibernate.cache.commons.util.TestConfigurationHook;
 import org.infinispan.test.hibernate.cache.commons.util.TestRegionFactory;
-import org.infinispan.commons.time.TimeService;
+import org.infinispan.test.hibernate.cache.commons.util.TestingKeyFactory;
 
 /**
  * Factory that should be overridden in tests.
@@ -49,6 +50,7 @@ public class TestInfinispanRegionFactory extends InfinispanRegionFactory {
       // If the cache manager has been provided by calling setCacheManager, don't create a new one
       EmbeddedCacheManager cacheManager = getCacheManager();
       if (cacheManager != null) {
+         cacheManager.getClassWhiteList().addClasses(TestingKeyFactory.TestingEntityCacheKey.class);
          return cacheManager;
       } else if (providedManager != null) {
          cacheManager = providedManager;
@@ -66,6 +68,8 @@ public class TestInfinispanRegionFactory extends InfinispanRegionFactory {
          basicComponentRegistry.replaceComponent(TimeService.class.getName(), timeService, false);
          basicComponentRegistry.rewire();
       }
+      cacheManager.getClassWhiteList().addRegexps("org\\.infinispan\\.test\\.hibernate\\.*");
+      cacheManager.getClassWhiteList().addClasses(TestingKeyFactory.TestingEntityCacheKey.class);
       return cacheManager;
    }
 

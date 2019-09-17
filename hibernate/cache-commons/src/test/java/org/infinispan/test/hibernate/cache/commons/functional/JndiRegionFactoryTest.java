@@ -28,6 +28,7 @@ import org.hibernate.stat.Statistics;
 import org.infinispan.test.hibernate.cache.commons.util.TestRegionFactory;
 import org.infinispan.test.hibernate.cache.commons.util.TestRegionFactoryProvider;
 import org.infinispan.test.hibernate.cache.commons.functional.entities.Item;
+import org.infinispan.test.hibernate.cache.commons.util.TestingKeyFactory;
 import org.junit.Test;
 
 import org.infinispan.Cache;
@@ -89,6 +90,7 @@ public class JndiRegionFactoryTest extends SingleNodeTest {
 						cfgFileName == null ? InfinispanProperties.DEF_INFINISPAN_CONFIG_RESOURCE : cfgFileName,
 						false
 				);
+				manager.getClassWhiteList().addClasses(TestingKeyFactory.TestingEntityCacheKey.class);
 				Context ctx = new InitialContext( props );
 				bind( JNDI_NAME, manager, EmbeddedCacheManager.class, ctx );
 			}

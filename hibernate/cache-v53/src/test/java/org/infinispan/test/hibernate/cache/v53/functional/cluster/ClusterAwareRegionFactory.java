@@ -26,6 +26,7 @@ import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.test.hibernate.cache.commons.functional.cluster.ClusterAware;
 import org.infinispan.test.hibernate.cache.commons.functional.cluster.DualNodeTest;
 import org.infinispan.test.hibernate.cache.commons.util.CacheTestUtil;
+import org.infinispan.test.hibernate.cache.commons.util.TestingKeyFactory;
 
 /**
  * ClusterAwareRegionFactory.
@@ -58,6 +59,7 @@ public class ClusterAwareRegionFactory implements RegionFactory {
       } else {
          delegate.setCacheManager(existing);
       }
+      delegate.getCacheManager().getClassWhiteList().addClasses(TestingKeyFactory.TestingEntityCacheKey.class);
    }
 
    public void stop() {

@@ -15,6 +15,7 @@
    </jgroups>
 
    <cache-container name="SampleCacheManager" statistics="false" default-cache="the-default-cache" shutdown-hook="DEFAULT">
+      <serialization marshaller="org.infinispan.commons.marshall.JavaSerializationMarshaller"/>
       <transport stack="hibernate-jgroups" cluster="infinispan-hibernate-cluster"/>
       <jmx duplicate-domains="true"/>
 

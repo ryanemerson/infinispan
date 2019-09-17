@@ -13,6 +13,8 @@
 
    <!-- This configuration is suitable for non-clustered environments, where only single instance accesses the DB -->
    <cache-container name="SampleCacheManager" statistics="false" default-cache="the-default-cache" shutdown-hook="DEFAULT">
+      <serialization marshaller="org.infinispan.commons.marshall.JavaSerializationMarshaller"/>
+
       <jmx duplicate-domains="true"/>
 
       <local-cache-configuration name="the-default-cache" statistics="false" />

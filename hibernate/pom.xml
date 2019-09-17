@@ -15,7 +15,7 @@
    <modules>
       <module>cache-spi</module>
       <module>cache-commons</module>
-      <module>cache-v51</module>
+<!--      <module>cache-v51</module>-->
       <module>cache-v53</module>
    </modules>
 
@@ -32,10 +32,6 @@
       <dependency>
          <groupId>org.infinispan</groupId>
          <artifactId>infinispan-core</artifactId>
-      </dependency>
-      <dependency>
-         <groupId>org.infinispan</groupId>
-         <artifactId>infinispan-jboss-marshalling</artifactId>
       </dependency>
       <dependency>
          <groupId>org.hibernate</groupId>

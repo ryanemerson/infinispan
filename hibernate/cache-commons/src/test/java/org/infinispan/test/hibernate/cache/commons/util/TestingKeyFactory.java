@@ -23,7 +23,7 @@ public class TestingKeyFactory {
 	}
 
 	//For convenience implement both interfaces.
-	private static class TestingEntityCacheKey implements Serializable {
+	public static class TestingEntityCacheKey implements Serializable {
 
 		private final String id;
 

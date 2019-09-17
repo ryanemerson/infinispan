@@ -45,6 +45,7 @@ import org.infinispan.test.TestingUtil;
 import org.infinispan.test.hibernate.cache.commons.util.InfinispanTestingSetup;
 import org.infinispan.test.hibernate.cache.commons.util.TestRegionFactory;
 import org.infinispan.test.hibernate.cache.commons.util.TestRegionFactoryProvider;
+import org.infinispan.test.hibernate.cache.commons.util.TestingKeyFactory;
 import org.infinispan.transaction.TransactionMode;
 import org.junit.After;
 import org.junit.Rule;
@@ -309,6 +310,8 @@ public class InfinispanRegionFactoryTestCase  {
       ConfigurationBuilder builder = cbh.getNamedConfigurationBuilders().get( DEF_TIMESTAMPS_RESOURCE );
 		builder.clustering().cacheMode(CacheMode.INVALIDATION_SYNC);
       DefaultCacheManager manager = new DefaultCacheManager(cbh, true);
+      // TODO do we need this?
+      manager.getClassWhiteList().addClasses(TestingKeyFactory.TestingEntityCacheKey.class);
 		try {
 			TestRegionFactory factory = createRegionFactory(manager, p, null);
          factory.start(serviceRegistry, p);

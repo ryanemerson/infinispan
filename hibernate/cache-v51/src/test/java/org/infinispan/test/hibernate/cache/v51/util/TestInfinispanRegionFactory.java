@@ -18,6 +18,7 @@ import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.test.hibernate.cache.commons.util.TestConfigurationHook;
 import org.infinispan.test.hibernate.cache.commons.util.TestRegionFactory;
+import org.infinispan.test.hibernate.cache.commons.util.TestingKeyFactory;
 
 /**
  * Factory that should be overridden in tests.
@@ -49,6 +50,7 @@ public class TestInfinispanRegionFactory extends InfinispanRegionFactory {
       // If the cache manager has been provided by calling setCacheManager, don't create a new one
       EmbeddedCacheManager cacheManager = getCacheManager();
       if (cacheManager != null) {
+         cacheManager.getClassWhiteList().addClasses(TestingKeyFactory.TestingEntityCacheKey.class);
          return cacheManager;
       } else if (providedManager != null) {
          cacheManager = providedManager;
@@ -66,6 +68,7 @@ public class TestInfinispanRegionFactory extends InfinispanRegionFactory {
          globalComponentRegistry.replaceComponent(TimeService.class.getName(), timeService, false);
          globalComponentRegistry.rewire();
       }
+      cacheManager.getClassWhiteList().addClasses(TestingKeyFactory.TestingEntityCacheKey.class);
       return cacheManager;
    }
 
