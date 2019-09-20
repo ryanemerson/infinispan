@@ -2,11 +2,13 @@ package org.infinispan.client.hotrod.configuration;
 
 import java.lang.ref.WeakReference;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import org.infinispan.client.hotrod.FailoverRequestBalancingStrategy;
 import org.infinispan.client.hotrod.ProtocolVersion;
@@ -17,6 +19,7 @@ import org.infinispan.commons.configuration.ClassWhiteList;
 import org.infinispan.commons.marshall.Marshaller;
 import org.infinispan.commons.util.Features;
 import org.infinispan.commons.util.TypedProperties;
+import org.infinispan.protostream.SerializationContextInitializer;
 
 /**
  * Configuration.
@@ -54,6 +57,7 @@ public class Configuration {
    private final StatisticsConfiguration statistics;
    private final TransactionConfiguration transaction;
    private final Features features;
+   private final Collection<SerializationContextInitializer> contextInitializers;
 
    public Configuration(ExecutorFactoryConfiguration asyncExecutorFactory, Supplier<FailoverRequestBalancingStrategy> balancingStrategyFactory, ClassLoader classLoader,
                  ClientIntelligence clientIntelligence, ConnectionPoolConfiguration connectionPool, int connectionTimeout, Class<? extends ConsistentHash>[] consistentHashImpl, boolean forceReturnValues, int keySizeEstimate,
@@ -61,7 +65,8 @@ public class Configuration {
                  ProtocolVersion protocolVersion, List<ServerConfiguration> servers, int socketTimeout, SecurityConfiguration security, boolean tcpNoDelay, boolean tcpKeepAlive,
                  int valueSizeEstimate, int maxRetries, NearCacheConfiguration nearCache,
                  List<ClusterConfiguration> clusters, List<String> serialWhitelist, int batchSize,
-                 TransactionConfiguration transaction, StatisticsConfiguration statistics, Features features) {
+                 TransactionConfiguration transaction, StatisticsConfiguration statistics, Features features,
+                 Collection<SerializationContextInitializer> contextInitializers) {
       this.asyncExecutorFactory = asyncExecutorFactory;
       this.balancingStrategyFactory = balancingStrategyFactory;
       this.maxRetries = maxRetries;
@@ -89,6 +94,7 @@ public class Configuration {
       this.transaction = transaction;
       this.statistics = statistics;
       this.features = features;
+      this.contextInitializers = contextInitializers;
 
       if (marshaller != null)
          marshaller.initialize(classWhiteList);
@@ -207,6 +213,10 @@ public class Configuration {
       return features;
    }
 
+   public Collection<SerializationContextInitializer> getContextInitializers() {
+      return contextInitializers;
+   }
+
    @Override
    public String toString() {
       return "Configuration [asyncExecutorFactory=" + asyncExecutorFactory + ", balancingStrategyFactory=()->" + balancingStrategyFactory.get()
@@ -246,7 +256,8 @@ public class Configuration {
       }
       properties.setProperty(ConfigurationProperties.FORCE_RETURN_VALUES, forceReturnValues());
       properties.setProperty(ConfigurationProperties.KEY_SIZE_ESTIMATE, keySizeEstimate());
-      properties.setProperty(ConfigurationProperties.MARSHALLER, marshallerClass().getName());
+      properties.setProperty(ConfigurationProperties.MARSHALLER, marshaller().getClass().getName());
+      properties.setProperty(ConfigurationProperties.CONTEXT_INITIALIZERS, contextInitializers.stream().map(sci -> sci.getClass().getName()).collect(Collectors.joining(",")));
       properties.setProperty(ConfigurationProperties.PROTOCOL_VERSION, version().toString());
       properties.setProperty(ConfigurationProperties.SO_TIMEOUT, socketTimeout());
       properties.setProperty(ConfigurationProperties.TCP_NO_DELAY, tcpNoDelay());
