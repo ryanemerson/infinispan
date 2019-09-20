@@ -18,6 +18,7 @@ import org.infinispan.client.hotrod.event.CustomEventLogListener.StaticCustomEve
 import org.infinispan.client.hotrod.exceptions.HotRodClientException;
 import org.infinispan.client.hotrod.test.HotRodClientTestingUtil;
 import org.infinispan.client.hotrod.test.SingleHotRodServerTest;
+import org.infinispan.protostream.SerializationContextInitializer;
 import org.infinispan.server.hotrod.HotRodServer;
 import org.infinispan.server.hotrod.configuration.HotRodServerConfigurationBuilder;
 import org.testng.annotations.Test;
@@ -34,6 +35,11 @@ public class ClientCustomEventsTest extends SingleHotRodServerTest {
       server.addCacheEventConverterFactory("raw-static-converter-factory", new RawStaticConverterFactory());
       server.addCacheEventConverterFactory("simple-converter-factory", new SimpleConverterFactory<>());
       return server;
+   }
+
+   @Override
+   protected SerializationContextInitializer contextInitializer() {
+      return ClientEventSCI.INSTANCE;
    }
 
    public void testCustomEvents() {
