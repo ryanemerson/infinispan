@@ -13,7 +13,7 @@ import org.infinispan.commons.marshall.StreamingMarshaller;
  */
 public abstract class MarshallerEncoder implements Encoder {
 
-   private final Marshaller marshaller;
+   protected final Marshaller marshaller;
 
    public MarshallerEncoder(Marshaller marshaller) {
       this.marshaller = marshaller;

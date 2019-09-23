@@ -3,6 +3,7 @@ package org.infinispan.factories;
 import static java.util.Objects.requireNonNull;
 
 import java.lang.invoke.MethodHandles;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -16,15 +17,24 @@ import org.infinispan.cache.impl.EncoderCache;
 import org.infinispan.cache.impl.SimpleCacheImpl;
 import org.infinispan.cache.impl.StatsCollectingCache;
 import org.infinispan.commons.CacheConfigurationException;
+import org.infinispan.commons.CacheException;
 import org.infinispan.commons.dataconversion.ByteArrayWrapper;
+import org.infinispan.commons.dataconversion.Encoder;
+import org.infinispan.commons.dataconversion.GenericJbossMarshallerEncoder;
 import org.infinispan.commons.dataconversion.MediaType;
 import org.infinispan.commons.dataconversion.TranscoderMarshallerAdapter;
+import org.infinispan.commons.dataconversion.UserMarshallerEncoder;
+import org.infinispan.commons.marshall.Marshaller;
 import org.infinispan.commons.marshall.StreamingMarshaller;
 import org.infinispan.commons.time.TimeService;
 import org.infinispan.commons.util.EnumUtil;
+import org.infinispan.commons.util.Util;
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.configuration.cache.ContentTypeConfiguration;
 import org.infinispan.configuration.cache.JMXStatisticsConfiguration;
+import org.infinispan.configuration.global.GlobalConfiguration;
+import org.infinispan.configuration.global.SerializationConfiguration;
+import org.infinispan.configuration.internal.PrivateGlobalConfiguration;
 import org.infinispan.container.entries.InternalCacheEntry;
 import org.infinispan.context.Flag;
 import org.infinispan.context.impl.FlagBitSets;
@@ -116,7 +126,7 @@ public class InternalCacheFactory<K, V> extends AbstractNamedCacheComponentFacto
          usedBuilder = actualBuilder;
       }
 
-      AdvancedCache<K, V> cache = buildEncodingCache(usedBuilder, configuration);
+      AdvancedCache<K, V> cache = buildEncodingCache(usedBuilder, configuration, globalComponentRegistry);
 
       bootstrap(cacheName, cache, configuration, globalComponentRegistry, marshaller);
       if (marshaller != null) {
@@ -125,16 +135,51 @@ public class InternalCacheFactory<K, V> extends AbstractNamedCacheComponentFacto
       return cache;
    }
 
-   private AdvancedCache<K, V> buildEncodingCache(BiFunction<DataConversion, DataConversion, AdvancedCache<K, V>> wrappedCacheBuilder, Configuration configuration) {
-      ContentTypeConfiguration keyEncodingConfig = configuration.encoding().keyDataType();
-      ContentTypeConfiguration valueEncodingConfig = configuration.encoding().valueDataType();
+   private AdvancedCache<K, V> buildEncodingCache(BiFunction<DataConversion, DataConversion, AdvancedCache<K, V>> wrappedCacheBuilder,
+                                                  Configuration configuration, GlobalComponentRegistry gcr) {
+      GlobalConfiguration globalConfig = gcr.getGlobalConfiguration();
+      SerializationConfiguration serializationConfig = globalConfig.serialization();
+      Marshaller marshaller = serializationConfig.marshaller();
+      // If no marshaller or SerializationContextInitializer specified, then we attempt to load `infinispan-jboss-marshalling`
+      // and the JBossUserMarshaller, however if it does not exist then we default to the JavaSerializationMarshaller
+      if (marshaller == null && serializationConfig.contextInitializers() == null) {
+         try {
+            Class<Marshaller> clazz = Util.loadClassStrict("org.infinispan.jboss.marshalling.core.JBossUserMarshaller", globalConfig.classLoader());
+            try {
+               PrivateGlobalConfiguration privateGlobalCfg = globalConfig.module(PrivateGlobalConfiguration.class);
+               if (privateGlobalCfg == null || !privateGlobalCfg.isServerMode()) {
+                  log.jbossMarshallingDetected();
+               }
+               marshaller = clazz.getConstructor(GlobalComponentRegistry.class).newInstance(gcr);
+            } catch (InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
+               throw new CacheException("Unable to start PersistenceMarshaller with JBossUserMarshaller", e);
+            }
+         } catch (ClassNotFoundException ignore) {
+         }
+      }
 
-      MediaType keyType = keyEncodingConfig.mediaType();
-      MediaType valueType = valueEncodingConfig.mediaType();
+      DataConversion keyDataConversion, valueDataConversion;
+      if (marshaller != null) {
+         Encoder encoder = serializationConfig.marshaller() == null ? new GenericJbossMarshallerEncoder(marshaller) : new UserMarshallerEncoder(marshaller);
+         EncoderRegistry registry = gcr.getComponent(EncoderRegistry.class);
+         if (!registry.isRegistered(encoder.getClass()))
+            registry.registerEncoder(encoder);
+         log.startingUserMarshaller(marshaller.getClass().getName());
+         marshaller.initialize(gcr.getCacheManager().getClassWhiteList());
+         marshaller.start();
+         keyDataConversion = DataConversion.newKeyDataConversion(encoder.getClass(), ByteArrayWrapper.class, encoder.getStorageFormat());
+         valueDataConversion = DataConversion.newValueDataConversion(encoder.getClass(), ByteArrayWrapper.class, encoder.getStorageFormat());
+      } else {
+         ContentTypeConfiguration keyEncodingConfig = configuration.encoding().keyDataType();
+         ContentTypeConfiguration valueEncodingConfig = configuration.encoding().valueDataType();
 
-      DataConversion keyDataConversion = DataConversion.newKeyDataConversion(null, ByteArrayWrapper.class, keyType);
-      DataConversion valueDataConversion = DataConversion.newValueDataConversion(null, ByteArrayWrapper.class, valueType);
+         MediaType keyType = keyEncodingConfig.mediaType();
+         MediaType valueType = valueEncodingConfig.mediaType();
 
+         keyDataConversion = DataConversion.newKeyDataConversion(null, ByteArrayWrapper.class, keyType);
+         valueDataConversion = DataConversion.newValueDataConversion(null, ByteArrayWrapper.class, valueType);
+
+      }
       return new EncoderCache<>(wrappedCacheBuilder.apply(keyDataConversion, valueDataConversion), keyDataConversion, valueDataConversion);
    }
 
@@ -145,9 +190,9 @@ public class InternalCacheFactory<K, V> extends AbstractNamedCacheComponentFacto
       JMXStatisticsConfiguration jmxStatistics = configuration.jmxStatistics();
       boolean statisticsAvailable = jmxStatistics != null && jmxStatistics.available();
       if (statisticsAvailable) {
-         cache = buildEncodingCache((kc, vc) -> new StatsCollectingCache<>(cacheName, kc, vc), configuration);
+         cache = buildEncodingCache((kc, vc) -> new StatsCollectingCache<>(cacheName, kc, vc), configuration, globalComponentRegistry);
       } else {
-         cache = buildEncodingCache((kc, vc) -> new SimpleCacheImpl<>(cacheName, kc, vc), configuration);
+         cache = buildEncodingCache((kc, vc) -> new SimpleCacheImpl<>(cacheName, kc, vc), configuration, globalComponentRegistry);
       }
       this.configuration = configuration;
 

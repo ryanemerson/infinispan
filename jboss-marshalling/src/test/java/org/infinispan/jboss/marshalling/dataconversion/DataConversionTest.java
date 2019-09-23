@@ -8,6 +8,8 @@ import java.io.IOException;
 
 import org.infinispan.AdvancedCache;
 import org.infinispan.Cache;
+import org.infinispan.commons.dataconversion.GenericJbossMarshallerEncoder;
+import org.infinispan.commons.marshall.Marshaller;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.factories.GlobalComponentRegistry;
 import org.infinispan.jboss.marshalling.commons.GenericJBossMarshaller;
@@ -21,7 +23,8 @@ public class DataConversionTest extends org.infinispan.dataconversion.DataConver
 
    @Test
    public void testObjectEncoder() {
-      GenericJbossMarshallerEncoder encoder = new GenericJbossMarshallerEncoder(org.infinispan.dataconversion.DataConversionTest.class.getClassLoader());
+      Marshaller marshaller = new GenericJBossMarshaller(org.infinispan.dataconversion.DataConversionTest.class.getClassLoader());
+      GenericJbossMarshallerEncoder encoder = new GenericJbossMarshallerEncoder(marshaller);
       withCacheManager(new CacheManagerCallable(
             createCacheManager(new ConfigurationBuilder())) {
 

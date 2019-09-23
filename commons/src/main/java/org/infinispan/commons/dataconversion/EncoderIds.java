@@ -11,4 +11,5 @@ public interface EncoderIds {
    short GLOBAL_MARSHALLER = 4;
    short GENERIC_MARSHALLER = 5;
    short JAVA_SERIALIZATION = 6;
+   short USER_MARSHALLER = 7;
 }
