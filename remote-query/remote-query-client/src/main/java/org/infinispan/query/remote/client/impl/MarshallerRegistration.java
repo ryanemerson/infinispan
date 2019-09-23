@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import org.infinispan.protostream.FileDescriptorSource;
 import org.infinispan.protostream.SerializationContext;
+import org.infinispan.protostream.WrappedMessage;
 
 /**
  * Registers protobuf schemas and marshsallers for the objects used by remote query request and response objects.
@@ -14,7 +15,6 @@ import org.infinispan.protostream.SerializationContext;
 public final class MarshallerRegistration {
 
    public static final String QUERY_PROTO_RES = "/org/infinispan/query/remote/client/query.proto";
-   public static final String MESSAGE_PROTO_RES = "/org/infinispan/protostream/message-wrapping.proto";
 
    private MarshallerRegistration() {
    }
@@ -41,7 +41,7 @@ public final class MarshallerRegistration {
    public static void registerProtoFiles(SerializationContext ctx) throws IOException {
       FileDescriptorSource fileDescriptorSource = new FileDescriptorSource();
       fileDescriptorSource.addProtoFile(QUERY_PROTO_RES, MarshallerRegistration.class.getResourceAsStream(QUERY_PROTO_RES));
-      fileDescriptorSource.addProtoFile(MESSAGE_PROTO_RES, MarshallerRegistration.class.getResourceAsStream(MESSAGE_PROTO_RES));
+      fileDescriptorSource.addProtoFile(WrappedMessage.PROTO_FILE, MarshallerRegistration.class.getResourceAsStream(WrappedMessage.PROTO_FILE));
       ctx.registerProtoFiles(fileDescriptorSource);
    }
 
