@@ -1,7 +1,6 @@
 package org.infinispan.marshall;
 
 import static org.testng.AssertJUnit.assertNotNull;
-import static org.testng.AssertJUnit.assertNull;
 import static org.testng.AssertJUnit.assertTrue;
 
 import java.time.Instant;
@@ -70,7 +69,6 @@ public class ProtostreamUserMarshallerTest extends MultipleCacheManagersTest {
    public void testProtostreamMarshallerLoaded() {
       PersistenceMarshallerImpl pm = (PersistenceMarshallerImpl) TestingUtil.extractPersistenceMarshaller(manager(0));
       testIsMarshallableAndPut(pm, new ExampleUserPojo("A Pojo!"), new AnotherExampleUserPojo("And another one!"));
-      assertNull(pm.getUserMarshaller());
    }
 
    private void testIsMarshallableAndPut(PersistenceMarshallerImpl pm, Object... pojos) {

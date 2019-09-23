@@ -23,17 +23,16 @@ public interface ProtoStreamTypeIds {
    // 1 byte Ids 0..127 -> Reserved for critical messages used a lot
    int WRAPPED_MESSAGE = 0; // Id reserved for ProtoStream WrappedMessage class
    int WRAPPED_BYTE_ARRAY = 1;
-   int USER_MARSHALLER_BYTES = 2;
-   int BYTE_STRING = 3;
-   int EMBEDDED_METADATA = 4;
-   int EMBEDDED_EXPIRABLE_METADATA = 5;
-   int EMBEDDED_LIFESPAN_METADATA = 6;
-   int EMBEDDED_MAX_IDLE_METADATA = 7;
-   int NUMERIC_VERSION = 8;
-   int SIMPLE_CLUSTERED_VERSION = 9;
-   int JGROUPS_ADDRESS = 10;
-   int PROTOBUF_VALUE_WRAPPER = 11;
-   int MEDIA_TYPE = 12;
+   int BYTE_STRING = 2;
+   int EMBEDDED_METADATA = 3;
+   int EMBEDDED_EXPIRABLE_METADATA = 4;
+   int EMBEDDED_LIFESPAN_METADATA = 5;
+   int EMBEDDED_MAX_IDLE_METADATA = 6;
+   int NUMERIC_VERSION = 7;
+   int SIMPLE_CLUSTERED_VERSION = 8;
+   int JGROUPS_ADDRESS = 9;
+   int PROTOBUF_VALUE_WRAPPER = 10;
+   int MEDIA_TYPE = 11;
 
    // Priority counter values
    int COUNTER_VALUE = 125;
