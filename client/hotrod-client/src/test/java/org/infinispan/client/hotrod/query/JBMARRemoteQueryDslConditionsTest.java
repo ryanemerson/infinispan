@@ -22,7 +22,9 @@ import org.infinispan.client.hotrod.test.HotRodClientTestingUtil;
 import org.infinispan.commons.dataconversion.MediaType;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.configuration.cache.Index;
+import org.infinispan.configuration.global.GlobalConfigurationBuilder;
 import org.infinispan.query.dsl.QueryFactory;
+import org.infinispan.query.dsl.embedded.DslSCI;
 import org.infinispan.query.dsl.embedded.QueryDslConditionsTest;
 import org.infinispan.server.hotrod.HotRodServer;
 import org.testng.annotations.AfterClass;
@@ -66,8 +68,10 @@ public class JBMARRemoteQueryDslConditionsTest extends QueryDslConditionsTest {
 
    @Override
    protected void createCacheManagers() throws Throwable {
+      GlobalConfigurationBuilder globalCfg = GlobalConfigurationBuilder.defaultClusteredBuilder();
+      globalCfg.serialization().addContextInitializer(DslSCI.INSTANCE);
       ConfigurationBuilder cfg = getConfigurationBuilder();
-      createClusteredCaches(1, cfg, true);
+      createClusteredCaches(1, globalCfg, cfg, true);
 
       cache = manager(0).getCache();
 
@@ -75,7 +79,7 @@ public class JBMARRemoteQueryDslConditionsTest extends QueryDslConditionsTest {
 
       org.infinispan.client.hotrod.configuration.ConfigurationBuilder clientBuilder = HotRodClientTestingUtil.newRemoteConfigurationBuilder();
       clientBuilder.addServer().host("127.0.0.1").port(hotRodServer.getPort());
-      clientBuilder.version(getProtocolVersion());
+      clientBuilder.version(getProtocolVersion()).contextInitializer(DslSCI.INSTANCE);
       remoteCacheManager = new RemoteCacheManager(clientBuilder.build());
       remoteCache = remoteCacheManager.getCache();
       cacheManagers.forEach(c -> c.getClassWhiteList().addRegexps(".*"));
