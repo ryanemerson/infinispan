@@ -5,10 +5,10 @@ import static org.apache.http.HttpHeaders.ACCEPT;
 import static org.infinispan.client.hotrod.test.HotRodClientTestingUtil.killServers;
 import static org.infinispan.client.hotrod.test.HotRodClientTestingUtil.startHotRodServer;
 import static org.infinispan.commons.dataconversion.MediaType.APPLICATION_JBOSS_MARSHALLING;
-import static org.infinispan.commons.dataconversion.MediaType.APPLICATION_JBOSS_MARSHALLING_TYPE;
 import static org.infinispan.commons.dataconversion.MediaType.APPLICATION_JSON;
 import static org.infinispan.commons.dataconversion.MediaType.APPLICATION_OCTET_STREAM;
 import static org.infinispan.commons.dataconversion.MediaType.APPLICATION_OCTET_STREAM_TYPE;
+import static org.infinispan.commons.dataconversion.MediaType.APPLICATION_PROTOSTREAM_TYPE;
 import static org.infinispan.commons.dataconversion.MediaType.TEXT_PLAIN;
 import static org.infinispan.commons.dataconversion.MediaType.TEXT_PLAIN_TYPE;
 import static org.infinispan.server.core.test.ServerTestingUtil.findFreePort;
@@ -35,8 +35,8 @@ import org.infinispan.commons.dataconversion.MediaType;
 import org.infinispan.commons.dataconversion.StandardConversions;
 import org.infinispan.commons.marshall.IdentityMarshaller;
 import org.infinispan.commons.marshall.Marshaller;
+import org.infinispan.commons.marshall.ProtoStreamMarshaller;
 import org.infinispan.commons.marshall.UTF8StringMarshaller;
-import org.infinispan.jboss.marshalling.commons.GenericJBossMarshaller;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.rest.RestServer;
@@ -112,8 +112,8 @@ public class EndpointInteroperabilityTest extends AbstractInfinispanTest {
 
    private ConfigurationBuilder getMarshalledCacheConfiguration() {
       ConfigurationBuilder builder = new ConfigurationBuilder();
-      builder.encoding().key().mediaType(APPLICATION_JBOSS_MARSHALLING_TYPE);
-      builder.encoding().value().mediaType(APPLICATION_JBOSS_MARSHALLING_TYPE);
+      builder.encoding().key().mediaType(APPLICATION_PROTOSTREAM_TYPE);
+      builder.encoding().value().mediaType(APPLICATION_PROTOSTREAM_TYPE);
       return builder;
    }
 
@@ -140,7 +140,7 @@ public class EndpointInteroperabilityTest extends AbstractInfinispanTest {
       // 'application/x-jboss-marshalling' for both K and V.
       String key = "string-1";
       byte[] value = {1, 2, 3};
-      byte[] marshalledValue = new GenericJBossMarshaller().objectToByteBuffer(value);
+      byte[] marshalledValue = new ProtoStreamMarshaller().objectToByteBuffer(value);
 
       defaultMarshalledRemoteCache.put(key, value);
       assertEquals(defaultMarshalledRemoteCache.get(key), value);
@@ -155,7 +155,7 @@ public class EndpointInteroperabilityTest extends AbstractInfinispanTest {
       // Write via rest raw bytes
       String otherKey = "string-2";
       byte[] otherValue = {0x4, 0x5, 0x6};
-      byte[] otherValueMarshalled = new GenericJBossMarshaller().objectToByteBuffer(otherValue);
+      byte[] otherValueMarshalled = new ProtoStreamMarshaller().objectToByteBuffer(otherValue);
 
       new RestRequest().cache(MARSHALLED_CACHE_NAME)
             .key(otherKey).value(otherValue, APPLICATION_OCTET_STREAM)
@@ -207,7 +207,7 @@ public class EndpointInteroperabilityTest extends AbstractInfinispanTest {
    public void testFloatKeysDoubleValues() throws Exception {
       String floatContentType = "application/x-java-object; type=java.lang.Float";
       String doubleContentType = "application/x-java-object; type=java.lang.Double";
-      GenericJBossMarshaller marshaller = new GenericJBossMarshaller();
+      Marshaller marshaller = new ProtoStreamMarshaller();
 
       Object key = 1.1f;
       Object value = 32.4d;
@@ -291,7 +291,7 @@ public class EndpointInteroperabilityTest extends AbstractInfinispanTest {
             .accept(APPLICATION_JBOSS_MARSHALLING)
             .read();
 
-      assertArrayEquals((byte[]) marshalledContent, new GenericJBossMarshaller().objectToByteBuffer(value));
+      assertArrayEquals((byte[]) marshalledContent, new ProtoStreamMarshaller().objectToByteBuffer(value));
 
       // Write via rest
       byte[] newKey = new byte[]{0x23};
@@ -343,7 +343,7 @@ public class EndpointInteroperabilityTest extends AbstractInfinispanTest {
       String customKeyType = "application/x-java-object; type=ByteArray";
 
       CustomKey objectKey = new CustomKey("a", 1.0d, 1.0f, true);
-      byte[] key = new GenericJBossMarshaller().objectToByteBuffer(objectKey);
+      byte[] key = new ProtoStreamMarshaller().objectToByteBuffer(objectKey);
       byte[] value = {12};
 
       // Write <byte[], byte[]> via Hot Rod (the HR client is configured with a no-op marshaller)
