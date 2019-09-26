@@ -7,10 +7,12 @@ import org.infinispan.AdvancedCache;
 import org.infinispan.Cache;
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.factories.ComponentRegistry;
+import org.infinispan.factories.GlobalComponentRegistry;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.security.Security;
 import org.infinispan.security.actions.AddCacheDependencyAction;
 import org.infinispan.security.actions.GetCacheComponentRegistryAction;
+import org.infinispan.security.actions.GetGlobalComponentRegistryAction;
 
 /**
  * SecurityActions for the org.infinispan.query.impl package.
@@ -41,6 +43,10 @@ final class SecurityActions {
 
    static ComponentRegistry getCacheComponentRegistry(AdvancedCache<?, ?> cache) {
       return doPrivileged(new GetCacheComponentRegistryAction(cache));
+   }
+
+   static GlobalComponentRegistry getCacheGlobalComponentRegistry(AdvancedCache<?, ?> cache) {
+      return doPrivileged(new GetGlobalComponentRegistryAction(cache.getCacheManager()));
    }
 
    static void addCacheDependency(EmbeddedCacheManager cacheManager, String cacheStarting, String queryKnownClassesCacheName) {

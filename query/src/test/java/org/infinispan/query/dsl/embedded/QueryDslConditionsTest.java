@@ -1522,7 +1522,7 @@ public class QueryDslConditionsTest extends AbstractQueryDslTest {
       QueryFactory qf = getQueryFactory();
 
       Query q = qf.from(getModelFactory().getUserImplClass())
-            .not().having("addresses.postCode").like("%123%").build();
+            .not().having("hSAddresses.postCode").like("%123%").build();
 
       List<User> list = q.list();
       assertEquals(2, list.size());

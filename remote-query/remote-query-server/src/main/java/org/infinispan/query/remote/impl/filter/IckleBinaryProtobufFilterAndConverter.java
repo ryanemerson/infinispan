@@ -29,6 +29,10 @@ import org.infinispan.query.remote.impl.ExternalizerIds;
  * @author gustavonalle
  * @since 8.1
  */
+// TODO is this why DSL failing without Serialization?
+//   https://issues.jboss.org/browse/ISPN-4699
+//   https://github.com/infinispan/infinispan/pull/2854/files
+//   https://github.com/infinispan/infinispan/commit/4d998ab509f948a2081a77b8f2f845bdb8f0d0e5
 @Scope(Scopes.NONE)
 public final class IckleBinaryProtobufFilterAndConverter<K, V> extends AbstractKeyValueFilterConverter<K, V, Object> {
 

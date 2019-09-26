@@ -87,6 +87,10 @@ public class PersistenceMarshallerImpl implements PersistenceMarshaller {
       return serializationContext;
    }
 
+   public boolean protoStreamUserMarshaller() {
+      return userMarshaller == null;
+   }
+
    private Marshaller createUserMarshaller() {
       GlobalConfiguration globalConfig = gcr.getGlobalConfiguration();
       SerializationConfiguration serializationConfig = globalConfig.serialization();

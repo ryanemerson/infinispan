@@ -1,7 +1,10 @@
 package org.infinispan.query.dsl.embedded;
 
+import org.infinispan.commons.marshall.JavaSerializationMarshaller;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
+import org.infinispan.configuration.global.GlobalConfiguration;
+import org.infinispan.configuration.global.GlobalConfigurationBuilder;
 import org.infinispan.persistence.dummy.DummyInMemoryStoreConfigurationBuilder;
 import org.testng.annotations.Test;
 
@@ -24,6 +27,9 @@ public class NonIndexedClusteredDummyInMemoryStoreQueryDslConditionsTest extends
       // ensure the data container contains minimal data so the store will need to be accessed to get the rest
       cfg.locking().concurrencyLevel(1).memory().size(1L);
 
+//      GlobalConfigurationBuilder globalBuilder = new GlobalConfigurationBuilder().clusteredDefault();
+//      globalBuilder.serialization().marshaller(new JavaSerializationMarshaller()).whiteList().addRegexp("org.*").addRegexp("java.*");
+//      createClusteredCaches(2, globalBuilder, cfg, false);
       createClusteredCaches(2, DslSCI.INSTANCE, cfg);
    }
 }

@@ -1,5 +1,6 @@
 package org.infinispan.query.dsl.embedded.impl;
 
+import org.infinispan.protostream.SerializationContext;
 import org.infinispan.query.dsl.IndexedQueryMode;
 import org.infinispan.query.dsl.Query;
 import org.infinispan.query.dsl.QueryBuilder;
@@ -13,12 +14,18 @@ import org.infinispan.query.dsl.impl.BaseQueryFactory;
 public final class EmbeddedQueryFactory extends BaseQueryFactory {
 
    private final QueryEngine<?> queryEngine;
+   private final SerializationContext serCtx;
 
    public EmbeddedQueryFactory(QueryEngine queryEngine) {
+      this(queryEngine, null);
+   }
+
+   public EmbeddedQueryFactory(QueryEngine queryEngine, SerializationContext serCtx) {
       if (queryEngine == null) {
          throw new IllegalArgumentException("queryEngine cannot be null");
       }
       this.queryEngine = queryEngine;
+      this.serCtx = serCtx;
    }
 
    @Override
@@ -33,7 +40,8 @@ public final class EmbeddedQueryFactory extends BaseQueryFactory {
 
    @Override
    public QueryBuilder from(Class<?> type) {
-      return new EmbeddedQueryBuilder(this, queryEngine, type.getName());
+      String typeName = serCtx == null ? type.getName() : serCtx.getMarshaller(type).getTypeName();
+      return from(typeName);
    }
 
    @Override

@@ -49,7 +49,7 @@ public class AddressHS implements Address, Serializable {
    }
 
    @Override
-   @ProtoField(number = 3, defaultValue = "0")
+   @ProtoField(number = 3, defaultValue = "-1")
    public int getNumber() {
       return number;
    }

@@ -59,7 +59,7 @@ public class TransactionHS implements Transaction, Serializable {
    private boolean isValid;
 
    @Override
-   @ProtoField(number = 1, defaultValue = "0")
+   @ProtoField(number = 1, defaultValue = "-1")
    public int getId() {
       return id;
    }
@@ -103,7 +103,7 @@ public class TransactionHS implements Transaction, Serializable {
    }
 
    @Override
-   @ProtoField(number = 5, defaultValue = "0")
+   @ProtoField(number = 5, defaultValue = "-1")
    public int getAccountId() {
       return accountId;
    }
@@ -125,7 +125,7 @@ public class TransactionHS implements Transaction, Serializable {
    }
 
    @Override
-   @ProtoField(number = 7, defaultValue = "0")
+   @ProtoField(number = 7, defaultValue = "-1")
    public double getAmount() {
       return amount;
    }
