@@ -4,11 +4,9 @@ import java.util.Map;
 
 import org.infinispan.AdvancedCache;
 import org.infinispan.Cache;
-import org.infinispan.marshall.persistence.impl.PersistenceMarshallerImpl;
 import org.infinispan.notifications.cachelistener.filter.CacheEventFilterConverter;
 import org.infinispan.objectfilter.ObjectFilter;
 import org.infinispan.objectfilter.impl.ReflectionMatcher;
-import org.infinispan.protostream.SerializationContext;
 import org.infinispan.query.api.continuous.ContinuousQuery;
 import org.infinispan.query.continuous.impl.ContinuousQueryImpl;
 import org.infinispan.query.dsl.Query;
@@ -17,7 +15,6 @@ import org.infinispan.query.dsl.embedded.impl.EmbeddedQueryEngine;
 import org.infinispan.query.dsl.embedded.impl.EmbeddedQueryFactory;
 import org.infinispan.query.dsl.embedded.impl.IckleCacheEventFilterConverter;
 import org.infinispan.query.dsl.embedded.impl.IckleFilterAndConverter;
-import org.infinispan.query.impl.ComponentRegistryUtils;
 import org.infinispan.query.impl.SearchManagerImpl;
 import org.infinispan.query.logging.Log;
 import org.infinispan.security.AuthorizationManager;
@@ -76,9 +73,7 @@ public final class Search {
       if (queryEngine == null) {
          throw log.queryModuleNotInitialised();
       }
-      PersistenceMarshallerImpl pm = ComponentRegistryUtils.getPersistenceMarshaller(cache);
-      SerializationContext ctx = pm.protoStreamUserMarshaller() ? pm.getSerializationContext() : null;
-      return new EmbeddedQueryFactory(queryEngine, ctx);
+      return new EmbeddedQueryFactory(queryEngine);
    }
 
    /**

@@ -5,10 +5,6 @@ import org.infinispan.Cache;
 import org.infinispan.commons.time.TimeService;
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.factories.ComponentRegistry;
-import org.infinispan.factories.GlobalComponentRegistry;
-import org.infinispan.factories.KnownComponentNames;
-import org.infinispan.marshall.persistence.impl.PersistenceMarshallerImpl;
-import org.infinispan.protostream.SerializationContext;
 import org.infinispan.query.backend.KeyTransformationHandler;
 import org.infinispan.query.backend.QueryInterceptor;
 import org.infinispan.query.dsl.embedded.impl.EmbeddedQueryEngine;
@@ -23,15 +19,6 @@ import org.infinispan.query.dsl.embedded.impl.QueryCache;
 public final class ComponentRegistryUtils {
 
    private ComponentRegistryUtils() {
-   }
-
-   private static <T> T getRequiredGlobalComponent(Cache<?, ?> cache, Class<T> clazz, String componentName) {
-      GlobalComponentRegistry componentRegistry = SecurityActions.getCacheGlobalComponentRegistry(cache.getAdvancedCache());
-      T component = componentRegistry.getComponent(clazz, componentName);
-      if (component == null) {
-         throw new IllegalStateException(clazz.getName() + " not found in component registry");
-      }
-      return component;
    }
 
    private static <T> T getRequiredComponent(Cache<?, ?> cache, Class<T> clazz) {
@@ -71,14 +58,6 @@ public final class ComponentRegistryUtils {
 
    public static TimeService getTimeService(Cache<?, ?> cache) {
       return getRequiredComponent(cache, TimeService.class);
-   }
-
-   public static PersistenceMarshallerImpl getPersistenceMarshaller(Cache<?, ?> cache) {
-      return getRequiredGlobalComponent(cache, PersistenceMarshallerImpl.class, KnownComponentNames.PERSISTENCE_MARSHALLER);
-   }
-
-   public static SerializationContext getSerializationContext(Cache<?, ?> cache) {
-      return getPersistenceMarshaller(cache).getSerializationContext();
    }
 
    /**

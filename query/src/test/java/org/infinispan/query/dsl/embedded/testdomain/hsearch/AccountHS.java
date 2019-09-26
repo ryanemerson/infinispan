@@ -33,7 +33,7 @@ public class AccountHS implements Account, Serializable {
 
    @Field(store = Store.YES, analyze = Analyze.NO)
    @SortableField
-   @ProtoField(number = 1, defaultValue = "-1")
+   @ProtoField(number = 1, defaultValue = "0")
    int id;
 
    @Field(store = Store.YES, analyze = Analyze.NO)

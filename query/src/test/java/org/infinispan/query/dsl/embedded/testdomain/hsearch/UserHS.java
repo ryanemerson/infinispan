@@ -54,7 +54,7 @@ public class UserHS extends UserBase {
    private Gender gender;
 
    @IndexedEmbedded(targetElement = AddressHS.class, indexNullAs = Field.DEFAULT_NULL_TOKEN)
-   List<Address> addresses;
+   private List<AddressHS> addresses;
 
    @Field(analyze = Analyze.NO, store = Store.YES, index = Index.YES)
    private Instant creationDate;
@@ -68,7 +68,7 @@ public class UserHS extends UserBase {
    private String notes;
 
    @Override
-   @ProtoField(number = 2, defaultValue = "-1")
+   @ProtoField(number = 2, defaultValue = "0")
    public int getId() {
       return id;
    }
@@ -134,25 +134,22 @@ public class UserHS extends UserBase {
    }
 
    @Override
-   public synchronized List<Address> getAddresses() {
-      return addresses;
+   public List<Address> getAddresses() {
+      return addresses == null ? null : addresses.stream().map(Address.class::cast).collect(Collectors.toList());
    }
 
    @Override
-   public synchronized void setAddresses(List<Address> addresses) {
-      this.addresses = addresses;
+   public void setAddresses(List<Address> addresses) {
+      this.addresses = addresses == null ? null :  addresses.stream().map(AddressHS.class::cast).collect(Collectors.toList());
    }
 
    @ProtoField(number = 8, collectionImplementation = ArrayList.class)
-   synchronized List<AddressHS> getHSAddresses() {
-      return addresses == null ? null : addresses.stream().map(AddressHS.class::cast).collect(Collectors.toCollection(ArrayList::new));
+   List<AddressHS> getHSAddresses() {
+      return addresses;
    }
 
-   synchronized void setHSAddresses(List<AddressHS> addresses) {
-      if (this.addresses != null)
-         this.addresses.addAll(addresses);
-      else
-         this.addresses = new ArrayList<>(addresses);
+   void setHSAddresses(List<AddressHS> addresses) {
+      this.addresses = addresses;
    }
 
    @Override

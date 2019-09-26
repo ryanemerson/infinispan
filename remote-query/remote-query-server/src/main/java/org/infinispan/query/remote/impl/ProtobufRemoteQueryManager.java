@@ -25,7 +25,6 @@ class ProtobufRemoteQueryManager extends BaseRemoteQueryManager {
 
    ProtobufRemoteQueryManager(SerializationContext serCtx, ComponentRegistry cr, QuerySerializers querySerializers) {
       super(cr, querySerializers);
-      // TODO move to just query?
       Matcher matcher = new ProtobufMatcher(serCtx, ProtobufFieldIndexingMetadata::new);
       cr.registerComponent(matcher, ProtobufMatcher.class);
 

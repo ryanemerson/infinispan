@@ -1,7 +1,7 @@
 package org.infinispan.query.dsl.embedded.impl;
 
 import org.infinispan.AdvancedCache;
-import org.infinispan.objectfilter.impl.ProtobufMatcher;
+import org.infinispan.objectfilter.impl.ReflectionMatcher;
 
 /**
  * @author anistor@redhat.com
@@ -10,6 +10,6 @@ import org.infinispan.objectfilter.impl.ProtobufMatcher;
 public final class EmbeddedQueryEngine extends QueryEngine<Class<?>> {
 
    public EmbeddedQueryEngine(AdvancedCache<?, ?> cache, boolean isIndexed) {
-      super(cache, isIndexed, ProtobufMatcher.class, null);
+      super(cache, isIndexed, ReflectionMatcher.class, null);
    }
 }

@@ -49,12 +49,8 @@ import org.infinispan.jmx.CacheManagerJmxRegistration;
 import org.infinispan.lifecycle.ModuleLifecycle;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.marshall.persistence.PersistenceMarshaller;
-import org.infinispan.marshall.persistence.impl.PersistenceMarshallerImpl;
-import org.infinispan.objectfilter.Matcher;
-import org.infinispan.objectfilter.impl.ProtobufMatcher;
 import org.infinispan.objectfilter.impl.ReflectionMatcher;
 import org.infinispan.objectfilter.impl.syntax.parser.ReflectionEntityNamesResolver;
-import org.infinispan.protostream.SerializationContext;
 import org.infinispan.query.Transformer;
 import org.infinispan.query.affinity.ShardAllocationManagerImpl;
 import org.infinispan.query.affinity.ShardAllocatorManager;
@@ -146,6 +142,7 @@ public class LifecycleManager implements ModuleLifecycle {
 
             cr.registerComponent(new QueryBox(), QueryBox.class);
          }
+
          registerMatcher(cr, searchFactory, aggregatedClassLoader);
 
          cr.registerComponent(new EmbeddedQueryEngine(cache, isIndexed), EmbeddedQueryEngine.class);
@@ -153,16 +150,9 @@ public class LifecycleManager implements ModuleLifecycle {
    }
 
    private void registerMatcher(ComponentRegistry cr, SearchIntegrator searchFactory, ClassLoader classLoader) {
-      PersistenceMarshallerImpl pm = cr.getGlobalComponentRegistry().getComponent(PersistenceMarshallerImpl.class, KnownComponentNames.PERSISTENCE_MARSHALLER);
-      Matcher matcher;
-      if (pm.protoStreamUserMarshaller()) {
-         SerializationContext ctx = pm.getSerializationContext();
-         matcher = new ProtobufMatcher(ctx, null);
-      } else {
-         matcher = searchFactory == null ? new ReflectionMatcher(classLoader) :
-               new ReflectionMatcher(new HibernateSearchPropertyHelper(searchFactory, new ReflectionEntityNamesResolver(classLoader)));
-      }
-      cr.registerComponent(matcher, matcher.getClass());
+      ReflectionMatcher reflectionMatcher = searchFactory == null ? new ReflectionMatcher(classLoader) :
+            new ReflectionMatcher(new HibernateSearchPropertyHelper(searchFactory, new ReflectionEntityNamesResolver(classLoader)));
+      cr.registerComponent(reflectionMatcher, ReflectionMatcher.class);
    }
 
    private void addCacheDependencyIfNeeded(String cacheStarting, EmbeddedCacheManager cacheManager, IndexingConfiguration indexingConfiguration) {
