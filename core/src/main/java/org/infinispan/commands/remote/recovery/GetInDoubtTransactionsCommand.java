@@ -7,7 +7,6 @@ import java.util.List;
 
 import javax.transaction.xa.Xid;
 
-import org.infinispan.context.InvocationContext;
 import org.infinispan.util.ByteString;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
@@ -34,7 +33,7 @@ public class GetInDoubtTransactionsCommand extends RecoveryCommand {
    }
 
    @Override
-   public List<Xid> perform(InvocationContext ctx) throws Throwable {
+   public List<Xid> invoke() throws Throwable {
       List<Xid> localInDoubtTransactions = recoveryManager.getInDoubtTransactions();
       log.tracef("Returning result %s", localInDoubtTransactions);
       return localInDoubtTransactions;

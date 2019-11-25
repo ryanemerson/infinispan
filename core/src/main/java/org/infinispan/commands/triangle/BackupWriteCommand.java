@@ -8,7 +8,6 @@ import java.io.ObjectOutput;
 import java.util.concurrent.CompletableFuture;
 
 import org.infinispan.commands.CommandInvocationId;
-import org.infinispan.commands.CommandsFactory;
 import org.infinispan.commands.InitializableCommand;
 import org.infinispan.commands.remote.BaseRpcCommand;
 import org.infinispan.commands.write.WriteCommand;
@@ -40,30 +39,23 @@ public abstract class BackupWriteCommand extends BaseRpcCommand implements Initi
    private long sequence;
    protected int segmentId;
 
-   private InvocationContextFactory invocationContextFactory;
-   private AsyncInterceptorChain interceptorChain;
-   protected CommandsFactory commandsFactory;
-
    BackupWriteCommand(ByteString cacheName) {
       super(cacheName);
    }
 
    @Override
-   public void init(ComponentRegistry componentRegistry, boolean isRemote) {
-      this.invocationContextFactory = componentRegistry.getInvocationContextFactory().running();
-      this.interceptorChain = componentRegistry.getInterceptorChain().running();
-      this.commandsFactory = componentRegistry.getCommandsFactory();
-   }
-
-   @Override
-   public final CompletableFuture<Object> invokeAsync() {
+   public final CompletableFuture<Object> invokeAsync(ComponentRegistry componentRegistry) {
       WriteCommand command = createWriteCommand();
       command.setFlagsBitSet(flags);
       command.addFlags(FlagBitSets.SKIP_LOCKING);
       command.setValueMatcher(MATCH_ALWAYS);
       command.setTopologyId(topologyId);
-      commandsFactory.initializeReplicableCommand(command, false);
-      InvocationContext invocationContext = createContext(command);
+      // TODO remove call to initialize command?
+      componentRegistry.getCommandsFactory().initializeReplicableCommand(command, false);
+      InvocationContextFactory invocationContextFactory = componentRegistry.getInvocationContextFactory().running();
+      InvocationContext invocationContext = invocationContextFactory.createRemoteInvocationContextForCommand(command, getOrigin());
+
+      AsyncInterceptorChain interceptorChain = componentRegistry.getInterceptorChain().running();
       return interceptorChain.invokeAsync(invocationContext, command);
    }
 
@@ -136,9 +128,5 @@ public abstract class BackupWriteCommand extends BaseRpcCommand implements Initi
             ", commandInvocationId=" + commandInvocationId +
             ", topologyId=" + topologyId +
             ", flags=" + flags;
-   }
-
-   private InvocationContext createContext(WriteCommand command) {
-      return invocationContextFactory.createRemoteInvocationContextForCommand(command, getOrigin());
    }
 }

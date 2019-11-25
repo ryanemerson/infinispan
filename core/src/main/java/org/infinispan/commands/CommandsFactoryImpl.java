@@ -219,7 +219,7 @@ public class CommandsFactoryImpl implements CommandsFactory {
 
    @Override
    public UpdateLastAccessCommand buildUpdateLastAccessCommand(Object key, int segment, long accessTime) {
-      return init(new UpdateLastAccessCommand(cacheName, key, segment, accessTime));
+      return new UpdateLastAccessCommand(cacheName, key, segment, accessTime);
    }
 
    @Override

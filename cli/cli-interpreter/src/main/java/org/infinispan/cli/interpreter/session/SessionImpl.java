@@ -3,6 +3,7 @@ package org.infinispan.cli.interpreter.session;
 import static org.infinispan.commons.dataconversion.MediaType.APPLICATION_OBJECT;
 
 import java.util.Collection;
+
 import javax.transaction.TransactionManager;
 
 import org.infinispan.AdvancedCache;

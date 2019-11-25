@@ -1,7 +1,10 @@
 package org.infinispan.commands;
 
+import java.util.concurrent.CompletableFuture;
+
 import org.infinispan.commands.write.InvalidateCommand;
 import org.infinispan.context.InvocationContext;
+import org.infinispan.factories.ComponentRegistry;
 import org.infinispan.lifecycle.ComponentStatus;
 
 
@@ -12,6 +15,12 @@ import org.infinispan.lifecycle.ComponentStatus;
  * @since 4.0
  */
 public interface VisitableCommand extends ReplicableCommand {
+
+   // TODO document
+   default CompletableFuture<Object> invokeAsync(ComponentRegistry registry) throws Throwable {
+      return CompletableFuture.completedFuture(invoke());
+   }
+
    /**
     * Performs the primary function of the command.  Please see specific implementation classes for details on what is
     * performed as well as return types. <b>Important</b>: this method will be invoked at the end of interceptors chain.
@@ -23,7 +32,6 @@ public interface VisitableCommand extends ReplicableCommand {
     * @deprecated since 10.0, please put appropriate logic into {@link org.infinispan.interceptors.impl.CallInterceptor}
     * or a custom interceptor
     */
-   @Override
    @Deprecated
    default Object perform(InvocationContext ctx) throws Throwable {
       throw new UnsupportedOperationException("Should be invoked via CallInterceptor");
@@ -46,6 +54,7 @@ public interface VisitableCommand extends ReplicableCommand {
     * @deprecated Since 9.0, no longer used.
     */
    @Deprecated
+   // TODO remove
    default boolean shouldInvoke(InvocationContext ctx) {
       return true;
    }

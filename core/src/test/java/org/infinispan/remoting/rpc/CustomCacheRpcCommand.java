@@ -37,7 +37,7 @@ public class CustomCacheRpcCommand extends BaseRpcCommand implements VisitableCo
    }
 
    @Override
-   public Object perform(InvocationContext ctx) throws Throwable {
+   public Object invoke() throws Throwable {
       if (arg instanceof Throwable) {
          throw (Throwable) arg;
       }

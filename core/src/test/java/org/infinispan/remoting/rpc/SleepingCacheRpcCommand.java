@@ -5,7 +5,6 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
 import org.infinispan.commands.remote.BaseRpcCommand;
-import org.infinispan.context.InvocationContext;
 import org.infinispan.util.ByteString;
 
 /**
@@ -31,7 +30,7 @@ public class SleepingCacheRpcCommand extends BaseRpcCommand {
    }
 
    @Override
-   public Object perform(InvocationContext ctx) throws Throwable {
+   public Object invoke() throws Throwable {
       Thread.sleep(sleepTime);
       return null;
    }

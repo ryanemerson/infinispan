@@ -21,6 +21,7 @@ import org.infinispan.context.InvocationContext;
 import org.infinispan.context.impl.FlagBitSets;
 import org.infinispan.context.impl.RemoteTxInvocationContext;
 import org.infinispan.context.impl.TxInvocationContext;
+import org.infinispan.factories.ComponentRegistry;
 import org.infinispan.transaction.impl.RemoteTransaction;
 import org.infinispan.transaction.xa.GlobalTransaction;
 import org.infinispan.util.ByteString;
@@ -118,17 +119,17 @@ public class LockControlCommand extends AbstractTransactionBoundaryCommand imple
    }
 
    @Override
-   public CompletableFuture<Object> invokeAsync() throws Throwable {
-      RemoteTxInvocationContext ctx = createContext();
+   public CompletableFuture<Object> invokeAsync(ComponentRegistry registry) throws Throwable {
+      RemoteTxInvocationContext ctx = createContext(registry);
       if (ctx == null) {
          return CompletableFutures.completedNull();
       }
-      return invoker.invokeAsync(ctx, this);
+      return registry.getInterceptorChain().running().invokeAsync(ctx, this);
    }
 
    @Override
-   public RemoteTxInvocationContext createContext() {
-      RemoteTransaction transaction = txTable.getRemoteTransaction(globalTx);
+   public RemoteTxInvocationContext createContext(ComponentRegistry componentRegistry) {
+      RemoteTransaction transaction = componentRegistry.getTransactionTableRef().running().getRemoteTransaction(globalTx);
 
       if (transaction == null) {
          if (unlock) {
@@ -136,9 +137,9 @@ public class LockControlCommand extends AbstractTransactionBoundaryCommand imple
             return null;
          }
          //create a remote tx without any modifications (we do not know modifications ahead of time)
-         transaction = txTable.getOrCreateRemoteTransaction(globalTx, null);
+         transaction = componentRegistry.getTransactionTableRef().running().getOrCreateRemoteTransaction(globalTx, null);
       }
-      return icf.createRemoteTxInvocationContext(transaction, getOrigin());
+      return componentRegistry.getInvocationContextFactory().running().createRemoteTxInvocationContext(transaction, getOrigin());
    }
 
    @Override

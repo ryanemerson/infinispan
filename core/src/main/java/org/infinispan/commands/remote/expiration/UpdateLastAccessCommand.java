@@ -5,7 +5,6 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.concurrent.CompletableFuture;
 
-import org.infinispan.commands.InitializableCommand;
 import org.infinispan.commands.SegmentSpecificCommand;
 import org.infinispan.commands.TopologyAffectedCommand;
 import org.infinispan.commands.remote.BaseRpcCommand;
@@ -21,12 +20,11 @@ import org.infinispan.util.concurrent.CompletableFutures;
  * @author wburns
  * @since 9.3
  */
-public class UpdateLastAccessCommand extends BaseRpcCommand implements InitializableCommand, TopologyAffectedCommand, SegmentSpecificCommand {
+public class UpdateLastAccessCommand extends BaseRpcCommand implements TopologyAffectedCommand, SegmentSpecificCommand {
 
    private Object key;
    private long acessTime;
 
-   private InternalDataContainer<Object, Object> container;
    private int topologyId = -1;
    private int segment;
 
@@ -45,11 +43,6 @@ public class UpdateLastAccessCommand extends BaseRpcCommand implements Initializ
       this.key = key;
       this.segment = segment;
       this.acessTime = accessTime;
-   }
-
-   @Override
-   public void init(ComponentRegistry componentRegistry, boolean isRemote) {
-      this.container = componentRegistry.getInternalDataContainer().running();
    }
 
    @Override
@@ -87,7 +80,8 @@ public class UpdateLastAccessCommand extends BaseRpcCommand implements Initializ
    }
 
    @Override
-   public CompletableFuture<Object> invokeAsync() throws Throwable {
+   public CompletableFuture<Object> invokeAsync(ComponentRegistry componentRegistry) throws Throwable {
+      InternalDataContainer container = componentRegistry.getInternalDataContainer().running();
       InternalCacheEntry<Object, Object> ice = container.peek(segment, key);
       if (ice != null) {
          ice.touch(acessTime);

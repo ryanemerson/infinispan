@@ -5,7 +5,9 @@ import java.util.concurrent.CompletableFuture;
 import org.infinispan.commands.Visitor;
 import org.infinispan.context.InvocationContext;
 import org.infinispan.context.impl.TxInvocationContext;
+import org.infinispan.factories.ComponentRegistry;
 import org.infinispan.transaction.impl.RemoteTransaction;
+import org.infinispan.transaction.impl.TransactionTable;
 import org.infinispan.transaction.xa.GlobalTransaction;
 import org.infinispan.util.ByteString;
 
@@ -32,10 +34,11 @@ public class RollbackCommand extends AbstractTransactionBoundaryCommand {
    }
 
    @Override
-   public CompletableFuture<Object> invokeAsync() throws Throwable {
+   public CompletableFuture<Object> invokeAsync(ComponentRegistry registry) throws Throwable {
       // Need to mark the transaction as completed even if the prepare command was not executed on this node
+      TransactionTable txTable = registry.getTransactionTableRef().running();
       txTable.markTransactionCompleted(globalTx, false);
-      return super.invokeAsync();
+      return super.invokeAsync(registry);
    }
 
    @Override

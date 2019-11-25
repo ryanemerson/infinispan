@@ -7,6 +7,7 @@ import org.infinispan.factories.ComponentRegistry;
  *
  * @author Ryan Emerson
  * @since 10.0
+ * @deprecated since 10.1, please implement {@link ReplicableCommand#invokeAsync(ComponentRegistry, boolean)} instead
  */
 public interface InitializableCommand {
 

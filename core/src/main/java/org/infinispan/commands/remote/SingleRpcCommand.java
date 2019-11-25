@@ -7,7 +7,6 @@ import java.util.concurrent.CompletableFuture;
 
 import org.infinispan.commands.InitializableCommand;
 import org.infinispan.commands.ReplicableCommand;
-import org.infinispan.context.InvocationContext;
 import org.infinispan.factories.ComponentRegistry;
 import org.infinispan.util.ByteString;
 
@@ -58,7 +57,7 @@ public class SingleRpcCommand extends BaseRpcInvokingCommand implements Initiali
    }
 
    @Override
-   public Object perform(InvocationContext ctx) throws Throwable {
+   public Object invoke() throws Throwable {
       throw new UnsupportedOperationException();
    }
 
