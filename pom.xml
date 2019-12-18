@@ -271,7 +271,7 @@
       <versionx.com.google.inject.guice>4.2.0</versionx.com.google.inject.guice>
       <versionx.com.google.j2objc.j2objc-annotations>1.1</versionx.com.google.j2objc.j2objc-annotations>
       <versionx.com.google.testing.compile>0.15</versionx.com.google.testing.compile>
-      <versionx.com.h2database.h2>1.4.193</versionx.com.h2database.h2>
+      <versionx.com.h2database.h2>1.4.200</versionx.com.h2database.h2>
       <versionx.com.intellij.forms_rt>6.0.5</versionx.com.intellij.forms_rt>
       <versionx.com.io7m.xom.xom>1.2.10</versionx.com.io7m.xom.xom>
       <versionx.com.jayway.jsonpath.json-path>2.2.0</versionx.com.jayway.jsonpath.json-path>
