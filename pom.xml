@@ -336,7 +336,7 @@
       <versionx.joda-time.joda-time>2.9.7</versionx.joda-time.joda-time>
       <versionx.junit.junit>${version.junit}</versionx.junit.junit>
       <versionx.log4j.log4j>1.2.17</versionx.log4j.log4j>
-      <versionx.mysql.mysql-connector-java>5.1.19</versionx.mysql.mysql-connector-java>
+      <versionx.mysql.mysql-connector-java>5.1.48</versionx.mysql.mysql-connector-java>
       <versionx.net.bytebuddy.byte-buddy>${version.net.bytebuddy}</versionx.net.bytebuddy.byte-buddy>
       <versionx.net.bytebuddy.byte-buddy-agent>${version.net.bytebuddy}</versionx.net.bytebuddy.byte-buddy-agent>
       <versionx.net.java.dev.jna.jna>4.2.2</versionx.net.java.dev.jna.jna>

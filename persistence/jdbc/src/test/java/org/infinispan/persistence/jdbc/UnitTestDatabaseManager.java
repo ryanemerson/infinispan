@@ -63,7 +63,7 @@ public class UnitTestDatabaseManager {
          return store
             .simpleConnection()
                .driverClass(com.mysql.jdbc.Driver.class)
-               .connectionUrl("jdbc:mysql://localhost/infinispan?user=ispn&password=ispn")
+               .connectionUrl("jdbc:mysql://localhost/infinispan?user=ispn&password=ispn&useSSL=false")
                .username("ispn")
                .password("ispn");
       default:
