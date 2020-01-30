@@ -47,6 +47,7 @@ import org.infinispan.commands.remote.recovery.TxCompletionNotificationCommand;
 import org.infinispan.commands.statetransfer.ConflictResolutionStartCommand;
 import org.infinispan.commands.statetransfer.ScatteredStateConfirmRevokedCommand;
 import org.infinispan.commands.statetransfer.ScatteredStateGetKeysCommand;
+import org.infinispan.commands.statetransfer.StateResponseCommand;
 import org.infinispan.commands.statetransfer.StateTransferCancelCommand;
 import org.infinispan.commands.statetransfer.StateTransferGetListenersCommand;
 import org.infinispan.commands.statetransfer.StateTransferGetTransactionsCommand;
@@ -98,7 +99,6 @@ import org.infinispan.reactive.publisher.impl.commands.batch.NextPublisherComman
 import org.infinispan.reactive.publisher.impl.commands.reduction.ReductionPublisherRequestCommand;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.statetransfer.StateChunk;
-import org.infinispan.commands.statetransfer.StateResponseCommand;
 import org.infinispan.transaction.xa.GlobalTransaction;
 import org.infinispan.xsite.SingleXSiteRpcCommand;
 import org.infinispan.xsite.commands.XSiteAmendOfflineStatusCommand;
@@ -595,15 +595,37 @@ public interface CommandsFactory {
 
    RenewBiasCommand buildRenewBiasCommand(Object[] keys);
 
-   SingleKeyBackupWriteCommand buildSingleKeyBackupWriteCommand();
+   SingleKeyBackupWriteCommand buildSingleKeyBackupWriteCommand(PutKeyValueCommand command, long sequence, int segmentId);
 
-   SingleKeyFunctionalBackupWriteCommand buildSingleKeyFunctionalBackupWriteCommand();
+   SingleKeyBackupWriteCommand buildSingleKeyBackupWriteCommand(RemoveCommand command, long sequence, int segmentId);
 
-   PutMapBackupWriteCommand buildPutMapBackupWriteCommand();
+   SingleKeyBackupWriteCommand buildSingleKeyBackupWriteCommand(ReplaceCommand command, long sequence, int segmentId);
 
-   MultiEntriesFunctionalBackupWriteCommand buildMultiEntriesFunctionalBackupWriteCommand();
+   SingleKeyBackupWriteCommand buildSingleKeyBackupWriteCommand(ComputeIfAbsentCommand command, long sequence, int segmentId);
 
-   MultiKeyFunctionalBackupWriteCommand buildMultiKeyFunctionalBackupWriteCommand();
+   SingleKeyBackupWriteCommand buildSingleKeyBackupWriteCommand(ComputeCommand command, long sequence, int segmentId);
+
+   <K, V, T, R> SingleKeyFunctionalBackupWriteCommand buildSingleKeyBackupWriteCommand(ReadWriteKeyValueCommand<K, V, T, R> command, long sequence, int segmentId);
+
+   <K, V, R> SingleKeyFunctionalBackupWriteCommand buildSingleKeyBackupWriteCommand(ReadWriteKeyCommand<K, V, R> command, long sequence, int segmentId);
+
+   <K, V> SingleKeyFunctionalBackupWriteCommand buildSingleKeyBackupWriteCommand(WriteOnlyKeyCommand<K, V> command, long sequence, int segmentId);
+
+   <K, V, T> SingleKeyFunctionalBackupWriteCommand buildSingleKeyBackupWriteCommand(WriteOnlyKeyValueCommand<K, V, T> command, long sequence, int segmentId);
+
+   PutMapBackupWriteCommand buildPutMapBackupWriteCommand(PutMapCommand command, Collection<Object> keys, long sequence, int segmentId);
+
+   <K, V, T> MultiEntriesFunctionalBackupWriteCommand buildMultiEntriesFunctionalBackupWriteCommand(
+         WriteOnlyManyEntriesCommand<K, V, T> command, Collection<Object> keys, long sequence, int segmentId);
+
+   <K, V, T, R> MultiEntriesFunctionalBackupWriteCommand buildMultiEntriesFunctionalBackupWriteCommand(
+         ReadWriteManyEntriesCommand<K, V, T, R> command, Collection<Object> keys, long sequence, int segmentId);
+
+   <K, V> MultiKeyFunctionalBackupWriteCommand buildMultiKeyFunctionalBackupWriteCommand(
+         WriteOnlyManyCommand<K, V> command, Collection<Object> keys, long sequence, int segmentId);
+
+   <K, V, R> MultiKeyFunctionalBackupWriteCommand buildMultiKeyFunctionalBackupWriteCommand(
+         ReadWriteManyCommand<K, V, R> command, Collection<Object> keys, long sequence, int segmentId);
 
    <K, R> ReductionPublisherRequestCommand<K> buildKeyReductionPublisherCommand(boolean parallelStream, DeliveryGuarantee deliveryGuarantee,
          IntSet segments, Set<K> keys, Set<K> excludedKeys, boolean includeLoader,

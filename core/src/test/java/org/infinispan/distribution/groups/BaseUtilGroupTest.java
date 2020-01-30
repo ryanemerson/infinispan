@@ -201,9 +201,9 @@ public abstract class BaseUtilGroupTest extends MultipleCacheManagersTest {
    }
 
    @AutoProtoSchemaBuilder(
+         dependsOn = org.infinispan.marshall.core.impl.GlobalContextInitializer.class,
          includeClasses = {
                GroupKey.class,
-               CacheMode.class,
                StateTransferGetGroupKeysTest.CustomConsistentHashFactory.class
          },
          schemaFileName = "test.core.GroupTestsSCI.proto",

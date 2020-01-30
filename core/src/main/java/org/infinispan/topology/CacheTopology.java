@@ -1,17 +1,20 @@
 package org.infinispan.topology;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
+import java.util.Objects;
 
-import org.infinispan.commons.marshall.InstanceReusingAdvancedExternalizer;
-import org.infinispan.commons.marshall.MarshallUtil;
+import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.distribution.ch.ConsistentHash;
-import org.infinispan.marshall.core.Ids;
+import org.infinispan.marshall.protostream.impl.WrappedMessages;
+import org.infinispan.protostream.WrappedMessage;
+import org.infinispan.protostream.annotations.ProtoEnumValue;
+import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.remoting.transport.Address;
+import org.infinispan.remoting.transport.jgroups.JGroupsAddress;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 
@@ -28,20 +31,49 @@ import org.infinispan.util.logging.LogFactory;
  * @author Dan Berindei
  * @since 5.2
  */
+@ProtoTypeId(ProtoStreamTypeIds.CACHE_TOPOLOGY)
 public class CacheTopology {
 
    private static Log log = LogFactory.getLog(CacheTopology.class);
    private static final boolean trace = log.isTraceEnabled();
 
-   private final int topologyId;
-   private final int rebalanceId;
-   private final ConsistentHash currentCH;
-   private final ConsistentHash pendingCH;
-   private final ConsistentHash unionCH;
-   private final Phase phase;
-   private List<Address> actualMembers;
+   @ProtoField(number = 1, defaultValue = "-1")
+   final int topologyId;
+
+   @ProtoField(number = 2, defaultValue = "-1")
+   final int rebalanceId;
+
+   @ProtoField(number = 3)
+   final WrappedMessage currentCH;
+
+   @ProtoField(number = 4)
+   final WrappedMessage pendingCH;
+
+   @ProtoField(number = 5)
+   final WrappedMessage unionCH;
+
+   @ProtoField(number = 6)
+   final Phase phase;
+
    // The persistent UUID of each actual member
-   private List<PersistentUUID> persistentUUIDs;
+   @ProtoField(number = 7, collectionImplementation = ArrayList.class)
+   List<PersistentUUID> persistentUUIDs;
+
+   List<Address> actualMembers;
+
+   @ProtoFactory
+   CacheTopology(int topologyId, int rebalanceId, WrappedMessage currentCH, WrappedMessage pendingCH,
+                 WrappedMessage unionCH, Phase phase, List<PersistentUUID> persistentUUIDs,
+                 List<JGroupsAddress> jGroupsMembers) {
+      this.topologyId = topologyId;
+      this.rebalanceId = rebalanceId;
+      this.currentCH = currentCH;
+      this.pendingCH = pendingCH;
+      this.unionCH = unionCH;
+      this.phase = phase;
+      this.persistentUUIDs = persistentUUIDs;
+      this.actualMembers = (List<Address>)(List<?>) jGroupsMembers;
+   }
 
    public CacheTopology(int topologyId, int rebalanceId, ConsistentHash currentCH, ConsistentHash pendingCH,
                         Phase phase, List<Address> actualMembers, List<PersistentUUID> persistentUUIDs) {
@@ -59,12 +91,17 @@ public class CacheTopology {
       }
       this.topologyId = topologyId;
       this.rebalanceId = rebalanceId;
-      this.currentCH = currentCH;
-      this.pendingCH = pendingCH;
-      this.unionCH = unionCH;
+      this.currentCH = WrappedMessages.orElseNull(currentCH);
+      this.pendingCH = WrappedMessages.orElseNull(pendingCH);
+      this.unionCH = WrappedMessages.orElseNull(unionCH);
       this.phase = phase;
       this.actualMembers = actualMembers;
       this.persistentUUIDs = persistentUUIDs;
+   }
+
+   @ProtoField(number = 8, collectionImplementation = ArrayList.class)
+   List<JGroupsAddress> getJGroupsMembers() {
+      return (List<JGroupsAddress>)(List<?>) actualMembers;
    }
 
    public int getTopologyId() {
@@ -75,21 +112,21 @@ public class CacheTopology {
     * The current consistent hash.
     */
    public ConsistentHash getCurrentCH() {
-      return currentCH;
+      return WrappedMessages.unwrap(currentCH);
    }
 
    /**
     * The future consistent hash. Should be {@code null} if there is no rebalance in progress.
     */
    public ConsistentHash getPendingCH() {
-      return pendingCH;
+      return WrappedMessages.unwrap(pendingCH);
    }
 
    /**
     * The union of the current and future consistent hashes. Should be {@code null} if there is no rebalance in progress.
     */
    public ConsistentHash getUnionCH() {
-      return unionCH;
+      return WrappedMessages.unwrap(unionCH);
    }
 
    /**
@@ -106,9 +143,9 @@ public class CacheTopology {
     */
    public List<Address> getMembers() {
       if (pendingCH != null)
-         return pendingCH.getMembers();
+         return getPendingCH().getMembers();
       else if (currentCH != null)
-         return currentCH.getMembers();
+         return getCurrentCH().getMembers();
       else
          return Collections.emptyList();
    }
@@ -135,19 +172,19 @@ public class CacheTopology {
          case NO_REBALANCE:
             assert pendingCH == null;
             assert unionCH == null;
-            return currentCH;
+            return getCurrentCH();
          case TRANSITORY:
-            return pendingCH;
+            return getPendingCH();
          case READ_OLD_WRITE_ALL:
             assert pendingCH != null;
             assert unionCH != null;
-            return currentCH;
+            return getCurrentCH();
          case READ_ALL_WRITE_ALL:
             assert pendingCH != null;
-            return unionCH;
+            return getUnionCH();
          case READ_NEW_WRITE_ALL:
             assert unionCH != null;
-            return pendingCH;
+            return getPendingCH();
          default:
             throw new IllegalStateException();
       }
@@ -162,15 +199,15 @@ public class CacheTopology {
          case NO_REBALANCE:
             assert pendingCH == null;
             assert unionCH == null;
-            return currentCH;
+            return getCurrentCH();
          case TRANSITORY:
-            return pendingCH;
+            return getPendingCH();
          case READ_OLD_WRITE_ALL:
          case READ_ALL_WRITE_ALL:
          case READ_NEW_WRITE_ALL:
             assert pendingCH != null;
             assert unionCH != null;
-            return unionCH;
+            return getUnionCH();
          default:
             throw new IllegalStateException();
       }
@@ -180,30 +217,20 @@ public class CacheTopology {
    public boolean equals(Object o) {
       if (this == o) return true;
       if (o == null || getClass() != o.getClass()) return false;
-
-      CacheTopology that = (CacheTopology) o;
-
-      if (topologyId != that.topologyId) return false;
-      if (rebalanceId != that.rebalanceId) return false;
-      if (phase != that.phase) return false;
-      if (currentCH != null ? !currentCH.equals(that.currentCH) : that.currentCH != null) return false;
-      if (pendingCH != null ? !pendingCH.equals(that.pendingCH) : that.pendingCH != null) return false;
-      if (unionCH != null ? !unionCH.equals(that.unionCH) : that.unionCH != null) return false;
-      if (actualMembers != null ? !actualMembers.equals(that.actualMembers) : that.actualMembers != null) return false;
-
-      return true;
+      CacheTopology topology = (CacheTopology) o;
+      return topologyId == topology.topologyId &&
+            rebalanceId == topology.rebalanceId &&
+            Objects.equals(currentCH, topology.currentCH) &&
+            Objects.equals(pendingCH, topology.pendingCH) &&
+            Objects.equals(unionCH, topology.unionCH) &&
+            phase == topology.phase &&
+            Objects.equals(persistentUUIDs, topology.persistentUUIDs) &&
+            Objects.equals(actualMembers, topology.actualMembers);
    }
 
    @Override
    public int hashCode() {
-      int result = topologyId;
-      result = 31 * result + rebalanceId;
-      result = 31 * result + (phase != null ? phase.hashCode() : 0);
-      result = 31 * result + (currentCH != null ? currentCH.hashCode() : 0);
-      result = 31 * result + (pendingCH != null ? pendingCH.hashCode() : 0);
-      result = 31 * result + (unionCH != null ? unionCH.hashCode() : 0);
-      result = 31 * result + (actualMembers != null ? actualMembers.hashCode() : 0);
-      return result;
+      return Objects.hash(topologyId, rebalanceId, currentCH, pendingCH, unionCH, phase, persistentUUIDs, actualMembers);
    }
 
    @Override
@@ -212,9 +239,9 @@ public class CacheTopology {
             "id=" + topologyId +
             ", phase=" + phase +
             ", rebalanceId=" + rebalanceId +
-            ", currentCH=" + currentCH +
-            ", pendingCH=" + pendingCH +
-            ", unionCH=" + unionCH +
+            ", currentCH=" + getCurrentCH() +
+            ", pendingCH=" + getPendingCH() +
+            ", unionCH=" + getUnionCH() +
             ", actualMembers=" + actualMembers +
             ", persistentUUIDs=" + persistentUUIDs +
             '}';
@@ -222,52 +249,14 @@ public class CacheTopology {
 
    public final void logRoutingTableInformation() {
       if (trace) {
-         log.tracef("Current consistent hash's routing table: %s", currentCH.getRoutingTableAsString());
-         if (pendingCH != null) log.tracef("Pending consistent hash's routing table: %s", pendingCH.getRoutingTableAsString());
-         if (unionCH != null) log.tracef("Union consistent hash's routing table: %s", unionCH.getRoutingTableAsString());
+         log.tracef("Current consistent hash's routing table: %s", getCurrentCH().getRoutingTableAsString());
+         if (pendingCH != null) log.tracef("Pending consistent hash's routing table: %s", getPendingCH().getRoutingTableAsString());
+         if (unionCH != null) log.tracef("Union consistent hash's routing table: %s", getUnionCH().getRoutingTableAsString());
       }
    }
 
    public Phase getPhase() {
       return phase;
-   }
-
-
-   public static class Externalizer extends InstanceReusingAdvancedExternalizer<CacheTopology> {
-      @Override
-      public void doWriteObject(ObjectOutput output, CacheTopology cacheTopology) throws IOException {
-         output.writeInt(cacheTopology.topologyId);
-         output.writeInt(cacheTopology.rebalanceId);
-         output.writeObject(cacheTopology.currentCH);
-         output.writeObject(cacheTopology.pendingCH);
-         output.writeObject(cacheTopology.unionCH);
-         output.writeObject(cacheTopology.actualMembers);
-         output.writeObject(cacheTopology.persistentUUIDs);
-         MarshallUtil.marshallEnum(cacheTopology.phase, output);
-      }
-
-      @Override
-      public CacheTopology doReadObject(ObjectInput unmarshaller) throws IOException, ClassNotFoundException {
-         int topologyId = unmarshaller.readInt();
-         int rebalanceId = unmarshaller.readInt();
-         ConsistentHash currentCH = (ConsistentHash) unmarshaller.readObject();
-         ConsistentHash pendingCH = (ConsistentHash) unmarshaller.readObject();
-         ConsistentHash unionCH = (ConsistentHash) unmarshaller.readObject();
-         List<Address> actualMembers = (List<Address>) unmarshaller.readObject();
-         List<PersistentUUID> persistentUUIDs = (List<PersistentUUID>) unmarshaller.readObject();
-         Phase phase = MarshallUtil.unmarshallEnum(unmarshaller, Phase::valueOf);
-         return new CacheTopology(topologyId, rebalanceId, currentCH, pendingCH, unionCH, phase, actualMembers, persistentUUIDs);
-      }
-
-      @Override
-      public Integer getId() {
-         return Ids.CACHE_TOPOLOGY;
-      }
-
-      @Override
-      public Set<Class<? extends CacheTopology>> getTypeClasses() {
-         return Collections.singleton(CacheTopology.class);
-      }
    }
 
    /**
@@ -279,31 +268,43 @@ public class CacheTopology {
     *
     * Old entries should be wiped out only after coming to the {@link #NO_REBALANCE} phase.
     */
+   @ProtoTypeId(ProtoStreamTypeIds.CACHE_TOPOLOGY_PHASE)
    public enum Phase {
       /**
        * Only currentCH should be set, this works as both readCH and writeCH
        */
+      @ProtoEnumValue(number = 1)
       NO_REBALANCE(false),
+
       /**
        * Used by caches that don't use 4-phase topology change. PendingCH is used for both read and write.
        */
+      @ProtoEnumValue(number = 2)
       TRANSITORY(true),
+
       /**
        * Interim state between NO_REBALANCE &rarr; READ_OLD_WRITE_ALL
        * readCh is set locally using previous Topology (of said node) readCH, whilst writeCH contains all members after merge
        */
+      @ProtoEnumValue(number = 3)
       CONFLICT_RESOLUTION(false),
+
       /**
        * Used during state transfer: readCH == currentCH, writeCH = unionCH
        */
+      @ProtoEnumValue(number = 4)
       READ_OLD_WRITE_ALL(true),
+
       /**
        * Used after state transfer completes: readCH == writeCH = unionCH
        */
+      @ProtoEnumValue(number = 5)
       READ_ALL_WRITE_ALL(false),
+
       /**
        * Intermediate state that prevents ISPN-5021: readCH == pendingCH, writeCH = unionCH
        */
+      @ProtoEnumValue(number = 6)
       READ_NEW_WRITE_ALL(false);
 
       private static final Phase[] values = Phase.values();

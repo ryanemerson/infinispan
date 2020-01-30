@@ -2,20 +2,20 @@ package org.infinispan.commands.write;
 
 import static org.infinispan.commons.util.Util.toStr;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
 import java.util.Objects;
 
 import org.infinispan.commands.CommandInvocationId;
 import org.infinispan.commands.MetadataAwareCommand;
 import org.infinispan.commands.Visitor;
-import org.infinispan.commons.io.UnsignedNumeric;
-import org.infinispan.commons.marshall.MarshallUtil;
+import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.context.InvocationContext;
 import org.infinispan.context.impl.FlagBitSets;
+import org.infinispan.marshall.protostream.impl.MarshallableObject;
 import org.infinispan.metadata.Metadata;
 import org.infinispan.metadata.impl.PrivateMetadata;
+import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.protostream.annotations.ProtoTypeId;
 
 
 /**
@@ -23,10 +23,10 @@ import org.infinispan.metadata.impl.PrivateMetadata;
  * @author <a href="mailto:galder.zamarreno@jboss.com">Galder Zamarreno</a>
  * @since 4.0
  */
+@ProtoTypeId(ProtoStreamTypeIds.REMOVE_COMMAND)
 public class RemoveCommand extends AbstractDataWriteCommand implements MetadataAwareCommand {
    public static final byte COMMAND_ID = 10;
-   protected boolean successful = true;
-   private boolean nonExistent = false;
+   protected transient boolean successful = true;
 
    protected Metadata metadata;
    protected ValueMatcher valueMatcher;
@@ -41,11 +41,45 @@ public class RemoveCommand extends AbstractDataWriteCommand implements MetadataA
    public RemoveCommand(Object key, Object value, int segment, long flagsBitSet,
                         CommandInvocationId commandInvocationId) {
       super(key, segment, flagsBitSet, commandInvocationId);
-      this.value = value;
+      setValue(value);
       this.valueMatcher = value != null ? ValueMatcher.MATCH_EXPECTED : ValueMatcher.MATCH_ALWAYS;
    }
 
-   public RemoveCommand() {
+   @ProtoFactory
+   RemoveCommand(MarshallableObject<?> wrappedKey, long flagsWithoutRemote, int topologyId, int segment,
+                 CommandInvocationId commandInvocationId, MarshallableObject<?> wrappedValue,
+                 MarshallableObject<Metadata> wrappedMetadata, ValueMatcher valueMatcher,
+                 PrivateMetadata internalMetadata) {
+      super(wrappedKey, flagsWithoutRemote, topologyId, segment, commandInvocationId);
+      this.value = MarshallableObject.unwrap(wrappedValue);
+      this.metadata = MarshallableObject.unwrap(wrappedMetadata);
+      this.valueMatcher = valueMatcher;
+      this.internalMetadata = internalMetadata;
+   }
+
+   @ProtoField(number = 6, name = "value")
+   protected MarshallableObject<?> getWrappedValue() {
+      return MarshallableObject.create(value);
+   }
+
+   @ProtoField(number = 7, name = "metadata")
+   protected MarshallableObject<Metadata> getWrappedMetadata() {
+      return MarshallableObject.create(metadata);
+   }
+
+   @Override
+   @ProtoField(number = 8)
+   public ValueMatcher getValueMatcher() {
+      return valueMatcher;
+   }
+
+   @ProtoField(number = 9)
+   public PrivateMetadata getInternalMetadata() {
+      return internalMetadata;
+   }
+
+   public void setInternalMetadata(PrivateMetadata internalMetadata) {
+      this.internalMetadata = internalMetadata;
    }
 
    @Override
@@ -89,18 +123,15 @@ public class RemoveCommand extends AbstractDataWriteCommand implements MetadataA
 
    @Override
    public String toString() {
-      return new StringBuilder()
-         .append("RemoveCommand{key=")
-         .append(toStr(key))
-         .append(", value=").append(toStr(value))
-         .append(", metadata=").append(metadata)
-         .append(", internalMetadata=").append(internalMetadata)
-         .append(", flags=").append(printFlags())
-         .append(", commandInvocationId=").append(CommandInvocationId.show(commandInvocationId))
-         .append(", valueMatcher=").append(valueMatcher)
-         .append(", topologyId=").append(getTopologyId())
-         .append("}")
-         .toString();
+      return "RemoveCommand{key=" + toStr(key) +
+            ", value=" + toStr(value) +
+            ", metadata=" + metadata +
+            ", internalMetadata=" + internalMetadata +
+            ", flags=" + printFlags() +
+            ", commandInvocationId=" + CommandInvocationId.show(commandInvocationId) +
+            ", valueMatcher=" + valueMatcher +
+            ", topologyId=" + getTopologyId() +
+            "}";
    }
 
    @Override
@@ -111,43 +142,6 @@ public class RemoveCommand extends AbstractDataWriteCommand implements MetadataA
    @Override
    public boolean isConditional() {
       return value != null;
-   }
-
-   public void nonExistant() {
-      nonExistent = false;
-   }
-
-   public boolean isNonExistent() {
-      return nonExistent;
-   }
-
-   @Override
-   public void writeTo(ObjectOutput output) throws IOException {
-      output.writeObject(key);
-      output.writeObject(value);
-      UnsignedNumeric.writeUnsignedInt(output, segment);
-      output.writeObject(metadata);
-      output.writeLong(FlagBitSets.copyWithoutRemotableFlags(getFlagsBitSet()));
-      MarshallUtil.marshallEnum(valueMatcher, output);
-      CommandInvocationId.writeTo(output, commandInvocationId);
-      output.writeObject(internalMetadata);
-   }
-
-   @Override
-   public void readFrom(ObjectInput input) throws IOException, ClassNotFoundException {
-      key = input.readObject();
-      value = input.readObject();
-      segment = UnsignedNumeric.readUnsignedInt(input);
-      metadata = (Metadata) input.readObject();
-      setFlagsBitSet(input.readLong());
-      valueMatcher = MarshallUtil.unmarshallEnum(input, ValueMatcher::valueOf);
-      commandInvocationId = CommandInvocationId.readFrom(input);
-      internalMetadata = (PrivateMetadata) input.readObject();
-   }
-
-   @Override
-   public ValueMatcher getValueMatcher() {
-      return valueMatcher;
    }
 
    @Override
@@ -177,13 +171,5 @@ public class RemoveCommand extends AbstractDataWriteCommand implements MetadataA
    public final boolean isReturnValueExpected() {
       // IGNORE_RETURN_VALUES ignored for conditional remove
       return isConditional() || super.isReturnValueExpected();
-   }
-
-   public PrivateMetadata getInternalMetadata() {
-      return internalMetadata;
-   }
-
-   public void setInternalMetadata(PrivateMetadata internalMetadata) {
-      this.internalMetadata = internalMetadata;
    }
 }

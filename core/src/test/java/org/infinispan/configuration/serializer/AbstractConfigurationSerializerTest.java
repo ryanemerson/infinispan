@@ -53,7 +53,7 @@ public abstract class AbstractConfigurationSerializerTest extends AbstractInfini
       compareAttributeSets("Global", globalConfigurationBefore.globalState().attributes(), globalConfigurationAfter.globalState().attributes(), "localConfigurationStorage");
       compareAttributeSets("Global", globalConfigurationBefore.jmx().attributes(), globalConfigurationAfter.jmx().attributes(), "mbeanServerLookup");
       compareAttributeSets("Global", globalConfigurationBefore.security().authorization().attributes(), globalConfigurationAfter.security().authorization().attributes());
-      compareAttributeSets("Global", globalConfigurationBefore.serialization().attributes(), globalConfigurationAfter.serialization().attributes(), "marshaller", "classResolver", "advancedExternalizer", "contextInitializers");
+      compareAttributeSets("Global", globalConfigurationBefore.serialization().attributes(), globalConfigurationAfter.serialization().attributes(), "marshaller", "contextInitializers");
       compareAttributeSets("Global", globalConfigurationBefore.transport().attributes(), globalConfigurationAfter.transport().attributes(), "transport", "properties");
       compareExtraGlobalConfiguration(globalConfigurationBefore, globalConfigurationAfter);
 

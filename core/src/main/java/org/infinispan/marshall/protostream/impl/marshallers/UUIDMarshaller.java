@@ -3,17 +3,13 @@ package org.infinispan.marshall.protostream.impl.marshallers;
 import java.io.IOException;
 import java.util.UUID;
 
-import org.infinispan.protostream.MessageMarshaller;
-
-public class UUIDMarshaller implements MessageMarshaller<UUID> {
-
-   private final String typeName;
+public class UUIDMarshaller extends AbstractMessageMarshaller<UUID> {
 
    /**
     * @param typeName so that marshaller can be used in multiple contexts
     */
    public UUIDMarshaller(String typeName) {
-      this.typeName = typeName;
+      super(typeName, UUID.class);
    }
 
    @Override
@@ -32,15 +28,5 @@ public class UUIDMarshaller implements MessageMarshaller<UUID> {
    public void writeTo(ProtoStreamWriter writer, UUID uuid) throws IOException {
       writer.writeLong("mostSigBitsFixed", uuid.getMostSignificantBits());
       writer.writeLong("leastSigBitsFixed", uuid.getLeastSignificantBits());
-   }
-
-   @Override
-   public Class<? extends UUID> getJavaClass() {
-      return UUID.class;
-   }
-
-   @Override
-   public String getTypeName() {
-      return typeName;
    }
 }

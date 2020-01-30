@@ -51,7 +51,7 @@ public class FunctionalTxTest extends MultipleCacheManagersTest {
       cb.transaction().transactionMode(TransactionMode.TRANSACTIONAL).useSynchronization(false);
       cb.clustering().cacheMode(CacheMode.DIST_SYNC).hash().numSegments(1).consistentHashFactory(chf);
 
-      createCluster(cb, 3);
+      createCluster(ControlledConsistentHashFactory.SCI.INSTANCE, cb, 3);
       waitForClusterToForm();
    }
 

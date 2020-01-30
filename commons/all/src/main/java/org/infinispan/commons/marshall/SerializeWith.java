@@ -25,6 +25,7 @@ import java.lang.annotation.Target;
 @Inherited
 @Documented
 @Deprecated
+// TODO remove all references from src & test
 public @interface SerializeWith {
 
    /**
@@ -33,5 +34,4 @@ public @interface SerializeWith {
     * @return the externalizer type
     */
    Class<? extends Externalizer<?>> value();
-
 }

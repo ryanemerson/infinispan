@@ -44,6 +44,9 @@ import org.infinispan.util.logging.events.EventLogLevel;
       schemaFilePath = "proto/generated",
       schemaPackageName = PersistenceContextInitializer.PACKAGE_NAME)
 public interface PersistenceContextInitializer extends SerializationContextInitializer {
+
+   SerializationContextInitializer INSTANCE = new PersistenceContextInitializerImpl();
+
    String PACKAGE_NAME = "org.infinispan.persistence.core";
 
    static String getFqTypeName(Class clazz) {

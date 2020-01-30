@@ -110,7 +110,7 @@ public abstract class BasePerCacheInboundInvocationHandler implements PerCacheIn
 
    final CompletableFuture<Response> invokeCommand(CacheRpcCommand cmd) throws Throwable {
       if (isTraceEnabled()) {
-         getLog().tracef("Calling perform() on %s", cmd);
+         getLog().tracef("Calling invokeAsync() on %s", cmd);
       }
       CompletableFuture<?> future = cmd.invokeAsync(componentRegistry).toCompletableFuture();
       if (CompletionStages.isCompletedSuccessfully(future)) {

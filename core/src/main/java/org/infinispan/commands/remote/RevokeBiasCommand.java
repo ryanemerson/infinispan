@@ -1,18 +1,19 @@
 package org.infinispan.commands.remote;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.CompletionStage;
 
 import org.infinispan.commands.write.BackupAckCommand;
-import org.infinispan.commons.marshall.MarshallUtil;
+import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.factories.ComponentRegistry;
+import org.infinispan.marshall.protostream.impl.MarshallableCollection;
+import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.remoting.inboundhandler.DeliverOrder;
 import org.infinispan.remoting.rpc.RpcManager;
 import org.infinispan.remoting.transport.Address;
+import org.infinispan.remoting.transport.jgroups.JGroupsAddress;
 import org.infinispan.scattered.BiasManager;
 import org.infinispan.util.ByteString;
 import org.infinispan.util.concurrent.CompletableFutures;
@@ -22,28 +23,37 @@ import org.infinispan.util.concurrent.CompletableFutures;
  * After local bias is revoked a {@link BackupAckCommand} is sent to the originator, and this confirms all keys.
  */
 //TODO: consolidate this with InvalidateVersionsCommand
+@ProtoTypeId(ProtoStreamTypeIds.REVOKE_BIAS_COMMAND)
 public class RevokeBiasCommand extends BaseRpcCommand {
    public static final byte COMMAND_ID = 74;
 
-   private Address ackTarget;
-   private long id;
-   private int topologyId;
-   private Collection<Object> keys;
+   @ProtoField(number = 2, javaType = JGroupsAddress.class)
+   final Address ackTarget;
 
-   public RevokeBiasCommand() {
-      super(null);
-   }
+   @ProtoField(number = 3, defaultValue = "-1")
+   final long id;
 
-   public RevokeBiasCommand(ByteString cacheName) {
-      super(cacheName);
-   }
+   @ProtoField(number = 4, defaultValue = "-1")
+   final int topologyId;
 
-   public RevokeBiasCommand(ByteString cacheName, Address ackTarget, long id, int topologyId, Collection<Object> keys) {
+   final Collection<?> keys;
+
+   public RevokeBiasCommand(ByteString cacheName, Address ackTarget, long id, int topologyId, Collection<?> keys) {
       super(cacheName);
       this.ackTarget = ackTarget;
       this.id = id;
       this.topologyId = topologyId;
       this.keys = keys;
+   }
+
+   @ProtoFactory
+   RevokeBiasCommand(ByteString cacheName, JGroupsAddress ackTarget, long id, int topologyId, MarshallableCollection<?> keys) {
+      this(cacheName, ackTarget, id, topologyId, MarshallableCollection.unwrap(keys));
+   }
+
+   @ProtoField(number = 5)
+   MarshallableCollection<?> getKeys() {
+      return MarshallableCollection.create(keys);
    }
 
    @Override
@@ -71,33 +81,11 @@ public class RevokeBiasCommand extends BaseRpcCommand {
    }
 
    @Override
-   public void writeTo(ObjectOutput output) throws IOException {
-      output.writeObject(ackTarget);
-      if (ackTarget != null) {
-         output.writeLong(id);
-      }
-      output.writeInt(topologyId);
-      MarshallUtil.marshallCollection(keys, output);
-   }
-
-   @Override
-   public void readFrom(ObjectInput input) throws IOException, ClassNotFoundException {
-      ackTarget = (Address) input.readObject();
-      if (ackTarget != null) {
-         id = input.readLong();
-      }
-      topologyId = input.readInt();
-      keys = MarshallUtil.unmarshallCollection(input, ArrayList::new);
-   }
-
-   @Override
    public String toString() {
-      final StringBuilder sb = new StringBuilder("RevokeBiasCommand{");
-      sb.append("ackTarget=").append(ackTarget);
-      sb.append(", id=").append(id);
-      sb.append(", topologyId=").append(topologyId);
-      sb.append(", keys=").append(keys);
-      sb.append('}');
-      return sb.toString();
+      return "RevokeBiasCommand{" + "ackTarget=" + ackTarget +
+            ", id=" + id +
+            ", topologyId=" + topologyId +
+            ", keys=" + keys +
+            '}';
    }
 }

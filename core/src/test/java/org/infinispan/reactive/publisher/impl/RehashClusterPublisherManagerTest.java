@@ -19,6 +19,7 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import org.infinispan.Cache;
+import org.infinispan.commons.test.ExceptionRunnable;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.container.impl.InternalDataContainer;
@@ -27,10 +28,8 @@ import org.infinispan.reactive.publisher.PublisherReducers;
 import org.infinispan.reactive.publisher.impl.commands.reduction.ReductionPublisherRequestCommand;
 import org.infinispan.remoting.rpc.RpcManager;
 import org.infinispan.remoting.transport.Address;
-import org.infinispan.commons.test.ExceptionRunnable;
 import org.infinispan.test.Mocks;
 import org.infinispan.test.MultipleCacheManagersTest;
-import org.infinispan.test.TestDataSCI;
 import org.infinispan.test.TestingUtil;
 import org.infinispan.test.fwk.CheckPoint;
 import org.infinispan.util.ControlledConsistentHashFactory;
@@ -57,7 +56,7 @@ public class RehashClusterPublisherManagerTest extends MultipleCacheManagersTest
       ConfigurationBuilder builderUsed = new ConfigurationBuilder();
       factory = new ControlledConsistentHashFactory.Default(START_SEGMENT_OWNERS);
       builderUsed.clustering().cacheMode(CacheMode.DIST_SYNC).hash().consistentHashFactory(factory).numSegments(4);
-      createClusteredCaches(4, TestDataSCI.INSTANCE, builderUsed);
+      createClusteredCaches(4, ControlledConsistentHashFactory.SCI.INSTANCE, builderUsed);
    }
 
    @BeforeMethod

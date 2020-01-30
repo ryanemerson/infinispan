@@ -2,9 +2,6 @@ package org.infinispan.commands.remote.recovery;
 
 import static org.infinispan.commons.util.Util.toStr;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
 import java.util.Set;
 import java.util.concurrent.CompletionStage;
 
@@ -12,7 +9,13 @@ import javax.transaction.xa.Xid;
 
 import org.infinispan.commands.TopologyAffectedCommand;
 import org.infinispan.commands.remote.BaseRpcCommand;
+import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.factories.ComponentRegistry;
+import org.infinispan.marshall.protostream.impl.WrappedMessages;
+import org.infinispan.protostream.WrappedMessage;
+import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.statetransfer.StateTransferManager;
 import org.infinispan.transaction.impl.RemoteTransaction;
 import org.infinispan.transaction.impl.TransactionTable;
@@ -30,34 +33,41 @@ import org.infinispan.util.logging.LogFactory;
  * @author Mircea.Markus@jboss.com
  * @since 5.0
  */
+@ProtoTypeId(ProtoStreamTypeIds.TX_COMPLETION_NOTIFICATION_COMMAND)
 public class TxCompletionNotificationCommand extends BaseRpcCommand implements TopologyAffectedCommand {
    private static final Log log = LogFactory.getLog(TxCompletionNotificationCommand.class);
    private static final boolean trace = log.isTraceEnabled();
 
    public static final int COMMAND_ID = 22;
 
-   private Xid xid;
-   private long internalId;
-   private GlobalTransaction gtx;
-   private int topologyId = -1;
+   @ProtoField(number = 2)
+   final WrappedMessage xid;
 
-   private TxCompletionNotificationCommand() {
-      super(null); // For command id uniqueness test
+   @ProtoField(number = 3, defaultValue = "-1")
+   final long internalId;
+
+   @ProtoField(number = 4)
+   final GlobalTransaction gtx;
+
+   @ProtoField(number = 5, defaultValue = "-1")
+   int topologyId;
+
+   @ProtoFactory
+   TxCompletionNotificationCommand(ByteString cacheName, WrappedMessage xid, long internalId, GlobalTransaction gtx,
+                                   int topologyId) {
+      super(cacheName);
+      this.xid = xid;
+      this.internalId = internalId;
+      this.gtx = gtx;
+      this.topologyId = topologyId;
    }
 
    public TxCompletionNotificationCommand(Xid xid, GlobalTransaction gtx, ByteString cacheName) {
-      super(cacheName);
-      this.xid = xid;
-      this.gtx = gtx;
+      this(cacheName, WrappedMessages.orElseNull(xid), -1, gtx, -1);
    }
 
    public TxCompletionNotificationCommand(long internalId, ByteString cacheName) {
-      super(cacheName);
-      this.internalId = internalId;
-   }
-
-   public TxCompletionNotificationCommand(ByteString cacheName) {
-      super(cacheName);
+      this(cacheName, null, internalId, null, -1);
    }
 
    @Override
@@ -82,6 +92,7 @@ public class TxCompletionNotificationCommand extends BaseRpcCommand implements T
       RemoteTransaction remoteTx = null;
       RecoveryManager recoveryManager = componentRegistry.getRecoveryManager().running();
       if (recoveryManager != null) { //recovery in use
+         Xid xid = WrappedMessages.unwrap(this.xid);
          if (xid != null) {
             remoteTx = (RemoteTransaction) recoveryManager.removeRecoveryInformation(xid);
          } else {
@@ -118,28 +129,6 @@ public class TxCompletionNotificationCommand extends BaseRpcCommand implements T
    @Override
    public byte getCommandId() {
       return COMMAND_ID;
-   }
-
-   @Override
-   public void writeTo(ObjectOutput output) throws IOException {
-      if (xid == null) {
-         output.writeBoolean(true);
-         output.writeLong(internalId);
-      } else {
-         output.writeBoolean(false);
-         output.writeObject(xid);
-      }
-      output.writeObject(gtx);
-   }
-
-   @Override
-   public void readFrom(ObjectInput input) throws IOException, ClassNotFoundException {
-      if (input.readBoolean()) {
-         internalId = input.readLong();
-      } else {
-         xid = (Xid) input.readObject();
-      }
-      gtx = (GlobalTransaction) input.readObject();
    }
 
    @Override

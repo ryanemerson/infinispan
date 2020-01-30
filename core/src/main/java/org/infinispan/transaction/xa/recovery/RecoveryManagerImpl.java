@@ -110,7 +110,7 @@ public class RecoveryManagerImpl implements RecoveryManager {
          for (Map.Entry<Address, Response> rEntry : responses.entrySet()) {
             Response thisResponse = rEntry.getValue();
             if (isSuccessful(thisResponse)) {
-               List<Xid> responseValue = (List<Xid>) ((SuccessfulResponse) thisResponse).getResponseValue();
+               Collection<Xid> responseValue = ((SuccessfulResponse) thisResponse).getResponseCollection();
                if (trace) {
                   log.tracef("Received Xid lists %s from node %s", responseValue, rEntry.getKey());
                }
@@ -246,7 +246,7 @@ public class RecoveryManagerImpl implements RecoveryManager {
             if (!isSuccessful(r)) {
                throw new CacheException("Could not fetch in doubt transactions: " + r);
             }
-            Set<InDoubtTxInfoImpl> infoInDoubtSet = (Set<InDoubtTxInfoImpl>) ((SuccessfulResponse) r).getResponseValue();
+            Collection<InDoubtTxInfoImpl> infoInDoubtSet = ((SuccessfulResponse) r).getResponseCollection();
             for (InDoubtTxInfoImpl infoInDoubt : infoInDoubtSet) {
                InDoubtTxInfoImpl inDoubtTxInfo = result.get(infoInDoubt.getXid());
                if (inDoubtTxInfo == null) {
@@ -345,7 +345,7 @@ public class RecoveryManagerImpl implements RecoveryManager {
          log.expectedJustOneResponse(responseMap);
          throw new CacheException("Expected response size is 1, received " + responseMap);
       }
-      return (String) ((SuccessfulResponse) responseMap.get(where)).getResponseValue();
+      return ((SuccessfulResponse) responseMap.get(where)).getResponseObject();
    }
 
    @Override

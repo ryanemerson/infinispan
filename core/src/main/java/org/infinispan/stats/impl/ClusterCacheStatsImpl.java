@@ -27,13 +27,9 @@ import static org.infinispan.stats.impl.StatKeys.REQUIRED_MIN_NODES;
 import static org.infinispan.stats.impl.StatKeys.STORES;
 import static org.infinispan.stats.impl.StatKeys.TIME_SINCE_START;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -42,8 +38,7 @@ import java.util.function.Function;
 import org.infinispan.AdvancedCache;
 import org.infinispan.Cache;
 import org.infinispan.commons.CacheException;
-import org.infinispan.commons.marshall.AdvancedExternalizer;
-import org.infinispan.commons.util.Util;
+import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.eviction.impl.ActivationManager;
@@ -61,7 +56,9 @@ import org.infinispan.jmx.annotations.MeasurementType;
 import org.infinispan.jmx.annotations.Units;
 import org.infinispan.manager.ClusterExecutor;
 import org.infinispan.manager.EmbeddedCacheManager;
-import org.infinispan.marshall.core.Ids;
+import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.remoting.transport.LocalModeAddress;
 import org.infinispan.stats.ClusterCacheStats;
@@ -461,11 +458,14 @@ public class ClusterCacheStatsImpl extends AbstractClusterStats implements Clust
       return cache.getCacheConfiguration().clustering().cacheMode();
    }
 
-   private static class DistributedCacheStatsCallable implements Function<EmbeddedCacheManager, Map<String, Number>> {
+   @ProtoTypeId(ProtoStreamTypeIds.DISTRIBUTED_CACHE_STATS_CALLABLE)
+   public static class DistributedCacheStatsCallable implements Function<EmbeddedCacheManager, Map<String, Number>> {
 
-      private final String cacheName;
+      @ProtoField(number = 1)
+      final String cacheName;
 
-      private DistributedCacheStatsCallable(String cacheName) {
+      @ProtoFactory
+      DistributedCacheStatsCallable(String cacheName) {
          this.cacheName = cacheName;
       }
 
@@ -550,28 +550,6 @@ public class ClusterCacheStatsImpl extends AbstractClusterStats implements Clust
             map.put(CACHE_WRITER_STORES, 0);
          }
          return map;
-      }
-   }
-
-   public static class DistributedCacheStatsCallableExternalizer implements AdvancedExternalizer<DistributedCacheStatsCallable> {
-      @Override
-      public Set<Class<? extends DistributedCacheStatsCallable>> getTypeClasses() {
-         return Util.asSet(DistributedCacheStatsCallable.class);
-      }
-
-      @Override
-      public Integer getId() {
-         return Ids.DISTRIBUTED_CACHE_STATS_CALLABLE;
-      }
-
-      @Override
-      public void writeObject(ObjectOutput output, DistributedCacheStatsCallable object) throws IOException {
-         output.writeUTF(object.cacheName);
-      }
-
-      @Override
-      public DistributedCacheStatsCallable readObject(ObjectInput input) throws IOException, ClassNotFoundException {
-         return new DistributedCacheStatsCallable(input.readUTF());
       }
    }
 }

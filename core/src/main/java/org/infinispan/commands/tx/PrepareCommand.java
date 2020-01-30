@@ -2,14 +2,10 @@ package org.infinispan.commands.tx;
 
 import static org.infinispan.commons.util.InfinispanCollections.forEach;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletionStage;
 
@@ -33,7 +29,7 @@ import org.infinispan.commands.write.RemoveCommand;
 import org.infinispan.commands.write.RemoveExpiredCommand;
 import org.infinispan.commands.write.ReplaceCommand;
 import org.infinispan.commands.write.WriteCommand;
-import org.infinispan.commons.marshall.MarshallUtil;
+import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.context.InvocationContext;
 import org.infinispan.context.InvocationContextFactory;
 import org.infinispan.context.impl.FlagBitSets;
@@ -41,7 +37,11 @@ import org.infinispan.context.impl.RemoteTxInvocationContext;
 import org.infinispan.context.impl.TxInvocationContext;
 import org.infinispan.factories.ComponentRegistry;
 import org.infinispan.interceptors.AsyncInterceptorChain;
+import org.infinispan.marshall.protostream.impl.MarshallableArray;
 import org.infinispan.notifications.cachelistener.CacheNotifier;
+import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.transaction.impl.RemoteTransaction;
 import org.infinispan.transaction.impl.TransactionTable;
 import org.infinispan.transaction.xa.GlobalTransaction;
@@ -60,6 +60,7 @@ import org.infinispan.util.logging.LogFactory;
  * @author Mircea.Markus@jboss.com
  * @since 4.0
  */
+@ProtoTypeId(ProtoStreamTypeIds.PREPARE_COMMAND)
 public class PrepareCommand extends AbstractTransactionBoundaryCommand implements TransactionalRemoteLockCommand {
 
    private static final Log log = LogFactory.getLog(PrepareCommand.class);
@@ -74,26 +75,39 @@ public class PrepareCommand extends AbstractTransactionBoundaryCommand implement
 
    private static final WriteCommand[] EMPTY_WRITE_COMMAND_ARRAY = new WriteCommand[0];
 
-   private PrepareCommand() {
-      super(null); // For command id uniqueness test
+   public PrepareCommand(ByteString cacheName, GlobalTransaction gtx, Collection<WriteCommand> commands, boolean onePhaseCommit) {
+      this(cacheName, gtx, commands.toArray(new WriteCommand[0]), onePhaseCommit);
    }
 
-   public PrepareCommand(ByteString cacheName, GlobalTransaction gtx, boolean onePhaseCommit, WriteCommand... modifications) {
-      super(cacheName);
-      this.globalTx = gtx;
+   private PrepareCommand(ByteString cacheName, GlobalTransaction gtx, WriteCommand[] modifications, boolean onePhaseCommit) {
+      super(cacheName, gtx);
       this.modifications = modifications;
       this.onePhaseCommit = onePhaseCommit;
+      this.retriedCommand = false;
    }
 
-   public PrepareCommand(ByteString cacheName, GlobalTransaction gtx, List<WriteCommand> commands, boolean onePhaseCommit) {
-      super(cacheName);
-      this.globalTx = gtx;
-      this.modifications = commands == null || commands.isEmpty() ? null : commands.toArray(new WriteCommand[commands.size()]);
+   @ProtoFactory
+   PrepareCommand(ByteString cacheName, GlobalTransaction globalTransaction, MarshallableArray<WriteCommand> wrappedModifications,
+                  boolean onePhaseCommit, boolean retriedCommand) {
+      super(cacheName, globalTransaction);
+      this.modifications = MarshallableArray.unwrap(wrappedModifications, new WriteCommand[0]);
       this.onePhaseCommit = onePhaseCommit;
+      this.retriedCommand = retriedCommand;
    }
 
-   public PrepareCommand(ByteString cacheName) {
-      super(cacheName);
+   @ProtoField(number = 3, name = "modifications")
+   MarshallableArray<WriteCommand> getWrappedModifications() {
+      return MarshallableArray.create(modifications);
+   }
+
+   @ProtoField(number = 4, defaultValue = "false")
+   public boolean isOnePhaseCommit() {
+      return onePhaseCommit;
+   }
+
+   @ProtoField(number = 5, defaultValue = "false")
+   public boolean isRetriedCommand() {
+      return retriedCommand;
    }
 
    @Override
@@ -212,37 +226,13 @@ public class PrepareCommand extends AbstractTransactionBoundaryCommand implement
       return modifications == null ? EMPTY_WRITE_COMMAND_ARRAY : modifications;
    }
 
-   public boolean isOnePhaseCommit() {
-      return onePhaseCommit;
-   }
-
    @Override
    public byte getCommandId() {
       return COMMAND_ID;
    }
 
-   @Override
-   public void writeTo(ObjectOutput output) throws IOException {
-      super.writeTo(output); //global tx
-      output.writeBoolean(onePhaseCommit);
-      output.writeBoolean(retriedCommand);
-      MarshallUtil.marshallArray(modifications, output);
-   }
-
-   @Override
-   public void readFrom(ObjectInput input) throws IOException, ClassNotFoundException {
-      super.readFrom(input);
-      onePhaseCommit = input.readBoolean();
-      retriedCommand = input.readBoolean();
-      modifications = MarshallUtil.unmarshallArray(input, WriteCommand[]::new);
-   }
-
    public PrepareCommand copy() {
-      PrepareCommand copy = new PrepareCommand(cacheName);
-      copy.globalTx = globalTx;
-      copy.modifications = modifications == null ? null : modifications.clone();
-      copy.onePhaseCommit = onePhaseCommit;
-      return copy;
+      return new PrepareCommand(cacheName, globalTx, modifications == null ? null : modifications.clone(), onePhaseCommit);
    }
 
    @Override
@@ -285,10 +275,6 @@ public class PrepareCommand extends AbstractTransactionBoundaryCommand implement
    @Override
    public boolean isReturnValueExpected() {
       return false;
-   }
-
-   public boolean isRetriedCommand() {
-      return retriedCommand;
    }
 
    public void setRetriedCommand(boolean retriedCommand) {

@@ -1,14 +1,12 @@
 package org.infinispan.commands.remote;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
 import java.util.Objects;
 import java.util.concurrent.CompletionStage;
 
 import org.infinispan.commands.SegmentSpecificCommand;
+import org.infinispan.commands.TopologyAffectedCommand;
 import org.infinispan.commands.read.GetCacheEntryCommand;
-import org.infinispan.commons.io.UnsignedNumeric;
+import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.commons.util.EnumUtil;
 import org.infinispan.container.entries.InternalCacheEntry;
 import org.infinispan.container.entries.MVCCEntry;
@@ -18,7 +16,10 @@ import org.infinispan.context.InvocationContextFactory;
 import org.infinispan.context.impl.FlagBitSets;
 import org.infinispan.factories.ComponentRegistry;
 import org.infinispan.interceptors.AsyncInterceptorChain;
-import org.infinispan.transaction.xa.GlobalTransaction;
+import org.infinispan.marshall.protostream.impl.MarshallableObject;
+import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.util.ByteString;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
@@ -31,7 +32,8 @@ import org.infinispan.util.logging.LogFactory;
  * @author Mircea.Markus@jboss.com
  * @since 4.0
  */
-public class ClusteredGetCommand extends BaseClusteredReadCommand implements SegmentSpecificCommand {
+@ProtoTypeId(ProtoStreamTypeIds.CLUSTERED_GET_COMMAND)
+public class ClusteredGetCommand extends BaseRpcCommand implements SegmentSpecificCommand, TopologyAffectedCommand {
 
    public static final byte COMMAND_ID = 16;
    private static final Log log = LogFactory.getLog(ClusteredGetCommand.class);
@@ -42,23 +44,46 @@ public class ClusteredGetCommand extends BaseClusteredReadCommand implements Seg
    //only used by extended statistics. this boolean is local.
    private boolean isWrite;
    private int segment;
-
-   private ClusteredGetCommand() {
-      super(null, EnumUtil.EMPTY_BIT_SET); // For command id uniqueness test
-   }
-
-   public ClusteredGetCommand(ByteString cacheName) {
-      super(cacheName, EnumUtil.EMPTY_BIT_SET);
-   }
+   private int topologyId = -1;
+   private long flags;
 
    public ClusteredGetCommand(Object key, ByteString cacheName, int segment, long flags) {
-      super(cacheName, flags);
+      super(cacheName);
       this.key = key;
       this.isWrite = false;
       if (segment < 0) {
          throw new IllegalArgumentException("Segment must 0 or greater!");
       }
       this.segment = segment;
+      this.flags = flags;
+   }
+
+   @ProtoFactory
+   ClusteredGetCommand(ByteString cacheName, int topologyId, MarshallableObject<?> wrappedKey, int segment, long flagsWithoutRemote) {
+      this(MarshallableObject.unwrap(wrappedKey), cacheName, segment, flagsWithoutRemote);
+      this.topologyId = topologyId;
+   }
+
+   @Override
+   @ProtoField(number = 2, defaultValue = "-1")
+   public int getTopologyId() {
+      return topologyId;
+   }
+
+   @ProtoField(number = 3, name = "key")
+   MarshallableObject<?> getWrappedKey() {
+      return MarshallableObject.create(key);
+   }
+
+   @Override
+   @ProtoField(number = 4, defaultValue = "-1")
+   public int getSegment() {
+      return segment;
+   }
+
+   @ProtoField(number = 5, name = "flags", defaultValue = "0")
+   long getFlagsWithoutRemote() {
+      return FlagBitSets.copyWithoutRemotableFlags(flags);
    }
 
    /**
@@ -72,7 +97,7 @@ public class ClusteredGetCommand extends BaseClusteredReadCommand implements Seg
       // CACHE_MODE_LOCAL is not used as it can be used when we want to ignore the ownership with respect to reads
       long flagBitSet = EnumUtil.bitSetOf(Flag.SKIP_REMOTE_LOOKUP);
       GetCacheEntryCommand command = componentRegistry.getCommandsFactory().buildGetCacheEntryCommand(key, segment,
-            EnumUtil.mergeBitSets(flagBitSet, getFlagsBitSet()));
+            EnumUtil.mergeBitSets(flagBitSet, flags));
       command.setTopologyId(topologyId);
       InvocationContextFactory icf = componentRegistry.getInvocationContextFactory().running();
       InvocationContext invocationContext = icf.createRemoteInvocationContextForCommand(command, getOrigin());
@@ -93,28 +118,9 @@ public class ClusteredGetCommand extends BaseClusteredReadCommand implements Seg
             });
    }
 
-   @Deprecated
-   public GlobalTransaction getGlobalTransaction() {
-      return null;
-   }
-
    @Override
    public byte getCommandId() {
       return COMMAND_ID;
-   }
-
-   @Override
-   public void writeTo(ObjectOutput output) throws IOException {
-      output.writeObject(key);
-      UnsignedNumeric.writeUnsignedInt(output, segment);
-      output.writeLong(FlagBitSets.copyWithoutRemotableFlags(getFlagsBitSet()));
-   }
-
-   @Override
-   public void readFrom(ObjectInput input) throws IOException, ClassNotFoundException {
-      key = input.readObject();
-      segment = UnsignedNumeric.readUnsignedInt(input);
-      setFlagsBitSet(input.readLong());
    }
 
    @Override
@@ -123,7 +129,6 @@ public class ClusteredGetCommand extends BaseClusteredReadCommand implements Seg
       if (o == null || getClass() != o.getClass()) return false;
 
       ClusteredGetCommand that = (ClusteredGetCommand) o;
-
       return Objects.equals(key, that.key);
    }
 
@@ -134,13 +139,10 @@ public class ClusteredGetCommand extends BaseClusteredReadCommand implements Seg
 
    @Override
    public String toString() {
-      return new StringBuilder()
-         .append("ClusteredGetCommand{key=")
-         .append(key)
-         .append(", flags=").append(printFlags())
-         .append(", topologyId=").append(topologyId)
-         .append("}")
-         .toString();
+      return "ClusteredGetCommand{key=" + key +
+            ", flags=" + EnumUtil.prettyPrintBitSet(flags, Flag.class) +
+            ", topologyId=" + topologyId +
+            "}";
    }
 
    public boolean isWrite() {
@@ -151,11 +153,6 @@ public class ClusteredGetCommand extends BaseClusteredReadCommand implements Seg
       isWrite = write;
    }
 
-   @Override
-   public int getSegment() {
-      return segment;
-   }
-
    public Object getKey() {
       return key;
    }
@@ -163,5 +160,10 @@ public class ClusteredGetCommand extends BaseClusteredReadCommand implements Seg
    @Override
    public boolean isReturnValueExpected() {
       return true;
+   }
+
+   @Override
+   public void setTopologyId(int topologyId) {
+      this.topologyId = topologyId;
    }
 }

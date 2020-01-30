@@ -1,8 +1,5 @@
 package org.infinispan.distribution.ch.impl;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -12,13 +9,16 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.UnaryOperator;
 
-import org.infinispan.commons.marshall.InstanceReusingAdvancedExternalizer;
+import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.commons.util.IntSet;
 import org.infinispan.commons.util.IntSets;
 import org.infinispan.distribution.ch.ConsistentHash;
 import org.infinispan.globalstate.ScopedPersistentState;
-import org.infinispan.marshall.core.Ids;
+import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.remoting.transport.Address;
+import org.infinispan.remoting.transport.jgroups.JGroupsAddress;
 import org.infinispan.topology.PersistentUUID;
 
 /**
@@ -30,6 +30,7 @@ import org.infinispan.topology.PersistentUUID;
  * @author anistor@redhat.com
  * @since 5.2
  */
+@ProtoTypeId(ProtoStreamTypeIds.REPLICATED_CONSISTENT_HASH)
 public class ReplicatedConsistentHash implements ConsistentHash {
 
    private static final String STATE_PRIMARY_OWNERS = "primaryOwners.%d";
@@ -44,6 +45,22 @@ public class ReplicatedConsistentHash implements ConsistentHash {
       this.membersSet = Collections.unmodifiableSet(new HashSet<>(members));
       this.primaryOwners = primaryOwners;
       segments = IntSets.immutableRangeSet(primaryOwners.length);
+   }
+
+   @ProtoFactory
+   static ReplicatedConsistentHash protoFactory(List<JGroupsAddress> jGroupsMembers, int[] primaryOwners) {
+      return new ReplicatedConsistentHash((List<Address>)(List<?>) jGroupsMembers, primaryOwners);
+   }
+
+   // TODO no need for the casting if ConsistentHash interface updated to use `<? extends Address>`
+   @ProtoField(number = 1, collectionImplementation = ArrayList.class)
+   List<JGroupsAddress> getJGroupsMembers() {
+      return (List<JGroupsAddress>)(List<?>) members;
+   }
+
+   @ProtoField(number = 2)
+   int[] getPrimaryOwners() {
+      return primaryOwners;
    }
 
    public ReplicatedConsistentHash union(ReplicatedConsistentHash ch2) {
@@ -242,33 +259,5 @@ public class ReplicatedConsistentHash implements ConsistentHash {
       if (!Arrays.equals(primaryOwners, other.primaryOwners))
          return false;
       return true;
-   }
-
-
-   public static class Externalizer extends InstanceReusingAdvancedExternalizer<ReplicatedConsistentHash> {
-
-      @Override
-      public void doWriteObject(ObjectOutput output, ReplicatedConsistentHash ch) throws IOException {
-         output.writeObject(ch.members);
-         output.writeObject(ch.primaryOwners);
-      }
-
-      @Override
-      @SuppressWarnings("unchecked")
-      public ReplicatedConsistentHash doReadObject(ObjectInput unmarshaller) throws IOException, ClassNotFoundException {
-         List<Address> members = (List<Address>) unmarshaller.readObject();
-         int[] primaryOwners = (int[]) unmarshaller.readObject();
-         return new ReplicatedConsistentHash(members, primaryOwners);
-      }
-
-      @Override
-      public Integer getId() {
-         return Ids.REPLICATED_CONSISTENT_HASH;
-      }
-
-      @Override
-      public Set<Class<? extends ReplicatedConsistentHash>> getTypeClasses() {
-         return Collections.singleton(ReplicatedConsistentHash.class);
-      }
    }
 }

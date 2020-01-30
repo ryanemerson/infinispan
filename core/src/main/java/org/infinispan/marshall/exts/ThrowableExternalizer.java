@@ -10,11 +10,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
 
-import org.infinispan.commons.IllegalLifecycleStateException;
 import org.infinispan.InvalidCacheUsageException;
 import org.infinispan.commons.CacheConfigurationException;
 import org.infinispan.commons.CacheException;
 import org.infinispan.commons.CacheListenerException;
+import org.infinispan.commons.IllegalLifecycleStateException;
 import org.infinispan.commons.dataconversion.EncodingException;
 import org.infinispan.commons.marshall.AdvancedExternalizer;
 import org.infinispan.commons.marshall.MarshallUtil;
@@ -39,6 +39,7 @@ import org.infinispan.transaction.xa.InvalidTransactionException;
 import org.infinispan.util.UserRaisedFunctionalException;
 import org.infinispan.util.concurrent.locks.DeadlockDetectedException;
 
+// TODO  convert all Infinispan Exceptions to ProtoStream and remove
 public class ThrowableExternalizer implements AdvancedExternalizer<Throwable> {
 
    public static ThrowableExternalizer INSTANCE = new ThrowableExternalizer();

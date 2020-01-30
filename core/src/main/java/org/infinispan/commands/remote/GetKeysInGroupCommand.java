@@ -1,14 +1,14 @@
 package org.infinispan.commands.remote;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
-
 import org.infinispan.commands.AbstractTopologyAffectedCommand;
 import org.infinispan.commands.VisitableCommand;
 import org.infinispan.commands.Visitor;
+import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.context.InvocationContext;
-import org.infinispan.context.impl.FlagBitSets;
+import org.infinispan.marshall.protostream.impl.MarshallableObject;
+import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.protostream.annotations.ProtoTypeId;
 
 /**
  * {@link org.infinispan.commands.VisitableCommand} that fetches the keys belonging to a group.
@@ -16,6 +16,7 @@ import org.infinispan.context.impl.FlagBitSets;
  * @author Pedro Ruivo
  * @since 7.0
  */
+@ProtoTypeId(ProtoStreamTypeIds.GET_KEYS_IN_GROUP_COMMAND)
 public class GetKeysInGroupCommand extends AbstractTopologyAffectedCommand implements VisitableCommand {
 
    public static final byte COMMAND_ID = 43;
@@ -27,28 +28,24 @@ public class GetKeysInGroupCommand extends AbstractTopologyAffectedCommand imple
    private transient boolean isGroupOwner;
 
    public GetKeysInGroupCommand(long flagsBitSet, Object groupName) {
+      super(flagsBitSet, -1);
       this.groupName = groupName;
-      setFlagsBitSet(flagsBitSet);
    }
 
-   public GetKeysInGroupCommand() {
+   @ProtoFactory
+   GetKeysInGroupCommand(long flagsWithoutRemote, int topologyId, MarshallableObject<?> wrappedGroupName) {
+      super(flagsWithoutRemote, topologyId);
+      this.groupName = MarshallableObject.unwrap(wrappedGroupName);
+   }
+
+   @ProtoField(number = 3, name = "groupName")
+   MarshallableObject<?> getWrappedGroupName() {
+      return MarshallableObject.create(groupName);
    }
 
    @Override
    public byte getCommandId() {
       return COMMAND_ID;
-   }
-
-   @Override
-   public void writeTo(ObjectOutput output) throws IOException {
-      output.writeObject(groupName);
-      output.writeLong(FlagBitSets.copyWithoutRemotableFlags(getFlagsBitSet()));
-   }
-
-   @Override
-   public void readFrom(ObjectInput input) throws IOException, ClassNotFoundException {
-      groupName = input.readObject();
-      setFlagsBitSet(input.readLong());
    }
 
    @Override

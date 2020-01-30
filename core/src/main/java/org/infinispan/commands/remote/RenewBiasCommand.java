@@ -1,32 +1,36 @@
 package org.infinispan.commands.remote;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
 import java.util.concurrent.CompletionStage;
 
-import org.infinispan.commons.marshall.MarshallUtil;
+import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.factories.ComponentRegistry;
+import org.infinispan.marshall.protostream.impl.MarshallableArray;
+import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.scattered.BiasManager;
 import org.infinispan.util.ByteString;
 import org.infinispan.util.concurrent.CompletableFutures;
 
+@ProtoTypeId(ProtoStreamTypeIds.RENEW_BIAS_COMMAND)
 public class RenewBiasCommand extends BaseRpcCommand {
    public static final byte COMMAND_ID = 75;
 
    Object[] keys;
 
-   public RenewBiasCommand() {
-      super(null);
-   }
-
-   public RenewBiasCommand(ByteString cacheName) {
-      super(cacheName);
-   }
-
    public RenewBiasCommand(ByteString cacheName, Object[] keys) {
       super(cacheName);
       this.keys = keys;
+   }
+
+   @ProtoFactory
+   RenewBiasCommand(ByteString cacheName, MarshallableArray<Object> keys) {
+      this(cacheName, MarshallableArray.unwrap(keys, new Object[0]));
+   }
+
+   @ProtoField(number = 2)
+   MarshallableArray<Object> getKeys() {
+      return MarshallableArray.create(keys);
    }
 
    @Override
@@ -46,15 +50,5 @@ public class RenewBiasCommand extends BaseRpcCommand {
    @Override
    public boolean isReturnValueExpected() {
       return false;
-   }
-
-   @Override
-   public void writeTo(ObjectOutput output) throws IOException {
-      MarshallUtil.marshallArray(keys, output);
-   }
-
-   @Override
-   public void readFrom(ObjectInput input) throws IOException, ClassNotFoundException {
-      keys = MarshallUtil.unmarshallArray(input, Object[]::new);
    }
 }

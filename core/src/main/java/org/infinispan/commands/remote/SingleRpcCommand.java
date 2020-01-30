@@ -1,16 +1,18 @@
 package org.infinispan.commands.remote;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
 import java.util.Objects;
 import java.util.concurrent.CompletionStage;
 
 import org.infinispan.commands.ReplicableCommand;
 import org.infinispan.commands.VisitableCommand;
+import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.context.InvocationContext;
 import org.infinispan.context.InvocationContextFactory;
 import org.infinispan.factories.ComponentRegistry;
+import org.infinispan.protostream.WrappedMessage;
+import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.util.ByteString;
 import org.infinispan.util.concurrent.locks.RemoteLockCommand;
 import org.infinispan.util.logging.Log;
@@ -21,6 +23,7 @@ import org.infinispan.util.logging.LogFactory;
  *
  * @author Mircea.Markus@jboss.com
  */
+@ProtoTypeId(ProtoStreamTypeIds.SINGLE_RPC_COMMAND)
 public class SingleRpcCommand extends BaseRpcCommand {
 
    public static final int COMMAND_ID = 1;
@@ -29,32 +32,25 @@ public class SingleRpcCommand extends BaseRpcCommand {
 
    private VisitableCommand command;
 
-   private SingleRpcCommand() {
-      super(null); // For command id uniqueness test
-   }
-
    public SingleRpcCommand(ByteString cacheName, VisitableCommand command) {
       super(cacheName);
       this.command = command;
    }
 
-   public SingleRpcCommand(ByteString cacheName) {
-      super(cacheName);
+   @ProtoFactory
+   SingleRpcCommand(ByteString cacheName, WrappedMessage wrappedCommand) {
+      this(cacheName, (VisitableCommand) wrappedCommand.getValue());
+   }
+
+
+   @ProtoField(number = 2, name = "command")
+   WrappedMessage getWrappedCommand() {
+      return new WrappedMessage(command);
    }
 
    @Override
    public byte getCommandId() {
       return COMMAND_ID;
-   }
-
-   @Override
-   public void writeTo(ObjectOutput output) throws IOException {
-      output.writeObject(command);
-   }
-
-   @Override
-   public void readFrom(ObjectInput input) throws IOException, ClassNotFoundException {
-      command = (VisitableCommand) input.readObject();
    }
 
    @Override

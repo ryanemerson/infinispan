@@ -3,8 +3,11 @@ package org.infinispan.commands.tx;
 import static org.infinispan.util.logging.Log.CONTAINER;
 
 import org.infinispan.commands.Visitor;
+import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.context.InvocationContext;
 import org.infinispan.context.impl.TxInvocationContext;
+import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.transaction.impl.TransactionTable;
 import org.infinispan.transaction.xa.GlobalTransaction;
 import org.infinispan.util.ByteString;
@@ -15,20 +18,14 @@ import org.infinispan.util.ByteString;
  * @author Manik Surtani (<a href="mailto:manik@jboss.org">manik@jboss.org</a>)
  * @since 4.0
  */
+@ProtoTypeId(ProtoStreamTypeIds.COMMIT_COMMAND)
 public class CommitCommand extends AbstractTransactionBoundaryCommand {
    public static final byte COMMAND_ID = 14;
 
-   private CommitCommand() {
-      super(null); // For command id uniqueness test
-   }
-
-   public CommitCommand(ByteString cacheName, GlobalTransaction gtx) {
+   @ProtoFactory
+   public CommitCommand(ByteString cacheName, GlobalTransaction globalTransaction) {
       super(cacheName);
-      this.globalTx = gtx;
-   }
-
-   public CommitCommand(ByteString cacheName) {
-      super(cacheName);
+      this.globalTx = globalTransaction;
    }
 
    @Override

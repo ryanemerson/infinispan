@@ -194,8 +194,7 @@ public class XSiteStateTransferManagerImpl implements XSiteStateTransferManager 
 
       for (Response response : invokeRemotelyInLocalSite(command).values()) {
          if (response instanceof SuccessfulResponse) {
-            //noinspection unchecked
-            result.putAll((Map<String, String>) ((SuccessfulResponse) response).getResponseValue());
+            result.putAll(((SuccessfulResponse) response).getResponseMap());
          }
       }
       return result;

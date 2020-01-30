@@ -2,18 +2,13 @@ package org.infinispan.factories;
 
 import static org.infinispan.util.logging.Log.CONFIG;
 
-import java.lang.reflect.Method;
-
 import org.infinispan.commons.marshall.ImmutableProtoStreamMarshaller;
 import org.infinispan.commons.marshall.Marshaller;
 import org.infinispan.commons.marshall.StreamAwareMarshaller;
-import org.infinispan.commons.marshall.StreamingMarshaller;
-import org.infinispan.commons.util.ReflectionUtil;
 import org.infinispan.commons.util.Util;
 import org.infinispan.configuration.global.SerializationConfiguration;
 import org.infinispan.factories.annotations.DefaultFactoryFor;
 import org.infinispan.factories.annotations.Inject;
-import org.infinispan.factories.impl.ComponentAlias;
 import org.infinispan.factories.impl.ComponentRef;
 import org.infinispan.marshall.core.GlobalMarshaller;
 import org.infinispan.marshall.core.impl.DelegatingUserMarshaller;
@@ -29,7 +24,6 @@ import org.infinispan.marshall.protostream.impl.SerializationContextRegistry;
 @DefaultFactoryFor(
       classes = {
             Marshaller.class,
-            StreamingMarshaller.class,
             StreamAwareMarshaller.class
       },
       names = {
@@ -45,11 +39,6 @@ public class MarshallerFactory extends AbstractComponentFactory implements AutoI
 
    @Override
    public Object construct(String componentName) {
-
-      if (componentName.equals(StreamingMarshaller.class.getName())) {
-         return ComponentAlias.of(KnownComponentNames.INTERNAL_MARSHALLER);
-      }
-
       switch (componentName) {
          case KnownComponentNames.PERSISTENCE_MARSHALLER:
             return new PersistenceMarshallerImpl();
@@ -68,10 +57,6 @@ public class MarshallerFactory extends AbstractComponentFactory implements AutoI
       if (userMarshaller != null) {
          Class<? extends Marshaller> clazz = userMarshaller.getClass();
          if (clazz.getName().equals(Util.JBOSS_USER_MARSHALLER_CLASS)) {
-            // If the user has specified to use jboss-marshalling, we must initialize the instance with the GlobalComponentRegistry
-            // So that any user Externalizer implementations can be loaded.
-            Method method = ReflectionUtil.findMethod(clazz, "initialize", GlobalComponentRegistry.class);
-            ReflectionUtil.invokeAccessibly(userMarshaller, method, globalComponentRegistry);
             CONFIG.jbossMarshallingDetected();
             return new DelegatingUserMarshaller(userMarshaller);
          }

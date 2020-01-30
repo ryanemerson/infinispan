@@ -1,17 +1,15 @@
 package org.infinispan.notifications.cachelistener.cluster;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
-import java.util.Collections;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 
 import org.infinispan.Cache;
-import org.infinispan.commons.marshall.AbstractExternalizer;
+import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.manager.EmbeddedCacheManager;
-import org.infinispan.marshall.core.Ids;
+import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 
@@ -22,16 +20,30 @@ import org.infinispan.util.logging.LogFactory;
  * @author wburns
  * @since 7.0
  */
+@ProtoTypeId(ProtoStreamTypeIds.CLUSTER_LISTENER_REMOVE_CALLABLE)
 public class ClusterListenerRemoveCallable implements Function<EmbeddedCacheManager, Void> {
    private static final Log log = LogFactory.getLog(ClusterListenerRemoveCallable.class);
    private static final boolean trace = log.isTraceEnabled();
 
-   private final String cacheName;
-   private final UUID identifier;
+   @ProtoField(number = 1)
+   final String cacheName;
+
+   // TODO marshall with ProtoStream directly IPROTO-137
+   final UUID identifier;
 
    public ClusterListenerRemoveCallable(String cacheName, UUID identifier) {
       this.cacheName = cacheName;
       this.identifier = identifier;
+   }
+
+   @ProtoFactory
+   ClusterListenerRemoveCallable(String cacheName, String identifier) {
+      this(cacheName, UUID.fromString(identifier));
+   }
+
+   @ProtoField(number = 2)
+   String getIdentifier() {
+      return identifier.toString();
    }
 
    @Override
@@ -51,28 +63,5 @@ public class ClusterListenerRemoveCallable implements Function<EmbeddedCacheMana
          }
       }
       return null;
-   }
-
-   public static class Externalizer extends AbstractExternalizer<ClusterListenerRemoveCallable> {
-      @Override
-      public Set<Class<? extends ClusterListenerRemoveCallable>> getTypeClasses() {
-         return Collections.singleton(ClusterListenerRemoveCallable.class);
-      }
-
-      @Override
-      public void writeObject(ObjectOutput output, ClusterListenerRemoveCallable object) throws IOException {
-         output.writeObject(object.cacheName);
-         output.writeObject(object.identifier);
-      }
-
-      @Override
-      public ClusterListenerRemoveCallable readObject(ObjectInput input) throws IOException, ClassNotFoundException {
-         return new ClusterListenerRemoveCallable((String) input.readObject(), (UUID)input.readObject());
-      }
-
-      @Override
-      public Integer getId() {
-         return Ids.CLUSTER_LISTENER_REMOVE_CALLABLE;
-      }
    }
 }

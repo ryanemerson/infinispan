@@ -1,19 +1,16 @@
 package org.infinispan.remoting.responses;
 
-import static org.infinispan.commons.marshall.MarshallUtil.marshallMap;
-import static org.infinispan.commons.marshall.MarshallUtil.unmarshallMap;
-
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
-import org.infinispan.commons.marshall.AbstractExternalizer;
+import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.container.versioning.IncrementableEntryVersion;
-import org.infinispan.marshall.core.Ids;
+import org.infinispan.marshall.protostream.impl.MarshallableArray;
+import org.infinispan.marshall.protostream.impl.MarshallableCollection;
+import org.infinispan.marshall.protostream.impl.MarshallableMap;
+import org.infinispan.marshall.protostream.impl.MarshallableObject;
+import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.transaction.impl.WriteSkewHelper;
 
 /**
@@ -26,25 +23,23 @@ import org.infinispan.transaction.impl.WriteSkewHelper;
  * @author Pedro Ruivo
  * @since 11.0
  */
+@ProtoTypeId(ProtoStreamTypeIds.PREPARE_RESPONSE)
 public class PrepareResponse extends ValidResponse {
 
-   public static final Externalizer EXTERNALIZER = new Externalizer();
-
    private Map<Object, IncrementableEntryVersion> newWriteSkewVersions;
-
-   public static void writeTo(PrepareResponse response, ObjectOutput output) throws IOException {
-      marshallMap(response.newWriteSkewVersions, output);
-   }
-
-   public static PrepareResponse readFrom(ObjectInput input) throws IOException, ClassNotFoundException {
-      PrepareResponse response = new PrepareResponse();
-      response.newWriteSkewVersions = unmarshallMap(input, HashMap::new);
-      return response;
-   }
 
    public static PrepareResponse asPrepareResponse(Object rv) {
       assert rv == null || rv instanceof PrepareResponse;
       return rv == null ? new PrepareResponse() : (PrepareResponse) rv;
+   }
+
+   public PrepareResponse() {
+   }
+
+   @ProtoFactory
+   PrepareResponse(MarshallableObject<?> object, MarshallableCollection<?> collection,
+                   MarshallableMap<?, ?> map, MarshallableArray<?> array) {
+      super(null, null, map, null);
    }
 
    @Override
@@ -64,7 +59,6 @@ public class PrepareResponse extends ValidResponse {
             '}';
    }
 
-
    public void merge(PrepareResponse remote) {
       if (remote.newWriteSkewVersions != null) {
          mergeEntryVersions(remote.newWriteSkewVersions);
@@ -77,30 +71,7 @@ public class PrepareResponse extends ValidResponse {
          newWriteSkewVersions = new HashMap<>();
       }
       newWriteSkewVersions = WriteSkewHelper.mergeEntryVersions(newWriteSkewVersions, entryVersions);
+      this.map = MarshallableMap.create(newWriteSkewVersions);
       return newWriteSkewVersions;
-   }
-
-   private static class Externalizer extends AbstractExternalizer<PrepareResponse> {
-
-
-      @Override
-      public Integer getId() {
-         return Ids.PREPARE_RESPONSE;
-      }
-
-      @Override
-      public Set<Class<? extends PrepareResponse>> getTypeClasses() {
-         return Collections.singleton(PrepareResponse.class);
-      }
-
-      @Override
-      public void writeObject(ObjectOutput output, PrepareResponse object) throws IOException {
-         writeTo(object, output);
-      }
-
-      @Override
-      public PrepareResponse readObject(ObjectInput input) throws IOException, ClassNotFoundException {
-         return readFrom(input);
-      }
    }
 }

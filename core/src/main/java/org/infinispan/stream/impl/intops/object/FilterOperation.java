@@ -3,6 +3,9 @@ package org.infinispan.stream.impl.intops.object;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
+import org.infinispan.marshall.protostream.impl.MarshallableObject;
+import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.stream.impl.intops.IntermediateOperation;
 
 import io.reactivex.rxjava3.core.Flowable;
@@ -18,13 +21,19 @@ public class FilterOperation<S> implements IntermediateOperation<S, Stream<S>, S
       this.predicate = predicate;
    }
 
+   @ProtoFactory
+   FilterOperation(MarshallableObject<Predicate<? super S>> wrappedPredicate) {
+      this.predicate = MarshallableObject.unwrap(wrappedPredicate);
+   }
+
+   @ProtoField(number = 1, name = "predicate")
+   MarshallableObject<Predicate<? super S>> getWrappedPredicate() {
+      return MarshallableObject.create(predicate);
+   }
+
    @Override
    public Stream<S> perform(Stream<S> stream) {
       return stream.filter(predicate);
-   }
-
-   public Predicate<? super S> getPredicate() {
-      return predicate;
    }
 
    @Override

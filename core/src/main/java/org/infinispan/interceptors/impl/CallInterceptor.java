@@ -254,7 +254,6 @@ public class CallInterceptor extends BaseAsyncInterceptor implements Visitor {
       Object prevValue = e.getValue();
       Object optionalValue = command.getValue();
       if (prevValue == null) {
-         command.nonExistant();
          if (valueMatcher.matches(null, optionalValue, null)) {
             e.setChanged(true);
             e.setRemoved(true);

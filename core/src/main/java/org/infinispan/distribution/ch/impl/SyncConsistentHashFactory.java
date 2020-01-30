@@ -2,24 +2,20 @@ package org.infinispan.distribution.ch.impl;
 
 import static org.infinispan.util.logging.Log.CONTAINER;
 
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.infinispan.commands.topology.CacheJoinCommand;
 import org.infinispan.commons.hash.MurmurHash3;
-import org.infinispan.commons.marshall.AbstractExternalizer;
+import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.commons.util.Util;
 import org.infinispan.distribution.ch.ConsistentHashFactory;
 import org.infinispan.globalstate.ScopedPersistentState;
-import org.infinispan.marshall.core.Ids;
+import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.remoting.transport.Address;
 
 /**
@@ -51,6 +47,7 @@ import org.infinispan.remoting.transport.Address;
  * @author Dan Berindei
  * @since 5.2
  */
+@ProtoTypeId(ProtoStreamTypeIds.SYNC_CONSISTENT_HASH)
 public class SyncConsistentHashFactory implements ConsistentHashFactory<DefaultConsistentHash> {
 
    public static final float OWNED_SEGMENTS_ALLOWED_VARIATION = 1.10f;
@@ -417,28 +414,5 @@ public class SyncConsistentHashFactory implements ConsistentHashFactory<DefaultC
    @Override
    public int hashCode() {
       return -10007;
-   }
-
-   public static class Externalizer extends AbstractExternalizer<SyncConsistentHashFactory> {
-
-      @Override
-      public void writeObject(ObjectOutput output, SyncConsistentHashFactory chf) {
-      }
-
-      @Override
-      @SuppressWarnings("unchecked")
-      public SyncConsistentHashFactory readObject(ObjectInput unmarshaller) {
-         return new SyncConsistentHashFactory();
-      }
-
-      @Override
-      public Integer getId() {
-         return Ids.SYNC_CONSISTENT_HASH_FACTORY;
-      }
-
-      @Override
-      public Set<Class<? extends SyncConsistentHashFactory>> getTypeClasses() {
-         return Collections.<Class<? extends SyncConsistentHashFactory>>singleton(SyncConsistentHashFactory.class);
-      }
    }
 }

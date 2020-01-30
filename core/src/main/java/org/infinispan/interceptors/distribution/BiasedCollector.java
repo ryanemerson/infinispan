@@ -1,5 +1,7 @@
 package org.infinispan.interceptors.distribution;
 
+import java.util.Collection;
+
 import org.infinispan.remoting.RpcException;
 import org.infinispan.remoting.responses.BiasRevocationResponse;
 import org.infinispan.remoting.responses.CacheNotFoundResponse;
@@ -11,7 +13,7 @@ import org.infinispan.remoting.transport.ResponseCollector;
 import org.infinispan.remoting.transport.ResponseCollectors;
 
 public interface BiasedCollector extends Collector<ValidResponse>, ResponseCollector<ValidResponse> {
-   void addPendingAcks(boolean success, Address[] waitFor);
+   void addPendingAcks(boolean success, Collection<Address> waitFor);
 
    @Override
    default ValidResponse addResponse(Address sender, Response response) {

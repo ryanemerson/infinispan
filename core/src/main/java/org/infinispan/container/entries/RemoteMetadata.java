@@ -1,14 +1,6 @@
 package org.infinispan.container.entries;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
-import java.util.Set;
-
-import org.infinispan.commons.marshall.AdvancedExternalizer;
-import org.infinispan.commons.marshall.Ids;
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
-import org.infinispan.commons.util.Util;
 import org.infinispan.container.versioning.EntryVersion;
 import org.infinispan.container.versioning.SimpleClusteredVersion;
 import org.infinispan.metadata.Metadata;
@@ -74,32 +66,5 @@ public class RemoteMetadata implements Metadata {
       sb.append(", version=").append(version);
       sb.append('}');
       return sb.toString();
-   }
-
-   public static class Externalizer implements AdvancedExternalizer<RemoteMetadata> {
-      @Override
-      public Set<Class<? extends RemoteMetadata>> getTypeClasses() {
-         return Util.asSet(RemoteMetadata.class);
-      }
-
-      @Override
-      public Integer getId() {
-         return Ids.METADATA_REMOTE;
-      }
-
-      @Override
-      public void writeObject(ObjectOutput output, RemoteMetadata entry) throws IOException {
-         output.writeObject(entry.getAddress());
-         output.writeInt(entry.version.getTopologyId());
-         output.writeLong(entry.version.getVersion());
-      }
-
-      @Override
-      public RemoteMetadata readObject(ObjectInput input) throws IOException, ClassNotFoundException {
-         JGroupsAddress address = (JGroupsAddress) input.readObject();
-         int topologyId = input.readInt();
-         long version = input.readLong();
-         return new RemoteMetadata(address, new SimpleClusteredVersion(topologyId, version));
-      }
    }
 }

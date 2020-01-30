@@ -1,8 +1,5 @@
 package org.infinispan.distribution.ch.impl;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -15,13 +12,16 @@ import java.util.Set;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
-import org.infinispan.commons.marshall.Ids;
-import org.infinispan.commons.marshall.InstanceReusingAdvancedExternalizer;
+import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.commons.util.IntSet;
 import org.infinispan.commons.util.IntSets;
 import org.infinispan.distribution.ch.ConsistentHash;
 import org.infinispan.globalstate.ScopedPersistentState;
+import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.remoting.transport.Address;
+import org.infinispan.remoting.transport.jgroups.JGroupsAddress;
 import org.infinispan.topology.ClusterCacheStatus;
 import org.infinispan.topology.PersistentUUID;
 
@@ -39,6 +39,7 @@ import net.jcip.annotations.Immutable;
  * @since 9.1
  */
 @Immutable
+@ProtoTypeId(ProtoStreamTypeIds.SCATTERED_CONSISTENT_HASH)
 public class ScatteredConsistentHash extends AbstractConsistentHash {
    private PersistentUUID ZERO_UUID = new PersistentUUID(0, 0);
 
@@ -67,15 +68,6 @@ public class ScatteredConsistentHash extends AbstractConsistentHash {
       this.isRebalanced = isRebalanced;
    }
 
-   // Only used by the externalizer, so we can skip copying collections
-   private ScatteredConsistentHash(int numSegments, List<Address> members, float[] capacityFactors,
-                                   Address[] segmentOwners, boolean isRebalanced) {
-      super(numSegments, members, capacityFactors);
-      this.segmentOwners = segmentOwners;
-      this.segmentOwnerLists = Stream.of(segmentOwners).map(ScatteredConsistentHash::toList).toArray(List[]::new);
-      this.isRebalanced = isRebalanced;
-   }
-
    private static List<Address> toList(Address address) {
       return address == null ? Collections.emptyList() : Collections.singletonList(address);
    }
@@ -96,6 +88,48 @@ public class ScatteredConsistentHash extends AbstractConsistentHash {
          }
       }
       this.isRebalanced = Boolean.parseBoolean(state.getProperty(REBALANCED));
+   }
+
+   @ProtoFactory
+   ScatteredConsistentHash(List<JGroupsAddress> jGroupsMembers, float[] capacityFactorsArray, int[] segmentOwners,
+                           boolean rebalanced) {
+      super(segmentOwners.length, (List<Address>)(List<?>) jGroupsMembers, capacityFactorsArray);
+      this.isRebalanced = rebalanced;
+
+      int numSegments = segmentOwners.length;
+      this.segmentOwners = new Address[numSegments];
+      for (int i = 0; i < numSegments; i++) {
+         int ownerIndex = segmentOwners[i];
+         if (ownerIndex >= 0) {
+            this.segmentOwners[i] = members.get(ownerIndex);
+         }
+      }
+      this.segmentOwnerLists = Stream.of(this.segmentOwners).map(ScatteredConsistentHash::toList).toArray(List[]::new);
+   }
+
+   @ProtoField(number = 1, name = "members", collectionImplementation = ArrayList.class)
+   List<JGroupsAddress> getJGroupsMembers() {
+      return (List<JGroupsAddress>)(List<?>) members;
+   }
+
+   @ProtoField(number = 2, name = "capacityFactors")
+   float[] getCapacityFactorsArray() {
+      return capacityFactors;
+   }
+
+   @ProtoField(number = 3)
+   int[] getSegmentOwners() {
+      // Avoid computing the identityHashCode for every ImmutableListCopy/Address
+      int[] indexes = new int[segmentOwners.length];
+      HashMap<Address, Integer> memberIndexes = getMemberIndexMap(members);
+      for (int i = 0; i < segmentOwners.length; i++)
+         indexes[i] = segmentOwners[i] == null ? -1 : memberIndexes.get(segmentOwners[i]);
+      return indexes;
+   }
+
+   @ProtoField(number = 4, defaultValue = "false")
+   boolean isRebalanced() {
+      return isRebalanced;
    }
 
    @Override
@@ -134,10 +168,6 @@ public class ScatteredConsistentHash extends AbstractConsistentHash {
    @Override
    public Address locatePrimaryOwnerForSegment(int segmentId) {
       return segmentOwners[segmentId];
-   }
-
-   private int getNumOwners() {
-      return 1;
    }
 
    @Override
@@ -235,51 +265,5 @@ public class ScatteredConsistentHash extends AbstractConsistentHash {
       Address[] remappedSegmentOwners = Stream.of(segmentOwners).map(remapper).toArray(Address[]::new);
       return new ScatteredConsistentHash(segmentOwners.length, remappedMembers,
             remappedCapacityFactors, remappedSegmentOwners, isRebalanced);
-   }
-
-   public static class Externalizer extends InstanceReusingAdvancedExternalizer<ScatteredConsistentHash> {
-
-      @Override
-      public void doWriteObject(ObjectOutput output, ScatteredConsistentHash ch) throws IOException {
-         output.writeInt(ch.segmentOwners.length);
-         output.writeObject(ch.members);
-         output.writeObject(ch.capacityFactors);
-
-         // Avoid computing the identityHashCode for every ImmutableListCopy/Address
-         HashMap<Address, Integer> memberIndexes = getMemberIndexMap(ch.members);
-         for (int i = 0; i < ch.segmentOwners.length; i++) {
-            output.writeInt(ch.segmentOwners[i] == null ? -1 : memberIndexes.get(ch.segmentOwners[i]));
-         }
-         output.writeBoolean(ch.isRebalanced);
-      }
-
-      @Override
-      @SuppressWarnings("unchecked")
-      public ScatteredConsistentHash doReadObject(ObjectInput unmarshaller) throws IOException, ClassNotFoundException {
-         int numSegments = unmarshaller.readInt();
-         List<Address> members = (List<Address>) unmarshaller.readObject();
-         float[] capacityFactors = (float[]) unmarshaller.readObject();
-
-         Address[] segmentOwners = new Address[numSegments];
-         for (int i = 0; i < numSegments; i++) {
-            int ownerIndex = unmarshaller.readInt();
-            if (ownerIndex >= 0) {
-               segmentOwners[i] = members.get(ownerIndex);
-            }
-         }
-         boolean isRebalanced = unmarshaller.readBoolean();
-
-         return new ScatteredConsistentHash(numSegments, members, capacityFactors, segmentOwners, isRebalanced);
-      }
-
-      @Override
-      public Integer getId() {
-         return Ids.SCATTERED_CONSISTENT_HASH;
-      }
-
-      @Override
-      public Set<Class<? extends ScatteredConsistentHash>> getTypeClasses() {
-         return Collections.singleton(ScatteredConsistentHash.class);
-      }
    }
 }

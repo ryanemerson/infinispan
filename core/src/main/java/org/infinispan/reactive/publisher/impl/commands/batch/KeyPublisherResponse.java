@@ -1,8 +1,14 @@
 package org.infinispan.reactive.publisher.impl.commands.batch;
 
+import java.util.Set;
 import java.util.function.ObjIntConsumer;
 
+import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.commons.util.IntSet;
+import org.infinispan.marshall.protostream.impl.MarshallableArray;
+import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.protostream.annotations.ProtoTypeId;
 
 /**
  * A Publisher Response that is used when key tracking is enabled. This is used in cases when EXACTLY_ONCE delivery
@@ -14,17 +20,43 @@ import org.infinispan.commons.util.IntSet;
  * operations may return more than one value. In this case it is possible to overflow the results array (sized based on
  * batch size). However since we are tracking by key we must retain all values that map to a given key in the response.
  */
+@ProtoTypeId(ProtoStreamTypeIds.KEY_PUBLISHER_RESPONSE)
 public class KeyPublisherResponse extends PublisherResponse {
    final Object[] extraObjects;
    final Object[] keys;
    final int keySize;
 
    public KeyPublisherResponse(Object[] results, IntSet completedSegments, IntSet lostSegments, int size,
-         boolean complete, Object[] extraObjects, int extraSize, Object[] keys, int keySize) {
+                               boolean complete, Object[] extraObjects, int extraSize, Object[] keys, int keySize) {
       super(results, completedSegments, lostSegments, size, complete, extraSize);
       this.extraObjects = extraObjects;
       this.keys = keys;
       this.keySize = keySize;
+   }
+
+   @ProtoFactory
+   KeyPublisherResponse(MarshallableArray<Object> wrappedResults, Set<Integer> completedSegmentsWorkaround,
+                        Set<Integer> lostSegmentsWorkaround, boolean complete, int segmentOffset,
+                        MarshallableArray<Object> wrappedExtraObjects, MarshallableArray<Object> keys, int keySize) {
+      super(wrappedResults, completedSegmentsWorkaround, lostSegmentsWorkaround, complete, segmentOffset);
+      this.extraObjects = MarshallableArray.unwrap(wrappedExtraObjects, new Object[0]);
+      this.keys = MarshallableArray.unwrap(keys, new Object[0]);
+      this.keySize = keySize;
+   }
+
+   @ProtoField(number = 6, name = "extraObjects")
+   MarshallableArray<Object> getWrappedExtraObjects() {
+      return MarshallableArray.create(extraObjects);
+   }
+
+   @ProtoField(number = 7)
+   MarshallableArray<Object> getKeys() {
+      return MarshallableArray.create(keys);
+   }
+
+   @ProtoField(number = 8, defaultValue = "-1")
+   int getKeySize() {
+      return keySize;
    }
 
    // NOTE: extraSize is stored in the segmentOffset field since it isn't valid when using key tracking.

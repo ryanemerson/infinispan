@@ -27,6 +27,7 @@ import org.infinispan.interceptors.BaseCustomAsyncInterceptor;
 import org.infinispan.interceptors.impl.EntryWrappingInterceptor;
 import org.infinispan.interceptors.locking.PessimisticLockingInterceptor;
 import org.infinispan.manager.EmbeddedCacheManager;
+import org.infinispan.protostream.SerializationContextInitializer;
 import org.infinispan.test.MultipleCacheManagersTest;
 import org.infinispan.test.fwk.CheckPoint;
 import org.infinispan.test.fwk.CleanupAfterMethod;
@@ -45,6 +46,8 @@ import org.testng.annotations.Test;
 @Test(groups = "functional", testName = "statetransfer.ReplCommandRetryTest")
 @CleanupAfterMethod
 public class ReplCommandRetryTest extends MultipleCacheManagersTest {
+
+   private static final SerializationContextInitializer SCI = ReplicatedControlledConsistentHashFactory.SCI.INSTANCE;
 
    @Override
    protected void createCacheManagers() {
@@ -71,12 +74,12 @@ public class ReplCommandRetryTest extends MultipleCacheManagersTest {
    }
 
    public void testRetryAfterJoinNonTransactional() throws Exception {
-      EmbeddedCacheManager cm1 = addClusterEnabledCacheManager(buildConfig(null, PutKeyValueCommand.class, true));
+      EmbeddedCacheManager cm1 = addClusterEnabledCacheManager(SCI, buildConfig(null, PutKeyValueCommand.class, true));
       final Cache<Object, Object> c1 = cm1.getCache();
       DelayInterceptor di1 = findInterceptor(c1, DelayInterceptor.class);
       int initialTopologyId = c1.getAdvancedCache().getDistributionManager().getCacheTopology().getTopologyId();
 
-      EmbeddedCacheManager cm2 = addClusterEnabledCacheManager(buildConfig(null, PutKeyValueCommand.class, false));
+      EmbeddedCacheManager cm2 = addClusterEnabledCacheManager(SCI, buildConfig(null, PutKeyValueCommand.class, false));
       final Cache<Object, Object> c2 = cm2.getCache();
       DelayInterceptor di2 = findInterceptor(c2, DelayInterceptor.class);
       waitForStateTransfer(initialTopologyId + 4, c1, c2);
@@ -91,7 +94,7 @@ public class ReplCommandRetryTest extends MultipleCacheManagersTest {
       di2.waitUntilBlocked(1);
 
       // c3 joins, topology id changes
-      EmbeddedCacheManager cm3 = addClusterEnabledCacheManager(buildConfig(null, PutKeyValueCommand.class, false));
+      EmbeddedCacheManager cm3 = addClusterEnabledCacheManager(SCI, buildConfig(null, PutKeyValueCommand.class, false));
       Cache<Object, Object> c3 = cm3.getCache();
       DelayInterceptor di3 = findInterceptor(c3, DelayInterceptor.class);
       waitForStateTransfer(initialTopologyId + 8, c1, c2, c3);
@@ -109,7 +112,7 @@ public class ReplCommandRetryTest extends MultipleCacheManagersTest {
       di2.unblock(2);
 
       // c4 joins, topology id changes
-      EmbeddedCacheManager cm4 = addClusterEnabledCacheManager(buildConfig(null, PutKeyValueCommand.class, false));
+      EmbeddedCacheManager cm4 = addClusterEnabledCacheManager(SCI, buildConfig(null, PutKeyValueCommand.class, false));
       Cache<Object, Object> c4 = cm4.getCache();
       DelayInterceptor di4 = findInterceptor(c4, DelayInterceptor.class);
       waitForStateTransfer(initialTopologyId + 12, c1, c2, c3, c4);
@@ -161,12 +164,12 @@ public class ReplCommandRetryTest extends MultipleCacheManagersTest {
    }
 
    private void testRetryAfterJoinTransactional(LockingMode lockingMode, Class<?> commandClass) throws Exception {
-      EmbeddedCacheManager cm1 = addClusterEnabledCacheManager(buildConfig(lockingMode, commandClass, false));
+      EmbeddedCacheManager cm1 = addClusterEnabledCacheManager(SCI, buildConfig(lockingMode, commandClass, false));
       final Cache<Object, Object> c1 = cm1.getCache();
       DelayInterceptor di1 = findInterceptor(c1, DelayInterceptor.class);
       int initialTopologyId = c1.getAdvancedCache().getDistributionManager().getCacheTopology().getTopologyId();
 
-      EmbeddedCacheManager cm2 = addClusterEnabledCacheManager(buildConfig(lockingMode, commandClass, true));
+      EmbeddedCacheManager cm2 = addClusterEnabledCacheManager(SCI, buildConfig(lockingMode, commandClass, true));
       final Cache<String, String> c2 = cm2.getCache();
       DelayInterceptor di2 = findInterceptor(c2, DelayInterceptor.class);
       waitForStateTransfer(initialTopologyId + 4, c1, c2);
@@ -182,7 +185,7 @@ public class ReplCommandRetryTest extends MultipleCacheManagersTest {
       di1.waitUntilBlocked(1);
 
       // c3 joins, topology id changes
-      EmbeddedCacheManager cm3 = addClusterEnabledCacheManager(buildConfig(lockingMode, commandClass, false));
+      EmbeddedCacheManager cm3 = addClusterEnabledCacheManager(SCI, buildConfig(lockingMode, commandClass, false));
       Cache c3 = cm3.getCache();
       DelayInterceptor di3 = findInterceptor(c3, DelayInterceptor.class);
       waitForStateTransfer(initialTopologyId + 8, c1, c2, c3);
@@ -197,7 +200,7 @@ public class ReplCommandRetryTest extends MultipleCacheManagersTest {
       di3.waitUntilBlocked(1);
 
       // c4 joins, topology id changes
-      EmbeddedCacheManager cm4 = addClusterEnabledCacheManager(buildConfig(lockingMode, commandClass, false));
+      EmbeddedCacheManager cm4 = addClusterEnabledCacheManager(SCI, buildConfig(lockingMode, commandClass, false));
       Cache c4 = cm4.getCache();
       DelayInterceptor di4 = findInterceptor(c4, DelayInterceptor.class);
       waitForStateTransfer(initialTopologyId + 12, c1, c2, c3, c4);

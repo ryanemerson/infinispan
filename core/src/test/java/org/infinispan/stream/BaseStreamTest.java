@@ -5,9 +5,6 @@ import static org.testng.AssertJUnit.assertFalse;
 import static org.testng.AssertJUnit.assertTrue;
 import static org.testng.AssertJUnit.fail;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.DoubleSummaryStatistics;
@@ -47,13 +44,17 @@ import org.infinispan.Cache;
 import org.infinispan.CacheCollection;
 import org.infinispan.CacheSet;
 import org.infinispan.CacheStream;
-import org.infinispan.commons.marshall.SerializeWith;
 import org.infinispan.commons.util.IntSet;
 import org.infinispan.commons.util.IntSets;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.container.entries.ImmortalCacheEntry;
 import org.infinispan.distribution.ch.KeyPartitioner;
 import org.infinispan.manager.EmbeddedCacheManager;
+import org.infinispan.marshall.protostream.impl.MarshallableObject;
+import org.infinispan.protostream.SerializationContextInitializer;
+import org.infinispan.protostream.annotations.AutoProtoSchemaBuilder;
+import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.test.MultipleCacheManagersTest;
 import org.infinispan.test.TestingUtil;
 import org.infinispan.test.fwk.TestCacheManagerFactory;
@@ -110,7 +111,7 @@ public abstract class BaseStreamTest extends MultipleCacheManagersTest {
       if (cacheMode.isClustered()) {
          builderUsed.clustering().stateTransfer().chunkSize(50);
          enhanceConfiguration(builderUsed);
-         createClusteredCaches(3, CACHE_NAME, builderUsed);
+         createClusteredCaches(3, CACHE_NAME, BaseStreamTestSCI.INSTANCE, builderUsed);
       } else {
          enhanceConfiguration(builderUsed);
          EmbeddedCacheManager cm = TestCacheManagerFactory.createCacheManager(builderUsed);
@@ -296,23 +297,41 @@ public abstract class BaseStreamTest extends MultipleCacheManagersTest {
       }
    }
 
-   @SerializeWith(ForEachInjected.Externalizer.class)
-   public static class ForEachInjected<E> implements Consumer<E>, CacheAware<Integer, String> {
-      private Cache<?, ?> cache;
-      private final int cacheOffset;
-      private final int atomicOffset;
+   private static abstract class AbstractForEach implements CacheAware<Integer, String> {
+      Cache<?, ?> cache;
 
+      @ProtoField(number = 1, defaultValue = "-1")
+      final int cacheOffset;
+
+      @ProtoField(number = 2, defaultValue = "-1")
+      final int atomicOffset;
+
+      AbstractForEach(int cacheOffset, int atomicOffset) {
+         this.cacheOffset = cacheOffset;
+         this.atomicOffset = atomicOffset;
+      }
+
+      public void injectCache(Cache<Integer, String> cache) {
+         this.cache = cache;
+      }
+   }
+
+   public static class ForEachInjected<E> extends AbstractForEach implements Consumer<E> {
       private final ToIntFunction<? super E> function;
 
       private ForEachInjected(int cacheOffset, int atomicOffset, SerializableToIntFunction<? super E> function) {
-         this.cacheOffset = cacheOffset;
-         this.atomicOffset = atomicOffset;
+         super(cacheOffset, atomicOffset);
          this.function = function;
       }
 
-      @Override
-      public void injectCache(Cache<Integer, String> cache) {
-         this.cache = cache;
+      @ProtoFactory
+      ForEachInjected(int cacheOffset, int atomicOffset, MarshallableObject<ToIntFunction<? super E>> function) {
+         this(cacheOffset, atomicOffset, (SerializableToIntFunction<? super E>) MarshallableObject.unwrap(function));
+      }
+
+      @ProtoField(number = 3)
+      MarshallableObject<ToIntFunction<? super E>> getFunction() {
+         return MarshallableObject.create(function);
       }
 
       @Override
@@ -322,23 +341,6 @@ public abstract class BaseStreamTest extends MultipleCacheManagersTest {
             ((AtomicInteger) getForEachObject(atomicOffset)).addAndGet(function.applyAsInt(entry));
          } else {
             fail("Did not receive correct cache!");
-         }
-      }
-
-      public static class Externalizer implements org.infinispan.commons.marshall.Externalizer<ForEachInjected> {
-         @Override
-         public void writeObject(ObjectOutput output, ForEachInjected object) throws IOException {
-            output.writeInt(object.cacheOffset);
-            output.writeInt(object.atomicOffset);
-            output.writeObject(object.function);
-         }
-
-         @Override
-         public ForEachInjected readObject(ObjectInput input) throws IOException, ClassNotFoundException {
-            int cacheOffset = input.readInt();
-            int atomicOffset = input.readInt();
-            SerializableToIntFunction f = (SerializableToIntFunction) input.readObject();
-            return new ForEachInjected<>(cacheOffset, atomicOffset, f);
          }
       }
    }
@@ -919,20 +921,11 @@ public abstract class BaseStreamTest extends MultipleCacheManagersTest {
       }
    }
 
-   @SerializeWith(ForEachIntInjected.Externalizer.class)
-   public static class ForEachIntInjected implements IntConsumer, CacheAware<Integer, String> {
-      private Cache<?, ?> cache;
-      private final int cacheOffset;
-      private final int atomicOffset;
+   public static class ForEachIntInjected extends AbstractForEach implements IntConsumer {
 
-      private ForEachIntInjected(int cacheOffset, int atomicOffset) {
-         this.cacheOffset = cacheOffset;
-         this.atomicOffset = atomicOffset;
-      }
-
-      @Override
-      public void injectCache(Cache<Integer, String> cache) {
-         this.cache = cache;
+      @ProtoFactory
+      ForEachIntInjected(int cacheOffset, int atomicOffset) {
+         super(cacheOffset, atomicOffset);
       }
 
       @Override
@@ -942,21 +935,6 @@ public abstract class BaseStreamTest extends MultipleCacheManagersTest {
             ((AtomicInteger) getForEachObject(atomicOffset)).addAndGet(value);
          } else {
             fail("Did not receive correct cache!");
-         }
-      }
-
-      public static class Externalizer implements org.infinispan.commons.marshall.Externalizer<ForEachIntInjected> {
-         @Override
-         public void writeObject(ObjectOutput output, ForEachIntInjected object) throws IOException {
-            output.writeInt(object.cacheOffset);
-            output.writeInt(object.atomicOffset);
-         }
-
-         @Override
-         public ForEachIntInjected readObject(ObjectInput input) throws IOException, ClassNotFoundException {
-            int cacheOffset = input.readInt();
-            int atomicOffset = input.readInt();
-            return new ForEachIntInjected(cacheOffset, atomicOffset);
          }
       }
    }
@@ -1396,20 +1374,11 @@ public abstract class BaseStreamTest extends MultipleCacheManagersTest {
       }
    }
 
-   @SerializeWith(ForEachLongInjected.Externalizer.class)
-   public static class ForEachLongInjected implements LongConsumer, CacheAware<Long, String> {
-      private Cache<?, ?> cache;
-      private final int cacheOffset;
-      private final int atomicOffset;
+   public static class ForEachLongInjected extends AbstractForEach implements LongConsumer {
 
-      private ForEachLongInjected(int cacheOffset, int atomicOffset) {
-         this.cacheOffset = cacheOffset;
-         this.atomicOffset = atomicOffset;
-      }
-
-      @Override
-      public void injectCache(Cache<Long, String> cache) {
-         this.cache = cache;
+      @ProtoFactory
+      ForEachLongInjected(int cacheOffset, int atomicOffset) {
+         super(cacheOffset, atomicOffset);
       }
 
       @Override
@@ -1419,21 +1388,6 @@ public abstract class BaseStreamTest extends MultipleCacheManagersTest {
             ((AtomicLong) getForEachObject(atomicOffset)).addAndGet(value);
          } else {
             fail("Did not receive correct cache!");
-         }
-      }
-
-      public static class Externalizer implements org.infinispan.commons.marshall.Externalizer<ForEachLongInjected> {
-         @Override
-         public void writeObject(ObjectOutput output, ForEachLongInjected object) throws IOException {
-            output.writeInt(object.cacheOffset);
-            output.writeInt(object.atomicOffset);
-         }
-
-         @Override
-         public ForEachLongInjected readObject(ObjectInput input) throws IOException, ClassNotFoundException {
-            int cacheOffset = input.readInt();
-            int atomicOffset = input.readInt();
-            return new ForEachLongInjected(cacheOffset, atomicOffset);
          }
       }
    }
@@ -1882,20 +1836,11 @@ public abstract class BaseStreamTest extends MultipleCacheManagersTest {
       }
    }
 
-   @SerializeWith(ForEachDoubleInjected.Externalizer.class)
-   public static class ForEachDoubleInjected<E> implements DoubleConsumer, CacheAware<Double, String> {
-      private Cache<?, ?> cache;
-      private final int cacheOffset;
-      private final int atomicOffset;
+   public static class ForEachDoubleInjected<E> extends AbstractForEach implements DoubleConsumer {
 
-      private ForEachDoubleInjected(int cacheOffset, int atomicOffset) {
-         this.cacheOffset = cacheOffset;
-         this.atomicOffset = atomicOffset;
-      }
-
-      @Override
-      public void injectCache(Cache<Double, String> cache) {
-         this.cache = cache;
+      @ProtoFactory
+      ForEachDoubleInjected(int cacheOffset, int atomicOffset) {
+         super(cacheOffset, atomicOffset);
       }
 
       @Override
@@ -1908,21 +1853,6 @@ public abstract class BaseStreamTest extends MultipleCacheManagersTest {
             }
          } else {
             fail("Did not receive correct cache!");
-         }
-      }
-
-      public static class Externalizer implements org.infinispan.commons.marshall.Externalizer<ForEachDoubleInjected> {
-         @Override
-         public void writeObject(ObjectOutput output, ForEachDoubleInjected object) throws IOException {
-            output.writeInt(object.cacheOffset);
-            output.writeInt(object.atomicOffset);
-         }
-
-         @Override
-         public ForEachDoubleInjected readObject(ObjectInput input) throws IOException, ClassNotFoundException {
-            int cacheOffset = input.readInt();
-            int atomicOffset = input.readInt();
-            return new ForEachDoubleInjected(cacheOffset, atomicOffset);
          }
       }
    }
@@ -2410,5 +2340,20 @@ public abstract class BaseStreamTest extends MultipleCacheManagersTest {
 
       Set<Integer> keys = IntStream.of(2, 5, 8, 3, 1, range + 2).boxed().collect(Collectors.toSet());
       assertEquals(keys.size() - 1, createStream(entrySet).filterKeys(keys).count());
+   }
+
+   @AutoProtoSchemaBuilder(
+         dependsOn = org.infinispan.marshall.core.impl.GlobalContextInitializer.class,
+         includeClasses = {
+               ForEachDoubleInjected.class,
+               ForEachInjected.class,
+               ForEachIntInjected.class,
+               ForEachLongInjected.class
+         },
+         schemaFileName = "test.core.BaseStreamTest.proto",
+         schemaFilePath = "proto/generated",
+         schemaPackageName = "org.infinispan.test.core.BaseStreamTest")
+   public interface BaseStreamTestSCI extends SerializationContextInitializer {
+      SerializationContextInitializer INSTANCE = new BaseStreamTestSCIImpl();
    }
 }

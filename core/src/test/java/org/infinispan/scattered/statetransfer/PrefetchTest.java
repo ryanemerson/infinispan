@@ -38,7 +38,7 @@ public class PrefetchTest extends MultipleCacheManagersTest {
       chf = new ControlledConsistentHashFactory.Scattered(0);
       cb.clustering().cacheMode(CacheMode.SCATTERED_SYNC).hash().numSegments(1).consistentHashFactory(chf);
 
-      createCluster(cb, 3);
+      createCluster(ControlledConsistentHashFactory.SCI.INSTANCE, cb, 3);
       waitForClusterToForm();
    }
 

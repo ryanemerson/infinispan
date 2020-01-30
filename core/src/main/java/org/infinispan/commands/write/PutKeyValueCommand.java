@@ -2,20 +2,20 @@ package org.infinispan.commands.write;
 
 import static org.infinispan.commons.util.Util.toStr;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
 import java.util.Objects;
 
 import org.infinispan.commands.CommandInvocationId;
 import org.infinispan.commands.MetadataAwareCommand;
 import org.infinispan.commands.Visitor;
-import org.infinispan.commons.io.UnsignedNumeric;
-import org.infinispan.commons.marshall.MarshallUtil;
+import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.context.InvocationContext;
 import org.infinispan.context.impl.FlagBitSets;
+import org.infinispan.marshall.protostream.impl.MarshallableObject;
 import org.infinispan.metadata.Metadata;
 import org.infinispan.metadata.impl.PrivateMetadata;
+import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.protostream.annotations.ProtoTypeId;
 
 /**
  * Implements functionality defined by {@link org.infinispan.Cache#put(Object, Object)}
@@ -27,19 +27,18 @@ import org.infinispan.metadata.impl.PrivateMetadata;
  * @author Mircea.Markus@jboss.com
  * @since 4.0
  */
+@ProtoTypeId(ProtoStreamTypeIds.PUT_KEY_VALUE_COMMAND)
 public class PutKeyValueCommand extends AbstractDataWriteCommand implements MetadataAwareCommand {
 
    public static final byte COMMAND_ID = 8;
 
    private Object value;
    private boolean putIfAbsent;
-   private boolean successful = true;
-   private Metadata metadata;
    private ValueMatcher valueMatcher;
+   private Metadata metadata;
    private PrivateMetadata internalMetadata;
 
-   public PutKeyValueCommand() {
-   }
+   private transient boolean successful = true;
 
    public PutKeyValueCommand(Object key, Object value, boolean putIfAbsent, Metadata metadata, int segment,
                              long flagsBitSet, CommandInvocationId commandInvocationId) {
@@ -48,6 +47,49 @@ public class PutKeyValueCommand extends AbstractDataWriteCommand implements Meta
       this.putIfAbsent = putIfAbsent;
       this.valueMatcher = putIfAbsent ? ValueMatcher.MATCH_EXPECTED : ValueMatcher.MATCH_ALWAYS;
       this.metadata = metadata;
+   }
+
+   @ProtoFactory
+   PutKeyValueCommand(MarshallableObject<?> wrappedKey, long flagsWithoutRemote, int topologyId, int segment,
+                      CommandInvocationId commandInvocationId, MarshallableObject<?> wrappedValue,
+                      MarshallableObject<Metadata> wrappedMetadata, ValueMatcher valueMatcher, boolean putIfAbsent,
+                      PrivateMetadata internalMetadata) {
+      super(wrappedKey, flagsWithoutRemote, topologyId, segment, commandInvocationId);
+      this.value = MarshallableObject.unwrap(wrappedValue);
+      this.metadata = MarshallableObject.unwrap(wrappedMetadata);
+      this.valueMatcher = valueMatcher;
+      this.putIfAbsent = putIfAbsent;
+      this.internalMetadata = internalMetadata;
+   }
+
+   @ProtoField(number = 6, name = "value")
+   MarshallableObject<?> getWrappedValue() {
+      return MarshallableObject.create(value);
+   }
+
+   @ProtoField(number = 7, name = "metadata")
+   MarshallableObject<Metadata> getWrappedMetadata() {
+      return MarshallableObject.create(metadata);
+   }
+
+   @Override
+   @ProtoField(number = 8)
+   public ValueMatcher getValueMatcher() {
+      return valueMatcher;
+   }
+
+   @ProtoField(number = 9, defaultValue = "false")
+   public boolean isPutIfAbsent() {
+      return putIfAbsent;
+   }
+
+   @ProtoField(number = 10)
+   public PrivateMetadata getInternalMetadata() {
+      return internalMetadata;
+   }
+
+   public void setInternalMetadata(PrivateMetadata internalMetadata) {
+      this.internalMetadata = internalMetadata;
    }
 
    public Object getValue() {
@@ -78,32 +120,6 @@ public class PutKeyValueCommand extends AbstractDataWriteCommand implements Meta
    }
 
    @Override
-   public void writeTo(ObjectOutput output) throws IOException {
-      output.writeObject(key);
-      output.writeObject(value);
-      UnsignedNumeric.writeUnsignedInt(output, segment);
-      output.writeObject(metadata);
-      MarshallUtil.marshallEnum(valueMatcher, output);
-      CommandInvocationId.writeTo(output, commandInvocationId);
-      output.writeLong(FlagBitSets.copyWithoutRemotableFlags(getFlagsBitSet()));
-      output.writeBoolean(putIfAbsent);
-      output.writeObject(internalMetadata);
-   }
-
-   @Override
-   public void readFrom(ObjectInput input) throws IOException, ClassNotFoundException {
-      key = input.readObject();
-      value = input.readObject();
-      segment = UnsignedNumeric.readUnsignedInt(input);
-      metadata = (Metadata) input.readObject();
-      valueMatcher = MarshallUtil.unmarshallEnum(input, ValueMatcher::valueOf);
-      commandInvocationId = CommandInvocationId.readFrom(input);
-      setFlagsBitSet(input.readLong());
-      putIfAbsent = input.readBoolean();
-      internalMetadata = (PrivateMetadata) input.readObject();
-   }
-
-   @Override
    public Metadata getMetadata() {
       return metadata;
    }
@@ -111,10 +127,6 @@ public class PutKeyValueCommand extends AbstractDataWriteCommand implements Meta
    @Override
    public void setMetadata(Metadata metadata) {
       this.metadata = metadata;
-   }
-
-   public boolean isPutIfAbsent() {
-      return putIfAbsent;
    }
 
    public void setPutIfAbsent(boolean putIfAbsent) {
@@ -126,39 +138,29 @@ public class PutKeyValueCommand extends AbstractDataWriteCommand implements Meta
       if (this == o) return true;
       if (o == null || getClass() != o.getClass()) return false;
       if (!super.equals(o)) return false;
-
       PutKeyValueCommand that = (PutKeyValueCommand) o;
-
       return putIfAbsent == that.putIfAbsent &&
             Objects.equals(value, that.value) &&
             Objects.equals(metadata, that.metadata);
-
    }
 
    @Override
    public int hashCode() {
-      int result = super.hashCode();
-      result = 31 * result + (value != null ? value.hashCode() : 0);
-      result = 31 * result + (putIfAbsent ? 1 : 0);
-      result = 31 * result + (metadata != null ? metadata.hashCode() : 0);
-      return result;
+      return Objects.hash(super.hashCode(), value, metadata, putIfAbsent);
    }
 
    @Override
    public String toString() {
-      return new StringBuilder()
-            .append("PutKeyValueCommand{key=")
-            .append(toStr(key))
-            .append(", value=").append(toStr(value))
-            .append(", flags=").append(printFlags())
-            .append(", commandInvocationId=").append(CommandInvocationId.show(commandInvocationId))
-            .append(", putIfAbsent=").append(putIfAbsent)
-            .append(", valueMatcher=").append(valueMatcher)
-            .append(", metadata=").append(metadata)
-            .append(", successful=").append(successful)
-            .append(", topologyId=").append(getTopologyId())
-            .append("}")
-            .toString();
+      return "PutKeyValueCommand{key=" + toStr(key) +
+            ", value=" + toStr(value) +
+            ", flags=" + printFlags() +
+            ", commandInvocationId=" + CommandInvocationId.show(commandInvocationId) +
+            ", putIfAbsent=" + putIfAbsent +
+            ", valueMatcher=" + valueMatcher +
+            ", metadata=" + metadata +
+            ", successful=" + successful +
+            ", topologyId=" + topologyId +
+            "}";
    }
 
    @Override
@@ -169,11 +171,6 @@ public class PutKeyValueCommand extends AbstractDataWriteCommand implements Meta
    @Override
    public boolean isConditional() {
       return putIfAbsent;
-   }
-
-   @Override
-   public ValueMatcher getValueMatcher() {
-      return valueMatcher;
    }
 
    @Override
@@ -189,13 +186,5 @@ public class PutKeyValueCommand extends AbstractDataWriteCommand implements Meta
    @Override
    public boolean isReturnValueExpected() {
       return isConditional() || super.isReturnValueExpected();
-   }
-
-   public PrivateMetadata getInternalMetadata() {
-      return internalMetadata;
-   }
-
-   public void setInternalMetadata(PrivateMetadata internalMetadata) {
-      this.internalMetadata = internalMetadata;
    }
 }

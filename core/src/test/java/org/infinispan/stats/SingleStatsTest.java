@@ -21,7 +21,7 @@ import org.testng.annotations.Test;
 @Test(groups = "functional", testName = "stats.SingleStatsTest")
 public class SingleStatsTest extends MultipleCacheManagersTest {
 
-   private static final int OFF_HEAP_KEY_SIZE = 6;
+   private static final int OFF_HEAP_KEY_SIZE = 8 ;
    private static final int OFF_HEAP_VALUE_SIZE = 8;
    private static final long OFF_HEAP_SIZE = estimateSizeOverhead(offHeapEntrySize(true, false /*immortal entries*/, OFF_HEAP_KEY_SIZE, OFF_HEAP_VALUE_SIZE));
 

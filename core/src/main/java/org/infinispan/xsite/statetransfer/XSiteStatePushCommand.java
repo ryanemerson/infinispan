@@ -1,12 +1,12 @@
 package org.infinispan.xsite.statetransfer;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
 import java.util.concurrent.CompletionStage;
 
-import org.infinispan.commons.marshall.MarshallUtil;
+import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.factories.ComponentRegistry;
+import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.util.ByteString;
 import org.infinispan.util.concurrent.CompletableFutures;
 import org.infinispan.xsite.BackupReceiver;
@@ -18,38 +18,34 @@ import org.infinispan.xsite.XSiteReplicateCommand;
  * @author Pedro Ruivo
  * @since 7.0
  */
+@ProtoTypeId(ProtoStreamTypeIds.XSITE_STATE_PUSH_COMMAND)
 public class XSiteStatePushCommand extends XSiteReplicateCommand {
 
    public static final byte COMMAND_ID = 33;
    private XSiteState[] chunk;
    private long timeoutMillis;
 
-   public XSiteStatePushCommand(ByteString cacheName, XSiteState[] chunk, long timeoutMillis) {
+   @ProtoFactory
+   public XSiteStatePushCommand(ByteString cacheName, XSiteState[] chunk, long timeout) {
       super(COMMAND_ID, cacheName);
       this.chunk = chunk;
-      this.timeoutMillis = timeoutMillis;
+      this.timeoutMillis = timeout;
    }
 
-   public XSiteStatePushCommand(ByteString cacheName) {
-      super(COMMAND_ID, cacheName);
+   @ProtoField(number = 2)
+   public XSiteState[] getChunk() {
+      return chunk;
+   }
+
+   @ProtoField(number = 3, name = "timeout", defaultValue = "-1")
+   public long getTimeout() {
+      return timeoutMillis;
    }
 
    @Override
    public CompletionStage<Void> performInLocalSite(BackupReceiver receiver, boolean preserveOrder) {
       assert !preserveOrder;
       return receiver.handleStateTransferState(this);
-   }
-
-   public XSiteStatePushCommand() {
-      this(null);
-   }
-
-   public XSiteState[] getChunk() {
-      return chunk;
-   }
-
-   public long getTimeout() {
-      return timeoutMillis;
    }
 
    @Override
@@ -62,18 +58,6 @@ public class XSiteStatePushCommand extends XSiteReplicateCommand {
    @Override
    public byte getCommandId() {
       return COMMAND_ID;
-   }
-
-   @Override
-   public void writeTo(ObjectOutput output) throws IOException {
-      output.writeLong(timeoutMillis);
-      MarshallUtil.marshallArray(chunk, output);
-   }
-
-   @Override
-   public void readFrom(ObjectInput input) throws IOException, ClassNotFoundException {
-      timeoutMillis = input.readLong();
-      chunk = MarshallUtil.unmarshallArray(input, XSiteState[]::new);
    }
 
    @Override

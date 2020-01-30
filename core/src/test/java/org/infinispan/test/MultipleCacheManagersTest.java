@@ -395,6 +395,13 @@ public abstract class MultipleCacheManagersTest extends AbstractCacheTest {
    }
 
    protected void createClusteredCaches(int numMembersInCluster,
+                                        SerializationContextInitializer sci,
+                                        String cacheName,
+                                        ConfigurationBuilder defaultConfigBuilder) {
+      createClusteredCaches(numMembersInCluster, sci, defaultConfigBuilder, new TransportFlags(), cacheName);
+   }
+
+   protected void createClusteredCaches(int numMembersInCluster,
                                                             SerializationContextInitializer sci,
                                                             ConfigurationBuilder configBuilder,
                                                             TransportFlags flags, String... cacheNames) {

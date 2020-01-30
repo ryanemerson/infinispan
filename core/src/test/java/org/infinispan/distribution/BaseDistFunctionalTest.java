@@ -23,9 +23,9 @@ import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.protostream.SerializationContextInitializer;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.test.MultipleCacheManagersTest;
-import org.infinispan.test.TestDataSCI;
 import org.infinispan.test.TestingUtil;
 import org.infinispan.test.fwk.TransportFlags;
+import org.infinispan.util.ControlledConsistentHashFactory;
 import org.infinispan.util.concurrent.IsolationLevel;
 
 
@@ -97,7 +97,7 @@ public abstract class BaseDistFunctionalTest<K, V> extends MultipleCacheManagers
    }
 
    protected SerializationContextInitializer getSerializationContext() {
-      return TestDataSCI.INSTANCE;
+      return ControlledConsistentHashFactory.SCI.INSTANCE;
    }
 
    @Override

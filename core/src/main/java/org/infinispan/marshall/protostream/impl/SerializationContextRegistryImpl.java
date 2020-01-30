@@ -1,5 +1,6 @@
 package org.infinispan.marshall.protostream.impl;
 
+import static org.infinispan.marshall.core.impl.GlobalContextInitializer.getFqTypeName;
 import static org.infinispan.marshall.protostream.impl.SerializationContextRegistry.MarshallerType.GLOBAL;
 import static org.infinispan.marshall.protostream.impl.SerializationContextRegistry.MarshallerType.PERSISTENCE;
 
@@ -16,8 +17,9 @@ import org.infinispan.factories.annotations.Start;
 import org.infinispan.factories.impl.ComponentRef;
 import org.infinispan.factories.scopes.Scope;
 import org.infinispan.factories.scopes.Scopes;
+import org.infinispan.marshall.core.impl.GlobalContextInitializer;
+import org.infinispan.marshall.core.impl.GlobalContextManualInitializer;
 import org.infinispan.marshall.persistence.impl.PersistenceContextInitializer;
-import org.infinispan.marshall.persistence.impl.PersistenceContextInitializerImpl;
 import org.infinispan.protostream.BaseMarshaller;
 import org.infinispan.protostream.FileDescriptorSource;
 import org.infinispan.protostream.ImmutableSerializationContext;
@@ -29,6 +31,8 @@ import org.infinispan.protostream.SerializationContextInitializer;
 public class SerializationContextRegistryImpl implements SerializationContextRegistry {
 
    @Inject GlobalConfiguration globalConfig;
+   @Inject @ComponentName(KnownComponentNames.INTERNAL_MARSHALLER)
+   ComponentRef<Marshaller> globalMarshaller;
    @Inject @ComponentName(KnownComponentNames.USER_MARSHALLER)
    ComponentRef<Marshaller> userMarshaller;
 
@@ -50,10 +54,14 @@ public class SerializationContextRegistryImpl implements SerializationContextReg
          if (scis != null)
             ctx.addContextIntializers(scis);
 
-         ctx.addContextIntializer(new PersistenceContextInitializerImpl())
-               // Register Commons util so that KeyValueWithPrevious can be used with JCache remote
-               .addContextIntializer(new org.infinispan.commons.GlobalContextInitializerImpl())
+         ctx.addContextIntializer(GlobalContextInitializer.INSTANCE)
+               .addContextIntializer(GlobalContextManualInitializer.INSTANCE)
+               .addContextIntializer(PersistenceContextManualInitializer.INSTANCE)
                .addMarshaller(userObjectMarshaller)
+               .addMarshaller(new MarshallableArray.Marshaller(getFqTypeName(MarshallableArray.class), globalMarshaller.wired()))
+               .addMarshaller(new MarshallableCollection.Marshaller(getFqTypeName(MarshallableCollection.class), globalMarshaller.wired()))
+               .addMarshaller(new MarshallableMap.Marshaller(getFqTypeName(MarshallableMap.class)))
+               .addMarshaller(new MarshallableObject.Marshaller(getFqTypeName(MarshallableObject.class), globalMarshaller.wired()))
                .update();
       });
 
@@ -61,7 +69,7 @@ public class SerializationContextRegistryImpl implements SerializationContextReg
          if (scis != null)
             ctx.addContextIntializers(scis);
 
-         ctx.addContextIntializer(new PersistenceContextInitializerImpl())
+         ctx.addContextIntializer(PersistenceContextInitializer.INSTANCE)
                .addContextIntializer(PersistenceContextManualInitializer.INSTANCE)
                .addMarshaller(userObjectMarshaller)
                .update();
