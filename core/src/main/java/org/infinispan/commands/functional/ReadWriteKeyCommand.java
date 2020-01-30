@@ -1,43 +1,49 @@
 package org.infinispan.commands.functional;
 
-import static org.infinispan.commons.util.Util.toStr;
-
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
 import java.util.function.Function;
 
 import org.infinispan.commands.CommandInvocationId;
 import org.infinispan.commands.Visitor;
 import org.infinispan.commands.functional.functions.InjectableComponent;
 import org.infinispan.commands.write.ValueMatcher;
-import org.infinispan.commons.io.UnsignedNumeric;
-import org.infinispan.commons.marshall.MarshallUtil;
+import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.context.InvocationContext;
-import org.infinispan.context.impl.FlagBitSets;
 import org.infinispan.encoding.DataConversion;
 import org.infinispan.factories.ComponentRegistry;
 import org.infinispan.functional.EntryView.ReadWriteEntryView;
 import org.infinispan.functional.impl.Params;
+import org.infinispan.marshall.protostream.impl.MarshallableObject;
+import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
+import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.protostream.annotations.ProtoTypeId;
 
 // TODO: the command does not carry previous values to backup, so it can cause
 // the values on primary and backup owners to diverge in case of topology change
+@ProtoTypeId(ProtoStreamTypeIds.READ_WRITE_KEY_COMMAND)
 public final class ReadWriteKeyCommand<K, V, R> extends AbstractWriteKeyCommand<K, V> {
 
    public static final byte COMMAND_ID = 50;
 
-   private Function<ReadWriteEntryView<K, V>, R> f;
+   @ProtoField(number = 10)
+   final MarshallableObject<Function<ReadWriteEntryView<K, V>, R>> f;
+
+   @ProtoFactory
+   ReadWriteKeyCommand(MarshallableUserObject<?> wrappedKey, long flagsWithoutRemote, int topologyId, int segment,
+                       CommandInvocationId commandInvocationId, Params params, ValueMatcher valueMatcher,
+                       DataConversion keyDataConversion, DataConversion valueDataConversion,
+                       MarshallableObject<Function<ReadWriteEntryView<K, V>, R>> f) {
+      super(wrappedKey, flagsWithoutRemote, topologyId, segment, commandInvocationId, params, valueMatcher,
+            keyDataConversion, valueDataConversion);
+      this.f = f;
+   }
 
    public ReadWriteKeyCommand(Object key, Function<ReadWriteEntryView<K, V>, R> f, int segment,
                               CommandInvocationId id, ValueMatcher valueMatcher, Params params,
                               DataConversion keyDataConversion,
                               DataConversion valueDataConversion) {
       super(key, valueMatcher, segment, id, params, keyDataConversion, valueDataConversion);
-      this.f = f;
-   }
-
-   public ReadWriteKeyCommand() {
-      // No-op, for marshalling
+      this.f = MarshallableObject.create(f);
    }
 
    @Override
@@ -50,32 +56,6 @@ public final class ReadWriteKeyCommand<K, V, R> extends AbstractWriteKeyCommand<
    @Override
    public byte getCommandId() {
       return COMMAND_ID;
-   }
-
-   @Override
-   public void writeTo(ObjectOutput output) throws IOException {
-      output.writeObject(key);
-      output.writeObject(f);
-      MarshallUtil.marshallEnum(valueMatcher, output);
-      UnsignedNumeric.writeUnsignedInt(output, segment);
-      Params.writeObject(output, params);
-      output.writeLong(FlagBitSets.copyWithoutRemotableFlags(getFlagsBitSet()));
-      CommandInvocationId.writeTo(output, commandInvocationId);
-      DataConversion.writeTo(output, keyDataConversion);
-      DataConversion.writeTo(output, valueDataConversion);
-   }
-
-   @Override
-   public void readFrom(ObjectInput input) throws IOException, ClassNotFoundException {
-      key = input.readObject();
-      f = (Function<ReadWriteEntryView<K, V>, R>) input.readObject();
-      valueMatcher = MarshallUtil.unmarshallEnum(input, ValueMatcher::valueOf);
-      segment = UnsignedNumeric.readUnsignedInt(input);
-      params = Params.readObject(input);
-      setFlagsBitSet(input.readLong());
-      commandInvocationId = CommandInvocationId.readFrom(input);
-      keyDataConversion = DataConversion.readFrom(input);
-      valueDataConversion = DataConversion.readFrom(input);
    }
 
    @Override
@@ -95,27 +75,25 @@ public final class ReadWriteKeyCommand<K, V, R> extends AbstractWriteKeyCommand<
 
    @Override
    public Mutation<K, V, ?> toMutation(Object key) {
-      return new Mutations.ReadWrite<>(keyDataConversion, valueDataConversion, f);
+      return new Mutations.ReadWrite<>(keyDataConversion, valueDataConversion, getFunction());
    }
 
    public Function<ReadWriteEntryView<K, V>, R> getFunction() {
-      return f;
+      return MarshallableObject.unwrap(f);
    }
 
    @Override
    public String toString() {
-      final StringBuilder sb = new StringBuilder("ReadWriteKeyCommand{");
-      sb.append("key=").append(toStr(key));
-      sb.append(", f=").append(f.getClass().getName());
-      sb.append(", flags=").append(printFlags());
-      sb.append(", commandInvocationId=").append(commandInvocationId);
-      sb.append(", topologyId=").append(getTopologyId());
-      sb.append(", params=").append(params);
-      sb.append(", valueMatcher=").append(valueMatcher);
-      sb.append(", successful=").append(successful);
-      sb.append(", keyDataConversion=").append(keyDataConversion);
-      sb.append(", valueDataConversion=").append(valueDataConversion);
-      sb.append('}');
-      return sb.toString();
+      return "ReadWriteKeyCommand{" + "key=" + key +
+            ", f=" + f.getClass().getName() +
+            ", flags=" + printFlags() +
+            ", commandInvocationId=" + commandInvocationId +
+            ", topologyId=" + getTopologyId() +
+            ", params=" + params +
+            ", valueMatcher=" + valueMatcher +
+            ", successful=" + successful +
+            ", keyDataConversion=" + keyDataConversion +
+            ", valueDataConversion=" + valueDataConversion +
+            '}';
    }
 }

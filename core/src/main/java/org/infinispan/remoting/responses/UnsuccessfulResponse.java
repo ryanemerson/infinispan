@@ -1,13 +1,13 @@
 package org.infinispan.remoting.responses;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
-import java.util.Set;
+import java.util.Objects;
 
-import org.infinispan.commons.marshall.AbstractExternalizer;
+import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.commons.util.Util;
-import org.infinispan.marshall.core.Ids;
+import org.infinispan.marshall.protostream.impl.MarshallableObject;
+import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.protostream.annotations.ProtoTypeId;
 
 /**
  * An unsuccessful response
@@ -15,16 +15,20 @@ import org.infinispan.marshall.core.Ids;
  * @author Manik Surtani
  * @since 4.0
  */
+@ProtoTypeId(ProtoStreamTypeIds.UNSUCCESSFUL_RESPONSE)
 public class UnsuccessfulResponse extends ValidResponse {
    public static final UnsuccessfulResponse EMPTY = new UnsuccessfulResponse(null);
-   private final Object responseValue;
 
-   private UnsuccessfulResponse(Object value) {
-      this.responseValue = value;
+   @ProtoField(number = 1)
+   final MarshallableObject<?> responseValue;
+
+   @ProtoFactory
+   UnsuccessfulResponse(MarshallableObject<?> responseValue) {
+      this.responseValue = responseValue;
    }
 
    public static UnsuccessfulResponse create(Object value) {
-      return value == null ? EMPTY : new UnsuccessfulResponse(value);
+      return value == null ? EMPTY : new UnsuccessfulResponse(new MarshallableObject<>(value));
    }
 
    @Override
@@ -33,50 +37,24 @@ public class UnsuccessfulResponse extends ValidResponse {
    }
 
    public Object getResponseValue() {
-      return responseValue;
-   }
-
-   @Override
-   public String toString() {
-      return "UnsuccessfulResponse{responseValue=" + Util.toStr(responseValue) + "} ";
+      return MarshallableObject.unwrap(responseValue);
    }
 
    @Override
    public boolean equals(Object o) {
       if (this == o) return true;
       if (o == null || getClass() != o.getClass()) return false;
-
       UnsuccessfulResponse that = (UnsuccessfulResponse) o;
-
-      if (responseValue != null ? !responseValue.equals(that.responseValue) : that.responseValue != null) return false;
-
-      return true;
+      return Objects.equals(responseValue, that.responseValue);
    }
 
    @Override
    public int hashCode() {
-      return responseValue != null ? responseValue.hashCode() : 0;
+      return Objects.hash(responseValue);
    }
 
-   public static class Externalizer extends AbstractExternalizer<UnsuccessfulResponse> {
-      @Override
-      public void writeObject(ObjectOutput output, UnsuccessfulResponse response) throws IOException {
-         output.writeObject(response.getResponseValue());
-      }
-
-      @Override
-      public UnsuccessfulResponse readObject(ObjectInput input) throws IOException, ClassNotFoundException {
-         return create(input.readObject());
-      }
-
-      @Override
-      public Integer getId() {
-         return Ids.UNSUCCESSFUL_RESPONSE;
-      }
-
-      @Override
-      public Set<Class<? extends UnsuccessfulResponse>> getTypeClasses() {
-         return Util.<Class<? extends UnsuccessfulResponse>>asSet(UnsuccessfulResponse.class);
-      }
+   @Override
+   public String toString() {
+      return "UnsuccessfulResponse{responseValue=" + Util.toStr(getResponseValue()) + "} ";
    }
 }

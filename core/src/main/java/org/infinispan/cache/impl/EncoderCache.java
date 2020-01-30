@@ -755,25 +755,25 @@ public class EncoderCache<K, V> extends AbstractDelegatingAdvancedCache<K, V> {
 
    @Override
    public V merge(K key, V value, BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
-      Object returned = super.merge(keyToStorage(key), valueToStorage(value), wrapBiFunction(remappingFunction));
+      Object returned = super.merge(keyToStorage(key), valueToStorage(value), wrapMergeBiFunction(remappingFunction));
       return valueFromStorage(returned);
    }
 
    @Override
    public V merge(K key, V value, BiFunction<? super V, ? super V, ? extends V> remappingFunction, Metadata metadata) {
-      Object returned = super.merge(keyToStorage(key), valueToStorage(value), wrapBiFunction(remappingFunction), metadata);
+      Object returned = super.merge(keyToStorage(key), valueToStorage(value), wrapMergeBiFunction(remappingFunction), metadata);
       return valueFromStorage(returned);
    }
 
    @Override
    public V merge(K key, V value, BiFunction<? super V, ? super V, ? extends V> remappingFunction, long lifespan, TimeUnit lifespanUnit) {
-      Object returned = super.merge(keyToStorage(key), valueToStorage(value), wrapBiFunction(remappingFunction), lifespan, lifespanUnit);
+      Object returned = super.merge(keyToStorage(key), valueToStorage(value), wrapMergeBiFunction(remappingFunction), lifespan, lifespanUnit);
       return valueFromStorage(returned);
    }
 
    @Override
    public V merge(K key, V value, BiFunction<? super V, ? super V, ? extends V> remappingFunction, long lifespan, TimeUnit lifespanUnit, long maxIdleTime, TimeUnit maxIdleTimeUnit) {
-      Object returned = super.merge(keyToStorage(key), valueToStorage(value), wrapBiFunction(remappingFunction), lifespan, lifespanUnit, maxIdleTime, maxIdleTimeUnit);
+      Object returned = super.merge(keyToStorage(key), valueToStorage(value), wrapMergeBiFunction(remappingFunction), lifespan, lifespanUnit, maxIdleTime, maxIdleTimeUnit);
       return valueFromStorage(returned);
    }
 
@@ -979,15 +979,15 @@ public class EncoderCache<K, V> extends AbstractDelegatingAdvancedCache<K, V> {
       }
    }
 
-   private BiFunctionMapper wrapBiFunction(BiFunction<?, ?, ?> biFunction) {
-      return biFunction == null ?
-            null :
-            new BiFunctionMapper(biFunction, keyDataConversion, valueDataConversion);
+   private BiFunctionMapper<? super K, ? super V, ? extends V> wrapBiFunction(BiFunction<? super K, ? super V, ? extends V> biFunction) {
+      return biFunction == null ? null : new BiFunctionMapper<>(biFunction, keyDataConversion, valueDataConversion);
    }
 
-   private FunctionMapper wrapFunction(Function<?, ?> function) {
-      return function == null ?
-            null :
-            new FunctionMapper(function, keyDataConversion, valueDataConversion);
+   private BiFunctionMapper<? super V, ? super V, ? extends V> wrapMergeBiFunction(BiFunction<? super V, ? super V, ? extends V> biFunction) {
+      return biFunction == null ? null : new BiFunctionMapper<>(biFunction, keyDataConversion, valueDataConversion);
+   }
+
+   private FunctionMapper<? super K, ? extends V> wrapFunction(Function<? super K, ? extends V> function) {
+      return function == null ? null : new FunctionMapper<>(function, keyDataConversion, valueDataConversion);
    }
 }

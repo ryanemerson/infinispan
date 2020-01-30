@@ -1,16 +1,19 @@
 package org.infinispan.commands.remote;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
 import java.util.Objects;
 import java.util.concurrent.CompletionStage;
 
 import org.infinispan.commands.ReplicableCommand;
 import org.infinispan.commands.VisitableCommand;
+import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.context.InvocationContext;
 import org.infinispan.context.InvocationContextFactory;
 import org.infinispan.factories.ComponentRegistry;
+import org.infinispan.marshall.protostream.impl.WrappedMessages;
+import org.infinispan.protostream.WrappedMessage;
+import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.util.ByteString;
 import org.infinispan.util.concurrent.locks.RemoteLockCommand;
 import org.infinispan.util.logging.Log;
@@ -21,25 +24,24 @@ import org.infinispan.util.logging.LogFactory;
  *
  * @author Mircea.Markus@jboss.com
  */
+@ProtoTypeId(ProtoStreamTypeIds.SINGLE_RPC_COMMAND)
 public class SingleRpcCommand extends BaseRpcCommand {
 
    public static final int COMMAND_ID = 1;
    private static final Log log = LogFactory.getLog(SingleRpcCommand.class);
    private static final boolean trace = log.isTraceEnabled();
 
-   private VisitableCommand command;
-
-   private SingleRpcCommand() {
-      super(null); // For command id uniqueness test
-   }
+   @ProtoField(number = 2)
+   final WrappedMessage command;
 
    public SingleRpcCommand(ByteString cacheName, VisitableCommand command) {
-      super(cacheName);
-      this.command = command;
+      this(cacheName, new WrappedMessage(command));
    }
 
-   public SingleRpcCommand(ByteString cacheName) {
+   @ProtoFactory
+   SingleRpcCommand(ByteString cacheName, WrappedMessage command) {
       super(cacheName);
+      this.command = command;
    }
 
    @Override
@@ -48,17 +50,8 @@ public class SingleRpcCommand extends BaseRpcCommand {
    }
 
    @Override
-   public void writeTo(ObjectOutput output) throws IOException {
-      output.writeObject(command);
-   }
-
-   @Override
-   public void readFrom(ObjectInput input) throws IOException, ClassNotFoundException {
-      command = (VisitableCommand) input.readObject();
-   }
-
-   @Override
    public CompletionStage<?> invokeAsync(ComponentRegistry componentRegistry) throws Throwable {
+      VisitableCommand command = WrappedMessages.unwrap(this.command);
       command.init(componentRegistry);
       InvocationContextFactory icf = componentRegistry.getInvocationContextFactory().running();
       InvocationContext ctx = icf.createRemoteInvocationContextForCommand(command, getOrigin());
@@ -98,21 +91,21 @@ public class SingleRpcCommand extends BaseRpcCommand {
    }
 
    public ReplicableCommand getCommand() {
-      return command;
+      return WrappedMessages.unwrap(command);
    }
 
    @Override
    public boolean isReturnValueExpected() {
-      return command.isReturnValueExpected();
+      return getCommand().isReturnValueExpected();
    }
 
    @Override
    public boolean isSuccessful() {
-      return command.isSuccessful();
+      return getCommand().isSuccessful();
    }
 
    @Override
    public boolean canBlock() {
-      return command.canBlock();
+      return getCommand().canBlock();
    }
 }

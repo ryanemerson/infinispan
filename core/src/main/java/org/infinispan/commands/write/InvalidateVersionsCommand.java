@@ -1,18 +1,20 @@
 package org.infinispan.commands.write;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
 import java.util.concurrent.CompletionStage;
 
 import org.infinispan.commands.VisitableCommand;
 import org.infinispan.commands.remote.BaseRpcCommand;
+import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.container.DataContainer;
 import org.infinispan.container.versioning.InequalVersionComparisonResult;
 import org.infinispan.container.versioning.SimpleClusteredVersion;
 import org.infinispan.distribution.DistributionManager;
 import org.infinispan.factories.ComponentRegistry;
+import org.infinispan.marshall.protostream.impl.MarshallableUserCollection;
 import org.infinispan.persistence.manager.OrderedUpdatesManager;
+import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.scattered.BiasManager;
 import org.infinispan.statetransfer.StateTransferLock;
 import org.infinispan.util.ByteString;
@@ -25,29 +27,42 @@ import org.infinispan.util.logging.LogFactory;
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
+@ProtoTypeId(ProtoStreamTypeIds.INVALIDATE_VERSIONS_COMMAND)
 public class InvalidateVersionsCommand extends BaseRpcCommand {
    private static final Log log = LogFactory.getLog(InvalidateVersionsCommand.class);
    private static final boolean trace = log.isTraceEnabled();
 
    public static final int COMMAND_ID = 67;
 
+   private final Object[] keys;
+
    // This is the topologyId in which this command is valid (in case that it comes from the state transfer)
-   private int topologyId;
-   private Object[] keys;
-   private int[] topologyIds;
-   private long[] versions;
+   @ProtoField(number = 2, defaultValue = "-1")
+   final int topologyId;
+
+   @ProtoField(number = 3)
+   final int[] topologyIds;
+
+   @ProtoField(number = 4)
+   final long[] versions;
+
    // Removed means that the comparison will remove current versions as well
-   private boolean removed;
+   @ProtoField(number = 5, defaultValue = "false")
+   final boolean removed;
 
-   public InvalidateVersionsCommand() {
-      this(null);
+   @ProtoFactory
+   InvalidateVersionsCommand(ByteString cacheName, int topologyId, MarshallableUserCollection<Object> keys,
+                             int[] topologyIds, long[] versions, boolean removed) {
+      this(cacheName, topologyId, MarshallableUserCollection.unwrapAsArray(keys, Object[]::new), topologyIds, versions, removed);
    }
 
-   public InvalidateVersionsCommand(ByteString cacheName) {
-      super(cacheName);
+   @ProtoField(number = 6)
+   MarshallableUserCollection<Object> getKeys() {
+      return MarshallableUserCollection.create(keys);
    }
 
-   public InvalidateVersionsCommand(ByteString cacheName, int topologyId, Object[] keys, int[] topologyIds, long[] versions, boolean removed) {
+   public InvalidateVersionsCommand(ByteString cacheName, int topologyId, Object[] keys, int[] topologyIds,
+                                    long[] versions, boolean removed) {
       super(cacheName);
       this.topologyId = topologyId;
       this.keys = keys;
@@ -118,42 +133,6 @@ public class InvalidateVersionsCommand extends BaseRpcCommand {
    @Override
    public boolean isReturnValueExpected() {
       return false;
-   }
-
-   @Override
-   public void writeTo(ObjectOutput output) throws IOException {
-      output.writeInt(topologyId);
-      // TODO: topology ids are mostly the same - sort the arrays according to topologyIds and use compaction encoding
-      output.writeInt(keys.length);
-      for (int i = 0; i < keys.length; ++i) {
-         if (keys[i] == null) {
-            output.writeObject(null);
-            break;
-         } else {
-            output.writeObject(keys[i]);
-            output.writeInt(topologyIds[i]);
-            output.writeLong(versions[i]);
-         }
-      }
-      output.writeBoolean(removed);
-   }
-
-   @Override
-   public void readFrom(ObjectInput input) throws IOException, ClassNotFoundException {
-      topologyId = input.readInt();
-      keys = new Object[input.readInt()];
-      topologyIds = new int[keys.length];
-      versions = new long[keys.length];
-      for (int i = 0; i < keys.length; ++i) {
-         Object key = input.readObject();
-         if (key == null) {
-            break;
-         }
-         keys[i] = key;
-         topologyIds[i] = input.readInt();
-         versions[i] = input.readLong();
-      }
-      removed = input.readBoolean();
    }
 
    @Override

@@ -36,6 +36,7 @@ import org.infinispan.commands.remote.recovery.TxCompletionNotificationCommand;
 import org.infinispan.commands.tx.CommitCommand;
 import org.infinispan.commands.tx.PrepareCommand;
 import org.infinispan.commands.tx.RollbackCommand;
+import org.infinispan.commons.test.Exceptions;
 import org.infinispan.commons.time.TimeService;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
@@ -48,7 +49,6 @@ import org.infinispan.extendedstats.wrappers.ExtendedStatisticLockManager;
 import org.infinispan.extendedstats.wrappers.ExtendedStatisticRpcManager;
 import org.infinispan.interceptors.impl.TxInterceptor;
 import org.infinispan.remoting.rpc.RpcManager;
-import org.infinispan.commons.test.Exceptions;
 import org.infinispan.test.MultipleCacheManagersTest;
 import org.infinispan.test.TestingUtil;
 import org.infinispan.transaction.LockingMode;
@@ -142,7 +142,7 @@ public class OptimisticLockingTxClusterExtendedStatisticLogicTest extends Multip
          extendedStatisticInterceptors[i] = new ExtendedStatisticInterceptor();
          builder.customInterceptors().addInterceptor().interceptor(extendedStatisticInterceptors[i])
                .after(TxInterceptor.class);
-         addClusterEnabledCacheManager(builder);
+         addClusterEnabledCacheManager(ReplicatedControlledConsistentHashFactory.SCI.INSTANCE, builder);
       }
       waitForClusterToForm();
       for (int i = 0; i < NUM_NODES; ++i) {

@@ -14,7 +14,7 @@ import javax.cache.spi.CachingProvider;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.configuration.ConfigurationBuilder;
-import org.infinispan.commons.GlobalContextInitializer;
+import org.infinispan.commons.marshall.GlobalContextInitializer;
 import org.infinispan.commons.api.BasicCache;
 import org.infinispan.commons.logging.LogFactory;
 import org.infinispan.commons.marshall.Marshaller;

@@ -1,17 +1,17 @@
 package org.infinispan.commands.write;
 
-import static org.infinispan.commons.util.Util.toStr;
-
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
 import java.util.Objects;
 
 import org.infinispan.commands.CommandInvocationId;
 import org.infinispan.commands.Visitor;
-import org.infinispan.commons.io.UnsignedNumeric;
+import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.context.InvocationContext;
-import org.infinispan.context.impl.FlagBitSets;
+import org.infinispan.marshall.protostream.impl.MarshallableObject;
+import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
+import org.infinispan.metadata.Metadata;
+import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.protostream.annotations.ProtoTypeId;
 
 
 /**
@@ -20,23 +20,29 @@ import org.infinispan.context.impl.FlagBitSets;
  * @author William Burns
  * @since 8.0
  */
+@ProtoTypeId(ProtoStreamTypeIds.REMOVE_EXPIRED_COMMAND)
 public class RemoveExpiredCommand extends RemoveCommand {
    public static final int COMMAND_ID = 58;
 
-   private boolean maxIdle;
-   private Long lifespan;
+   @ProtoField(number = 9, defaultValue = "-1")
+   Long lifespan;
 
-   public RemoveExpiredCommand() {
-      // The value matcher will always be the same, so we don't need to serialize it like we do for the other commands
-      this.valueMatcher = ValueMatcher.MATCH_EXPECTED_OR_NULL;
+   @ProtoFactory
+   RemoveExpiredCommand(MarshallableUserObject<?> wrappedKey, long flagsWithoutRemote, int topologyId, int segment,
+                 CommandInvocationId commandInvocationId, MarshallableUserObject<?> value,
+                 MarshallableObject<Metadata> metadata, ValueMatcher valueMatcher, Long lifespan) {
+      super(wrappedKey, flagsWithoutRemote, topologyId, segment, commandInvocationId);
+      this.value = value;
+      this.metadata = metadata;
+      this.valueMatcher = valueMatcher;
+      this.lifespan = lifespan;
    }
 
-   public RemoveExpiredCommand(Object key, Object value, Long lifespan, boolean maxIdle, int segment,
-                               long flagBitSet, CommandInvocationId commandInvocationId) {
+   public RemoveExpiredCommand(Object key, Object value, Long lifespan, int segment, long flagBitSet,
+                               CommandInvocationId commandInvocationId) {
       //valueEquivalence can be null because this command never compares values.
       super(key, value, segment, flagBitSet, commandInvocationId);
       this.lifespan = lifespan;
-      this.maxIdle = maxIdle;
       this.valueMatcher = ValueMatcher.MATCH_EXPECTED_OR_NULL;
    }
 
@@ -58,44 +64,10 @@ public class RemoveExpiredCommand extends RemoveCommand {
    @Override
    public String toString() {
       return "RemoveExpiredCommand{" +
-              "key=" + toStr(key) +
-              ", value=" + toStr(value) +
+              "key=" + key +
+              ", value=" + value +
               ", lifespan=" + lifespan +
-              ", maxIde=" + maxIdle +
               '}';
-   }
-
-   @Override
-   public void writeTo(ObjectOutput output) throws IOException {
-      CommandInvocationId.writeTo(output, commandInvocationId);
-      output.writeObject(key);
-      output.writeObject(value);
-      UnsignedNumeric.writeUnsignedInt(output, segment);
-      if (lifespan != null) {
-         output.writeBoolean(true);
-         output.writeLong(lifespan);
-      } else {
-         output.writeBoolean(false);
-      }
-      output.writeBoolean(maxIdle);
-      output.writeLong(FlagBitSets.copyWithoutRemotableFlags(getFlagsBitSet()));
-
-   }
-
-   @Override
-   public void readFrom(ObjectInput input) throws IOException, ClassNotFoundException {
-      commandInvocationId = CommandInvocationId.readFrom(input);
-      key = input.readObject();
-      value = input.readObject();
-      segment = UnsignedNumeric.readUnsignedInt(input);
-      boolean lifespanProvided = input.readBoolean();
-      if (lifespanProvided) {
-         lifespan = input.readLong();
-      } else {
-         lifespan = null;
-      }
-      maxIdle = input.readBoolean();
-      setFlagsBitSet(input.readLong());
    }
 
    @Override
@@ -104,20 +76,12 @@ public class RemoveExpiredCommand extends RemoveCommand {
       if (o == null || getClass() != o.getClass()) return false;
       if (!super.equals(o)) return false;
       RemoveExpiredCommand that = (RemoveExpiredCommand) o;
-      return maxIdle == that.maxIdle && Objects.equals(lifespan, that.lifespan);
+      return Objects.equals(lifespan, that.lifespan);
    }
 
    @Override
    public int hashCode() {
-      return Objects.hash(super.hashCode(), lifespan, maxIdle);
-   }
-
-   /**
-    * Whether this remove expired was fired because of max idle
-    * @return if this command is max idle based expiration
-    */
-   public boolean isMaxIdle() {
-      return maxIdle;
+      return Objects.hash(super.hashCode(), lifespan);
    }
 
    public Long getLifespan() {

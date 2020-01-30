@@ -104,8 +104,8 @@ public class StateResponseOrderingTest extends MultipleCacheManagersTest {
       // Cache 0 didn't manage to request any segments yet, but it has registered all the inbound transfer tasks.
       // We'll pretend it got a StateResponseCommand with an older topology id.
       PerCacheInboundInvocationHandler handler = TestingUtil.extractComponent(cache(0), PerCacheInboundInvocationHandler.class);
-      StateChunk stateChunk0 = new StateChunk(0, Arrays.asList(new ImmortalCacheEntry("k0", "v0")), true);
-      StateChunk stateChunk1 = new StateChunk(1, Arrays.asList(new ImmortalCacheEntry("k0", "v0")), true);
+      StateChunk stateChunk0 = StateChunk.create(0, true, new ImmortalCacheEntry("k0", "v0"));
+      StateChunk stateChunk1 = StateChunk.create(1, true, new ImmortalCacheEntry("k0", "v0"));
       String cacheName = manager(0).getCacheManagerConfiguration().defaultCacheName().get();
       StateResponseCommand stateResponseCommand = new StateResponseCommand(ByteString.fromString(cacheName),
             initialTopologyId, Arrays.asList(stateChunk0, stateChunk1), true, false);

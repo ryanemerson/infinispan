@@ -1,16 +1,14 @@
 package org.infinispan.xsite.statetransfer;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
-import java.util.Collections;
-import java.util.Set;
-
-import org.infinispan.commons.marshall.AbstractExternalizer;
+import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.container.entries.InternalCacheEntry;
-import org.infinispan.marshall.core.Ids;
-import org.infinispan.persistence.spi.MarshallableEntry;
+import org.infinispan.marshall.protostream.impl.MarshallableObject;
+import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
 import org.infinispan.metadata.Metadata;
+import org.infinispan.persistence.spi.MarshallableEntry;
+import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.protostream.annotations.ProtoTypeId;
 
 /**
  * Represents the state of a single key to be sent to a backup site. It contains the only needed information, i.e., the
@@ -19,36 +17,54 @@ import org.infinispan.metadata.Metadata;
  * @author Pedro Ruivo
  * @since 7.0
  */
+@ProtoTypeId(ProtoStreamTypeIds.XSITE_STATE)
 public class XSiteState {
 
-   private final Object key;
-   private final Object value;
-   private final Metadata metadata;
+   @ProtoField(number = 1)
+   final MarshallableUserObject<?> key;
 
-   private XSiteState(Object key, Object value, Metadata metadata) {
+   @ProtoField(number = 2)
+   final MarshallableUserObject<?> value;
+
+   @ProtoField(number = 3)
+   final MarshallableObject<Metadata> metadata;
+
+   @ProtoFactory
+   XSiteState(MarshallableUserObject<?> key, MarshallableUserObject<?> value, MarshallableObject<Metadata> metadata) {
       this.key = key;
       this.value = value;
       this.metadata = metadata;
    }
 
    public final Object key() {
-      return key;
+      return MarshallableUserObject.unwrap(key);
    }
 
    public final Object value() {
-      return value;
+      return MarshallableUserObject.unwrap(value);
    }
 
    public final Metadata metadata() {
-      return metadata;
+      return MarshallableObject.unwrap(metadata);
    }
 
    public static XSiteState fromDataContainer(InternalCacheEntry entry) {
-      return new XSiteState(entry.getKey(), entry.getValue(), entry.getMetadata());
+      return new XSiteState(
+            MarshallableUserObject.create(entry.getKey()),
+            MarshallableUserObject.create(entry.getValue()),
+            MarshallableObject.create(entry.getMetadata())
+      );
    }
 
-   public static XSiteState fromCacheLoader(MarshallableEntry marshalledEntry) {
-      return new XSiteState(marshalledEntry.getKey(), marshalledEntry.getValue(), marshalledEntry.getMetadata());
+   public static XSiteState fromCacheLoader(MarshallableEntry entry) {
+      // We can't use any of the MarshallableEntry bytes as they rely on the persistence marshaller
+      // TODO is this correct? Metadata and user types are part of the persistence context, so should be to create
+      // MarshallableUserObject with bytes directly
+      return new XSiteState(
+            MarshallableUserObject.create(entry.getKey()),
+            MarshallableUserObject.create(entry.getValue()),
+            MarshallableObject.create(entry.getMetadata())
+      );
    }
 
    @Override
@@ -58,30 +74,5 @@ public class XSiteState {
             ", value=" + value +
             ", metadata=" + metadata +
             '}';
-   }
-
-   public static class XSiteStateExternalizer extends AbstractExternalizer<XSiteState> {
-
-      @Override
-      public Integer getId() {
-         return Ids.X_SITE_STATE;
-      }
-
-      @Override
-      public Set<Class<? extends XSiteState>> getTypeClasses() {
-         return Collections.singleton(XSiteState.class);
-      }
-
-      @Override
-      public void writeObject(ObjectOutput output, XSiteState object) throws IOException {
-         output.writeObject(object.key);
-         output.writeObject(object.value);
-         output.writeObject(object.metadata);
-      }
-
-      @Override
-      public XSiteState readObject(ObjectInput input) throws IOException, ClassNotFoundException {
-         return new XSiteState(input.readObject(), input.readObject(), (Metadata) input.readObject());
-      }
    }
 }

@@ -1,12 +1,12 @@
 package org.infinispan.xsite.commands;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
 import java.util.concurrent.CompletionStage;
 
-import org.infinispan.commons.marshall.MarshallUtil;
+import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.factories.ComponentRegistry;
+import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.util.ByteString;
 import org.infinispan.util.concurrent.CompletableFutures;
 import org.infinispan.xsite.BackupReceiver;
@@ -20,21 +20,15 @@ import org.infinispan.xsite.statetransfer.XSiteStateTransferManager;
  * @author Ryan Emerson
  * @since 11.0
  */
+@ProtoTypeId(ProtoStreamTypeIds.XSITE_STATE_TRANSFER_FINISH_RECEIVE_COMMAND)
 public class XSiteStateTransferFinishReceiveCommand extends XSiteReplicateCommand {
 
    public static final byte COMMAND_ID = 107;
 
-   private String siteName;
+   @ProtoField(number = 2)
+   final String siteName;
 
-   // For CommandIdUniquenessTest only
-   public XSiteStateTransferFinishReceiveCommand() {
-      super(COMMAND_ID, null);
-   }
-
-   public XSiteStateTransferFinishReceiveCommand(ByteString cacheName) {
-      this(cacheName, null);
-   }
-
+   @ProtoFactory
    public XSiteStateTransferFinishReceiveCommand(ByteString cacheName, String siteName) {
       super(COMMAND_ID, cacheName);
       this.siteName = siteName;
@@ -54,26 +48,8 @@ public class XSiteStateTransferFinishReceiveCommand extends XSiteReplicateComman
       return receiver.handleEndReceivingStateTransfer(this);
    }
 
-   public void setSiteName(String siteName) {
-      this.siteName = siteName;
-   }
-
-   @Override
-   public void writeTo(ObjectOutput output) throws IOException {
-      MarshallUtil.marshallString(siteName, output);
-   }
-
-   @Override
-   public void readFrom(ObjectInput input) throws IOException, ClassNotFoundException {
-      siteName = MarshallUtil.unmarshallString(input);
-   }
-
    public static XSiteStateTransferFinishReceiveCommand copyForCache(XSiteStateTransferFinishReceiveCommand command, ByteString cacheName) {
-      if (!command.cacheName.equals(cacheName))
-         return new XSiteStateTransferFinishReceiveCommand(cacheName, command.originSite);
-
-      command.siteName = command.originSite;
-      return command;
+      return new XSiteStateTransferFinishReceiveCommand(cacheName, command.originSite);
    }
 
    @Override

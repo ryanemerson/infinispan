@@ -2,7 +2,6 @@ package org.infinispan.marshall;
 
 import static org.infinispan.test.TestingUtil.extractGlobalMarshaller;
 import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertTrue;
 import static org.testng.internal.junit.ArrayAsserts.assertArrayEquals;
 
 import java.io.ByteArrayInputStream;
@@ -45,9 +44,7 @@ import org.infinispan.commands.write.RemoveCommand;
 import org.infinispan.commands.write.ReplaceCommand;
 import org.infinispan.commons.marshall.AdvancedExternalizer;
 import org.infinispan.commons.marshall.MarshallingException;
-import org.infinispan.commons.marshall.PojoWithSerializeWith;
 import org.infinispan.commons.marshall.SerializeWith;
-import org.infinispan.commons.marshall.StreamingMarshaller;
 import org.infinispan.commons.util.EnumUtil;
 import org.infinispan.commons.util.FastCopyHashMap;
 import org.infinispan.commons.util.Immutables;
@@ -67,6 +64,7 @@ import org.infinispan.container.entries.TransientMortalCacheEntry;
 import org.infinispan.container.entries.TransientMortalCacheValue;
 import org.infinispan.context.Flag;
 import org.infinispan.manager.EmbeddedCacheManager;
+import org.infinispan.marshall.core.GlobalMarshaller;
 import org.infinispan.metadata.EmbeddedMetadata;
 import org.infinispan.protostream.SerializationContextInitializer;
 import org.infinispan.protostream.annotations.AutoProtoSchemaBuilder;
@@ -95,11 +93,12 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+// TODO how to update this?
 @Test(groups = "functional", testName = "marshall.VersionAwareMarshallerTest")
 public class VersionAwareMarshallerTest extends AbstractInfinispanTest {
 
    private static final Log log = LogFactory.getLog(VersionAwareMarshallerTest.class);
-   protected StreamingMarshaller marshaller;
+   protected GlobalMarshaller marshaller;
    private EmbeddedCacheManager cm;
 
    private final TransactionFactory gtf = new TransactionFactory();
@@ -119,9 +118,9 @@ public class VersionAwareMarshallerTest extends AbstractInfinispanTest {
    protected GlobalConfigurationBuilder globalConfiguration() {
       // Use a clustered cache manager to be able to test global marshaller interaction too
       GlobalConfigurationBuilder globalBuilder = GlobalConfigurationBuilder.defaultClusteredBuilder();
-      globalBuilder.serialization().addAdvancedExternalizer(new PojoWithExternalAndInternal.Externalizer());
-      globalBuilder.serialization().addAdvancedExternalizer(new PojoWithExternalizer.Externalizer());
-      globalBuilder.serialization().addAdvancedExternalizer(new PojoWithMultiExternalizer.Externalizer());
+//      globalBuilder.serialization().addAdvancedExternalizer(new PojoWithExternalAndInternal.Externalizer());
+//      globalBuilder.serialization().addAdvancedExternalizer(new PojoWithExternalizer.Externalizer());
+//      globalBuilder.serialization().addAdvancedExternalizer(new PojoWithMultiExternalizer.Externalizer());
       globalBuilder.serialization().serialization().addContextInitializer(new VersionAwareMarshallerSCIImpl());
       return globalBuilder;
    }
@@ -224,14 +223,14 @@ public class VersionAwareMarshallerTest extends AbstractInfinispanTest {
       InvalidateCommand c7 = new InvalidateCommand(EnumUtil.EMPTY_BIT_SET, CommandInvocationId.generateId(null), "key1", "key2");
       marshallAndAssertEquality(c7);
 
-      InvalidateCommand c71 = new InvalidateL1Command(EnumUtil.EMPTY_BIT_SET, CommandInvocationId.generateId(null), "key1", "key2");
+      InvalidateCommand c71 = new InvalidateL1Command(EnumUtil.EMPTY_BIT_SET, Arrays.asList("key1", "key2"), CommandInvocationId.generateId(null));
       marshallAndAssertEquality(c71);
 
       ReplaceCommand c8 = new ReplaceCommand("key", "oldvalue", "newvalue", new EmbeddedMetadata.Builder().build(), 0,
             EnumUtil.EMPTY_BIT_SET, CommandInvocationId.generateId(null));
       marshallAndAssertEquality(c8);
 
-      ClearCommand c9 = new ClearCommand();
+      ClearCommand c9 = new ClearCommand(0);
       marshallAndAssertEquality(c9);
 
       Map<Integer, GlobalTransaction> m1 = new HashMap<>();
@@ -244,7 +243,7 @@ public class VersionAwareMarshallerTest extends AbstractInfinispanTest {
 
       Address local = new JGroupsAddress(UUID.randomUUID());
       GlobalTransaction gtx = gtf.newGlobalTransaction(local, false);
-      PrepareCommand c11 = new PrepareCommand(cacheName, gtx, true, c5, c6, c8, c10);
+      PrepareCommand c11 = new PrepareCommand(cacheName, gtx, Arrays.asList(c5, c6, c8, c10), true);
       marshallAndAssertEquality(c11);
 
       CommitCommand c12 = new CommitCommand(cacheName, gtx);
@@ -374,7 +373,7 @@ public class VersionAwareMarshallerTest extends AbstractInfinispanTest {
 
    public void testErrorUnmarshallInputStreamAvailable() throws Exception {
       byte[] bytes = marshaller.objectToByteBuffer("23");
-      Object o = marshaller.objectFromInputStream(new ByteArrayInputStream(bytes){
+      Object o = marshaller.readObject(new ByteArrayInputStream(bytes){
          @Override
          public int available() {
             return 0;
@@ -397,15 +396,6 @@ public class VersionAwareMarshallerTest extends AbstractInfinispanTest {
 
    public void testEnumSetMultiElementMarshalling() throws Exception {
       marshallAndAssertEquality(EnumSet.of(Flag.FORCE_SYNCHRONOUS, Flag.FORCE_ASYNCHRONOUS));
-   }
-
-   public void testIsMarshallableSerializableWithAnnotation() throws Exception {
-      PojoWithSerializeWith pojo = new PojoWithSerializeWith(17, "k1");
-      assertTrue(marshaller.isMarshallable(pojo));
-   }
-
-   public void testSerializableWithAnnotation() throws Exception {
-      marshallAndAssertEquality(new PojoWithSerializeWith(20, "k2"));
    }
 
    public void testListArray() throws Exception {

@@ -1,7 +1,5 @@
 package org.infinispan.util;
 
-import java.io.IOException;
-import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -27,16 +25,26 @@ public final class ByteString {
    private transient String s;
    private transient int hash;
 
-   @ProtoField(number = 1)
    final byte[] bytes;
 
-   @ProtoFactory
    ByteString(byte[] bytes) {
       if (bytes.length > 255) {
          throw new IllegalArgumentException("ByteString must be shorter than 255 bytes");
       }
       this.bytes = bytes;
       this.hash = Arrays.hashCode(bytes);
+   }
+
+   @ProtoFactory
+   static ByteString protoFactory(byte[] bytes) {
+      if (bytes == null || bytes.length == 0)
+         return EMPTY;
+      return new ByteString(bytes);
+   }
+
+   @ProtoField(number = 1)
+   byte[] getBytes() {
+      return bytes.length == 0 ? null : bytes;
    }
 
    public static ByteString fromString(String s) {
@@ -46,7 +54,7 @@ public final class ByteString {
          return new ByteString(s.getBytes(CHARSET));
    }
 
-   public static ByteString emptyString() {
+   static ByteString emptyString() {
       return EMPTY;
    }
 
@@ -69,22 +77,5 @@ public final class ByteString {
          s = new String(bytes, CHARSET);
       }
       return s;
-   }
-
-   public static void writeObject(ObjectOutput output, ByteString object) throws IOException {
-      output.writeByte(object.bytes.length);
-      if (object.bytes.length > 0) {
-         output.write(object.bytes);
-      }
-   }
-
-   public static ByteString readObject(ObjectInput input) throws IOException {
-      int len = input.readUnsignedByte();
-      if (len == 0)
-         return EMPTY;
-
-      byte[] b = new byte[len];
-      input.readFully(b);
-      return new ByteString(b);
    }
 }

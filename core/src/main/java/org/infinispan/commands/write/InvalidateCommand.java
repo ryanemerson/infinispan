@@ -1,21 +1,19 @@
 package org.infinispan.commands.write;
 
-import static org.infinispan.commons.util.Util.toStr;
-
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.Objects;
 
 import org.infinispan.commands.AbstractTopologyAffectedCommand;
 import org.infinispan.commands.CommandInvocationId;
 import org.infinispan.commands.Visitor;
-import org.infinispan.commons.marshall.MarshallUtil;
+import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.commons.util.Util;
 import org.infinispan.context.InvocationContext;
 import org.infinispan.context.impl.FlagBitSets;
+import org.infinispan.marshall.protostream.impl.MarshallableUserCollection;
+import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.util.concurrent.locks.RemoteLockCommand;
 
 
@@ -25,22 +23,30 @@ import org.infinispan.util.concurrent.locks.RemoteLockCommand;
  * @author Mircea.Markus@jboss.com
  * @since 4.0
  */
+@ProtoTypeId(ProtoStreamTypeIds.INVALIDATE_COMMAND)
 public class InvalidateCommand extends AbstractTopologyAffectedCommand implements WriteCommand, RemoteLockCommand {
    public static final int COMMAND_ID = 6;
-   protected Object[] keys;
+
+   @ProtoField(number = 3)
+   protected MarshallableUserCollection<Object> keys;
+
+   @ProtoField(number = 4)
    protected CommandInvocationId commandInvocationId;
 
-   public InvalidateCommand() {
+   @ProtoFactory
+   InvalidateCommand(long flagsWithoutRemote, int topologyId, CommandInvocationId commandInvocationId,
+                     MarshallableUserCollection<Object> keys) {
+      super(flagsWithoutRemote, topologyId);
+      this.keys = keys;
+      this.commandInvocationId = commandInvocationId;
    }
 
    public InvalidateCommand(long flagsBitSet, CommandInvocationId commandInvocationId, Object... keys) {
-      this.keys = keys;
-      this.commandInvocationId = commandInvocationId;
-      setFlagsBitSet(flagsBitSet);
+      this(flagsBitSet, -1, commandInvocationId, MarshallableUserCollection.create(keys));
    }
 
    public InvalidateCommand(long flagsBitSet, Collection<Object> keys, CommandInvocationId commandInvocationId) {
-      this(flagsBitSet, commandInvocationId, keys == null || keys.isEmpty() ? Util.EMPTY_OBJECT_ARRAY : keys.toArray(new Object[keys.size()]));
+      this(flagsBitSet, commandInvocationId, keys == null || keys.isEmpty() ? Util.EMPTY_OBJECT_ARRAY : keys.toArray(new Object[0]));
    }
 
    @Override
@@ -54,33 +60,12 @@ public class InvalidateCommand extends AbstractTopologyAffectedCommand implement
    }
 
    @Override
-   public String toString() {
-      return "InvalidateCommand{keys=" +
-            toStr(Arrays.asList(keys)) +
-            '}';
-   }
-
-   @Override
-   public void writeTo(ObjectOutput output) throws IOException {
-      CommandInvocationId.writeTo(output, commandInvocationId);
-      MarshallUtil.marshallArray(keys, output);
-      output.writeLong(getFlagsBitSet());
-   }
-
-   @Override
-   public void readFrom(ObjectInput input) throws IOException, ClassNotFoundException {
-      commandInvocationId = CommandInvocationId.readFrom(input);
-      keys = MarshallUtil.unmarshallArray(input, Util::objectArray);
-      setFlagsBitSet(input.readLong());
-   }
-
-   @Override
    public Object acceptVisitor(InvocationContext ctx, Visitor visitor) throws Throwable {
       return visitor.visitInvalidateCommand(ctx, this);
    }
 
    public Object[] getKeys() {
-      return keys;
+      return MarshallableUserCollection.unwrapAsArray(keys, Object[]::new);
    }
 
    @Override
@@ -104,7 +89,7 @@ public class InvalidateCommand extends AbstractTopologyAffectedCommand implement
 
    @Override
    public Collection<?> getAffectedKeys() {
-      return new HashSet<>(Arrays.asList(keys));
+      return MarshallableUserCollection.unwrap(keys);
    }
 
    @Override
@@ -119,7 +104,7 @@ public class InvalidateCommand extends AbstractTopologyAffectedCommand implement
 
    @Override
    public Collection<?> getKeysToLock() {
-      return Arrays.asList(keys);
+      return getAffectedKeys();
    }
 
    @Override
@@ -143,21 +128,20 @@ public class InvalidateCommand extends AbstractTopologyAffectedCommand implement
    }
 
    @Override
-   public boolean equals(Object obj) {
-      if (this == obj)
-         return true;
-      if (obj == null)
-         return false;
-      if (getClass() != obj.getClass())
-         return false;
-      InvalidateCommand that = (InvalidateCommand) obj;
-      if (!hasSameFlags(that))
-         return false;
-      return Arrays.equals(keys, that.keys);
+   public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+      InvalidateCommand that = (InvalidateCommand) o;
+      return Objects.equals(keys, that.keys);
    }
 
    @Override
    public int hashCode() {
-      return keys != null ? Arrays.hashCode(keys) : 0;
+      return Objects.hash(keys);
+   }
+
+   @Override
+   public String toString() {
+      return "InvalidateCommand{keys=" + keys + '}';
    }
 }

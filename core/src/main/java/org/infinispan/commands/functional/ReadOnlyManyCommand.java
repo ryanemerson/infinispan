@@ -1,54 +1,64 @@
 package org.infinispan.commands.functional;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.function.Function;
 
 import org.infinispan.commands.AbstractTopologyAffectedCommand;
-import org.infinispan.commands.LocalCommand;
 import org.infinispan.commands.Visitor;
-import org.infinispan.commons.marshall.MarshallUtil;
+import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.context.InvocationContext;
 import org.infinispan.encoding.DataConversion;
 import org.infinispan.factories.ComponentRegistry;
 import org.infinispan.functional.EntryView.ReadEntryView;
 import org.infinispan.functional.impl.Params;
+import org.infinispan.marshall.protostream.impl.MarshallableUserCollection;
+import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
+import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.protostream.annotations.ProtoTypeId;
 
-public class ReadOnlyManyCommand<K, V, R> extends AbstractTopologyAffectedCommand implements LocalCommand {
+@ProtoTypeId(ProtoStreamTypeIds.READ_ONLY_MANY_COMMAND)
+public class ReadOnlyManyCommand<K, V, R> extends AbstractTopologyAffectedCommand {
    public static final int COMMAND_ID = 63;
 
-   protected Collection<?> keys;
-   protected Function<ReadEntryView<K, V>, R> f;
+   @ProtoField(number = 3)
+   protected MarshallableUserCollection<?> keys;
+
+   @ProtoField(number = 4)
+   protected MarshallableUserObject<Function<ReadEntryView<K, V>, R>> function;
+
+   @ProtoField(number = 5)
    protected Params params;
+
+   @ProtoField(number = 6)
    protected DataConversion keyDataConversion;
+
+   @ProtoField(number = 7)
    protected DataConversion valueDataConversion;
 
-   public ReadOnlyManyCommand(Collection<?> keys,
-                              Function<ReadEntryView<K, V>, R> f,
-                              Params params,
-                              DataConversion keyDataConversion,
-                              DataConversion valueDataConversion) {
+   @ProtoFactory
+   ReadOnlyManyCommand(long flagsWithoutRemote, int topologyId, MarshallableUserCollection<?> keys,
+                       MarshallableUserObject<Function<ReadEntryView<K, V>, R>> function, Params params,
+                       DataConversion keyDataConversion, DataConversion valueDataConversion) {
+      super(flagsWithoutRemote, topologyId);
       this.keys = keys;
-      this.f = f;
+      this.function = function;
       this.params = params;
       this.keyDataConversion = keyDataConversion;
       this.valueDataConversion = valueDataConversion;
-      this.setFlagsBitSet(params.toFlagsBitSet());
    }
 
-   public ReadOnlyManyCommand() {
+   public ReadOnlyManyCommand(Collection<?> keys,
+                              Function<ReadEntryView<K, V>, R> function,
+                              Params params,
+                              DataConversion keyDataConversion,
+                              DataConversion valueDataConversion) {
+      this(params.toFlagsBitSet(), -1, MarshallableUserCollection.create(keys), MarshallableUserObject.create(function),
+            params, keyDataConversion, valueDataConversion);
    }
 
-   public ReadOnlyManyCommand(ReadOnlyManyCommand c) {
-      this.keys = c.keys;
-      this.f = c.f;
-      this.params = c.params;
-      this.setFlagsBitSet(c.getFlagsBitSet());
-      this.keyDataConversion = c.keyDataConversion;
-      this.valueDataConversion = c.valueDataConversion;
+   public ReadOnlyManyCommand(ReadOnlyManyCommand<K, V, R> c) {
+      this(c.flags, c.topologyId, c.keys, c.function, c.params, c.keyDataConversion, c.valueDataConversion);
    }
 
    @Override
@@ -58,11 +68,11 @@ public class ReadOnlyManyCommand<K, V, R> extends AbstractTopologyAffectedComman
    }
 
    public Collection<?> getKeys() {
-      return keys;
+      return MarshallableUserCollection.unwrap(keys);
    }
 
    public void setKeys(Collection<?> keys) {
-      this.keys = keys;
+      this.keys = MarshallableUserCollection.create(keys);
    }
 
    public final ReadOnlyManyCommand<K, V, R> withKeys(Collection<?> keys) {
@@ -78,25 +88,6 @@ public class ReadOnlyManyCommand<K, V, R> extends AbstractTopologyAffectedComman
    @Override
    public boolean isReturnValueExpected() {
       return true;
-   }
-
-   @Override
-   public void writeTo(ObjectOutput output) throws IOException {
-      MarshallUtil.marshallCollection(keys, output);
-      output.writeObject(f);
-      Params.writeObject(output, params);
-      DataConversion.writeTo(output, keyDataConversion);
-      DataConversion.writeTo(output, valueDataConversion);
-   }
-
-   @Override
-   public void readFrom(ObjectInput input) throws IOException, ClassNotFoundException {
-      this.keys = MarshallUtil.unmarshallCollection(input, ArrayList::new);
-      this.f = (Function<ReadEntryView<K, V>, R>) input.readObject();
-      this.params = Params.readObject(input);
-      this.setFlagsBitSet(params.toFlagsBitSet());
-      keyDataConversion = DataConversion.readFrom(input);
-      valueDataConversion = DataConversion.readFrom(input);
    }
 
    @Override
@@ -123,17 +114,15 @@ public class ReadOnlyManyCommand<K, V, R> extends AbstractTopologyAffectedComman
    }
 
    public Function<ReadEntryView<K, V>, R> getFunction() {
-      return f;
+      return MarshallableUserObject.unwrap(function);
    }
 
    @Override
    public String toString() {
-      final StringBuilder sb = new StringBuilder("ReadOnlyManyCommand{");
-      sb.append(", keys=").append(keys);
-      sb.append(", f=").append(f.getClass().getName());
-      sb.append(", keyDataConversion=").append(keyDataConversion);
-      sb.append(", valueDataConversion=").append(valueDataConversion);
-      sb.append('}');
-      return sb.toString();
+      return "ReadOnlyManyCommand{" + ", keys=" + keys +
+            ", f=" + function.getClass().getName() +
+            ", keyDataConversion=" + keyDataConversion +
+            ", valueDataConversion=" + valueDataConversion +
+            '}';
    }
 }

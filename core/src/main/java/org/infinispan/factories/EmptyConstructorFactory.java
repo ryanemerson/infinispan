@@ -2,7 +2,6 @@ package org.infinispan.factories;
 
 import static org.infinispan.util.logging.Log.CONTAINER;
 
-import org.infinispan.commands.RemoteCommandsFactory;
 import org.infinispan.commons.time.TimeService;
 import org.infinispan.factories.annotations.DefaultFactoryFor;
 import org.infinispan.factories.scopes.Scope;
@@ -34,7 +33,7 @@ import org.infinispan.xsite.BackupReceiverRepositoryImpl;
 @DefaultFactoryFor(classes = {
       BackupReceiverRepository.class, EventLogManager.class,
       InboundInvocationHandler.class, PersistentUUIDManager.class,
-      RemoteCommandsFactory.class, TimeService.class, DataOperationOrderer.class,
+      TimeService.class, DataOperationOrderer.class,
       GlobalStateManager.class, GlobalConfigurationManager.class,
       SerializationContextRegistry.class
 })
@@ -48,8 +47,6 @@ public class EmptyConstructorFactory extends AbstractComponentFactory implements
          return new BackupReceiverRepositoryImpl();
       else if (componentName.equals(InboundInvocationHandler.class.getName()))
          return new GlobalInboundInvocationHandler();
-      else if (componentName.equals(RemoteCommandsFactory.class.getName()))
-         return new RemoteCommandsFactory();
       else if (componentName.equals(TimeService.class.getName()))
          return new EmbeddedTimeService();
       else if (componentName.equals(EventLogManager.class.getName()))

@@ -33,8 +33,8 @@ public class WriteSkewHelper {
    @SuppressWarnings("unchecked")
    public static void readVersionsFromResponse(Response r, CacheTransaction ct) {
       if (r != null && r.isSuccessful()) {
-         SuccessfulResponse<Map<Object, IncrementableEntryVersion>> sr = (SuccessfulResponse<Map<Object, IncrementableEntryVersion>>) r;
-         Map<Object, IncrementableEntryVersion> entryVersions = sr.getResponseValue();
+         SuccessfulResponse sr = (SuccessfulResponse) r;
+         Map<Object, IncrementableEntryVersion> entryVersions = (Map<Object, IncrementableEntryVersion>) sr.getResponseValue();
          if (entryVersions != null)
             ct.setUpdatedEntryVersions(mergeEntryVersions(entryVersions, ct.getUpdatedEntryVersions()));
       }

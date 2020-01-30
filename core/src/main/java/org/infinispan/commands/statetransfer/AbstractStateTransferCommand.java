@@ -1,13 +1,12 @@
 package org.infinispan.commands.statetransfer;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.infinispan.commands.TopologyAffectedCommand;
 import org.infinispan.commands.remote.BaseRpcCommand;
 import org.infinispan.commons.util.IntSet;
-import org.infinispan.commons.util.IntSetsExternalization;
+import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.util.ByteString;
 
 /**
@@ -19,8 +18,16 @@ import org.infinispan.util.ByteString;
 abstract class AbstractStateTransferCommand extends BaseRpcCommand implements TopologyAffectedCommand {
 
    private final byte commandId;
+
+   @ProtoField(number = 2, defaultValue = "-1")
    protected int topologyId;
+
+//   @ProtoField(number = 3, collectionImplementation = SmallIntSet.class)
    protected IntSet segments;
+
+   // TODO remove once IPROTO-131 issue fixed
+   @ProtoField(number = 3, collectionImplementation = HashSet.class)
+   protected Set<Integer> segmentsWorkaround;
 
    AbstractStateTransferCommand(byte commandId, ByteString cacheName) {
       super(cacheName);
@@ -31,6 +38,7 @@ abstract class AbstractStateTransferCommand extends BaseRpcCommand implements To
       this(commandId, cacheName);
       this.topologyId = topologyId;
       this.segments = segments;
+      this.segmentsWorkaround = segments == null ? null : new HashSet<>(segments);
    }
 
    @Override
@@ -55,15 +63,5 @@ abstract class AbstractStateTransferCommand extends BaseRpcCommand implements To
    @Override
    public byte getCommandId() {
       return commandId;
-   }
-
-   @Override
-   public void writeTo(ObjectOutput output) throws IOException {
-      IntSetsExternalization.writeTo(output, segments);
-   }
-
-   @Override
-   public void readFrom(ObjectInput input) throws IOException, ClassNotFoundException {
-      segments = IntSetsExternalization.readFrom(input);
    }
 }

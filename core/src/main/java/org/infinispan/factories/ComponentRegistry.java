@@ -5,7 +5,7 @@ import org.infinispan.cache.impl.CacheConfigurationMBean;
 import org.infinispan.commands.CommandsFactory;
 import org.infinispan.commons.CacheConfigurationException;
 import org.infinispan.commons.CacheException;
-import org.infinispan.commons.marshall.StreamingMarshaller;
+import org.infinispan.commons.marshall.Marshaller;
 import org.infinispan.commons.time.TimeService;
 import org.infinispan.commons.util.Util;
 import org.infinispan.configuration.cache.Configuration;
@@ -101,7 +101,7 @@ public class ComponentRegistry extends AbstractComponentRegistry {
    private ComponentRef<RpcManager> rpcManager;
    private ComponentRef<StateTransferLock> stateTransferLock;
    private ComponentRef<StateTransferManager> stateTransferManager;
-   private ComponentRef<StreamingMarshaller> internalMarshaller;
+   private ComponentRef<Marshaller> internalMarshaller;
    private ComponentRef<TakeOfflineManager> takeOfflineManager;
    private ComponentRef<TransactionTable> transactionTable;
    private ComponentRef<VersionGenerator> versionGenerator;
@@ -272,15 +272,10 @@ public class ComponentRegistry extends AbstractComponentRegistry {
       return cacheName;
    }
 
-   @Deprecated
-   public StreamingMarshaller getCacheMarshaller() {
-      return internalMarshaller.wired();
-   }
-
    /**
     * Caching shortcut for #getComponent(StreamingMarshaller.class, INTERNAL_MARSHALLER);
     */
-   public StreamingMarshaller getInternalMarshaller() {
+   public Marshaller getInternalMarshaller() {
       return internalMarshaller.wired();
    }
 
@@ -364,7 +359,7 @@ public class ComponentRegistry extends AbstractComponentRegistry {
       inboundInvocationHandler = basicComponentRegistry.getComponent(PerCacheInboundInvocationHandler.class);
       internalDataContainer = basicComponentRegistry.getComponent(InternalDataContainer.class);
       internalEntryFactory = basicComponentRegistry.getComponent(InternalEntryFactory.class);
-      internalMarshaller = basicComponentRegistry.getComponent(KnownComponentNames.INTERNAL_MARSHALLER, StreamingMarshaller.class);
+      internalMarshaller = basicComponentRegistry.getComponent(KnownComponentNames.INTERNAL_MARSHALLER, Marshaller.class);
       invocationContextFactory = basicComponentRegistry.getComponent(InvocationContextFactory.class);
       localPublisherManager = basicComponentRegistry.getComponent(LocalPublisherManager.class);
       lockManager = basicComponentRegistry.getComponent(LockManager.class);

@@ -25,6 +25,7 @@ import org.infinispan.context.impl.TxInvocationContext;
 import org.infinispan.interceptors.BaseCustomAsyncInterceptor;
 import org.infinispan.interceptors.impl.EntryWrappingInterceptor;
 import org.infinispan.manager.EmbeddedCacheManager;
+import org.infinispan.protostream.SerializationContextInitializer;
 import org.infinispan.test.MultipleCacheManagersTest;
 import org.infinispan.test.fwk.CheckPoint;
 import org.infinispan.test.fwk.CleanupAfterMethod;
@@ -61,19 +62,20 @@ public class ReplCommandForwardingTest extends MultipleCacheManagersTest {
    }
 
    public void testForwardToJoinerNonTransactional() throws Exception {
-      EmbeddedCacheManager cm1 = addClusterEnabledCacheManager();
+      SerializationContextInitializer sci = ReplicatedControlledConsistentHashFactory.SCI.INSTANCE;
+      EmbeddedCacheManager cm1 = addClusterEnabledCacheManager(sci);
       final Cache<Object, Object> c1 = cm1.createCache(CACHE_NAME, buildConfig(PutKeyValueCommand.class).build());
       DelayInterceptor di1 = findInterceptor(c1, DelayInterceptor.class);
       int initialTopologyId = c1.getAdvancedCache().getDistributionManager().getCacheTopology().getTopologyId();
 
-      EmbeddedCacheManager cm2 = addClusterEnabledCacheManager();
+      EmbeddedCacheManager cm2 = addClusterEnabledCacheManager(sci);
       Cache<Object, Object> c2 = cm2.createCache(CACHE_NAME, buildConfig(PutKeyValueCommand.class).build());
       DelayInterceptor di2 = findInterceptor(c2, DelayInterceptor.class);
       waitForStateTransfer(initialTopologyId + 4, c1, c2);
 
       // Start a 3rd node, but start a different cache there so that the topology stays the same.
       // Otherwise the put command blocked on node 1 could block the view message (as both are broadcast by node 0).
-      EmbeddedCacheManager cm3 = addClusterEnabledCacheManager();
+      EmbeddedCacheManager cm3 = addClusterEnabledCacheManager(sci);
       cm3.createCache("differentCache", getDefaultClusteredCacheConfig(CacheMode.REPL_SYNC).build());
 
       Future<Object> f = fork(() -> {

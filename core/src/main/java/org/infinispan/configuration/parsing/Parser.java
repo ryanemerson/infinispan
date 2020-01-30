@@ -26,7 +26,6 @@ import javax.xml.stream.XMLStreamException;
 import org.infinispan.commons.configuration.BuiltBy;
 import org.infinispan.commons.configuration.ConfiguredBy;
 import org.infinispan.commons.dataconversion.MediaType;
-import org.infinispan.commons.marshall.AdvancedExternalizer;
 import org.infinispan.commons.util.FileLookupFactory;
 import org.infinispan.commons.util.GlobUtils;
 import org.infinispan.commons.util.Util;
@@ -166,8 +165,11 @@ public class Parser implements ConfigurationParser {
          Element element = Element.forName(reader.getLocalName());
          switch (element) {
             case ADVANCED_EXTERNALIZER: {
-               CONFIG.advancedExternalizerDeprecated();
-               parseAdvancedExternalizer(reader, holder.getClassLoader(), builder.serialization());
+               if (reader.getSchema().since(11, 0))
+                  throw ParseUtils.unexpectedElement(reader);
+
+               ignoreElement(reader, element);
+               parseAdvancedExternalizer(reader);
                break;
             }
             case SERIALIZATION_CONTEXT_INITIALIZER: {
@@ -228,37 +230,21 @@ public class Parser implements ConfigurationParser {
       }
    }
 
-   private void parseAdvancedExternalizer(final XMLExtendedStreamReader reader, final ClassLoader classLoader,
-                                          final SerializationConfigurationBuilder builder) throws XMLStreamException {
+   private void parseAdvancedExternalizer(final XMLExtendedStreamReader reader) throws XMLStreamException {
       int attributes = reader.getAttributeCount();
-      AdvancedExternalizer<?> advancedExternalizer = null;
-      Integer id = null;
       ParseUtils.requireAttributes(reader, Attribute.CLASS.getLocalName());
       for (int i = 0; i < attributes; i++) {
-         String value = reader.getAttributeValue(i);
          Attribute attribute = Attribute.forName(reader.getAttributeLocalName(i));
          switch (attribute) {
-            case CLASS: {
-               advancedExternalizer = Util.getInstance(value, classLoader);
+            case CLASS:
+            case ID:
+               ignoreAttribute(reader, attribute);
                break;
-            }
-            case ID: {
-               id = Integer.valueOf(value);
-               break;
-            }
-            default: {
+            default:
                throw ParseUtils.unexpectedAttribute(reader, i);
-            }
          }
       }
-
       ParseUtils.requireNoContent(reader);
-
-      if (id != null) {
-         builder.addAdvancedExternalizer(id, advancedExternalizer);
-      } else {
-         builder.addAdvancedExternalizer(advancedExternalizer);
-      }
    }
 
    private void parseThreads(XMLExtendedStreamReader reader, ConfigurationBuilderHolder holder) throws XMLStreamException {

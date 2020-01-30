@@ -1,20 +1,9 @@
 package org.infinispan.marshall.protostream.impl;
 
-import java.io.IOException;
-
-import org.infinispan.commons.CacheException;
-import org.infinispan.commons.marshall.MarshallingException;
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
-import org.infinispan.commons.util.Util;
 import org.infinispan.protostream.BaseMarshaller;
-import org.infinispan.protostream.ImmutableSerializationContext;
-import org.infinispan.protostream.RawProtoStreamReader;
-import org.infinispan.protostream.RawProtoStreamWriter;
-import org.infinispan.protostream.RawProtobufMarshaller;
 import org.infinispan.protostream.annotations.ProtoFactory;
-import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
-import org.infinispan.protostream.impl.WireFormat;
 
 /**
  * A wrapper message used by ProtoStream Marshallers to allow user objects to be marshalled/unmarshalled via the {@link
@@ -36,122 +25,48 @@ import org.infinispan.protostream.impl.WireFormat;
  * @since 10.0
  */
 @ProtoTypeId(ProtoStreamTypeIds.MARSHALLABLE_USER_OBJECT)
-public class MarshallableUserObject<T> {
+public class MarshallableUserObject<T> extends AbstractMarshallableWrapper<T> {
 
-   private final T object;
+   static final MarshallableUserObject<?> EMPTY_INSTANCE = new MarshallableUserObject<>((Object) null);
+
+   /**
+    * @param wrapper the {@link MarshallableUserObject} instance to unwrap.
+    * @return the wrapped {@link Object} or null if the provided wrapper does not exist.
+    */
+   public static <T> T unwrap(MarshallableUserObject<T> wrapper) {
+      return wrapper == null ? null : wrapper.get();
+   }
+
+   /**
+    * @param object the Object to be wrapped.
+    * @return a new {@link MarshallableUserObject} instance containing the passed object if the object is not null,
+    * otherwise null.
+    */
+   public static <T> MarshallableUserObject<T> create(T object) {
+      return object == null ? null : new MarshallableUserObject<>(object);
+   }
 
    @ProtoFactory
    MarshallableUserObject(byte[] bytes) {
-      // no-op never actually used, as we override the default marshaller
-      throw new IllegalStateException(this.getClass().getSimpleName() + " marshaller not overridden in SerializationContext");
+      super(bytes);
    }
 
    public MarshallableUserObject(T object) {
-      this.object = object;
+      super(object);
    }
 
-   @ProtoField(number = 1)
-   byte[] getBytes() {
-      return Util.EMPTY_BYTE_ARRAY;
-   }
-
-   public T get() {
-      return object;
-   }
-
-   @Override
-   public boolean equals(Object o) {
-      if (this == o) return true;
-      if (o == null || getClass() != o.getClass()) return false;
-
-      MarshallableUserObject other = (MarshallableUserObject) o;
-      return object != null ? object.equals(other.object) : other.object == null;
-   }
-
-   @Override
-   public int hashCode() {
-      return object != null ? object.hashCode() : 0;
-   }
-
-   public static int size(int objectBytes) {
-      int typeId = ProtoStreamTypeIds.MARSHALLABLE_USER_OBJECT;
-      int typeIdSize = tagSize(19, 1) + computeUInt32SizeNoTag(typeId);
-      int userBytesFieldSize = tagSize(1, 2) + computeUInt32SizeNoTag(objectBytes) + objectBytes;
-      int wrappedMessageSize = tagSize(17, 2) + computeUInt32SizeNoTag(objectBytes);
-
-      return typeIdSize + userBytesFieldSize + wrappedMessageSize;
-   }
-
-   private static int tagSize(int fieldNumber, int wireType) {
-      return computeUInt32SizeNoTag(fieldNumber << 3 | wireType);
-   }
-
-   // Protobuf logic included to avoid requiring a dependency on com.google.protobuf.CodedOutputStream
-   private static int computeUInt32SizeNoTag(int value) {
-      if ((value & -128) == 0) {
-         return 1;
-      } else if ((value & -16384) == 0) {
-         return 2;
-      } else if ((value & -2097152) == 0) {
-         return 3;
-      } else {
-         return (value & -268435456) == 0 ? 4 : 5;
-      }
-   }
-
-   public static class Marshaller implements RawProtobufMarshaller<MarshallableUserObject> {
-
-      private final String typeName;
-      private final org.infinispan.commons.marshall.Marshaller userMarshaller;
+   public static class Marshaller extends AbstractMarshallableWrapper.Marshaller {
 
       public Marshaller(String typeName, org.infinispan.commons.marshall.Marshaller userMarshaller) {
-         this.typeName = typeName;
-         this.userMarshaller = userMarshaller;
+         super(typeName, userMarshaller);
       }
 
       @Override
-      public Class<MarshallableUserObject> getJavaClass() { return MarshallableUserObject.class; }
-
-      @Override
-      public String getTypeName() { return typeName; }
-
-      @Override
-      public MarshallableUserObject readFrom(ImmutableSerializationContext ctx, RawProtoStreamReader in) throws IOException {
-         try {
-            byte[] bytes = null;
-            boolean done = false;
-            while (!done) {
-               final int tag = in.readTag();
-               switch (tag) {
-                  case 0:
-                     done = true;
-                     break;
-                  case 1 << 3 | WireFormat.WIRETYPE_LENGTH_DELIMITED: {
-                     bytes = in.readByteArray();
-                     break;
-                  }
-                  default: {
-                     if (!in.skipField(tag)) done = true;
-                  }
-               }
-            }
-            Object userObject = userMarshaller.objectFromByteBuffer(bytes);
-            return new MarshallableUserObject<>(userObject);
-         } catch (ClassNotFoundException e) {
-            throw new MarshallingException(e);
-         }
+      MarshallableUserObject newWrapperInstance(Object o) {
+         return o == null ? EMPTY_INSTANCE : new MarshallableUserObject<>(o);
       }
 
       @Override
-      public void writeTo(ImmutableSerializationContext ctx, RawProtoStreamWriter out, MarshallableUserObject marshallableUserObject) throws IOException {
-         try {
-            Object userObject = marshallableUserObject.get();
-            byte[] bytes = userMarshaller.objectToByteBuffer(userObject);
-            out.writeBytes(1, bytes);
-         } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new CacheException(e);
-         }
-      }
+      public Class getJavaClass() { return MarshallableUserObject.class; }
    }
 }

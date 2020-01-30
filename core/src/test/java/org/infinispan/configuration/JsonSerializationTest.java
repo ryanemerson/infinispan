@@ -30,7 +30,6 @@ import org.infinispan.commons.configuration.JsonReader;
 import org.infinispan.commons.configuration.JsonWriter;
 import org.infinispan.commons.jmx.MBeanServerLookup;
 import org.infinispan.commons.jmx.TestMBeanServerLookup;
-import org.infinispan.commons.marshall.AdvancedExternalizer;
 import org.infinispan.commons.marshall.JavaSerializationMarshaller;
 import org.infinispan.commons.util.Version;
 import org.infinispan.configuration.cache.BackupConfiguration;
@@ -52,12 +51,10 @@ import org.infinispan.distribution.ch.impl.AffinityPartitioner;
 import org.infinispan.distribution.ch.impl.TopologyAwareSyncConsistentHashFactory;
 import org.infinispan.distribution.group.Grouper;
 import org.infinispan.eviction.EvictionStrategy;
-import org.infinispan.filter.CacheFilters;
 import org.infinispan.globalstate.ConfigurationStorage;
 import org.infinispan.globalstate.LocalConfigurationStorage;
 import org.infinispan.interceptors.BaseAsyncInterceptor;
 import org.infinispan.manager.EmbeddedCacheManager;
-import org.infinispan.marshall.exts.MapExternalizer;
 import org.infinispan.partitionhandling.PartitionHandling;
 import org.infinispan.remoting.transport.jgroups.JGroupsTransport;
 import org.infinispan.security.AuthorizationPermission;
@@ -470,13 +467,9 @@ public class JsonSerializationTest extends AbstractInfinispanTest {
    @Test
    public void testSerializationConfig() throws IOException {
       final String regexp = "org.infinispan.test.*";
-      AdvancedExternalizer<?> mapExternalizer = new MapExternalizer();
-      AdvancedExternalizer<?> opExternalizer = new CacheFilters.CacheFiltersExternalizer();
       GlobalConfigurationBuilder globalConfigurationBuilder = new GlobalConfigurationBuilder();
       globalConfigurationBuilder.serialization()
             .marshaller(new JavaSerializationMarshaller())
-            .addAdvancedExternalizer(1, mapExternalizer)
-            .addAdvancedExternalizer(2, opExternalizer)
             .whiteList()
             .addClass(Person.class.getName())
             .addRegexp(regexp).create();
@@ -487,9 +480,6 @@ public class JsonSerializationTest extends AbstractInfinispanTest {
       JsonNode node = new ObjectMapper().readTree(json);
       JsonNode serialization = node.get("infinispan").get("cache-container").get("serialization");
       assertEquals(JavaSerializationMarshaller.class.getName(), serialization.get("marshaller").asText());
-      JsonNode externalizerMap = serialization.get("advanced-externalizer");
-      assertEquals(MapExternalizer.class.getName(), externalizerMap.get("1").asText());
-      assertEquals(CacheFilters.CacheFiltersExternalizer.class.getName(), externalizerMap.get("2").asText());
 
       JsonNode whiteList = serialization.get("white-list");
       JsonNode classes = whiteList.get("classes");

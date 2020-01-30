@@ -128,7 +128,7 @@ public class PessimisticLockingTxClusterExtendedStatisticLogicTest extends Multi
          extendedStatisticInterceptors[i] = new ExtendedStatisticInterceptor();
          builder.customInterceptors().addInterceptor().interceptor(extendedStatisticInterceptors[i])
                .after(TxInterceptor.class);
-         addClusterEnabledCacheManager(builder);
+         addClusterEnabledCacheManager(ReplicatedControlledConsistentHashFactory.SCI.INSTANCE, builder);
       }
       waitForClusterToForm();
       for (int i = 0; i < NUM_NODES; ++i) {

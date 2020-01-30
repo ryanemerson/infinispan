@@ -800,23 +800,23 @@ public class ScatteredDistributionInterceptor extends ClusteringInterceptor {
          return;
       }
       Object responseValue = response.getResponseValue();
-      if (!(responseValue instanceof InternalCacheValue[])) {
+      if (!(responseValue instanceof Collection)) {
          allFuture.completeExceptionally(new IllegalStateException("Unexpected response value: " + responseValue));
          return;
       }
-      InternalCacheValue[] values = (InternalCacheValue[]) responseValue;
-      if (keys.size() != values.length) {
-         allFuture.completeExceptionally(new CacheException("Request and response lengths differ: keys=" + keys + ", response=" + Arrays.toString(values)));
+      List<InternalCacheValue<?>> values = (List<InternalCacheValue<?>>) responseValue;
+      if (keys.size() != values.size()) {
+         allFuture.completeExceptionally(new CacheException("Request and response lengths differ: keys=" + keys + ", response=" + values));
          return;
       }
       synchronized (allFuture) {
          if (allFuture.isDone()) {
             return;
          }
-         for (int i = 0; i < values.length; ++i) {
+         for (int i = 0; i < values.size(); ++i) {
             Object key = keys.get(i);
-            InternalCacheValue value = values[i];
-            CacheEntry entry = value == null ? NullCacheEntry.getInstance() : value.toInternalCacheEntry(key);
+            InternalCacheValue<?> value = values.get(i);
+            CacheEntry<?, ?> entry = value == null ? NullCacheEntry.getInstance() : value.toInternalCacheEntry(key);
             entryFactory.wrapExternalEntry(ctx, key, entry, true, false);
          }
          if (--allFuture.counter == 0) {
@@ -1100,6 +1100,7 @@ public class ScatteredDistributionInterceptor extends ClusteringInterceptor {
                   }
                   values = (InternalCacheValue[]) responseValue;
                } else {
+                  // TODO needs to be updated to use custom response object
                   if (!(responseValue instanceof Object[]) || (((Object[]) responseValue).length != 2)) {
                      allFuture.completeExceptionally(new CacheException("Response from " + owner + ": expected Object[2] but it is " + responseValue));
                      return;
@@ -1163,6 +1164,7 @@ public class ScatteredDistributionInterceptor extends ClusteringInterceptor {
       }
       CompletionStage<Void> aggregatedStage = aggregateCompletionStage.freeze();
       Object returnValue;
+      // TODO change to a class implementation for Scattered responses?
       if (cmd.loadType() == DONT_LOAD) {
          // Disable ignoring return value in response
          cmd.setFlagsBitSet(cmd.getFlagsBitSet() & ~FlagBitSets.IGNORE_RETURN_VALUES);

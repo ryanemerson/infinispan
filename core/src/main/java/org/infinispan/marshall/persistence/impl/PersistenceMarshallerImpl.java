@@ -2,9 +2,9 @@ package org.infinispan.marshall.persistence.impl;
 
 import static org.infinispan.util.logging.Log.PERSISTENCE;
 
+import org.infinispan.marshall.persistence.PersistenceMarshaller;
 import org.infinispan.factories.scopes.Scope;
 import org.infinispan.factories.scopes.Scopes;
-import org.infinispan.marshall.persistence.PersistenceMarshaller;
 import org.infinispan.marshall.protostream.impl.AbstractInternalProtoStreamMarshaller;
 import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
 import org.infinispan.marshall.protostream.impl.SerializationContextRegistry.MarshallerType;
@@ -34,11 +34,11 @@ public class PersistenceMarshallerImpl extends AbstractInternalProtoStreamMarsha
    }
 
    public ImmutableSerializationContext getSerializationContext() {
-      return ctxRegistry.getPersistenceCtx();
+      return ctxRegistry.running().getPersistenceCtx();
    }
 
    @Override
    public void register(SerializationContextInitializer initializer) {
-      ctxRegistry.addContextInitializer(MarshallerType.PERSISTENCE, initializer);
+      ctxRegistry.running().addContextInitializer(MarshallerType.PERSISTENCE, initializer);
    }
 }

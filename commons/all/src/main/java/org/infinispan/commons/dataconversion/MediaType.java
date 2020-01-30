@@ -5,9 +5,6 @@ import static java.util.Arrays.stream;
 import static java.util.Collections.emptyMap;
 import static org.infinispan.commons.logging.Log.CONTAINER;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
 import java.nio.charset.Charset;
 import java.util.Collections;
 import java.util.Comparator;
@@ -17,9 +14,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.infinispan.commons.marshall.Externalizer;
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
-import org.infinispan.commons.marshall.SerializeWith;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
@@ -31,7 +26,6 @@ import org.infinispan.protostream.annotations.ProtoTypeId;
  * @since 9.2
  */
 @ProtoTypeId(ProtoStreamTypeIds.MEDIA_TYPE)
-@SerializeWith(value = MediaType.MediaTypeExternalizer.class)
 public final class MediaType {
 
    // OpenMetrics aka Prometheus content type
@@ -322,38 +316,4 @@ public final class MediaType {
    public String toString() {
       return toStringExcludingParam(WEIGHT_PARAM_NAME);
    }
-
-   public static final class MediaTypeExternalizer implements Externalizer<MediaType> {
-      @Override
-      public void writeObject(ObjectOutput output, MediaType mediaType) throws IOException {
-         Short id = MediaTypeIds.getId(mediaType);
-         if (id == null) {
-            output.writeBoolean(false);
-            output.writeUTF(mediaType.type);
-            output.writeUTF(mediaType.subType);
-            output.writeObject(mediaType.params);
-         } else {
-            output.writeBoolean(true);
-            output.writeShort(id);
-            output.writeObject(mediaType.params);
-         }
-      }
-
-      @Override
-      @SuppressWarnings("unchecked")
-      public MediaType readObject(ObjectInput input) throws IOException, ClassNotFoundException {
-         boolean isInternal = input.readBoolean();
-         if (isInternal) {
-            short id = input.readShort();
-            Map<String, String> params = (Map<String, String>) input.readObject();
-            return MediaTypeIds.getMediaType(id).withParameters(params);
-         } else {
-            String type = input.readUTF();
-            String subType = input.readUTF();
-            Map<String, String> params = (Map<String, String>) input.readObject();
-            return new MediaType(type, subType, params);
-         }
-      }
-   }
-
 }

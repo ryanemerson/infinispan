@@ -1,8 +1,14 @@
 package org.infinispan.reactive.publisher.impl.commands.batch;
 
+import java.util.Set;
 import java.util.function.ObjIntConsumer;
 
+import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.commons.util.IntSet;
+import org.infinispan.marshall.protostream.impl.MarshallableCollection;
+import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.protostream.annotations.ProtoTypeId;
 
 /**
  * A Publisher Response that is used when key tracking is enabled. This is used in cases when EXACTLY_ONCE delivery
@@ -14,16 +20,32 @@ import org.infinispan.commons.util.IntSet;
  * operations may return more than one value. In this case it is possible to overflow the results array (sized based on
  * batch size). However since we are tracking by key we must retain all values that map to a given key in the response.
  */
+@ProtoTypeId(ProtoStreamTypeIds.KEY_PUBLISHER_RESPONSE)
 public class KeyPublisherResponse extends PublisherResponse {
-   final Object[] extraObjects;
-   final Object[] keys;
+   @ProtoField(number = 6)
+   final MarshallableCollection<Object> extraObjects;
+
+   @ProtoField(number = 7)
+   final MarshallableCollection<Object> keys;
+
+   @ProtoField(number = 8, defaultValue = "-1")
    final int keySize;
 
-   public KeyPublisherResponse(Object[] results, IntSet completedSegments, IntSet lostSegments, int size,
-         boolean complete, Object[] extraObjects, int extraSize, Object[] keys, int keySize) {
-      super(results, completedSegments, lostSegments, size, complete, extraSize);
+   @ProtoFactory
+   KeyPublisherResponse(MarshallableCollection<Object> results, Set<Integer> completedSegmentsWorkaround,
+                        Set<Integer> lostSegmentsWorkaround, boolean complete, int segmentOffset,
+                        MarshallableCollection<Object> extraObjects, MarshallableCollection<Object> keys, int keySize) {
+      super(results, completedSegmentsWorkaround, lostSegmentsWorkaround, complete, segmentOffset);
       this.extraObjects = extraObjects;
       this.keys = keys;
+      this.keySize = keySize;
+   }
+
+   public KeyPublisherResponse(Object[] results, IntSet completedSegments, IntSet lostSegments, int size,
+                               boolean complete, Object[] extraObjects, int extraSize, Object[] keys, int keySize) {
+      super(results, completedSegments, lostSegments, size, complete, extraSize);
+      this.extraObjects = MarshallableCollection.create(extraObjects);
+      this.keys = MarshallableCollection.create(keys);
       this.keySize = keySize;
    }
 
@@ -35,14 +57,13 @@ public class KeyPublisherResponse extends PublisherResponse {
    }
 
    public Object[] getExtraObjects() {
-      return extraObjects;
+      return MarshallableCollection.unwrapAsArray(extraObjects, Object[]::new);
    }
 
    @Override
    public void forEachSegmentValue(ObjIntConsumer consumer, int segment) {
-      for (int i = 0; i < keySize; ++i) {
-         consumer.accept(keys[i], segment);
-      }
+      for (Object key : MarshallableCollection.unwrap(keys))
+         consumer.accept(key, segment);
    }
 
    @Override

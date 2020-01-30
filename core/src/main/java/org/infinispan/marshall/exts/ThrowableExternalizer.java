@@ -39,6 +39,7 @@ import org.infinispan.transaction.xa.InvalidTransactionException;
 import org.infinispan.util.UserRaisedFunctionalException;
 import org.infinispan.util.concurrent.locks.DeadlockDetectedException;
 
+// TODO  convert all Infinispan Exceptions to ProtoStream and remove
 public class ThrowableExternalizer implements AdvancedExternalizer<Throwable> {
 
    public static ThrowableExternalizer INSTANCE = new ThrowableExternalizer();

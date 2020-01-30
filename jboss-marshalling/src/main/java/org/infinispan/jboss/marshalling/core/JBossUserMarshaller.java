@@ -35,6 +35,7 @@ public class JBossUserMarshaller extends JBossMarshaller {
       super(classResolver);
    }
 
+   // TODO we can no longer load via config. Users should utilise JbossMarshaller @ExternalizeWith if required
    public void initialize(GlobalComponentRegistry gcr) {
       this.globalCfg = gcr.getGlobalConfiguration();
       // Only load the externalizers outside of the ISPN reserved range, this ensures that we don't accidentally persist internal types

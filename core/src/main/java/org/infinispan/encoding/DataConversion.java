@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.Objects;
-import java.util.Set;
 
 import org.infinispan.commons.dataconversion.ByteArrayWrapper;
 import org.infinispan.commons.dataconversion.Encoder;
@@ -15,10 +14,8 @@ import org.infinispan.commons.dataconversion.IdentityWrapper;
 import org.infinispan.commons.dataconversion.MediaType;
 import org.infinispan.commons.dataconversion.Transcoder;
 import org.infinispan.commons.dataconversion.Wrapper;
-import org.infinispan.commons.marshall.AbstractExternalizer;
-import org.infinispan.commons.marshall.Ids;
 import org.infinispan.commons.marshall.Marshaller;
-import org.infinispan.commons.util.Util;
+import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.configuration.cache.Configurations;
 import org.infinispan.configuration.cache.ContentTypeConfiguration;
@@ -32,6 +29,9 @@ import org.infinispan.factories.annotations.Inject;
 import org.infinispan.factories.scopes.Scope;
 import org.infinispan.factories.scopes.Scopes;
 import org.infinispan.marshall.core.EncoderRegistry;
+import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.registry.InternalCacheRegistry;
 
 /**
@@ -39,6 +39,7 @@ import org.infinispan.registry.InternalCacheRegistry;
  *
  * @since 9.2
  */
+@ProtoTypeId(ProtoStreamTypeIds.DATA_CONVERSION)
 @Scope(Scopes.NONE)
 public final class DataConversion {
 
@@ -90,6 +91,38 @@ public final class DataConversion {
       this.isKey = isKey;
       this.storageMediaType = MediaType.APPLICATION_OBJECT;
       this.requestMediaType = MediaType.APPLICATION_OBJECT;
+   }
+
+   @ProtoFactory
+   static DataConversion protoFactory(boolean isKey, Short encoderId, Byte wrapperId, MediaType mediaType) {
+      if (encoderId == null && wrapperId == null && mediaType == null)
+         return isKey ? DEFAULT_KEY : DEFAULT_VALUE;
+
+      return new DataConversion(encoderId, wrapperId, mediaType, null, isKey);
+   }
+
+   @ProtoField(number = 1, defaultValue = "false")
+   boolean getIsKey() {
+      return isKey;
+   }
+
+   @ProtoField(number = 2)
+   Short getEncoderId() {
+      return isDefault() ? null : encoder.id();
+   }
+
+   @ProtoField(number = 3)
+   Byte getWrapperId() {
+      return isDefault() ? null : wrapper.id();
+   }
+
+   @ProtoField(number = 4)
+   MediaType getMediaType() {
+      return isDefault() ? null : requestMediaType;
+   }
+
+   private boolean isDefault() {
+      return isKey ? DEFAULT_KEY.equals(this) : DEFAULT_VALUE.equals(this);
    }
 
    public DataConversion withRequestMediaType(MediaType requestMediaType) {
@@ -305,57 +338,12 @@ public final class DataConversion {
       return new DataConversion(encoderClass, wrapperClass, MediaType.APPLICATION_OBJECT, storageType, false);
    }
 
-   private static boolean isDefault(DataConversion dataConversion) {
-      return dataConversion == null || dataConversion.isKey && dataConversion.equals(DEFAULT_KEY) ||
-            !dataConversion.isKey && dataConversion.equals(DEFAULT_VALUE);
-   }
-
    public static void writeTo(ObjectOutput output, DataConversion dataConversion) throws IOException {
-      byte flags = 0;
-      boolean isDefault = isDefault(dataConversion);
-      if (isDefault) flags = 1;
-      if (dataConversion.isKey) flags = (byte) (flags | 2);
-      output.writeByte(flags);
-      if (!isDefault) {
-         output.writeShort(dataConversion.encoder.id());
-         output.writeByte(dataConversion.wrapper.id());
-         output.writeObject(dataConversion.requestMediaType);
-      }
+      // TODO remove all code references
    }
 
    public static DataConversion readFrom(ObjectInput input) throws IOException, ClassNotFoundException {
-      byte flags = input.readByte();
-      boolean isKey = ((flags & 2) == 2);
-      if (((flags & 1) == 1))
-         return isKey ? DEFAULT_KEY : DEFAULT_VALUE;
-
-      short encoderId = input.readShort();
-      byte wrapperId = input.readByte();
-      MediaType requestMediaType = (MediaType) input.readObject();
-      return new DataConversion(encoderId, wrapperId, requestMediaType, null, isKey);
+      // TODO remove all code references
+      return null;
    }
-
-   public static class Externalizer extends AbstractExternalizer<DataConversion> {
-
-      @Override
-      public Set<Class<? extends DataConversion>> getTypeClasses() {
-         return Util.asSet(DataConversion.class);
-      }
-
-      @Override
-      public void writeObject(ObjectOutput output, DataConversion dataConversion) throws IOException {
-         writeTo(output, dataConversion);
-      }
-
-      @Override
-      public DataConversion readObject(ObjectInput input) throws IOException, ClassNotFoundException {
-         return readFrom(input);
-      }
-
-      @Override
-      public Integer getId() {
-         return Ids.DATA_CONVERSION;
-      }
-   }
-
 }

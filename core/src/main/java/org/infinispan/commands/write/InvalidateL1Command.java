@@ -1,15 +1,18 @@
 package org.infinispan.commands.write;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
 import java.util.Collection;
 import java.util.Collections;
 
 import org.infinispan.commands.CommandInvocationId;
 import org.infinispan.commands.Visitor;
+import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.context.InvocationContext;
+import org.infinispan.marshall.protostream.impl.MarshallableUserCollection;
+import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.remoting.transport.Address;
+import org.infinispan.remoting.transport.jgroups.JGroupsAddress;
 
 /**
  * Invalidates an entry in a L1 cache (used with DIST mode)
@@ -18,18 +21,18 @@ import org.infinispan.remoting.transport.Address;
  * @author Mircea.Markus@jboss.com
  * @since 4.0
  */
+@ProtoTypeId(ProtoStreamTypeIds.INVALIDATE_L1_COMMAND)
 public class InvalidateL1Command extends InvalidateCommand {
    public static final int COMMAND_ID = 7;
-   private Address writeOrigin;
 
-   public InvalidateL1Command() {
-      writeOrigin = null;
-   }
+   @ProtoField(number = 5, javaType = JGroupsAddress.class)
+   final Address writeOrigin;
 
-   public InvalidateL1Command(long flagsBitSet,
-                              CommandInvocationId commandInvocationId, Object... keys) {
-      super(flagsBitSet, commandInvocationId, keys);
-      writeOrigin = null;
+   @ProtoFactory
+   InvalidateL1Command(long flagsWithoutRemote, int topologyId, CommandInvocationId commandInvocationId,
+                       MarshallableUserCollection<Object> keys, JGroupsAddress writeOrigin) {
+      super(flagsWithoutRemote, topologyId, commandInvocationId, keys);
+      this.writeOrigin = writeOrigin;
    }
 
    public InvalidateL1Command(long flagsBitSet, Collection<Object> keys, CommandInvocationId commandInvocationId) {
@@ -38,8 +41,7 @@ public class InvalidateL1Command extends InvalidateCommand {
 
    public InvalidateL1Command(Address writeOrigin, long flagsBitSet, Collection<Object> keys,
          CommandInvocationId commandInvocationId) {
-      super(flagsBitSet, keys, commandInvocationId);
-      this.writeOrigin = writeOrigin;
+      this(flagsBitSet, -1, commandInvocationId, MarshallableUserCollection.create(keys), (JGroupsAddress) writeOrigin);
    }
 
    @Override
@@ -48,25 +50,13 @@ public class InvalidateL1Command extends InvalidateCommand {
    }
 
    public void setKeys(Object[] keys) {
-      this.keys = keys;
+      this.keys = MarshallableUserCollection.create(keys);
    }
 
    @Override
    public Collection<?> getKeysToLock() {
       //no keys to lock
       return Collections.emptyList();
-   }
-
-   @Override
-   public void writeTo(ObjectOutput output) throws IOException {
-      super.writeTo(output); //command invocation id + keys
-      output.writeObject(writeOrigin);
-   }
-
-   @Override
-   public void readFrom(ObjectInput input) throws IOException, ClassNotFoundException {
-      super.readFrom(input);
-      writeOrigin = (Address) input.readObject();
    }
 
    @Override
@@ -77,7 +67,7 @@ public class InvalidateL1Command extends InvalidateCommand {
    @Override
    public String toString() {
       return getClass().getSimpleName() + "{" +
-            "num keys=" + (keys == null ? 0 : keys.length) +
+            "num keys=" + keys +
             ", origin=" + writeOrigin +
             '}';
    }

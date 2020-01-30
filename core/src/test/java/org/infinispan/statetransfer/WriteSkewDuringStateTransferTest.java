@@ -12,9 +12,6 @@ import static org.testng.AssertJUnit.assertNotNull;
 import static org.testng.AssertJUnit.assertNull;
 import static org.testng.AssertJUnit.assertTrue;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -29,7 +26,6 @@ import org.infinispan.commands.remote.recovery.TxCompletionNotificationCommand;
 import org.infinispan.commands.tx.CommitCommand;
 import org.infinispan.commands.tx.PrepareCommand;
 import org.infinispan.commands.tx.VersionedPrepareCommand;
-import org.infinispan.commons.marshall.SerializeWith;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.configuration.global.GlobalConfigurationBuilder;
@@ -73,9 +69,6 @@ public class WriteSkewDuringStateTransferTest extends MultipleCacheManagersTest 
       }
       topologyManagerList.clear();
    }
-
-   /*
-   */
 
    /**
     * See ISPN-3738
@@ -332,7 +325,6 @@ public class WriteSkewDuringStateTransferTest extends MultipleCacheManagersTest 
 
    }
 
-   @SerializeWith(ConsistentHashFactoryImpl.Externalizer.class)
    public static class ConsistentHashFactoryImpl extends BaseControlledConsistentHashFactory.Default {
 
       ConsistentHashFactoryImpl() {
@@ -351,30 +343,17 @@ public class WriteSkewDuringStateTransferTest extends MultipleCacheManagersTest 
                return new int[][]{{members.size() - 1, 0, 1}};
          }
       }
-
-      public static class Externalizer implements org.infinispan.commons.marshall.Externalizer<ConsistentHashFactoryImpl> {
-         @Override
-         public void writeObject(ObjectOutput output, ConsistentHashFactoryImpl object) throws IOException {
-         }
-
-         @Override
-         public ConsistentHashFactoryImpl readObject(ObjectInput input) throws IOException, ClassNotFoundException {
-            return new ConsistentHashFactoryImpl();
-         }
-      }
    }
 
    public static class ControlledCommandInterceptor extends BaseAsyncInterceptor {
 
       private final List<Action> actionList;
       private Cache<Object, Object> cache;
-      private EmbeddedCacheManager embeddedCacheManager;
 
       public ControlledCommandInterceptor(Cache<Object, Object> cache) {
          actionList = new ArrayList<>(3);
          this.cache = cache;
          this.cacheConfiguration = cache.getCacheConfiguration();
-         this.embeddedCacheManager = cache.getCacheManager();
          extractInterceptorChain(cache).addInterceptor(this, 0);
       }
 

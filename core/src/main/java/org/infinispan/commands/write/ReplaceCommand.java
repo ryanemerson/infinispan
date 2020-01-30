@@ -1,46 +1,59 @@
 package org.infinispan.commands.write;
 
-import static org.infinispan.commons.util.Util.toStr;
-
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
+import java.util.Objects;
 
 import org.infinispan.commands.CommandInvocationId;
 import org.infinispan.commands.MetadataAwareCommand;
 import org.infinispan.commands.Visitor;
-import org.infinispan.commons.io.UnsignedNumeric;
-import org.infinispan.commons.marshall.MarshallUtil;
+import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.context.InvocationContext;
-import org.infinispan.context.impl.FlagBitSets;
+import org.infinispan.marshall.protostream.impl.MarshallableObject;
+import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
 import org.infinispan.metadata.Metadata;
+import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.protostream.annotations.ProtoTypeId;
 
 /**
  * @author Mircea.Markus@jboss.com
  * @author Galder Zamarreño
  * @since 4.0
  */
+@ProtoTypeId(ProtoStreamTypeIds.REPLACE_COMMAND)
 public class ReplaceCommand extends AbstractDataWriteCommand implements MetadataAwareCommand {
    public static final byte COMMAND_ID = 11;
 
-   private Object oldValue;
-   private Object newValue;
-   private Metadata metadata;
-   private boolean successful = true;
+   @ProtoField(number = 6)
+   MarshallableUserObject<?> oldValue;
 
-   private ValueMatcher valueMatcher;
+   @ProtoField(number = 7)
+   MarshallableUserObject<?> newValue;
 
-   public ReplaceCommand() {
-   }
+   @ProtoField(number = 8)
+   MarshallableObject<Metadata> metadata;
 
-   public ReplaceCommand(Object key, Object oldValue, Object newValue,
-                         Metadata metadata, int segment, long flagsBitSet,
-                         CommandInvocationId commandInvocationId) {
-      super(key, segment, flagsBitSet, commandInvocationId);
+   @ProtoField(number = 9)
+   ValueMatcher valueMatcher;
+
+   private transient boolean successful = true;
+
+   @ProtoFactory
+   ReplaceCommand(MarshallableUserObject<?> wrappedKey, long flagsWithoutRemote, int topologyId, int segment,
+                  CommandInvocationId commandInvocationId, MarshallableUserObject<?> oldValue,
+                  MarshallableUserObject<?> newValue, MarshallableObject<Metadata> metadata, ValueMatcher valueMatcher) {
+      super(wrappedKey, flagsWithoutRemote, topologyId, segment, commandInvocationId);
       this.oldValue = oldValue;
       this.newValue = newValue;
-      //noinspection unchecked
       this.metadata = metadata;
+      this.valueMatcher = valueMatcher;
+   }
+
+   public ReplaceCommand(Object key, Object oldValue, Object newValue, Metadata metadata, int segment, long flagsBitSet,
+                         CommandInvocationId commandInvocationId) {
+      super(key, segment, flagsBitSet, commandInvocationId);
+      setOldValue(oldValue);
+      setNewValue(newValue);
+      setMetadata(metadata);
       this.valueMatcher = oldValue != null ? ValueMatcher.MATCH_EXPECTED : ValueMatcher.MATCH_NON_NULL;
    }
 
@@ -60,50 +73,19 @@ public class ReplaceCommand extends AbstractDataWriteCommand implements Metadata
    }
 
    @Override
-   public void writeTo(ObjectOutput output) throws IOException {
-      output.writeObject(key);
-      output.writeObject(oldValue);
-      output.writeObject(newValue);
-      UnsignedNumeric.writeUnsignedInt(output, segment);
-      output.writeObject(metadata);
-      MarshallUtil.marshallEnum(valueMatcher, output);
-      output.writeLong(FlagBitSets.copyWithoutRemotableFlags(getFlagsBitSet()));
-      CommandInvocationId.writeTo(output, commandInvocationId);
-   }
-
-   @Override
-   public void readFrom(ObjectInput input) throws IOException, ClassNotFoundException {
-      key = input.readObject();
-      oldValue = input.readObject();
-      newValue = input.readObject();
-      segment = UnsignedNumeric.readUnsignedInt(input);
-      metadata = (Metadata) input.readObject();
-      valueMatcher = MarshallUtil.unmarshallEnum(input, ValueMatcher::valueOf);
-      setFlagsBitSet(input.readLong());
-      commandInvocationId = CommandInvocationId.readFrom(input);
-   }
-
-   @Override
    public boolean equals(Object o) {
       if (this == o) return true;
       if (o == null || getClass() != o.getClass()) return false;
       if (!super.equals(o)) return false;
-
       ReplaceCommand that = (ReplaceCommand) o;
-
-      if (metadata != null ? !metadata.equals(that.metadata) : that.metadata != null) return false;
-      if (newValue != null ? !newValue.equals(that.newValue) : that.newValue != null) return false;
-      return oldValue != null ? oldValue.equals(that.oldValue) : that.oldValue == null;
-
+      return Objects.equals(oldValue, that.oldValue) &&
+            Objects.equals(newValue, that.newValue) &&
+            Objects.equals(metadata, that.metadata);
    }
 
    @Override
    public int hashCode() {
-      int result = super.hashCode();
-      result = 31 * result + (oldValue != null ? oldValue.hashCode() : 0);
-      result = 31 * result + (newValue != null ? newValue.hashCode() : 0);
-      result = 31 * result + (metadata != null ? metadata.hashCode() : 0);
-      return result;
+      return Objects.hash(super.hashCode(), oldValue, newValue, metadata);
    }
 
    @Override
@@ -118,28 +100,28 @@ public class ReplaceCommand extends AbstractDataWriteCommand implements Metadata
 
    @Override
    public Metadata getMetadata() {
-      return metadata;
+      return MarshallableObject.unwrap(metadata);
    }
 
    @Override
    public void setMetadata(Metadata metadata) {
-      this.metadata = metadata;
+      this.metadata = MarshallableObject.create(metadata);
    }
 
    public Object getOldValue() {
-      return oldValue;
+      return MarshallableUserObject.unwrap(oldValue);
    }
 
    public void setOldValue(Object oldValue) {
-      this.oldValue = oldValue;
+      this.oldValue = MarshallableUserObject.create(oldValue);
    }
 
    public Object getNewValue() {
-      return newValue;
+      return MarshallableUserObject.unwrap(newValue);
    }
 
    public void setNewValue(Object newValue) {
-      this.newValue = newValue;
+      this.newValue = MarshallableUserObject.create(newValue);
    }
 
    @Override
@@ -165,16 +147,15 @@ public class ReplaceCommand extends AbstractDataWriteCommand implements Metadata
    @Override
    public String toString() {
       return "ReplaceCommand{" +
-            "key=" + toStr(key) +
-            ", oldValue=" + toStr(oldValue) +
-            ", newValue=" + toStr(newValue) +
+            "key=" + key +
+            ", oldValue=" + oldValue +
+            ", newValue=" + newValue +
             ", metadata=" + metadata +
             ", flags=" + printFlags() +
             ", commandInvocationId=" + CommandInvocationId.show(commandInvocationId) +
             ", successful=" + successful +
             ", valueMatcher=" + valueMatcher +
-            ", topologyId=" + getTopologyId() +
+            ", topologyId=" + topologyId +
             '}';
    }
-
 }

@@ -1,14 +1,14 @@
 package org.infinispan.commands.remote;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
-
 import org.infinispan.commands.AbstractTopologyAffectedCommand;
 import org.infinispan.commands.VisitableCommand;
 import org.infinispan.commands.Visitor;
+import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.context.InvocationContext;
-import org.infinispan.context.impl.FlagBitSets;
+import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
+import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.protostream.annotations.ProtoTypeId;
 
 /**
  * {@link org.infinispan.commands.VisitableCommand} that fetches the keys belonging to a group.
@@ -16,39 +16,31 @@ import org.infinispan.context.impl.FlagBitSets;
  * @author Pedro Ruivo
  * @since 7.0
  */
+@ProtoTypeId(ProtoStreamTypeIds.GET_KEYS_IN_GROUP_COMMAND)
 public class GetKeysInGroupCommand extends AbstractTopologyAffectedCommand implements VisitableCommand {
 
    public static final byte COMMAND_ID = 43;
 
-   private Object groupName;
+   @ProtoField(number = 3)
+   final MarshallableUserObject<?> groupName;
    /*
    local state to avoid checking everywhere if the node in which this command is executed is the group owner.
     */
    private transient boolean isGroupOwner;
 
-   public GetKeysInGroupCommand(long flagsBitSet, Object groupName) {
+   @ProtoFactory
+   GetKeysInGroupCommand(long flagsWithoutRemote, int topologyId, MarshallableUserObject<?> groupName) {
+      super(flagsWithoutRemote, topologyId);
       this.groupName = groupName;
-      setFlagsBitSet(flagsBitSet);
    }
 
-   public GetKeysInGroupCommand() {
+   public GetKeysInGroupCommand(long flagsBitSet, Object groupName) {
+      this(flagsBitSet, -1, MarshallableUserObject.create(groupName));
    }
 
    @Override
    public byte getCommandId() {
       return COMMAND_ID;
-   }
-
-   @Override
-   public void writeTo(ObjectOutput output) throws IOException {
-      output.writeObject(groupName);
-      output.writeLong(FlagBitSets.copyWithoutRemotableFlags(getFlagsBitSet()));
-   }
-
-   @Override
-   public void readFrom(ObjectInput input) throws IOException, ClassNotFoundException {
-      groupName = input.readObject();
-      setFlagsBitSet(input.readLong());
    }
 
    @Override
@@ -67,7 +59,7 @@ public class GetKeysInGroupCommand extends AbstractTopologyAffectedCommand imple
    }
 
    public Object getGroupName() {
-      return groupName;
+      return MarshallableUserObject.unwrap(groupName);
    }
 
    @Override

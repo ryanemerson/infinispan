@@ -1,8 +1,5 @@
 package org.infinispan.reactive.publisher.impl.commands.batch;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CompletionStage;
@@ -11,51 +8,97 @@ import java.util.function.Function;
 import org.infinispan.commands.TopologyAffectedCommand;
 import org.infinispan.commands.functional.functions.InjectableComponent;
 import org.infinispan.commands.remote.BaseRpcCommand;
-import org.infinispan.commons.io.UnsignedNumeric;
-import org.infinispan.commons.marshall.MarshallUtil;
+import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.commons.util.IntSet;
+import org.infinispan.commons.util.IntSets;
 import org.infinispan.factories.ComponentRegistry;
+import org.infinispan.marshall.protostream.impl.MarshallableObject;
+import org.infinispan.marshall.protostream.impl.MarshallableUserCollection;
+import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.reactive.publisher.impl.DeliveryGuarantee;
 import org.infinispan.reactive.publisher.impl.PublisherHandler;
 import org.infinispan.util.ByteString;
 import org.reactivestreams.Publisher;
 
+@ProtoTypeId(ProtoStreamTypeIds.INITIAL_PUBLISHER_COMMAND)
 public class InitialPublisherCommand<K, I, R> extends BaseRpcCommand implements TopologyAffectedCommand {
    public static final byte COMMAND_ID = 18;
 
-   private String requestId;
-   private DeliveryGuarantee deliveryGuarantee;
-   private int batchSize;
-   private IntSet segments;
-   private Set<K> keys;
-   private Set<K> excludedKeys;
-   private boolean includeLoader;
-   private boolean entryStream;
-   private boolean trackKeys;
-   private Function<? super Publisher<I>, ? extends Publisher<R>> transformer;
-   private int topologyId = -1;
+   @ProtoField(number = 2)
+   final String requestId;
 
-   // Only here for CommandIdUniquenessTest
-   private InitialPublisherCommand() { super(null); }
+   @ProtoField(number = 3)
+   final DeliveryGuarantee deliveryGuarantee;
 
-   public InitialPublisherCommand(ByteString cacheName) {
-      super(cacheName);
-   }
+   @ProtoField(number = 4, defaultValue = "-1")
+   final int batchSize;
 
-   public InitialPublisherCommand(ByteString cacheName, String requestId, DeliveryGuarantee deliveryGuarantee,
-         int batchSize, IntSet segments, Set<K> keys, Set<K> excludedKeys, boolean includeLoader, boolean entryStream,
-         boolean trackKeys, Function<? super Publisher<I>, ? extends Publisher<R>> transformer) {
+   // TODO workaround
+//   @ProtoField(number = 5)
+   final IntSet segments;
+
+   // TODO remove once IPROTO-131 issue fixed
+   @ProtoField(number = 5, collectionImplementation = HashSet.class)
+   protected Set<Integer> segmentsWorkaround;
+
+   @ProtoField(number = 6)
+   final MarshallableUserCollection<K> keys;
+
+   @ProtoField(number = 7)
+   final MarshallableUserCollection<K> excludedKeys;
+
+   @ProtoField(number = 8, defaultValue = "false")
+   final boolean includeLoader;
+
+   @ProtoField(number = 9, defaultValue = "false")
+   final boolean entryStream;
+
+   @ProtoField(number = 10, defaultValue = "false")
+   final boolean trackKeys;
+
+   @ProtoField(number = 11)
+   final MarshallableObject<Function<? super Publisher<I>, ? extends Publisher<R>>> transformer;
+
+   @ProtoField(number = 12, defaultValue = "-1")
+   int topologyId = -1;
+
+   @ProtoFactory
+   InitialPublisherCommand(ByteString cacheName, String requestId, DeliveryGuarantee deliveryGuarantee, int batchSize,
+                           Set<Integer> segmentsWorkaround, MarshallableUserCollection<K> keys, MarshallableUserCollection<K> excludedKeys,
+                           boolean includeLoader, boolean entryStream, boolean trackKeys,
+                           MarshallableObject<Function<? super Publisher<I>, ? extends Publisher<R>>> transformer, int topologyId) {
       super(cacheName);
       this.requestId = requestId;
       this.deliveryGuarantee = deliveryGuarantee;
       this.batchSize = batchSize;
-      this.segments = segments;
+      this.segments = segmentsWorkaround == null ? null : IntSets.from(segmentsWorkaround);
+      this.segmentsWorkaround = segmentsWorkaround;
       this.keys = keys;
       this.excludedKeys = excludedKeys;
       this.includeLoader = includeLoader;
       this.entryStream = entryStream;
       this.trackKeys = trackKeys;
       this.transformer = transformer;
+      this.topologyId = topologyId;
+   }
+
+   public InitialPublisherCommand(ByteString cacheName, String requestId, DeliveryGuarantee deliveryGuarantee,
+                                  int batchSize, IntSet segments, Set<K> keys, Set<K> excludedKeys, boolean includeLoader, boolean entryStream,
+                                  boolean trackKeys, Function<? super Publisher<I>, ? extends Publisher<R>> transformer) {
+      super(cacheName);
+      this.requestId = requestId;
+      this.deliveryGuarantee = deliveryGuarantee;
+      this.batchSize = batchSize;
+      this.segments = segments;
+      this.segmentsWorkaround = new HashSet<>(segments);
+      this.keys = MarshallableUserCollection.create(keys);
+      this.excludedKeys = MarshallableUserCollection.create(excludedKeys);
+      this.includeLoader = includeLoader;
+      this.entryStream = entryStream;
+      this.trackKeys = trackKeys;
+      this.transformer = MarshallableObject.create(transformer);
    }
 
    public String getRequestId() {
@@ -75,11 +118,11 @@ public class InitialPublisherCommand<K, I, R> extends BaseRpcCommand implements 
    }
 
    public Set<K> getKeys() {
-      return keys;
+      return MarshallableUserCollection.unwrapAsSet(keys);
    }
 
    public Set<K> getExcludedKeys() {
-      return excludedKeys;
+      return MarshallableUserCollection.unwrapAsSet(excludedKeys);
    }
 
    public boolean isIncludeLoader() {
@@ -95,7 +138,7 @@ public class InitialPublisherCommand<K, I, R> extends BaseRpcCommand implements 
    }
 
    public Function<? super Publisher<I>, ? extends Publisher<R>> getTransformer() {
-      return transformer;
+      return MarshallableObject.unwrap(transformer);
    }
 
    @Override
@@ -126,34 +169,5 @@ public class InitialPublisherCommand<K, I, R> extends BaseRpcCommand implements 
    @Override
    public boolean isReturnValueExpected() {
       return true;
-   }
-
-   @Override
-   public void writeTo(ObjectOutput output) throws IOException {
-      output.writeUTF(requestId);
-      MarshallUtil.marshallEnum(deliveryGuarantee, output);
-      UnsignedNumeric.writeUnsignedInt(output, batchSize);
-      output.writeObject(segments);
-      MarshallUtil.marshallCollection(keys, output);
-      MarshallUtil.marshallCollection(excludedKeys, output);
-      // Maybe put the booleans into a single byte - only saves 2 bytes though
-      output.writeBoolean(includeLoader);
-      output.writeBoolean(entryStream);
-      output.writeBoolean(trackKeys);
-      output.writeObject(transformer);
-   }
-
-   @Override
-   public void readFrom(ObjectInput input) throws IOException, ClassNotFoundException {
-      requestId = input.readUTF();
-      deliveryGuarantee = MarshallUtil.unmarshallEnum(input, DeliveryGuarantee::valueOf);
-      batchSize = UnsignedNumeric.readUnsignedInt(input);
-      segments = (IntSet) input.readObject();
-      keys = MarshallUtil.unmarshallCollectionUnbounded(input, HashSet::new);
-      excludedKeys = MarshallUtil.unmarshallCollectionUnbounded(input, HashSet::new);
-      includeLoader = input.readBoolean();
-      entryStream = input.readBoolean();
-      trackKeys = input.readBoolean();
-      transformer = (Function) input.readObject();
    }
 }

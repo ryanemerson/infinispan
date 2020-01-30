@@ -2,7 +2,6 @@ package org.infinispan.statetransfer;
 
 import static org.infinispan.reactive.RxJavaInterop.completionStageToCompletable;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -183,8 +182,8 @@ public class OutboundTransferTask {
          int segmentId = keyPartitioner.getSegment(ice.getKey());
          if (segments.contains(segmentId)) {
             StateChunk chunk = chunks.computeIfAbsent(
-               segmentId, segment -> new StateChunk(segment, new ArrayList<>(), isLast));
-            chunk.getCacheEntries().add(ice);
+               segmentId, segment -> StateChunk.create(segment, isLast));
+            chunk.add(ice);
          }
       }
 
@@ -192,7 +191,7 @@ public class OutboundTransferTask {
          for (PrimitiveIterator.OfInt iter = segments.iterator(); iter.hasNext(); ) {
             int segmentId = iter.nextInt();
             chunks.computeIfAbsent(
-               segmentId, segment -> new StateChunk(segment, Collections.emptyList(), true));
+               segmentId, segment -> StateChunk.create(segment, true));
          }
       }
 

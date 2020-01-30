@@ -2,6 +2,8 @@ package org.infinispan.commands;
 
 import org.infinispan.commons.util.EnumUtil;
 import org.infinispan.context.Flag;
+import org.infinispan.context.impl.FlagBitSets;
+import org.infinispan.protostream.annotations.ProtoField;
 
 /**
  * Base class for those commands that can carry flags.
@@ -11,7 +13,16 @@ import org.infinispan.context.Flag;
  */
 public abstract class AbstractFlagAffectedCommand implements FlagAffectedCommand {
 
-   private long flags = 0;
+   protected long flags;
+
+   protected AbstractFlagAffectedCommand(long flags) {
+      this.flags = flags;
+   }
+
+   @ProtoField(number = 1, name = "flags", defaultValue = "0")
+   public long getFlagsWithoutRemote() {
+      return FlagBitSets.copyWithoutRemotableFlags(flags);
+   }
 
    @Override
    public long getFlagsBitSet() {
@@ -21,10 +32,6 @@ public abstract class AbstractFlagAffectedCommand implements FlagAffectedCommand
    @Override
    public void setFlagsBitSet(long bitSet) {
       this.flags = bitSet;
-   }
-
-   protected final boolean hasSameFlags(FlagAffectedCommand other) {
-      return this.flags == other.getFlagsBitSet();
    }
 
    protected final String printFlags() {

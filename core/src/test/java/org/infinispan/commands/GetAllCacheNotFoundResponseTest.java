@@ -3,6 +3,7 @@ package org.infinispan.commands;
 import static org.testng.AssertJUnit.assertEquals;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
@@ -13,17 +14,16 @@ import java.util.concurrent.TimeoutException;
 
 import org.infinispan.Cache;
 import org.infinispan.commands.remote.ClusteredGetAllCommand;
+import org.infinispan.commands.statetransfer.StateResponseCommand;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.container.entries.ImmortalCacheValue;
-import org.infinispan.container.entries.InternalCacheValue;
 import org.infinispan.distribution.DistributionManager;
 import org.infinispan.distribution.LocalizedCacheTopology;
 import org.infinispan.distribution.MagicKey;
 import org.infinispan.remoting.responses.CacheNotFoundResponse;
 import org.infinispan.remoting.responses.SuccessfulResponse;
 import org.infinispan.remoting.responses.UnsureResponse;
-import org.infinispan.commands.statetransfer.StateResponseCommand;
 import org.infinispan.statetransfer.StateTransferLock;
 import org.infinispan.test.MultipleCacheManagersTest;
 import org.infinispan.test.TestingUtil;
@@ -35,14 +35,13 @@ import org.testng.annotations.Test;
 @Test(groups = "functional", testName = "commands.GetAllCacheNotFoundResponseTest")
 public class GetAllCacheNotFoundResponseTest extends MultipleCacheManagersTest {
 
-
    @Override
    protected void createCacheManagers() throws Throwable {
       ConfigurationBuilder cb = getDefaultClusteredCacheConfig(CacheMode.DIST_SYNC);
       ControlledConsistentHashFactory.Default chf = new ControlledConsistentHashFactory.Default(
             new int[][]{{0, 1}, {0, 2}, {2, 3}});
       cb.clustering().hash().numOwners(2).numSegments(3).consistentHashFactory(chf);
-      createClusteredCaches(5, cb);
+      createClusteredCaches(5, ControlledConsistentHashFactory.SCI.INSTANCE, cb);
    }
 
    public void test() throws InterruptedException, ExecutionException, TimeoutException {
@@ -73,8 +72,8 @@ public class GetAllCacheNotFoundResponseTest extends MultipleCacheManagersTest {
       // Provide a response for the retry commands.
       // We simulate that key1 is completely lost due to crashing nodes.
       round2.skipSendAndReceive(address(1), CacheNotFoundResponse.INSTANCE);
-      round2.skipSendAndReceive(address(2), SuccessfulResponse.create(new InternalCacheValue[]{new ImmortalCacheValue("value2")}));
-      round2.skipSendAndReceiveAsync(address(3), SuccessfulResponse.create(new InternalCacheValue[]{new ImmortalCacheValue("value3")}));
+      round2.skipSendAndReceive(address(2), SuccessfulResponse.create(Collections.singletonList(new ImmortalCacheValue("value2"))));
+      round2.skipSendAndReceiveAsync(address(3), SuccessfulResponse.create(Collections.singletonList(new ImmortalCacheValue("value3"))));
 
       // After all the owners are lost, we must wait for a new topology in case the key is still available
       crm4.expectNoCommand(10, TimeUnit.MILLISECONDS);
@@ -86,7 +85,7 @@ public class GetAllCacheNotFoundResponseTest extends MultipleCacheManagersTest {
          crm4.expectCommands(ClusteredGetAllCommand.class, address(0));
       // Provide a response for the 2nd retry
       // Because we only simulated the loss of cache0, the primary owner is the same
-      round3.skipSendAndReceive(address(0), SuccessfulResponse.create(new InternalCacheValue[]{null}));
+      round3.skipSendAndReceive(address(0), SuccessfulResponse.create(Collections.singletonList(null)));
 
       log.debugf("Expect final result");
       topologyUpdateFuture.get(10, TimeUnit.SECONDS);

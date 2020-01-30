@@ -18,7 +18,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 import org.infinispan.commands.CommandsFactory;
-import org.infinispan.commands.write.WriteCommand;
 import org.infinispan.commons.util.IntSet;
 import org.infinispan.commons.util.IntSets;
 import org.infinispan.configuration.cache.Configuration;
@@ -255,11 +254,6 @@ public class StateProviderImpl implements StateProvider {
             continue;
          }
          if (trace) log.tracef("Sending transaction %s to new owner %s", tx, destination);
-         List<WriteCommand> txModifications = tx.getModifications();
-         WriteCommand[] modifications = null;
-         if (!txModifications.isEmpty()) {
-            modifications = txModifications.toArray(new WriteCommand[0]);
-         }
 
          // If a key affected by a local transaction has a new owner, we must add the new owner to the transaction's
          // affected nodes set, so that the it receives the commit/rollback command. See ISPN-3389.
@@ -269,8 +263,7 @@ public class StateProviderImpl implements StateProvider {
             if (trace) log.tracef("Adding affected node %s to transferred transaction %s (keys %s)", destination,
                   gtx, filteredLockedKeys);
          }
-         transactionsToTransfer.add(new TransactionInfo(gtx, tx.getTopologyId(),
-               modifications, filteredLockedKeys));
+         transactionsToTransfer.add(new TransactionInfo(gtx, tx.getTopologyId(), tx.getModifications(), filteredLockedKeys));
       }
    }
 

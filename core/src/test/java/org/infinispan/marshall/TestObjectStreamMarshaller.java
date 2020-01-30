@@ -9,7 +9,6 @@ import org.infinispan.commons.dataconversion.MediaType;
 import org.infinispan.commons.io.ByteBuffer;
 import org.infinispan.commons.marshall.BufferSizePredictor;
 import org.infinispan.commons.marshall.Marshaller;
-import org.infinispan.commons.marshall.StreamingMarshaller;
 import org.infinispan.factories.annotations.Stop;
 import org.infinispan.factories.scopes.Scope;
 import org.infinispan.factories.scopes.Scopes;
@@ -23,7 +22,7 @@ import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 
 /**
- * A dummy marshaller impl. Under the hood instantiates an {@link StreamingMarshaller}.
+ * A dummy marshaller impl. Under the hood instantiates the {@link PersistenceMarshallerImpl}.
  * N.B.: When an instance of this class is no longer needed please invoke TestObjectStreamMarshaller.stop on it.
  *
  * @author Manik Surtani

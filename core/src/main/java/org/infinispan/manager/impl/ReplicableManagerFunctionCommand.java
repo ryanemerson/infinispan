@@ -1,16 +1,18 @@
 package org.infinispan.manager.impl;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
-import org.infinispan.commands.ReplicableCommand;
-import org.infinispan.factories.annotations.Inject;
+import org.infinispan.commands.GlobalRpcCommand;
+import org.infinispan.commons.marshall.ProtoStreamTypeIds;
+import org.infinispan.factories.GlobalComponentRegistry;
 import org.infinispan.factories.scopes.Scope;
 import org.infinispan.factories.scopes.Scopes;
 import org.infinispan.manager.EmbeddedCacheManager;
+import org.infinispan.marshall.protostream.impl.MarshallableObject;
+import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.protostream.annotations.ProtoTypeId;
 
 /**
  * Replicable Command that runs the given Function passing the {@link EmbeddedCacheManager} as an argument
@@ -18,40 +20,33 @@ import org.infinispan.manager.EmbeddedCacheManager;
  * @author wburns
  * @since 8.2
  */
+@ProtoTypeId(ProtoStreamTypeIds.REPLICABLE_MANAGER_FUNCTION_COMMAND)
 @Scope(Scopes.NONE)
-public class ReplicableManagerFunctionCommand implements ReplicableCommand {
+public class ReplicableManagerFunctionCommand implements GlobalRpcCommand {
 
    public static final byte COMMAND_ID = 60;
 
-   private Function<? super EmbeddedCacheManager, ?> function;
-   @Inject EmbeddedCacheManager manager;
+   @ProtoField(number = 1)
+   MarshallableObject<Function<? super EmbeddedCacheManager, ?>> function;
 
-   public ReplicableManagerFunctionCommand() {
-
-   }
-
-   public ReplicableManagerFunctionCommand(Function<? super EmbeddedCacheManager, ?> function) {
+   @ProtoFactory
+   ReplicableManagerFunctionCommand(MarshallableObject<Function<? super EmbeddedCacheManager, ?>> function) {
       this.function = function;
    }
 
+   public ReplicableManagerFunctionCommand(Function<? super EmbeddedCacheManager, ?> function) {
+      this(MarshallableObject.create(function));
+   }
+
    @Override
-   public CompletableFuture<Object> invokeAsync() throws Throwable {
-      return CompletableFuture.completedFuture(function.apply(new UnwrappingEmbeddedCacheManager(manager)));
+   public CompletableFuture<Object> invokeAsync(GlobalComponentRegistry globalComponentRegistry) throws Throwable {
+      EmbeddedCacheManager manager = globalComponentRegistry.getCacheManager();
+      return CompletableFuture.completedFuture(function.get().apply(new UnwrappingEmbeddedCacheManager(manager)));
    }
 
    @Override
    public byte getCommandId() {
       return COMMAND_ID;
-   }
-
-   @Override
-   public void readFrom(ObjectInput input) throws IOException, ClassNotFoundException {
-      function = (Function<? super EmbeddedCacheManager, ?>) input.readObject();
-   }
-
-   @Override
-   public void writeTo(ObjectOutput output) throws IOException {
-      output.writeObject(function);
    }
 
    @Override

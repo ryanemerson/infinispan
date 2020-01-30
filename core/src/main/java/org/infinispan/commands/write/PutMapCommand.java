@@ -2,24 +2,26 @@ package org.infinispan.commands.write;
 
 import static org.infinispan.commons.util.Util.toStr;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 
 import org.infinispan.commands.AbstractTopologyAffectedCommand;
 import org.infinispan.commands.CommandInvocationId;
 import org.infinispan.commands.MetadataAwareCommand;
 import org.infinispan.commands.Visitor;
-import org.infinispan.commons.marshall.MarshallUtil;
+import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.context.InvocationContext;
 import org.infinispan.context.impl.FlagBitSets;
+import org.infinispan.marshall.protostream.impl.MarshallableObject;
+import org.infinispan.marshall.protostream.impl.MarshallableUserMap;
 import org.infinispan.metadata.Metadata;
+import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.util.concurrent.locks.RemoteLockCommand;
 
 /**
@@ -31,36 +33,45 @@ import org.infinispan.util.concurrent.locks.RemoteLockCommand;
  * @author Mircea.Markus@jboss.com
  * @since 4.0
  */
+@ProtoTypeId(ProtoStreamTypeIds.PUT_MAP_COMMAND)
 public class PutMapCommand extends AbstractTopologyAffectedCommand implements WriteCommand, MetadataAwareCommand, RemoteLockCommand {
    public static final byte COMMAND_ID = 9;
 
-   private Map<Object, Object> map;
-   private Metadata metadata;
-   private boolean isForwarded = false;
+   @ProtoField(number = 3)
+   MarshallableUserMap<Object, Object> map;
+
+   @ProtoField(number = 4)
+   MarshallableObject<Metadata> metadata;
+
+   @ProtoField(number = 5, defaultValue = "false")
+   boolean isForwarded;
+
+   @ProtoField(number = 6)
+   CommandInvocationId commandInvocationId;
 
    public CommandInvocationId getCommandInvocationId() {
       return commandInvocationId;
    }
 
-   private CommandInvocationId commandInvocationId;
-
-   public PutMapCommand() {
+   @ProtoFactory
+   PutMapCommand(long flagsWithoutRemote, int topologyId, MarshallableUserMap<Object, Object> map,
+                 MarshallableObject<Metadata> metadata, boolean isForwarded, CommandInvocationId commandInvocationId) {
+      super(flagsWithoutRemote, topologyId);
+      this.map = map;
+      this.metadata = metadata;
+      this.isForwarded = isForwarded;
+      this.commandInvocationId = commandInvocationId;
    }
 
    @SuppressWarnings("unchecked")
    public PutMapCommand(Map<?, ?> map, Metadata metadata, long flagsBitSet, CommandInvocationId commandInvocationId) {
-      this.map = (Map<Object, Object>) map;
-      this.metadata = metadata;
-      this.commandInvocationId = commandInvocationId;
-      setFlagsBitSet(flagsBitSet);
+      this(flagsBitSet, -1, (MarshallableUserMap<Object, Object>) MarshallableUserMap.create(map),
+            MarshallableObject.create(metadata), false, commandInvocationId);
    }
 
-   public PutMapCommand(PutMapCommand command) {
-      this.map = command.map;
-      this.metadata = command.metadata;
-      this.isForwarded = command.isForwarded;
-      this.commandInvocationId = command.commandInvocationId;
-      setFlagsBitSet(command.getFlagsBitSet());
+   public PutMapCommand(PutMapCommand c) {
+      this(c.flags, c.topologyId, c.map, c.metadata, c.isForwarded, c.commandInvocationId);
+      this.map = c.map;
    }
 
    @Override
@@ -70,7 +81,7 @@ public class PutMapCommand extends AbstractTopologyAffectedCommand implements Wr
 
    @Override
    public Collection<?> getKeysToLock() {
-      return isForwarded ? Collections.emptyList() : Collections.unmodifiableCollection(map.keySet());
+      return isForwarded ? Collections.emptyList() : Collections.unmodifiableCollection(getAffectedKeys());
    }
 
    @Override
@@ -89,11 +100,11 @@ public class PutMapCommand extends AbstractTopologyAffectedCommand implements Wr
    }
 
    public Map<Object, Object> getMap() {
-      return map;
+      return MarshallableUserMap.unwrap(map);
    }
 
    public void setMap(Map<Object, Object> map) {
-      this.map = map;
+      this.map = MarshallableUserMap.create(map);
    }
 
    public final PutMapCommand withMap(Map<Object, Object> map) {
@@ -107,50 +118,28 @@ public class PutMapCommand extends AbstractTopologyAffectedCommand implements Wr
    }
 
    @Override
-   public void writeTo(ObjectOutput output) throws IOException {
-      MarshallUtil.marshallMap(map, output);
-      output.writeObject(metadata);
-      output.writeBoolean(isForwarded);
-      output.writeLong(FlagBitSets.copyWithoutRemotableFlags(getFlagsBitSet()));
-      CommandInvocationId.writeTo(output, commandInvocationId);
-   }
-
-   @Override
-   public void readFrom(ObjectInput input) throws IOException, ClassNotFoundException {
-      map = MarshallUtil.unmarshallMap(input, LinkedHashMap::new);
-      metadata = (Metadata) input.readObject();
-      isForwarded = input.readBoolean();
-      setFlagsBitSet(input.readLong());
-      commandInvocationId = CommandInvocationId.readFrom(input);
-   }
-
-   @Override
    public boolean equals(Object o) {
       if (this == o) return true;
       if (o == null || getClass() != o.getClass()) return false;
-
       PutMapCommand that = (PutMapCommand) o;
-
-      if (metadata != null ? !metadata.equals(that.metadata) : that.metadata != null) return false;
-      return map != null ? map.equals(that.map) : that.map == null;
-
+      return Objects.equals(map, that.map) &&
+            Objects.equals(metadata, that.metadata);
    }
 
    @Override
    public int hashCode() {
-      int result = map != null ? map.hashCode() : 0;
-      result = 31 * result + (metadata != null ? metadata.hashCode() : 0);
-      return result;
+      return Objects.hash(map, metadata);
    }
 
    @Override
    public String toString() {
       StringBuilder sb = new StringBuilder();
       sb.append("PutMapCommand{map={");
+      Map<Object, Object> map = getMap();
       if (!map.isEmpty()) {
          Iterator<Entry<Object, Object>> it = map.entrySet().iterator();
          int i = 0;
-         for (;;) {
+         for (; ; ) {
             Entry<Object, Object> e = it.next();
             sb.append(toStr(e.getKey())).append('=').append(toStr(e.getValue()));
             if (!it.hasNext()) {
@@ -165,9 +154,9 @@ public class PutMapCommand extends AbstractTopologyAffectedCommand implements Wr
          }
       }
       sb.append("}, flags=").append(printFlags())
-         .append(", metadata=").append(metadata)
-         .append(", isForwarded=").append(isForwarded)
-         .append("}");
+            .append(", metadata=").append(getMetadata())
+            .append(", isForwarded=").append(isForwarded)
+            .append("}");
       return sb.toString();
    }
 
@@ -193,7 +182,7 @@ public class PutMapCommand extends AbstractTopologyAffectedCommand implements Wr
 
    @Override
    public Collection<?> getAffectedKeys() {
-      return map.keySet();
+      return getMap().keySet();
    }
 
    @Override
@@ -213,21 +202,19 @@ public class PutMapCommand extends AbstractTopologyAffectedCommand implements Wr
 
    @Override
    public Metadata getMetadata() {
-      return metadata;
+      return MarshallableObject.unwrap(metadata);
    }
 
    @Override
    public void setMetadata(Metadata metadata) {
-      this.metadata = metadata;
+      this.metadata = MarshallableObject.create(metadata);
    }
 
    /**
     * For non transactional caches that support concurrent writes (default), the commands are forwarded between nodes,
-    * e.g.:
-    * - commands is executed on node A, but some of the keys should be locked on node B
-    * - the command is send to the main owner (B)
-    * - B tries to acquire lock on the keys it owns, then forwards the commands to the other owners as well
-    * - at this last stage, the command has the "isForwarded" flag set to true.
+    * e.g.: - commands is executed on node A, but some of the keys should be locked on node B - the command is send to
+    * the main owner (B) - B tries to acquire lock on the keys it owns, then forwards the commands to the other owners
+    * as well - at this last stage, the command has the "isForwarded" flag set to true.
     */
    public boolean isForwarded() {
       return isForwarded;
@@ -239,5 +226,4 @@ public class PutMapCommand extends AbstractTopologyAffectedCommand implements Wr
    public void setForwarded(boolean forwarded) {
       isForwarded = forwarded;
    }
-
 }

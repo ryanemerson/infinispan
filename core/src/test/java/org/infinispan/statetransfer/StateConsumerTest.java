@@ -262,7 +262,7 @@ public class StateConsumerTest extends AbstractInfinispanTest {
       // apply state
       ArrayList<StateChunk> stateChunks = new ArrayList<>();
       for (Integer segment : newSegments) {
-         stateChunks.add(new StateChunk(segment, Collections.emptyList(), true));
+         stateChunks.add(StateChunk.create(segment, true));
       }
       stateConsumer.applyState(addresses[1], 2, false, stateChunks);
 

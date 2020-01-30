@@ -1,19 +1,16 @@
 package org.infinispan.container.entries.metadata;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
-import java.util.Collections;
-import java.util.Set;
-
-import org.infinispan.commons.io.UnsignedNumeric;
-import org.infinispan.commons.marshall.AbstractExternalizer;
+import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.container.entries.ExpiryHelper;
 import org.infinispan.container.entries.ImmortalCacheValue;
 import org.infinispan.container.entries.InternalCacheEntry;
 import org.infinispan.functional.impl.MetaParamsInternalMetadata;
-import org.infinispan.marshall.core.Ids;
+import org.infinispan.marshall.protostream.impl.MarshallableObject;
+import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
 import org.infinispan.metadata.Metadata;
+import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.protostream.annotations.ProtoTypeId;
 
 /**
  * A mortal cache value, to correspond with {@link MetadataMortalCacheEntry}
@@ -21,9 +18,10 @@ import org.infinispan.metadata.Metadata;
  * @author Galder Zamarreño
  * @since 5.1
  */
+@ProtoTypeId(ProtoStreamTypeIds.METADATA_MORTAL_VALUE)
 public class MetadataMortalCacheValue extends ImmortalCacheValue implements MetadataAware {
 
-   Metadata metadata;
+   MarshallableObject<Metadata> metadata;
    long created;
 
    public MetadataMortalCacheValue(Object value, Metadata metadata, long created) {
@@ -31,45 +29,59 @@ public class MetadataMortalCacheValue extends ImmortalCacheValue implements Meta
    }
 
    protected MetadataMortalCacheValue(Object value, MetaParamsInternalMetadata internalMetadata, Metadata metadata,
-         long created) {
+                                      long created) {
       super(value, internalMetadata);
-      this.metadata = metadata;
+      this.setMetadata(metadata);
       this.created = created;
    }
 
-   @Override
-   public InternalCacheEntry<?, ?> toInternalCacheEntry(Object key) {
-      return new MetadataMortalCacheEntry(key, value, internalMetadata, metadata, created);
+   @ProtoFactory
+   MetadataMortalCacheValue(MarshallableUserObject<?> wrappedValue, MetaParamsInternalMetadata internalMetadata,
+                            MarshallableObject<Metadata> wrappedMetadata, long created) {
+      super(wrappedValue, internalMetadata);
+      this.metadata = wrappedMetadata;
+      this.created = created;
    }
 
-   @Override
-   public Metadata getMetadata() {
+   @ProtoField(number = 3, name ="metadata")
+   public MarshallableObject<Metadata> getWrappedMetadata() {
       return metadata;
    }
 
    @Override
-   public void setMetadata(Metadata metadata) {
-      this.metadata = metadata;
-   }
-
-   @Override
+   @ProtoField(number = 4, defaultValue = "-1")
    public final long getCreated() {
       return created;
    }
 
    @Override
+   public InternalCacheEntry<?, ?> toInternalCacheEntry(Object key) {
+      return new MetadataMortalCacheEntry((MarshallableUserObject<?>) key, value, internalMetadata, metadata, created);
+   }
+
+   @Override
+   public Metadata getMetadata() {
+      return MarshallableObject.unwrap(metadata);
+   }
+
+   @Override
+   public void setMetadata(Metadata metadata) {
+      this.metadata = MarshallableObject.create(metadata);
+   }
+
+   @Override
    public final long getLifespan() {
-      return metadata.lifespan();
+      return getMetadata().lifespan();
    }
 
    @Override
    public boolean isExpired(long now) {
-      return ExpiryHelper.isExpiredMortal(metadata.lifespan(), created, now);
+      return ExpiryHelper.isExpiredMortal(getMetadata().lifespan(), created, now);
    }
 
    @Override
    public long getExpiryTime() {
-      long lifespan = metadata.lifespan();
+      long lifespan = getMetadata().lifespan();
       return lifespan > -1 ? created + lifespan : -1;
    }
 
@@ -84,34 +96,4 @@ public class MetadataMortalCacheValue extends ImmortalCacheValue implements Meta
       builder.append(", metadata=").append(metadata);
       builder.append(", created=").append(created);
    }
-
-   public static class Externalizer extends AbstractExternalizer<MetadataMortalCacheValue> {
-      @Override
-      public void writeObject(ObjectOutput output, MetadataMortalCacheValue mcv) throws IOException {
-         output.writeObject(mcv.value);
-         output.writeObject(mcv.internalMetadata);
-         output.writeObject(mcv.metadata);
-         UnsignedNumeric.writeUnsignedLong(output, mcv.created);
-      }
-
-      @Override
-      public MetadataMortalCacheValue readObject(ObjectInput input) throws IOException, ClassNotFoundException {
-         Object value = input.readObject();
-         MetaParamsInternalMetadata internalMetadata = (MetaParamsInternalMetadata) input.readObject();
-         Metadata metadata = (Metadata) input.readObject();
-         long created = UnsignedNumeric.readUnsignedLong(input);
-         return new MetadataMortalCacheValue(value, internalMetadata, metadata, created);
-      }
-
-      @Override
-      public Integer getId() {
-         return Ids.METADATA_MORTAL_VALUE;
-      }
-
-      @Override
-      public Set<Class<? extends MetadataMortalCacheValue>> getTypeClasses() {
-         return Collections.singleton(MetadataMortalCacheValue.class);
-      }
-   }
-
 }

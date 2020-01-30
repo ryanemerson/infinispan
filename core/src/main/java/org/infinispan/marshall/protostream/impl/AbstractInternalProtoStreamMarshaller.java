@@ -12,6 +12,7 @@ import org.infinispan.commons.marshall.BufferSizePredictor;
 import org.infinispan.commons.marshall.Marshaller;
 import org.infinispan.commons.marshall.MarshallingException;
 import org.infinispan.commons.marshall.StreamAwareMarshaller;
+import org.infinispan.factories.GlobalComponentRegistry;
 import org.infinispan.factories.KnownComponentNames;
 import org.infinispan.factories.annotations.ComponentName;
 import org.infinispan.factories.annotations.Inject;
@@ -34,12 +35,14 @@ import org.infinispan.util.logging.Log;
 public abstract class AbstractInternalProtoStreamMarshaller implements Marshaller, StreamAwareMarshaller {
    private static final int PROTOSTREAM_DEFAULT_BUFFER_SIZE = 4096;
 
-   @Inject protected SerializationContextRegistry ctxRegistry;
+   @Inject protected GlobalComponentRegistry gcr;
+   @Inject protected ComponentRef<SerializationContextRegistry> ctxRegistry;
    @Inject @ComponentName(KnownComponentNames.USER_MARSHALLER)
    ComponentRef<Marshaller> userMarshallerRef;
-   protected Marshaller userMarshaller;
 
-   protected Log log;
+   protected final Log log;
+   protected ClassLoader classLoader;
+   protected Marshaller userMarshaller;
 
    abstract public ImmutableSerializationContext getSerializationContext();
 
@@ -50,6 +53,7 @@ public abstract class AbstractInternalProtoStreamMarshaller implements Marshalle
    @Start
    @Override
    public void start() {
+      classLoader = gcr.getGlobalConfiguration().classLoader();
       userMarshaller = userMarshallerRef.running();
    }
 

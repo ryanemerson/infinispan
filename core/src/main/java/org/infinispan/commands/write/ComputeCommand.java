@@ -1,45 +1,53 @@
 package org.infinispan.commands.write;
 
-import static org.infinispan.commons.util.Util.toStr;
-
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
 import java.util.Objects;
 import java.util.function.BiFunction;
 
 import org.infinispan.commands.CommandInvocationId;
 import org.infinispan.commands.MetadataAwareCommand;
 import org.infinispan.commands.Visitor;
-import org.infinispan.commons.io.UnsignedNumeric;
+import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.context.InvocationContext;
-import org.infinispan.context.impl.FlagBitSets;
 import org.infinispan.factories.ComponentRegistry;
+import org.infinispan.marshall.protostream.impl.MarshallableObject;
+import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
 import org.infinispan.metadata.Metadata;
+import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.protostream.annotations.ProtoTypeId;
 
+@ProtoTypeId(ProtoStreamTypeIds.COMPUTE_COMMAND)
 public class ComputeCommand extends AbstractDataWriteCommand implements MetadataAwareCommand {
 
    public static final int COMMAND_ID = 68;
 
-   private BiFunction remappingBiFunction;
-   private Metadata metadata;
-   private boolean computeIfPresent;
-   private boolean successful = true;
+   private transient boolean successful = true;
 
-   public ComputeCommand() {
+   @ProtoField(number = 6)
+   final MarshallableObject<BiFunction<?, ?, ?>> remappingBiFunction;
+
+   @ProtoField(number = 7)
+   MarshallableObject<Metadata> metadata;
+
+   @ProtoField(number = 8, defaultValue = "false")
+   boolean computeIfPresent;
+
+   @ProtoFactory
+   ComputeCommand(MarshallableUserObject<?> wrappedKey, long flagsWithoutRemote, int topologyId, int segment,
+                  CommandInvocationId commandInvocationId, MarshallableObject<BiFunction<?, ?, ?>> remappingBiFunction,
+                  MarshallableObject<Metadata> metadata, boolean computeIfPresent) {
+      super(wrappedKey, flagsWithoutRemote, topologyId, segment, commandInvocationId);
+      this.remappingBiFunction = remappingBiFunction;
+      this.metadata = metadata;
+      this.computeIfPresent = computeIfPresent;
    }
 
-   public ComputeCommand(Object key,
-                         BiFunction remappingBiFunction,
-                         boolean computeIfPresent,
-                         int segment, long flagsBitSet,
-                         CommandInvocationId commandInvocationId,
-                         Metadata metadata) {
-
+   public ComputeCommand(Object key, BiFunction<?, ?, ?> remappingBiFunction, boolean computeIfPresent, int segment,
+                         long flagsBitSet, CommandInvocationId commandInvocationId, Metadata metadata) {
       super(key, segment, flagsBitSet, commandInvocationId);
-      this.remappingBiFunction = remappingBiFunction;
+      this.remappingBiFunction = MarshallableObject.create(remappingBiFunction);
       this.computeIfPresent = computeIfPresent;
-      this.metadata = metadata;
+      this.setMetadata(metadata);
    }
 
    public boolean isComputeIfPresent() {
@@ -57,12 +65,12 @@ public class ComputeCommand extends AbstractDataWriteCommand implements Metadata
 
    @Override
    public Metadata getMetadata() {
-      return metadata;
+      return MarshallableObject.unwrap(metadata);
    }
 
    @Override
    public void setMetadata(Metadata metadata) {
-      this.metadata = metadata;
+      this.metadata = MarshallableObject.create(metadata);
    }
 
    @Override
@@ -96,29 +104,7 @@ public class ComputeCommand extends AbstractDataWriteCommand implements Metadata
    }
 
    public BiFunction getRemappingBiFunction() {
-      return remappingBiFunction;
-   }
-
-   @Override
-   public void writeTo(ObjectOutput output) throws IOException {
-      output.writeObject(key);
-      output.writeBoolean(computeIfPresent);
-      output.writeObject(remappingBiFunction);
-      UnsignedNumeric.writeUnsignedInt(output, segment);
-      output.writeObject(metadata);
-      CommandInvocationId.writeTo(output, commandInvocationId);
-      output.writeLong(FlagBitSets.copyWithoutRemotableFlags(getFlagsBitSet()));
-   }
-
-   @Override
-   public void readFrom(ObjectInput input) throws IOException, ClassNotFoundException {
-      key = input.readObject();
-      computeIfPresent = input.readBoolean();
-      remappingBiFunction = (BiFunction) input.readObject();
-      segment = UnsignedNumeric.readUnsignedInt(input);
-      metadata = (Metadata) input.readObject();
-      commandInvocationId = CommandInvocationId.readFrom(input);
-      setFlagsBitSet(input.readLong());
+      return MarshallableObject.unwrap(remappingBiFunction);
    }
 
    @Override
@@ -138,10 +124,8 @@ public class ComputeCommand extends AbstractDataWriteCommand implements Metadata
       if (!super.equals(o)) return false;
 
       ComputeCommand that = (ComputeCommand) o;
-
       if (!Objects.equals(metadata, that.metadata)) return false;
-      if (!Objects.equals(computeIfPresent, that.computeIfPresent)) return false;
-      return Objects.equals(remappingBiFunction, this.remappingBiFunction);
+      return Objects.equals(computeIfPresent, that.computeIfPresent);
    }
 
    @Override
@@ -152,9 +136,9 @@ public class ComputeCommand extends AbstractDataWriteCommand implements Metadata
    @Override
    public String toString() {
       return "ComputeCommand{" +
-            "key=" + toStr(key) +
-            ", isComputeIfPresent=" + toStr(computeIfPresent) +
-            ", remappingBiFunction=" + toStr(remappingBiFunction) +
+            "key=" + key +
+            ", isComputeIfPresent=" + computeIfPresent +
+            ", remappingBiFunction=" + remappingBiFunction +
             ", metadata=" + metadata +
             ", flags=" + printFlags() +
             ", successful=" + isSuccessful() +

@@ -23,7 +23,6 @@ import org.infinispan.commons.executors.BlockingThreadPoolExecutorFactory;
 import org.infinispan.commons.executors.CachedThreadPoolExecutorFactory;
 import org.infinispan.commons.executors.ScheduledThreadPoolExecutorFactory;
 import org.infinispan.commons.executors.ThreadPoolExecutorFactory;
-import org.infinispan.commons.marshall.AdvancedExternalizer;
 import org.infinispan.commons.util.TypedProperties;
 import org.infinispan.commons.util.Util;
 import org.infinispan.configuration.cache.AbstractStoreConfiguration;
@@ -425,23 +424,9 @@ public class Serializer extends AbstractStoreSerializer implements Configuration
          writer.writeStartElement(Element.SERIALIZATION);
          attributes.write(writer, SerializationConfiguration.MARSHALLER, Attribute.MARSHALLER_CLASS);
          SerializationConfiguration config = globalConfiguration.serialization();
-         writeAdvancedSerializers(writer, config);
          writeSerializationContextInitializers(writer,config);
          writeClassWhiteList(writer, config.whiteList());
          writer.writeEndElement();
-      }
-   }
-
-   private void writeAdvancedSerializers(XMLExtendedStreamWriter writer, SerializationConfiguration config) throws XMLStreamException {
-      Map<Integer, AdvancedExternalizer<?>> externalizers = config.advancedExternalizers();
-      boolean userExternalizerExists = externalizers.entrySet().stream().anyMatch(entry -> entry.getKey() >= AdvancedExternalizer.USER_EXT_ID_MIN);
-      if (userExternalizerExists) {
-         for (Entry<Integer, AdvancedExternalizer<?>> externalizer : externalizers.entrySet()) {
-            writer.writeStartElement(Element.ADVANCED_EXTERNALIZER);
-            writer.writeAttribute(Attribute.ID, Integer.toString(externalizer.getKey()));
-            writer.writeAttribute(Attribute.CLASS, externalizer.getValue().getClass().getName());
-            writer.writeEndElement();
-         }
       }
    }
 

@@ -1,18 +1,15 @@
 package org.infinispan.container.entries;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
-import java.util.Collections;
 import java.util.Objects;
-import java.util.Set;
 
-import org.infinispan.commons.marshall.AbstractExternalizer;
-import org.infinispan.commons.util.Util;
+import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.functional.impl.MetaParamsInternalMetadata;
-import org.infinispan.marshall.core.Ids;
+import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
 import org.infinispan.metadata.EmbeddedMetadata;
 import org.infinispan.metadata.Metadata;
+import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.protostream.annotations.ProtoTypeId;
 
 /**
  * An immortal cache value, to correspond with {@link org.infinispan.container.entries.ImmortalCacheEntry}
@@ -20,34 +17,52 @@ import org.infinispan.metadata.Metadata;
  * @author Manik Surtani
  * @since 4.0
  */
+@ProtoTypeId(ProtoStreamTypeIds.IMMORTAL_CACHE_VALUE)
 public class ImmortalCacheValue implements InternalCacheValue, Cloneable {
 
-   public Object value;
+   // TODO change to wrap lazily
+   protected MarshallableUserObject<?> value;
    protected MetaParamsInternalMetadata internalMetadata;
 
    public ImmortalCacheValue(Object value) {
       this(value, null);
    }
 
-   protected ImmortalCacheValue(Object value, MetaParamsInternalMetadata internalMetadata) {
-      this.value = value;
+   public ImmortalCacheValue(Object value, MetaParamsInternalMetadata internalMetadata) {
+      this(MarshallableUserObject.create(value), internalMetadata);
+   }
+
+   @ProtoFactory
+   public ImmortalCacheValue(MarshallableUserObject<?> wrappedValue, MetaParamsInternalMetadata internalMetadata) {
+      this.value = wrappedValue;
       this.internalMetadata = internalMetadata;
    }
 
+   @ProtoField(number = 1, name ="value")
+   public MarshallableUserObject<?> getWrappedValue() {
+      return value;
+   }
+
    @Override
-   public InternalCacheEntry<?,?> toInternalCacheEntry(Object key) {
-      return new ImmortalCacheEntry(key, value, internalMetadata);
+   @ProtoField(number = 2)
+   public final MetaParamsInternalMetadata getInternalMetadata() {
+      return internalMetadata;
+   }
+
+   @Override
+   public InternalCacheEntry toInternalCacheEntry(Object key) {
+      return new ImmortalCacheEntry(MarshallableUserObject.create(key), value, internalMetadata);
    }
 
    public final Object setValue(Object value) {
-      Object old = this.value;
-      this.value = value;
+      Object old = getValue();
+      this.value = MarshallableUserObject.create(value);
       return old;
    }
 
    @Override
    public Object getValue() {
-      return value;
+      return MarshallableUserObject.unwrap(value);
    }
 
    @Override
@@ -91,11 +106,6 @@ public class ImmortalCacheValue implements InternalCacheValue, Cloneable {
    }
 
    @Override
-   public final MetaParamsInternalMetadata getInternalMetadata() {
-      return internalMetadata;
-   }
-
-   @Override
    public final void setInternalMetadata(MetaParamsInternalMetadata internalMetadata) {
       this.internalMetadata = internalMetadata;
    }
@@ -136,32 +146,7 @@ public class ImmortalCacheValue implements InternalCacheValue, Cloneable {
    }
 
    protected void appendFieldsToString(StringBuilder builder) {
-      builder.append("value=").append(Util.toStr(value));
+      builder.append("value=").append(value);
       builder.append(", internalMetadata=").append(internalMetadata);
-   }
-
-   public static class Externalizer extends AbstractExternalizer<ImmortalCacheValue> {
-      @Override
-      public void writeObject(ObjectOutput output, ImmortalCacheValue icv) throws IOException {
-         output.writeObject(icv.value);
-         output.writeObject(icv.internalMetadata);
-      }
-
-      @Override
-      public ImmortalCacheValue readObject(ObjectInput input) throws IOException, ClassNotFoundException {
-         Object value = input.readObject();
-         MetaParamsInternalMetadata internalMetadata = (MetaParamsInternalMetadata) input.readObject();
-         return new ImmortalCacheValue(value, internalMetadata);
-      }
-
-      @Override
-      public Integer getId() {
-         return Ids.IMMORTAL_VALUE;
-      }
-
-      @Override
-      public Set<Class<? extends ImmortalCacheValue>> getTypeClasses() {
-         return Collections.singleton(ImmortalCacheValue.class);
-      }
    }
 }

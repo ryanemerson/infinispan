@@ -1,10 +1,10 @@
 package org.infinispan.commands.write;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
-
 import org.infinispan.commands.remote.BaseRpcCommand;
+import org.infinispan.commons.marshall.ProtoStreamTypeIds;
+import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.util.ByteString;
 import org.infinispan.util.concurrent.CommandAckCollector;
 
@@ -16,20 +16,17 @@ import org.infinispan.util.concurrent.CommandAckCollector;
  * @author Pedro Ruivo
  * @since 9.0
  */
+@ProtoTypeId(ProtoStreamTypeIds.BACKUP_ACK_COMMAND)
 public class BackupAckCommand extends BaseRpcCommand {
 
    public static final byte COMMAND_ID = 2;
+   @ProtoField(number = 2, defaultValue = "-1")
    protected long id;
+
+   @ProtoField(number = 3, defaultValue = "-1")
    protected int topologyId;
 
-   public BackupAckCommand() {
-      super(null);
-   }
-
-   public BackupAckCommand(ByteString cacheName) {
-      super(cacheName);
-   }
-
+   @ProtoFactory
    public BackupAckCommand(ByteString cacheName, long id, int topologyId) {
       super(cacheName);
       this.id = id;
@@ -48,18 +45,6 @@ public class BackupAckCommand extends BaseRpcCommand {
    @Override
    public boolean isReturnValueExpected() {
       return false;
-   }
-
-   @Override
-   public void writeTo(ObjectOutput output) throws IOException {
-      output.writeLong(id);
-      output.writeInt(topologyId);
-   }
-
-   @Override
-   public void readFrom(ObjectInput input) throws IOException, ClassNotFoundException {
-      id = input.readLong();
-      topologyId = input.readInt();
    }
 
    @Override

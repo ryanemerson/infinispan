@@ -1,13 +1,15 @@
 package org.infinispan.commands.read;
 
 import static org.infinispan.commons.util.EnumUtil.prettyPrintBitSet;
-import static org.infinispan.commons.util.Util.toStr;
 
 import java.util.Objects;
 
 import org.infinispan.commands.DataCommand;
 import org.infinispan.commands.SegmentSpecificCommand;
 import org.infinispan.context.Flag;
+import org.infinispan.context.impl.FlagBitSets;
+import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
+import org.infinispan.protostream.annotations.ProtoField;
 
 /**
  * @author Mircea.Markus@jboss.com
@@ -15,31 +17,46 @@ import org.infinispan.context.Flag;
  * @since 4.0
  */
 public abstract class AbstractDataCommand implements DataCommand, SegmentSpecificCommand {
-   protected Object key;
+
+   protected MarshallableUserObject<?> key;
    private long flags;
    // These 2 ints have to stay next to each other to ensure they are aligned together
-   private int topologyId = -1;
+   protected int topologyId = -1;
    protected int segment;
 
-   protected AbstractDataCommand(Object key, int segment, long flagsBitSet) {
-      this.key = key;
-      if (segment < 0) {
-         throw new IllegalArgumentException("Segment must be 0 or greater");
-      }
+   // For ProtoFactory implementations
+   protected AbstractDataCommand(MarshallableUserObject<?> wrappedKey, long flagsWithoutRemote, int topologyId, int segment) {
+      this.key = wrappedKey;
+      this.flags = flagsWithoutRemote;
+      this.topologyId = topologyId;
       this.segment = segment;
-      this.flags = flagsBitSet;
+
+      if (segment < 0)
+         throw new IllegalArgumentException("Segment must be 0 or greater");
    }
 
+   protected AbstractDataCommand(Object key, int segment, long flagsBitSet) {
+      this(MarshallableUserObject.create(key), flagsBitSet, 0, segment);
+   }
+
+   // TODO remove
    protected AbstractDataCommand() {
       this.segment = -1;
    }
 
+   @ProtoField(number = 1, name = "key")
+   public MarshallableUserObject<?> getWrappedKey() {
+      return key;
+   }
+
    @Override
+   @ProtoField(number = 2, defaultValue = "-1")
    public int getSegment() {
       return segment;
    }
 
    @Override
+   @ProtoField(number = 3, defaultValue = "-1")
    public int getTopologyId() {
       return topologyId;
    }
@@ -47,6 +64,11 @@ public abstract class AbstractDataCommand implements DataCommand, SegmentSpecifi
    @Override
    public void setTopologyId(int topologyId) {
       this.topologyId = topologyId;
+   }
+
+   @ProtoField(number = 4, name = "flags", defaultValue = "0")
+   public long getFlagsWithoutRemote() {
+      return FlagBitSets.copyWithoutRemotableFlags(flags);
    }
 
    @Override
@@ -61,11 +83,11 @@ public abstract class AbstractDataCommand implements DataCommand, SegmentSpecifi
 
    @Override
    public Object getKey() {
-      return key;
+      return MarshallableUserObject.unwrap(key);
    }
 
    public void setKey(Object key) {
-      this.key = key;
+      this.key = MarshallableUserObject.create(key);
    }
 
    @Override
@@ -91,7 +113,7 @@ public abstract class AbstractDataCommand implements DataCommand, SegmentSpecifi
    @Override
    public String toString() {
       return getClass().getSimpleName() +
-            " {key=" + toStr(key) +
+            " {key=" + key +
             ", flags=" + printFlags() +
             "}";
    }

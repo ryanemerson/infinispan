@@ -10,11 +10,14 @@ import static org.infinispan.configuration.parsing.Element.SCATTERED_CACHE;
 import java.util.Arrays;
 
 import org.infinispan.commons.CacheConfigurationException;
+import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.protostream.annotations.ProtoEnumValue;
+import org.infinispan.protostream.annotations.ProtoTypeId;
 
 /**
  * Cache replication mode.
  */
+@ProtoTypeId(ProtoStreamTypeIds.CACHE_MODE)
 public enum CacheMode {
    /**
     * Data is not replicated.

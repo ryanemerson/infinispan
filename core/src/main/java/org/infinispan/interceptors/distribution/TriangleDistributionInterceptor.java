@@ -110,49 +110,49 @@ public class TriangleDistributionInterceptor extends BaseDistributionInterceptor
    @Override
    public Object visitPutKeyValueCommand(InvocationContext ctx, PutKeyValueCommand command)
          throws Throwable {
-      return handleSingleKeyWriteCommand(ctx, command, TriangleFunctionsUtil::backupFrom);
+      return handleSingleKeyWriteCommand(ctx, command, commandsFactory::buildSingleKeyBackupWriteCommand);
    }
 
    @Override
    public Object visitRemoveCommand(InvocationContext ctx, RemoveCommand command) throws Throwable {
-      return handleSingleKeyWriteCommand(ctx, command, TriangleFunctionsUtil::backupFrom);
+      return handleSingleKeyWriteCommand(ctx, command, commandsFactory::buildSingleKeyBackupWriteCommand);
    }
 
    @Override
    public Object visitReplaceCommand(InvocationContext ctx, ReplaceCommand command) throws Throwable {
-      return handleSingleKeyWriteCommand(ctx, command, TriangleFunctionsUtil::backupFrom);
+      return handleSingleKeyWriteCommand(ctx, command, commandsFactory::buildSingleKeyBackupWriteCommand);
    }
 
    @Override
    public Object visitComputeCommand(InvocationContext ctx, ComputeCommand command) throws Throwable {
-      return handleSingleKeyWriteCommand(ctx, command, TriangleFunctionsUtil::backupFrom);
+      return handleSingleKeyWriteCommand(ctx, command, commandsFactory::buildSingleKeyBackupWriteCommand);
    }
 
    @Override
    public Object visitComputeIfAbsentCommand(InvocationContext ctx, ComputeIfAbsentCommand command) throws Throwable {
-      return handleSingleKeyWriteCommand(ctx, command, TriangleFunctionsUtil::backupFrom);
+      return handleSingleKeyWriteCommand(ctx, command, commandsFactory::buildSingleKeyBackupWriteCommand);
    }
 
    @Override
    public Object visitReadWriteKeyValueCommand(InvocationContext ctx, ReadWriteKeyValueCommand command)
          throws Throwable {
-      return handleSingleKeyWriteCommand(ctx, command, TriangleFunctionsUtil::backupFrom);
+      return handleSingleKeyWriteCommand(ctx, command, commandsFactory::buildSingleKeyBackupWriteCommand);
    }
 
    @Override
    public Object visitReadWriteKeyCommand(InvocationContext ctx, ReadWriteKeyCommand command) throws Throwable {
-      return handleSingleKeyWriteCommand(ctx, command, TriangleFunctionsUtil::backupFrom);
+      return handleSingleKeyWriteCommand(ctx, command, commandsFactory::buildSingleKeyBackupWriteCommand);
    }
 
    @Override
    public Object visitWriteOnlyKeyValueCommand(InvocationContext ctx, WriteOnlyKeyValueCommand command)
          throws Throwable {
-      return handleSingleKeyWriteCommand(ctx, command, TriangleFunctionsUtil::backupFrom);
+      return handleSingleKeyWriteCommand(ctx, command, commandsFactory::buildSingleKeyBackupWriteCommand);
    }
 
    @Override
    public Object visitWriteOnlyKeyCommand(InvocationContext ctx, WriteOnlyKeyCommand command) throws Throwable {
-      return handleSingleKeyWriteCommand(ctx, command, TriangleFunctionsUtil::backupFrom);
+      return handleSingleKeyWriteCommand(ctx, command, commandsFactory::buildSingleKeyBackupWriteCommand);
    }
 
    @Override
@@ -162,10 +162,10 @@ public class TriangleDistributionInterceptor extends BaseDistributionInterceptor
                   TriangleFunctionsUtil::copy,
                   TriangleFunctionsUtil::mergeHashMap,
                   HashMap::new,
-                  TriangleFunctionsUtil::backupFrom) :
+                  commandsFactory::buildPutMapBackupWriteCommand) :
             handleRemoteManyKeysCommand(ctx, command,
                   PutMapCommand::isForwarded,
-                  TriangleFunctionsUtil::backupFrom);
+                  commandsFactory::buildPutMapBackupWriteCommand);
    }
 
    @Override
@@ -175,10 +175,10 @@ public class TriangleDistributionInterceptor extends BaseDistributionInterceptor
                   TriangleFunctionsUtil::copy,
                   TriangleFunctionsUtil::voidMerge,
                   () -> null,
-                  TriangleFunctionsUtil::backupFrom) :
+                  commandsFactory::buildMultiEntriesFunctionalBackupWriteCommand) :
             handleRemoteManyKeysCommand(ctx, command,
                   WriteOnlyManyEntriesCommand::isForwarded,
-                  TriangleFunctionsUtil::backupFrom);
+                  commandsFactory::buildMultiEntriesFunctionalBackupWriteCommand);
    }
 
    @Override
@@ -188,10 +188,10 @@ public class TriangleDistributionInterceptor extends BaseDistributionInterceptor
                   TriangleFunctionsUtil::copy,
                   TriangleFunctionsUtil::voidMerge,
                   () -> null,
-                  TriangleFunctionsUtil::backupFrom) :
+                  commandsFactory::buildMultiKeyFunctionalBackupWriteCommand) :
             handleRemoteManyKeysCommand(ctx, command,
                   WriteOnlyManyCommand::isForwarded,
-                  TriangleFunctionsUtil::backupFrom);
+                  commandsFactory::buildMultiKeyFunctionalBackupWriteCommand);
    }
 
    @Override
@@ -201,10 +201,10 @@ public class TriangleDistributionInterceptor extends BaseDistributionInterceptor
                   TriangleFunctionsUtil::copy,
                   TriangleFunctionsUtil::mergeList,
                   LinkedList::new,
-                  TriangleFunctionsUtil::backupFrom) :
+                  commandsFactory::buildMultiKeyFunctionalBackupWriteCommand) :
             handleRemoteManyKeysCommand(ctx, command,
                   ReadWriteManyCommand::isForwarded,
-                  TriangleFunctionsUtil::backupFrom);
+                  commandsFactory::buildMultiKeyFunctionalBackupWriteCommand);
    }
 
    @Override
@@ -215,10 +215,10 @@ public class TriangleDistributionInterceptor extends BaseDistributionInterceptor
                   TriangleFunctionsUtil::copy,
                   TriangleFunctionsUtil::mergeList,
                   LinkedList::new,
-                  TriangleFunctionsUtil::backupFrom) :
+                  commandsFactory::buildMultiEntriesFunctionalBackupWriteCommand) :
             handleRemoteManyKeysCommand(ctx, command,
                   ReadWriteManyEntriesCommand::isForwarded,
-                  TriangleFunctionsUtil::backupFrom);
+                  commandsFactory::buildMultiEntriesFunctionalBackupWriteCommand);
    }
 
    private <R, C extends WriteCommand> Object handleLocalManyKeysCommand(InvocationContext ctx, C command,
@@ -339,9 +339,7 @@ public class TriangleDistributionInterceptor extends BaseDistributionInterceptor
             continue;
          }
          long sequence = triangleOrderManager.next(segmentId, topologyId);
-         BackupWriteCommand backupCommand = backupBuilder.build(commandsFactory, command, entry.getValue());
-         backupCommand.setSequence(sequence);
-         backupCommand.setSegmentId(segmentId);
+         BackupWriteCommand backupCommand = backupBuilder.build(command, entry.getValue(), sequence, segmentId);
          if (trace) {
             log.tracef("Command %s got sequence %s for segment %s", command.getCommandInvocationId(), segmentId,
                   sequence);
@@ -479,9 +477,7 @@ public class TriangleDistributionInterceptor extends BaseDistributionInterceptor
          log.tracef("Command %s send to backup owner %s.", id, backupOwners);
       }
       long sequenceNumber = triangleOrderManager.next(segmentId, command.getTopologyId());
-      BackupWriteCommand backupCommand = backupBuilder.build(commandsFactory, command);
-      backupCommand.setSequence(sequenceNumber);
-      backupCommand.setSegmentId(segmentId);
+      BackupWriteCommand backupCommand = backupBuilder.build(command, sequenceNumber, segmentId);
       if (trace) {
          log.tracef("Command %s got sequence %s for segment %s", id, sequenceNumber, segmentId);
       }
@@ -565,11 +561,11 @@ public class TriangleDistributionInterceptor extends BaseDistributionInterceptor
    }
 
    private interface BackupBuilder<C> {
-      BackupWriteCommand build(CommandsFactory factory, C command);
+      BackupWriteCommand build(C command, long sequenceId, int segmendId);
    }
 
    private interface MultiKeyBackupBuilder<C> {
-      BackupWriteCommand build(CommandsFactory factory, C command, Collection<Object> keys);
+      BackupWriteCommand build(C command, Collection<Object> keys, long sequenceId, int segmendId);
    }
 
    /**

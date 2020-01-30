@@ -1,14 +1,12 @@
 package org.infinispan.commands.remote;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
 import java.util.Objects;
 import java.util.concurrent.CompletionStage;
 
 import org.infinispan.commands.SegmentSpecificCommand;
+import org.infinispan.commands.TopologyAffectedCommand;
 import org.infinispan.commands.read.GetCacheEntryCommand;
-import org.infinispan.commons.io.UnsignedNumeric;
+import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.commons.util.EnumUtil;
 import org.infinispan.container.entries.InternalCacheEntry;
 import org.infinispan.container.entries.MVCCEntry;
@@ -18,7 +16,10 @@ import org.infinispan.context.InvocationContextFactory;
 import org.infinispan.context.impl.FlagBitSets;
 import org.infinispan.factories.ComponentRegistry;
 import org.infinispan.interceptors.AsyncInterceptorChain;
-import org.infinispan.transaction.xa.GlobalTransaction;
+import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
+import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.util.ByteString;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
@@ -31,34 +32,47 @@ import org.infinispan.util.logging.LogFactory;
  * @author Mircea.Markus@jboss.com
  * @since 4.0
  */
-public class ClusteredGetCommand extends BaseClusteredReadCommand implements SegmentSpecificCommand {
+@ProtoTypeId(ProtoStreamTypeIds.CLUSTERED_GET_COMMAND)
+public class ClusteredGetCommand extends BaseRpcCommand implements SegmentSpecificCommand, TopologyAffectedCommand {
 
    public static final byte COMMAND_ID = 16;
    private static final Log log = LogFactory.getLog(ClusteredGetCommand.class);
    private static final boolean trace = log.isTraceEnabled();
 
-   private Object key;
+   @ProtoField(number = 2, defaultValue = "-1")
+   int topologyId;
+
+   @ProtoField(number = 3)
+   final MarshallableUserObject<?> key;
+
+   @ProtoField(number = 4, defaultValue = "-1")
+   final int segment;
+
+   final long flags;
 
    //only used by extended statistics. this boolean is local.
    private boolean isWrite;
-   private int segment;
 
-   private ClusteredGetCommand() {
-      super(null, EnumUtil.EMPTY_BIT_SET); // For command id uniqueness test
-   }
-
-   public ClusteredGetCommand(ByteString cacheName) {
-      super(cacheName, EnumUtil.EMPTY_BIT_SET);
-   }
-
-   public ClusteredGetCommand(Object key, ByteString cacheName, int segment, long flags) {
-      super(cacheName, flags);
-      this.key = key;
-      this.isWrite = false;
+   @ProtoFactory
+   ClusteredGetCommand(ByteString cacheName, int topologyId, MarshallableUserObject<?> key, int segment, long flagsWithoutRemote) {
+      super(cacheName);
       if (segment < 0) {
          throw new IllegalArgumentException("Segment must 0 or greater!");
       }
+      this.topologyId = topologyId;
+      this.key = key;
       this.segment = segment;
+      this.flags = flagsWithoutRemote;
+      this.isWrite = false;
+   }
+
+   public ClusteredGetCommand(Object key, ByteString cacheName, int segment, long flags) {
+      this(cacheName, -1, MarshallableUserObject.create(key), segment, flags);
+   }
+
+   @ProtoField(number = 5, name = "flags", defaultValue = "0")
+   long getFlagsWithoutRemote() {
+      return FlagBitSets.copyWithoutRemotableFlags(flags);
    }
 
    /**
@@ -71,15 +85,15 @@ public class ClusteredGetCommand extends BaseClusteredReadCommand implements Seg
       // as our caller is already calling the ClusteredGetCommand on all the relevant nodes
       // CACHE_MODE_LOCAL is not used as it can be used when we want to ignore the ownership with respect to reads
       long flagBitSet = EnumUtil.bitSetOf(Flag.SKIP_REMOTE_LOOKUP);
-      GetCacheEntryCommand command = componentRegistry.getCommandsFactory().buildGetCacheEntryCommand(key, segment,
-            EnumUtil.mergeBitSets(flagBitSet, getFlagsBitSet()));
+      GetCacheEntryCommand command = componentRegistry.getCommandsFactory().buildGetCacheEntryCommand(key.get(), segment,
+            EnumUtil.mergeBitSets(flagBitSet, flags));
       command.setTopologyId(topologyId);
       InvocationContextFactory icf = componentRegistry.getInvocationContextFactory().running();
       InvocationContext invocationContext = icf.createRemoteInvocationContextForCommand(command, getOrigin());
       AsyncInterceptorChain invoker = componentRegistry.getInterceptorChain().running();
       return invoker.invokeAsync(invocationContext, command)
             .thenApply(rv -> {
-               if (trace) log.tracef("Return value for key=%s is %s", key, rv);
+               if (trace) log.tracef("Return value for key=%s is %s", key.get(), rv);
                //this might happen if the value was fetched from a cache loader
                if (rv instanceof MVCCEntry) {
                   MVCCEntry mvccEntry = (MVCCEntry) rv;
@@ -93,54 +107,9 @@ public class ClusteredGetCommand extends BaseClusteredReadCommand implements Seg
             });
    }
 
-   @Deprecated
-   public GlobalTransaction getGlobalTransaction() {
-      return null;
-   }
-
    @Override
    public byte getCommandId() {
       return COMMAND_ID;
-   }
-
-   @Override
-   public void writeTo(ObjectOutput output) throws IOException {
-      output.writeObject(key);
-      UnsignedNumeric.writeUnsignedInt(output, segment);
-      output.writeLong(FlagBitSets.copyWithoutRemotableFlags(getFlagsBitSet()));
-   }
-
-   @Override
-   public void readFrom(ObjectInput input) throws IOException, ClassNotFoundException {
-      key = input.readObject();
-      segment = UnsignedNumeric.readUnsignedInt(input);
-      setFlagsBitSet(input.readLong());
-   }
-
-   @Override
-   public boolean equals(Object o) {
-      if (this == o) return true;
-      if (o == null || getClass() != o.getClass()) return false;
-
-      ClusteredGetCommand that = (ClusteredGetCommand) o;
-
-      return Objects.equals(key, that.key);
-   }
-
-   @Override
-   public int hashCode() {
-      return Objects.hashCode(key);
-   }
-
-   @Override
-   public String toString() {
-      return new StringBuilder()
-         .append("ClusteredGetCommand{key=")
-         .append(key)
-         .append(", flags=").append(printFlags())
-         .append(", topologyId=").append(topologyId)
-         .append("}")
-         .toString();
    }
 
    public boolean isWrite() {
@@ -157,11 +126,43 @@ public class ClusteredGetCommand extends BaseClusteredReadCommand implements Seg
    }
 
    public Object getKey() {
-      return key;
+      return MarshallableUserObject.unwrap(key);
    }
 
    @Override
    public boolean isReturnValueExpected() {
       return true;
+   }
+
+   @Override
+   public int getTopologyId() {
+      return topologyId;
+   }
+
+   @Override
+   public void setTopologyId(int topologyId) {
+      this.topologyId = topologyId;
+   }
+
+   @Override
+   public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+
+      ClusteredGetCommand that = (ClusteredGetCommand) o;
+      return Objects.equals(key, that.key);
+   }
+
+   @Override
+   public int hashCode() {
+      return Objects.hashCode(key);
+   }
+
+   @Override
+   public String toString() {
+      return "ClusteredGetCommand{key=" + key +
+            ", flags=" + EnumUtil.prettyPrintBitSet(flags, Flag.class) +
+            ", topologyId=" + topologyId +
+            "}";
    }
 }

@@ -1,12 +1,14 @@
 package org.infinispan.xsite;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
 import java.util.concurrent.CompletionStage;
 
 import org.infinispan.commands.VisitableCommand;
+import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.factories.ComponentRegistry;
+import org.infinispan.marshall.protostream.impl.MarshallableObject;
+import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.util.ByteString;
 
 /**
@@ -15,22 +17,25 @@ import org.infinispan.util.ByteString;
  * @author Pedro Ruivo
  * @since 7.0
  */
+@ProtoTypeId(ProtoStreamTypeIds.XSITE_SINGLE_RPC_COMMAND)
 public class SingleXSiteRpcCommand extends XSiteReplicateCommand {
 
    public static final byte COMMAND_ID = 40;
-   private VisitableCommand command;
+   private final VisitableCommand command;
 
    public SingleXSiteRpcCommand(ByteString cacheName, VisitableCommand command) {
       super(COMMAND_ID, cacheName);
       this.command = command;
    }
 
-   public SingleXSiteRpcCommand(ByteString cacheName) {
-      this(cacheName, null);
+   @ProtoFactory
+   SingleXSiteRpcCommand(ByteString cacheName, MarshallableObject<VisitableCommand> command) {
+      this(cacheName, MarshallableObject.unwrap(command));
    }
 
-   public SingleXSiteRpcCommand() {
-      this(null);
+   @ProtoField(number = 2)
+   MarshallableObject<VisitableCommand> getCommand() {
+      return MarshallableObject.create(command);
    }
 
    @Override
@@ -41,16 +46,6 @@ public class SingleXSiteRpcCommand extends XSiteReplicateCommand {
    @Override
    public CompletionStage<?> invokeAsync(ComponentRegistry componentRegistry) throws Throwable {
       throw new UnsupportedOperationException();
-   }
-
-   @Override
-   public void writeTo(ObjectOutput output) throws IOException {
-      output.writeObject(command);
-   }
-
-   @Override
-   public void readFrom(ObjectInput input) throws IOException, ClassNotFoundException {
-      command = (VisitableCommand) input.readObject();
    }
 
    @Override

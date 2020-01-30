@@ -10,8 +10,8 @@ import java.io.ObjectInput;
  * if a negative number is passed in, they skip backwards effectively
  * providing rewind capabilities.
  *
- * This should be removed when the {@link GlobalMarshaller} is no longer based on {@link org.infinispan.commons.marshall.StreamingMarshaller}.
  */
+// TODO move to tools module
 abstract public class AbstractBytesObjectInput implements ObjectInput {
    final byte bytes[];
    int pos;

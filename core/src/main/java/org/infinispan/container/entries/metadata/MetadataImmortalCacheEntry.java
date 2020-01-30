@@ -1,17 +1,15 @@
 package org.infinispan.container.entries.metadata;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
-import java.util.Collections;
-import java.util.Set;
-
-import org.infinispan.commons.marshall.AbstractExternalizer;
+import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.container.entries.ImmortalCacheEntry;
 import org.infinispan.container.entries.InternalCacheValue;
 import org.infinispan.functional.impl.MetaParamsInternalMetadata;
-import org.infinispan.marshall.core.Ids;
+import org.infinispan.marshall.protostream.impl.MarshallableObject;
+import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
 import org.infinispan.metadata.Metadata;
+import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.protostream.annotations.ProtoTypeId;
 
 /**
  * A form of {@link org.infinispan.container.entries.ImmortalCacheEntry} that is {@link
@@ -20,28 +18,32 @@ import org.infinispan.metadata.Metadata;
  * @author Galder Zamarreño
  * @since 5.3
  */
+@ProtoTypeId(ProtoStreamTypeIds.METADATA_IMMORTAL_ENTRY)
 public class MetadataImmortalCacheEntry extends ImmortalCacheEntry implements MetadataAware {
 
-   protected Metadata metadata;
+   @ProtoField(number = 4)
+   protected MarshallableObject<Metadata> metadata;
 
-   public MetadataImmortalCacheEntry(Object key, Object value, Metadata metadata) {
-      this(key, value, null, metadata);
+   @ProtoFactory
+   MetadataImmortalCacheEntry(MarshallableUserObject<?> wrappedKey, MarshallableUserObject<?> wrappedValue,
+                              MetaParamsInternalMetadata internalMetadata, MarshallableObject<Metadata> metadata) {
+      super(wrappedKey, wrappedValue, internalMetadata);
+      this.metadata = metadata;
    }
 
-   protected MetadataImmortalCacheEntry(Object key, Object value, MetaParamsInternalMetadata internalMetadata,
-         Metadata metadata) {
-      super(key, value, internalMetadata);
-      this.metadata = metadata;
+   public MetadataImmortalCacheEntry(Object key, Object value, Metadata metadata) {
+      super(key, value, null);
+      setMetadata(metadata);
    }
 
    @Override
    public Metadata getMetadata() {
-      return metadata;
+      return MarshallableObject.unwrap(metadata);
    }
 
    @Override
    public void setMetadata(Metadata metadata) {
-      this.metadata = metadata;
+      this.metadata = MarshallableObject.create(metadata);
    }
 
    @Override
@@ -53,34 +55,5 @@ public class MetadataImmortalCacheEntry extends ImmortalCacheEntry implements Me
    protected void appendFieldsToString(StringBuilder builder) {
       super.appendFieldsToString(builder);
       builder.append(", metadata=").append(metadata);
-   }
-
-   public static class Externalizer extends AbstractExternalizer<MetadataImmortalCacheEntry> {
-      @Override
-      public void writeObject(ObjectOutput output, MetadataImmortalCacheEntry ice) throws IOException {
-         output.writeObject(ice.key);
-         output.writeObject(ice.value);
-         output.writeObject(ice.internalMetadata);
-         output.writeObject(ice.metadata);
-      }
-
-      @Override
-      public MetadataImmortalCacheEntry readObject(ObjectInput input) throws IOException, ClassNotFoundException {
-         Object key = input.readObject();
-         Object value = input.readObject();
-         MetaParamsInternalMetadata internalMetadata = (MetaParamsInternalMetadata) input.readObject();
-         Metadata metadata = (Metadata) input.readObject();
-         return new MetadataImmortalCacheEntry(key, value, internalMetadata, metadata);
-      }
-
-      @Override
-      public Integer getId() {
-         return Ids.METADATA_IMMORTAL_ENTRY;
-      }
-
-      @Override
-      public Set<Class<? extends MetadataImmortalCacheEntry>> getTypeClasses() {
-         return Collections.singleton(MetadataImmortalCacheEntry.class);
-      }
    }
 }

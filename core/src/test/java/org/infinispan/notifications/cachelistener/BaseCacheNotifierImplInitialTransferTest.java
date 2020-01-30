@@ -28,7 +28,7 @@ import org.infinispan.CacheSet;
 import org.infinispan.CacheStream;
 import org.infinispan.cache.impl.EncoderCache;
 import org.infinispan.commands.CommandsFactory;
-import org.infinispan.commons.marshall.StreamingMarshaller;
+import org.infinispan.commons.marshall.Marshaller;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
@@ -145,7 +145,7 @@ public abstract class BaseCacheNotifierImplInitialTransferTest extends AbstractI
       MockBasicComponentRegistry mockRegistry = new MockBasicComponentRegistry();
       when(componentRegistry.getComponent(BasicComponentRegistry.class)).thenReturn(mockRegistry);
       mockRegistry.registerMocks(RpcManager.class, CommandsFactory.class);
-      mockRegistry.registerMock(KnownComponentNames.INTERNAL_MARSHALLER, StreamingMarshaller.class);
+      mockRegistry.registerMock(KnownComponentNames.INTERNAL_MARSHALLER, Marshaller.class);
       ClusteringDependentLogic.LocalLogic cdl = new ClusteringDependentLogic.LocalLogic();
       cdl.init(null, config, mock(KeyPartitioner.class));
       ClusterEventManager cem = mock(ClusterEventManager.class);

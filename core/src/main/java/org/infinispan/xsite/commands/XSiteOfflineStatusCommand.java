@@ -1,13 +1,14 @@
 package org.infinispan.xsite.commands;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
 import org.infinispan.commands.remote.BaseRpcCommand;
+import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.factories.ComponentRegistry;
+import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.util.ByteString;
 import org.infinispan.xsite.BackupSender;
 import org.infinispan.xsite.status.SiteState;
@@ -19,28 +20,22 @@ import org.infinispan.xsite.status.TakeOfflineManager;
  * @author Ryan Emerson
  * @since 11.0
  */
+@ProtoTypeId(ProtoStreamTypeIds.XSITE_OFFLINE_STATUS_COMMAND)
 public class XSiteOfflineStatusCommand extends BaseRpcCommand {
 
    public static final int COMMAND_ID = 99;
 
-   private String siteName;
+   @ProtoField(number = 2)
+   final String siteName;
 
-   // For CommandIdUniquenessTest only
-   public XSiteOfflineStatusCommand() {
-      this(null);
-   }
-
-   public XSiteOfflineStatusCommand(ByteString cacheName) {
-      this(cacheName, null);
-   }
-
+   @ProtoFactory
    public XSiteOfflineStatusCommand(ByteString cacheName, String siteName) {
       super(cacheName);
       this.siteName = siteName;
    }
 
    @Override
-   public CompletionStage<?> invokeAsync(ComponentRegistry registry) throws Throwable {
+   public CompletionStage<Boolean> invokeAsync(ComponentRegistry registry) throws Throwable {
       TakeOfflineManager takeOfflineManager = registry.getTakeOfflineManager().running();
       return CompletableFuture.completedFuture(takeOfflineManager.getSiteState(siteName) != SiteState.ONLINE);
    }
@@ -53,16 +48,6 @@ public class XSiteOfflineStatusCommand extends BaseRpcCommand {
    @Override
    public byte getCommandId() {
       return COMMAND_ID;
-   }
-
-   @Override
-   public void writeTo(ObjectOutput output) throws IOException {
-      output.writeUTF(siteName);
-   }
-
-   @Override
-   public void readFrom(ObjectInput input) throws IOException, ClassNotFoundException {
-      siteName = input.readUTF();
    }
 
    @Override

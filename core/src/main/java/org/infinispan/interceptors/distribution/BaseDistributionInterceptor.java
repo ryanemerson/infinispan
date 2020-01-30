@@ -23,7 +23,7 @@ import org.infinispan.commands.read.AbstractDataCommand;
 import org.infinispan.commands.read.GetAllCommand;
 import org.infinispan.commands.read.GetCacheEntryCommand;
 import org.infinispan.commands.read.GetKeyValueCommand;
-import org.infinispan.commands.remote.BaseClusteredReadCommand;
+import org.infinispan.commands.remote.ClusteredGetAllCommand;
 import org.infinispan.commands.remote.ClusteredGetCommand;
 import org.infinispan.commands.remote.GetKeysInGroupCommand;
 import org.infinispan.commands.write.AbstractDataWriteCommand;
@@ -828,7 +828,7 @@ public abstract class BaseDistributionInterceptor extends ClusteringInterceptor 
       public ReplicableCommand apply(Address target) {
          List<Object> targetKeys = requestedKeys.get(target);
          assert !targetKeys.isEmpty();
-         BaseClusteredReadCommand getCommand = cf.buildClusteredGetAllCommand(targetKeys, flags, gtx);
+         ClusteredGetAllCommand<?,?> getCommand = cf.buildClusteredGetAllCommand(targetKeys, flags, gtx);
          getCommand.setTopologyId(topologyId);
          return getCommand;
       }
@@ -880,18 +880,12 @@ public abstract class BaseDistributionInterceptor extends ClusteringInterceptor 
          }
 
          SuccessfulResponse successfulResponse = (SuccessfulResponse) response;
-         Object responseValue = successfulResponse.getResponseValue();
-         if (!(responseValue instanceof InternalCacheValue[])) {
-            throw CompletableFutures.asCompletionException(
-               new IllegalStateException("Unexpected response value: " + responseValue));
-         }
-
          List<Object> senderKeys = requestedKeys.get(sender);
-         InternalCacheValue[] values = (InternalCacheValue[]) responseValue;
+         List<InternalCacheValue<?>> values = (List<InternalCacheValue<?>>) successfulResponse.getResponseValue();
          for (int i = 0; i < senderKeys.size(); ++i) {
             Object key = senderKeys.get(i);
-            InternalCacheValue value = values[i];
-            CacheEntry entry = value == null ? NullCacheEntry.getInstance() : value.toInternalCacheEntry(key);
+            InternalCacheValue<?> value = values.get(i);
+            CacheEntry<?, ?> entry = value == null ? NullCacheEntry.getInstance() : value.toInternalCacheEntry(key);
             wrapRemoteEntry(ctx, key, entry, false);
          }
          // TODO Dan: handleRemotelyRetrievedKeys could call wrapRemoteEntry itself after transforming the entries

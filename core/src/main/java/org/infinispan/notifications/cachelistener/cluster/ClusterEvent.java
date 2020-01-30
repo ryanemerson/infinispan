@@ -1,24 +1,23 @@
 package org.infinispan.notifications.cachelistener.cluster;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
-import java.util.Collections;
-import java.util.Set;
+import java.util.Objects;
 
 import org.infinispan.Cache;
-import org.infinispan.commons.marshall.AbstractExternalizer;
-import org.infinispan.commons.marshall.MarshallUtil;
-import org.infinispan.marshall.core.Ids;
+import org.infinispan.commons.marshall.ProtoStreamTypeIds;
+import org.infinispan.marshall.protostream.impl.MarshallableObject;
+import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
 import org.infinispan.metadata.Metadata;
 import org.infinispan.notifications.cachelistener.event.CacheEntryCreatedEvent;
 import org.infinispan.notifications.cachelistener.event.CacheEntryEvent;
 import org.infinispan.notifications.cachelistener.event.CacheEntryExpiredEvent;
 import org.infinispan.notifications.cachelistener.event.CacheEntryModifiedEvent;
 import org.infinispan.notifications.cachelistener.event.CacheEntryRemovedEvent;
-import org.infinispan.notifications.cachelistener.event.TransactionalEvent;
 import org.infinispan.notifications.cachelistener.event.impl.EventImpl;
+import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.remoting.transport.Address;
+import org.infinispan.remoting.transport.jgroups.JGroupsAddress;
 import org.infinispan.transaction.xa.GlobalTransaction;
 
 /**
@@ -29,6 +28,7 @@ import org.infinispan.transaction.xa.GlobalTransaction;
  * @author wburns
  * @since 7.0
  */
+@ProtoTypeId(ProtoStreamTypeIds.CLUSTER_EVENT)
 public class ClusterEvent<K, V> implements CacheEntryCreatedEvent<K, V>, CacheEntryRemovedEvent<K, V>,
                                            CacheEntryModifiedEvent<K, V>, CacheEntryExpiredEvent<K, V> {
    transient Cache<K, V> cache;
@@ -37,10 +37,18 @@ public class ClusterEvent<K, V> implements CacheEntryCreatedEvent<K, V>, CacheEn
    private final V value;
    private final V oldValue;
    private final Metadata metadata;
-   private final Type type;
-   private final GlobalTransaction transaction;
-   private final Address origin;
-   private final boolean commandRetried;
+
+   @ProtoField(number = 1)
+   final Type type;
+
+   @ProtoField(number = 2)
+   final GlobalTransaction transaction;
+
+   @ProtoField(number = 3, javaType = JGroupsAddress.class)
+   final Address origin;
+
+   @ProtoField(number = 4, defaultValue = "false")
+   final boolean commandRetried;
 
    public static <K, V> ClusterEvent<K, V> fromEvent(CacheEntryEvent<K, V> event) {
       if (event instanceof ClusterEvent) {
@@ -68,11 +76,10 @@ public class ClusterEvent<K, V> implements CacheEntryCreatedEvent<K, V>, CacheEn
             throw new IllegalArgumentException("Cluster Event can only be created from a CacheEntryRemoved, CacheEntryCreated or CacheEntryModified event!");
       }
 
-      GlobalTransaction transaction = ((TransactionalEvent)event).getGlobalTransaction();
-
+      GlobalTransaction transaction = event.getGlobalTransaction();
       Metadata metadata = null;
       if (event instanceof EventImpl) {
-         metadata = ((EventImpl)event).getMetadata();
+         metadata = event.getMetadata();
       }
 
       ClusterEvent<K, V> clusterEvent = new ClusterEvent<>(event.getKey(), event.getValue(), oldValue, metadata,
@@ -92,6 +99,35 @@ public class ClusterEvent<K, V> implements CacheEntryCreatedEvent<K, V>, CacheEn
       this.origin = origin;
       this.transaction = transaction;
       this.commandRetried = commandRetried;
+   }
+
+   @ProtoFactory
+   ClusterEvent(MarshallableUserObject<K> wrappedKey, MarshallableUserObject<V> wrappedValue,
+                MarshallableUserObject<V> wrappedOldValue, MarshallableObject<Metadata> wrappedMetadata,
+                GlobalTransaction transaction, JGroupsAddress origin, Type type, boolean commandRetried) {
+      this(MarshallableUserObject.unwrap(wrappedKey), MarshallableUserObject.unwrap(wrappedValue),
+            MarshallableUserObject.unwrap(wrappedOldValue), MarshallableObject.unwrap(wrappedMetadata),
+            type, origin, transaction, commandRetried);
+   }
+
+   @ProtoField(number = 5, name = "key")
+   MarshallableUserObject<K> getWrappedKey() {
+      return MarshallableUserObject.create(key);
+   }
+
+   @ProtoField(number = 6, name = "value")
+   MarshallableUserObject<V> getWrappedValue() {
+      return MarshallableUserObject.create(value);
+   }
+
+   @ProtoField(number = 7, name = "oldValue")
+   MarshallableUserObject<V> getWrappedOldValue() {
+      return MarshallableUserObject.create(value);
+   }
+
+   @ProtoField(number = 8, name = "metadata")
+   MarshallableObject<Metadata> getWrappedMetadata() {
+      return MarshallableObject.create(metadata);
    }
 
    @Override
@@ -153,72 +189,25 @@ public class ClusterEvent<K, V> implements CacheEntryCreatedEvent<K, V>, CacheEn
       return cache;
    }
 
-   public static class Externalizer extends AbstractExternalizer<ClusterEvent> {
-
-      @Override
-      public Set<Class<? extends ClusterEvent>> getTypeClasses() {
-         return Collections.singleton(ClusterEvent.class);
-      }
-
-      @Override
-      public void writeObject(ObjectOutput output, ClusterEvent object) throws IOException {
-         output.writeObject(object.key);
-         output.writeObject(object.value);
-         output.writeObject(object.oldValue);
-         output.writeObject(object.metadata);
-         MarshallUtil.marshallEnum(object.type, output);
-         output.writeObject(object.origin);
-         output.writeObject(object.transaction);
-         output.writeBoolean(object.commandRetried);
-      }
-
-      @Override
-      public ClusterEvent readObject(ObjectInput input) throws IOException, ClassNotFoundException {
-
-         return new ClusterEvent(input.readObject(), input.readObject(), input.readObject(),
-                                 (Metadata)input.readObject(),MarshallUtil.unmarshallEnum(input, Type::valueOf),
-                                 (Address)input.readObject(), (GlobalTransaction)input.readObject(),
-                                 input.readBoolean());
-      }
-
-      @Override
-      public Integer getId() {
-         return Ids.CLUSTER_EVENT;
-      }
-   }
-
    @Override
    public boolean equals(Object o) {
       if (this == o) return true;
       if (o == null || getClass() != o.getClass()) return false;
-
-      ClusterEvent that = (ClusterEvent) o;
-
-      if (commandRetried != that.commandRetried) return false;
-      if (cache != null ? !cache.equals(that.cache) : that.cache != null) return false;
-      if (key != null ? !key.equals(that.key) : that.key != null) return false;
-      if (metadata != null ? !metadata.equals(that.metadata) : that.metadata != null) return false;
-      if (oldValue != null ? !oldValue.equals(that.oldValue) : that.oldValue != null) return false;
-      if (origin != null ? !origin.equals(that.origin) : that.origin != null) return false;
-      if (transaction != null ? !transaction.equals(that.transaction) : that.transaction != null) return false;
-      if (type != that.type) return false;
-      if (value != null ? !value.equals(that.value) : that.value != null) return false;
-
-      return true;
+      ClusterEvent<?, ?> that = (ClusterEvent<?, ?>) o;
+      return commandRetried == that.commandRetried &&
+            Objects.equals(cache, that.cache) &&
+            Objects.equals(key, that.key) &&
+            Objects.equals(value, that.value) &&
+            Objects.equals(oldValue, that.oldValue) &&
+            Objects.equals(metadata, that.metadata) &&
+            type == that.type &&
+            Objects.equals(transaction, that.transaction) &&
+            Objects.equals(origin, that.origin);
    }
 
    @Override
    public int hashCode() {
-      int result = cache != null ? cache.hashCode() : 0;
-      result = 31 * result + (key != null ? key.hashCode() : 0);
-      result = 31 * result + (value != null ? value.hashCode() : 0);
-      result = 31 * result + (oldValue != null ? oldValue.hashCode() : 0);
-      result = 31 * result + (metadata != null ? metadata.hashCode() : 0);
-      result = 31 * result + (type != null ? type.hashCode() : 0);
-      result = 31 * result + (transaction != null ? transaction.hashCode() : 0);
-      result = 31 * result + (origin != null ? origin.hashCode() : 0);
-      result = 31 * result + (commandRetried ? 1 : 0);
-      return result;
+      return Objects.hash(cache, key, value, oldValue, metadata, type, transaction, origin, commandRetried);
    }
 
    @Override

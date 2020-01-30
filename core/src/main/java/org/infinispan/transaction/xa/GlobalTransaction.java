@@ -1,16 +1,14 @@
 package org.infinispan.transaction.xa;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
 import java.util.Objects;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.infinispan.commons.marshall.AbstractExternalizer;
-import org.infinispan.commons.util.Util;
-import org.infinispan.marshall.core.Ids;
+import org.infinispan.commons.marshall.ProtoStreamTypeIds;
+import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.remoting.transport.Address;
+import org.infinispan.remoting.transport.jgroups.JGroupsAddress;
 
 
 /**
@@ -24,32 +22,37 @@ import org.infinispan.remoting.transport.Address;
  * @author Mircea.Markus@jboss.com
  * @since 4.0
  */
+@ProtoTypeId(ProtoStreamTypeIds.GLOBAL_TRANSACTION)
 public class GlobalTransaction implements Cloneable {
 
    private static final AtomicLong sid = new AtomicLong(0);
 
    protected long id = -1;
-
-   protected Address addr = null;
-   private int hash_code = -1;  // in the worst case, hashCode() returns 0, then increases, so we're safe here
+   protected Address address = null;
+   private int hashCode = -1;  // in the worst case, hashCode() returns 0, then increases, so we're safe here
    private boolean remote = false;
 
-   /**
-    * empty ctor used by externalization.
-    */
    protected GlobalTransaction() {
    }
 
-   protected GlobalTransaction(Address addr, boolean remote) {
+   protected GlobalTransaction(Address address, boolean remote) {
       this.id = sid.incrementAndGet();
-      this.addr = addr;
+      this.address = address;
       this.remote = remote;
    }
 
-   public Address getAddress() {
-      return addr;
+   @ProtoFactory
+   protected GlobalTransaction(long id, JGroupsAddress address) {
+      this.id = id;
+      this.address = address;
    }
 
+   @ProtoField(number = 1, javaType = JGroupsAddress.class)
+   public Address getAddress() {
+      return address;
+   }
+
+   @ProtoField(number = 2, defaultValue = "-1")
    public long getId() {
       return id;
    }
@@ -64,10 +67,10 @@ public class GlobalTransaction implements Cloneable {
 
    @Override
    public int hashCode() {
-      if (hash_code == -1) {
-         hash_code = (addr != null ? addr.hashCode() : 0) + (int) id;
+      if (hashCode == -1) {
+         hashCode = (address != null ? address.hashCode() : 0) + (int) id;
       }
-      return hash_code;
+      return hashCode;
    }
 
    @Override
@@ -78,13 +81,12 @@ public class GlobalTransaction implements Cloneable {
          return false;
 
       GlobalTransaction otherGtx = (GlobalTransaction) other;
-      boolean aeq = (addr == null) ? (otherGtx.addr == null) : addr.equals(otherGtx.addr);
-      return aeq && (id == otherGtx.id);
+      return Objects.equals(address, otherGtx.address) && (id == otherGtx.id);
    }
 
    @Override
    public String toString() {
-      return "GlobalTx:" + Objects.toString(addr, "local") + ":" + id;
+      return "GlobalTx:" + Objects.toString(address, "local") + ":" + id;
    }
 
    /**
@@ -99,7 +101,7 @@ public class GlobalTransaction implements Cloneable {
    }
 
    public void setAddress(Address address) {
-      this.addr = address;
+      this.address = address;
    }
 
    @Override
@@ -108,46 +110,6 @@ public class GlobalTransaction implements Cloneable {
          return super.clone();
       } catch (CloneNotSupportedException e) {
          throw new IllegalStateException("Impossible!");
-      }
-   }
-
-   protected abstract static class AbstractGlobalTxExternalizer<T extends GlobalTransaction> extends AbstractExternalizer<T> {
-      @Override
-      public void writeObject(ObjectOutput output, T gtx) throws IOException {
-         output.writeLong(gtx.id);
-         output.writeObject(gtx.addr);
-      }
-
-      /**
-       * Factory method for GlobalTransactions
-       * @return a newly constructed instance of GlobalTransaction or one of its subclasses
-       **/
-      protected abstract T createGlobalTransaction();
-
-      @Override
-      public T readObject(ObjectInput input) throws IOException, ClassNotFoundException {
-         T gtx = createGlobalTransaction();
-         gtx.id = input.readLong();
-         gtx.addr = (Address) input.readObject();
-         return gtx;
-      }
-   }
-
-   public static class Externalizer extends AbstractGlobalTxExternalizer<GlobalTransaction> {
-      @Override
-      @SuppressWarnings("unchecked")
-      public Set<Class<? extends GlobalTransaction>> getTypeClasses() {
-         return Util.<Class<? extends GlobalTransaction>>asSet(GlobalTransaction.class);
-      }
-
-      @Override
-      public Integer getId() {
-         return Ids.GLOBAL_TRANSACTION;
-      }
-
-      @Override
-      protected GlobalTransaction createGlobalTransaction() {
-         return TransactionFactory.TxFactoryEnum.NODLD_NORECOVERY_XA.newGlobalTransaction();
       }
    }
 }

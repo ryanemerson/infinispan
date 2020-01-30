@@ -29,7 +29,6 @@ import org.infinispan.commons.CacheException;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.container.entries.CacheEntry;
 import org.infinispan.container.entries.ImmortalCacheEntry;
-import org.infinispan.container.entries.InternalCacheEntry;
 import org.infinispan.container.impl.InternalDataContainer;
 import org.infinispan.distribution.LocalizedCacheTopology;
 import org.infinispan.distribution.TestAddress;
@@ -169,8 +168,7 @@ public class StateReceiverTest extends AbstractInfinispanTest {
    }
 
    private Collection<StateChunk> createStateChunks(Object key, Object value) {
-      Collection<InternalCacheEntry<?, ?>> entries = Collections.singleton(new ImmortalCacheEntry(key, value));
-      return Collections.singleton(new StateChunk(0, entries, true));
+      return Collections.singleton(StateChunk.create(0, true, new ImmortalCacheEntry(key, value)));
    }
 
    private ConsistentHash createConsistentHash(int numberOfNodes) {

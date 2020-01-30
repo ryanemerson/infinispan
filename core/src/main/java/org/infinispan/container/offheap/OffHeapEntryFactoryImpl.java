@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 import org.infinispan.commons.CacheException;
-import org.infinispan.commons.marshall.StreamingMarshaller;
+import org.infinispan.commons.marshall.Marshaller;
 import org.infinispan.commons.marshall.WrappedByteArray;
 import org.infinispan.commons.marshall.WrappedBytes;
 import org.infinispan.commons.time.TimeService;
@@ -38,7 +38,7 @@ public class OffHeapEntryFactoryImpl implements OffHeapEntryFactory {
    private static final OffHeapMemory MEMORY = OffHeapMemory.INSTANCE;
 
    @Inject @ComponentName(KnownComponentNames.INTERNAL_MARSHALLER)
-   StreamingMarshaller marshaller;
+   Marshaller marshaller;
    @Inject OffHeapMemoryAllocator allocator;
    @Inject TimeService timeService;
    @Inject InternalEntryFactory internalEntryFactory;

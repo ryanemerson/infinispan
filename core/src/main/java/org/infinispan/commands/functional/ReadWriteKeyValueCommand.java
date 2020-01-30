@@ -1,48 +1,61 @@
 package org.infinispan.commands.functional;
 
-import static org.infinispan.commons.util.Util.toStr;
-
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
 import java.util.function.BiFunction;
 
 import org.infinispan.commands.CommandInvocationId;
 import org.infinispan.commands.Visitor;
 import org.infinispan.commands.functional.functions.InjectableComponent;
 import org.infinispan.commands.write.ValueMatcher;
-import org.infinispan.commons.io.UnsignedNumeric;
-import org.infinispan.commons.marshall.MarshallUtil;
+import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.context.InvocationContext;
-import org.infinispan.context.impl.FlagBitSets;
 import org.infinispan.encoding.DataConversion;
 import org.infinispan.factories.ComponentRegistry;
 import org.infinispan.functional.EntryView.ReadWriteEntryView;
 import org.infinispan.functional.impl.Params;
+import org.infinispan.marshall.protostream.impl.MarshallableObject;
+import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
 import org.infinispan.metadata.Metadata;
+import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.protostream.annotations.ProtoTypeId;
 
+@ProtoTypeId(ProtoStreamTypeIds.READ_WRITE_KEY_VALUE_COMMAND)
 public final class ReadWriteKeyValueCommand<K, V, T, R> extends AbstractWriteKeyCommand<K, V> {
 
    public static final byte COMMAND_ID = 51;
 
-   private Object argument;
-   private BiFunction<T, ReadWriteEntryView<K, V>, R> f;
-   private Object prevValue;
-   private Metadata prevMetadata;
+   // TODO should this be MarshallableObject?
+   @ProtoField(number = 10)
+   final MarshallableUserObject<?> argument;
 
-   public ReadWriteKeyValueCommand(Object key, Object argument, BiFunction<T, ReadWriteEntryView<K, V>, R> f,
-                                   int segment, CommandInvocationId id,
-                                   ValueMatcher valueMatcher,
-                                   Params params,
-                                   DataConversion keyDataConversion,
-                                   DataConversion valueDataConversion) {
-      super(key, valueMatcher, segment, id, params, keyDataConversion, valueDataConversion);
+   @ProtoField(number = 11)
+   final MarshallableObject<BiFunction<T, ReadWriteEntryView<K, V>, R>> f;
+
+   @ProtoField(number = 12)
+   MarshallableUserObject<?> prevValue;
+
+   @ProtoField(number = 13)
+   MarshallableObject<Metadata> prevMetadata;
+
+   @ProtoFactory
+   ReadWriteKeyValueCommand(MarshallableUserObject<?> wrappedKey, long flagsWithoutRemote, int topologyId, int segment,
+                                   CommandInvocationId commandInvocationId, Params params, ValueMatcher valueMatcher,
+                                   DataConversion keyDataConversion, DataConversion valueDataConversion,
+                                   MarshallableUserObject<?> argument, MarshallableObject<BiFunction<T,
+         ReadWriteEntryView<K, V>, R>> f, MarshallableUserObject<?> prevValue, MarshallableObject<Metadata> prevMetadata) {
+      super(wrappedKey, flagsWithoutRemote, topologyId, segment, commandInvocationId, params, valueMatcher, keyDataConversion, valueDataConversion);
       this.argument = argument;
       this.f = f;
+      this.prevValue = prevValue;
+      this.prevMetadata = prevMetadata;
    }
 
-   public ReadWriteKeyValueCommand() {
-      // No-op, for marshalling
+   public ReadWriteKeyValueCommand(Object key, Object argument, BiFunction<T, ReadWriteEntryView<K, V>, R> f,
+                                   int segment, CommandInvocationId id, ValueMatcher valueMatcher, Params params,
+                                   DataConversion keyDataConversion, DataConversion valueDataConversion) {
+      super(key, valueMatcher, segment, id, params, keyDataConversion, valueDataConversion);
+      this.argument = MarshallableUserObject.create(argument);
+      this.f = MarshallableObject.create(f);
    }
 
    @Override
@@ -55,38 +68,6 @@ public final class ReadWriteKeyValueCommand<K, V, T, R> extends AbstractWriteKey
    @Override
    public byte getCommandId() {
       return COMMAND_ID;
-   }
-
-   @Override
-   public void writeTo(ObjectOutput output) throws IOException {
-      output.writeObject(key);
-      output.writeObject(argument);
-      output.writeObject(f);
-      MarshallUtil.marshallEnum(valueMatcher, output);
-      UnsignedNumeric.writeUnsignedInt(output, segment);
-      Params.writeObject(output, params);
-      output.writeLong(FlagBitSets.copyWithoutRemotableFlags(getFlagsBitSet()));
-      CommandInvocationId.writeTo(output, commandInvocationId);
-      output.writeObject(prevValue);
-      output.writeObject(prevMetadata);
-      DataConversion.writeTo(output, keyDataConversion);
-      DataConversion.writeTo(output, valueDataConversion);
-   }
-
-   @Override
-   public void readFrom(ObjectInput input) throws IOException, ClassNotFoundException {
-      key = input.readObject();
-      argument = input.readObject();
-      f = (BiFunction<T, ReadWriteEntryView<K, V>, R>) input.readObject();
-      valueMatcher = MarshallUtil.unmarshallEnum(input, ValueMatcher::valueOf);
-      segment = UnsignedNumeric.readUnsignedInt(input);
-      params = Params.readObject(input);
-      setFlagsBitSet(input.readLong());
-      commandInvocationId = CommandInvocationId.readFrom(input);
-      prevValue = input.readObject();
-      prevMetadata = (Metadata) input.readObject();
-      keyDataConversion = DataConversion.readFrom(input);
-      valueDataConversion = DataConversion.readFrom(input);
    }
 
    @Override
@@ -106,46 +87,45 @@ public final class ReadWriteKeyValueCommand<K, V, T, R> extends AbstractWriteKey
 
    @Override
    public String toString() {
-      return new StringBuilder("ReadWriteKeyValueCommand{")
-            .append("key=").append(toStr(key))
-            .append(", argument=").append(toStr(argument))
-            .append(", f=").append(f.getClass().getName())
-            .append(", prevValue=").append(toStr(prevValue))
-            .append(", prevMetadata=").append(toStr(prevMetadata))
-            .append(", flags=").append(printFlags())
-            .append(", commandInvocationId=").append(commandInvocationId)
-            .append(", topologyId=").append(getTopologyId())
-            .append(", valueMatcher=").append(valueMatcher)
-            .append(", successful=").append(successful)
-            .append(", keyDataConversion=").append(keyDataConversion)
-            .append(", valueDataConversion=").append(valueDataConversion)
-            .append("}")
-            .toString();
+      return "ReadWriteKeyValueCommand{" +
+            "key=" + key +
+            ", argument=" + argument +
+            ", f=" + getBiFunction().getClass().getName() +
+            ", prevValue=" + prevValue +
+            ", prevMetadata=" + prevMetadata +
+            ", flags=" + printFlags() +
+            ", commandInvocationId=" + commandInvocationId +
+            ", topologyId=" + getTopologyId() +
+            ", valueMatcher=" + valueMatcher +
+            ", successful=" + successful +
+            ", keyDataConversion=" + keyDataConversion +
+            ", valueDataConversion=" + valueDataConversion +
+            "}";
    }
 
    @Override
-   public Mutation toMutation(Object key) {
-      return new Mutations.ReadWriteWithValue<>(keyDataConversion, valueDataConversion, argument, f);
+   public Mutation<K, V, R> toMutation(Object key) {
+      return new Mutations.ReadWriteWithValue<>(keyDataConversion, valueDataConversion, getArgument(), getBiFunction());
    }
 
    public void setPrevValueAndMetadata(Object prevValue, Metadata prevMetadata) {
-      this.prevMetadata = prevMetadata;
-      this.prevValue = prevValue;
+      this.prevValue = MarshallableUserObject.create(prevValue);
+      this.prevMetadata = MarshallableObject.create(prevMetadata);
    }
 
    public Object getArgument() {
-      return argument;
+      return MarshallableUserObject.unwrap(argument);
    }
 
    public BiFunction<T, ReadWriteEntryView<K, V>, R> getBiFunction() {
-      return f;
+      return MarshallableObject.unwrap(f);
    }
 
    public Object getPrevValue() {
-      return prevValue;
+      return MarshallableUserObject.unwrap(prevValue);
    }
 
    public Metadata getPrevMetadata() {
-      return prevMetadata;
+      return MarshallableObject.unwrap(prevMetadata);
    }
 }

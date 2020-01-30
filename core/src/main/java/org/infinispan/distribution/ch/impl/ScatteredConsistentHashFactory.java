@@ -2,20 +2,16 @@ package org.infinispan.distribution.ch.impl;
 
 import static org.infinispan.util.logging.Log.CONTAINER;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-import org.infinispan.commons.marshall.AbstractExternalizer;
-import org.infinispan.commons.marshall.Ids;
+import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.globalstate.ScopedPersistentState;
+import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.remoting.transport.Address;
 
 /**
@@ -23,6 +19,7 @@ import org.infinispan.remoting.transport.Address;
  *
  * @since 9.0
  */
+@ProtoTypeId(ProtoStreamTypeIds.SCATTERED_CONSISTENT_HASH_FACTORY)
 public class ScatteredConsistentHashFactory extends AbstractConsistentHashFactory<ScatteredConsistentHash> {
 
    @Override
@@ -224,28 +221,5 @@ public class ScatteredConsistentHashFactory extends AbstractConsistentHashFactor
    @Override
    public int hashCode() {
       return 4728;
-   }
-
-   public static class Externalizer extends AbstractExternalizer<ScatteredConsistentHashFactory> {
-
-      @Override
-      public void writeObject(ObjectOutput output, ScatteredConsistentHashFactory chf) throws IOException {
-      }
-
-      @Override
-      @SuppressWarnings("unchecked")
-      public ScatteredConsistentHashFactory readObject(ObjectInput unmarshaller) throws IOException, ClassNotFoundException {
-         return new ScatteredConsistentHashFactory();
-      }
-
-      @Override
-      public Integer getId() {
-         return Ids.SCATTERED_CONSISTENT_HASH_FACTORY;
-      }
-
-      @Override
-      public Set<Class<? extends ScatteredConsistentHashFactory>> getTypeClasses() {
-         return Collections.singleton(ScatteredConsistentHashFactory.class);
-      }
    }
 }

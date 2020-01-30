@@ -65,9 +65,8 @@ import org.infinispan.cache.impl.AbstractDelegatingCache;
 import org.infinispan.commands.CommandsFactory;
 import org.infinispan.commons.CacheException;
 import org.infinispan.commons.api.Lifecycle;
+import org.infinispan.commons.marshall.Marshaller;
 import org.infinispan.commons.marshall.ProtoStreamMarshaller;
-import org.infinispan.commons.marshall.StreamAwareMarshaller;
-import org.infinispan.commons.marshall.StreamingMarshaller;
 import org.infinispan.commons.test.Exceptions;
 import org.infinispan.commons.util.Version;
 import org.infinispan.configuration.cache.CacheMode;
@@ -1044,7 +1043,7 @@ public class TestingUtil {
 
    public static GlobalMarshaller extractGlobalMarshaller(EmbeddedCacheManager cm) {
       GlobalComponentRegistry gcr = extractGlobalComponentRegistry(cm);
-      return (GlobalMarshaller) gcr.getComponent(StreamingMarshaller.class, KnownComponentNames.INTERNAL_MARSHALLER);
+      return (GlobalMarshaller) gcr.getComponent(Marshaller.class, KnownComponentNames.INTERNAL_MARSHALLER);
    }
 
    public static PersistenceMarshallerImpl extractPersistenceMarshaller(EmbeddedCacheManager cm) {
@@ -1843,15 +1842,6 @@ public class TestingUtil {
    public static void cleanUpDataContainerForCache(Cache<?, ?> cache) {
       InternalDataContainer<?, ?> dataContainer = extractComponent(cache, InternalDataContainer.class);
       dataContainer.cleanUp();
-   }
-
-   // The first call to JbossMarshall::isMarshallable results in an object actually being serialized, the additional
-   // call to PersistenceMarshaller::isMarshallable in the GlobalMarshaller may break stats on test Externalizer implementations
-   // this is simply a convenience method to initialise MarshallableTypeHints
-   public static void initJbossMarshallerTypeHints(EmbeddedCacheManager cm, Object... objects) {
-      StreamAwareMarshaller marshaller = extractPersistenceMarshaller(cm);
-      for (Object o : objects)
-         marshaller.isMarshallable(o);
    }
 
    public static void copy(InputStream is, OutputStream os) throws IOException {
