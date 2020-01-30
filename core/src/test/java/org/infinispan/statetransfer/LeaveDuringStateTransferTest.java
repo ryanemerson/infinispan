@@ -28,7 +28,7 @@ public class LeaveDuringStateTransferTest extends MultipleCacheManagersTest {
    @Override
    protected void createCacheManagers() throws Throwable {
       ConfigurationBuilder cb = configuration();
-      createClusteredCaches(3, cb, new TransportFlags().withFD(true));
+      createClusteredCaches(3, ControlledConsistentHashFactory.SCI.INSTANCE, cb, new TransportFlags().withFD(true));
    }
 
    private ConfigurationBuilder configuration() {

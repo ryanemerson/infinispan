@@ -1,13 +1,12 @@
 package org.infinispan.commands.statetransfer;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.infinispan.commands.TopologyAffectedCommand;
 import org.infinispan.commands.remote.BaseRpcCommand;
 import org.infinispan.commons.util.IntSet;
-import org.infinispan.commons.util.IntSetsExternalization;
+import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.util.ByteString;
 
 /**
@@ -34,13 +33,19 @@ abstract class AbstractStateTransferCommand extends BaseRpcCommand implements To
    }
 
    @Override
-   public boolean isReturnValueExpected() {
-      return true;
+   @ProtoField(value = 2, defaultValue = "-1")
+   public int getTopologyId() {
+      return topologyId;
+   }
+
+   @ProtoField(number = 3, collectionImplementation = HashSet.class)
+   Set<Integer> getSegmentsSet() {
+      return segments;
    }
 
    @Override
-   public int getTopologyId() {
-      return topologyId;
+   public boolean isReturnValueExpected() {
+      return true;
    }
 
    @Override
@@ -55,15 +60,5 @@ abstract class AbstractStateTransferCommand extends BaseRpcCommand implements To
    @Override
    public byte getCommandId() {
       return commandId;
-   }
-
-   @Override
-   public void writeTo(ObjectOutput output) throws IOException {
-      IntSetsExternalization.writeTo(output, segments);
-   }
-
-   @Override
-   public void readFrom(ObjectInput input) throws IOException, ClassNotFoundException {
-      segments = IntSetsExternalization.readFrom(input);
    }
 }

@@ -18,8 +18,10 @@ import org.infinispan.distribution.MagicKey;
 import org.infinispan.distribution.ch.ConsistentHash;
 import org.infinispan.distribution.ch.KeyPartitioner;
 import org.infinispan.distribution.ch.impl.DefaultConsistentHash;
+import org.infinispan.filter.CompositeKeyValueFilterConverter;
 import org.infinispan.filter.Converter;
 import org.infinispan.manager.EmbeddedCacheManager;
+import org.infinispan.marshall.core.next.impl.GlobalContextInitializer;
 import org.infinispan.metadata.Metadata;
 import org.infinispan.protostream.SerializationContextInitializer;
 import org.infinispan.protostream.annotations.AutoProtoSchemaBuilder;
@@ -151,11 +153,11 @@ public abstract class BaseSetupStreamIteratorTest extends MultipleCacheManagersT
    }
 
    @AutoProtoSchemaBuilder(
-         // TODO use this or just explicitly add required classes?
-//         dependsOn = org.infinispan.test.TestDataSCI.class,
+         dependsOn = GlobalContextInitializer.class,
          includeClasses = {
                BaseSetupStreamIteratorTest.StringTruncator.class,
                BaseSetupStreamIteratorTest.TestDefaultConsistentHashFactory.class,
+               CompositeKeyValueFilterConverter.class,
                MagicKey.class
          },
          schemaFileName = "core.stream.proto",

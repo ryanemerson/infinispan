@@ -1,8 +1,6 @@
 package org.infinispan.statetransfer;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletionStage;
@@ -14,6 +12,7 @@ import org.infinispan.commands.statetransfer.StateResponseCommand;
 import org.infinispan.commons.IllegalLifecycleStateException;
 import org.infinispan.commons.util.IntSet;
 import org.infinispan.commons.util.IntSets;
+import org.infinispan.commons.util.concurrent.CompletableFutures;
 import org.infinispan.container.entries.InternalCacheEntry;
 import org.infinispan.reactive.publisher.impl.SegmentPublisherSupplier;
 import org.infinispan.remoting.inboundhandler.DeliverOrder;
@@ -22,7 +21,6 @@ import org.infinispan.remoting.rpc.RpcOptions;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.remoting.transport.impl.SingleResponseCollector;
 import org.infinispan.remoting.transport.jgroups.SuspectException;
-import org.infinispan.commons.util.concurrent.CompletableFutures;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 
@@ -124,7 +122,7 @@ public class OutboundTransferTask {
                for(SegmentPublisherSupplier.Notification<InternalCacheEntry<?, ?>> notification: batch) {
                   if (notification.isValue()) {
                      StateChunk chunk = chunks.computeIfAbsent(
-                           notification.valueSegment(), segment -> new StateChunk(segment, new ArrayList<>(), false));
+                           notification.valueSegment(), segment -> StateChunk.create(segment, false));
                      chunk.getCacheEntries().add(notification.value());
                   }
 
@@ -132,8 +130,8 @@ public class OutboundTransferTask {
                   if (notification.isSegmentComplete()) {
                      int segment = notification.completedSegment();
                      chunks.compute(segment, (s, previous) -> previous == null
-                           ? new StateChunk(s, Collections.emptyList(), true)
-                           : new StateChunk(segment, previous.getCacheEntries(), true));
+                           ? StateChunk.create(s, true)
+                           : StateChunk.create(segment, true));
                   }
                }
 

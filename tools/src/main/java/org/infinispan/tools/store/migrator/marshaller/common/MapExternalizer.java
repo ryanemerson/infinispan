@@ -1,8 +1,7 @@
-package org.infinispan.marshall.exts;
+package org.infinispan.tools.store.migrator.marshaller.common;
 
 import java.io.IOException;
 import java.io.ObjectInput;
-import java.io.ObjectOutput;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -12,22 +11,13 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.infinispan.commons.marshall.AbstractExternalizer;
 import org.infinispan.commons.marshall.MarshallUtil;
 import org.infinispan.commons.util.FastCopyHashMap;
 import org.infinispan.commons.util.Util;
 import org.infinispan.distribution.util.ReadOnlySegmentAwareMap;
 import org.infinispan.marshall.core.Ids;
 
-/**
- * Map externalizer for all map implementations except immutable maps and singleton maps, i.e. FastCopyHashMap, HashMap,
- * TreeMap.
- *
- * @author Galder Zamarreño
- * @since 4.0
- *
- */
-public class MapExternalizer extends AbstractExternalizer<Map> {
+public class MapExternalizer extends AbstractMigratorExternalizer<Map> {
    private static final int HASHMAP = 0;
    private static final int TREEMAP = 1;
    private static final int FASTCOPYHASHMAP = 2;
@@ -132,5 +122,4 @@ public class MapExternalizer extends AbstractExternalizer<Map> {
    private static Class<? extends Map> getMapClass(String className) {
       return Util.loadClass(className, Map.class.getClassLoader());
    }
-
 }

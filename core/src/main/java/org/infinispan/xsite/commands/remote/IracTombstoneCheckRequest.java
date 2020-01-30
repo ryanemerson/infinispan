@@ -14,12 +14,17 @@ import java.util.stream.Collectors;
 
 import org.infinispan.commands.irac.IracTombstoneRemoteSiteCheckCommand;
 import org.infinispan.commons.marshall.MarshallUtil;
+import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.commons.util.IntSet;
 import org.infinispan.commons.util.IntSets;
 import org.infinispan.commons.util.Util;
 import org.infinispan.distribution.DistributionInfo;
 import org.infinispan.distribution.LocalizedCacheTopology;
 import org.infinispan.factories.ComponentRegistry;
+import org.infinispan.marshall.protostream.impl.MarshallableCollection;
+import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.remoting.responses.ValidResponse;
 import org.infinispan.remoting.rpc.RpcManager;
 import org.infinispan.remoting.rpc.RpcOptions;
@@ -38,17 +43,24 @@ import org.infinispan.xsite.irac.IracManager;
  *
  * @since 15.0
  */
+@ProtoTypeId(ProtoStreamTypeIds.IRAC_TOMBSTONE_CHECKOUT_REQUEST)
 public class IracTombstoneCheckRequest extends XSiteCacheRequest<IntSet> {
 
    private List<Object> keys;
 
-   public IracTombstoneCheckRequest() {
-      super(null);
-   }
-
    public IracTombstoneCheckRequest(ByteString cacheName, List<Object> keys) {
       super(cacheName);
       this.keys = keys;
+   }
+
+   @ProtoFactory
+   IracTombstoneCheckRequest(ByteString cacheName, MarshallableCollection<Object> keys) {
+      this(cacheName, MarshallableCollection.unwrapAsList(keys));
+   }
+
+   @ProtoField(2)
+   MarshallableCollection<Object> getKeys() {
+      return MarshallableCollection.create(keys);
    }
 
    @Override

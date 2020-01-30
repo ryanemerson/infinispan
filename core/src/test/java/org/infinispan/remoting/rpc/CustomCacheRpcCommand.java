@@ -1,9 +1,5 @@
 package org.infinispan.remoting.rpc;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
-import java.io.Serializable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
@@ -12,35 +8,35 @@ import org.infinispan.commands.Visitor;
 import org.infinispan.commands.remote.BaseRpcCommand;
 import org.infinispan.context.InvocationContext;
 import org.infinispan.factories.ComponentRegistry;
+import org.infinispan.marshall.protostream.impl.MarshallableObject;
+import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.util.ByteString;
 
 /**
  * @author anistor@redhat.com
  * @since 5.3
  */
-public class CustomCacheRpcCommand extends BaseRpcCommand implements VisitableCommand, Serializable {
+public class CustomCacheRpcCommand extends BaseRpcCommand implements VisitableCommand {
 
    public static final byte COMMAND_ID = 126;
 
-   private static final long serialVersionUID = -1L;
+   @ProtoField(number = 2)
+   final MarshallableObject<?> arg;
 
-   private Object arg;
-
-   public CustomCacheRpcCommand() {
-      super(null); // For command id uniqueness test
-   }
-
-   public CustomCacheRpcCommand(ByteString cacheName) {
+   @ProtoFactory
+   CustomCacheRpcCommand(ByteString cacheName, MarshallableObject<?> arg) {
       super(cacheName);
+      this.arg = arg;
    }
 
-   public CustomCacheRpcCommand(ByteString cacheName, Object arg) {
-      this(cacheName);
-      this.arg = arg;
+   CustomCacheRpcCommand(ByteString cacheName, Object arg) {
+      this(cacheName, MarshallableObject.create(arg));
    }
 
    @Override
    public CompletionStage<?> invokeAsync(ComponentRegistry registry) throws Throwable {
+      Object arg = MarshallableObject.unwrap(this.arg);
       if (arg instanceof Throwable) {
          throw (Throwable) arg;
       }
@@ -52,16 +48,6 @@ public class CustomCacheRpcCommand extends BaseRpcCommand implements VisitableCo
    @Override
    public byte getCommandId() {
       return COMMAND_ID;
-   }
-
-   @Override
-   public void writeTo(ObjectOutput output) throws IOException {
-      output.writeObject(arg);
-   }
-
-   @Override
-   public void readFrom(ObjectInput input) throws IOException, ClassNotFoundException {
-      arg = input.readObject();
    }
 
    @Override
@@ -78,5 +64,4 @@ public class CustomCacheRpcCommand extends BaseRpcCommand implements VisitableCo
    public LoadType loadType() {
       throw new UnsupportedOperationException();
    }
-
 }

@@ -1,18 +1,9 @@
-package org.infinispan.marshall.exts;
+package org.infinispan.marshall.protostream.impl.marshallers;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 
-/**
- * SecurityActions for the org.infinispan.marshall.exts package.
- * <p>
- * Do not move. Do not change class and method visibility to avoid being called from other
- * {@link java.security.CodeSource}s, thus granting privilege escalation to external code.
- *
- * @author William Burns
- * @since 8.2
- */
-final class SecurityActions {
+final class Util {
    private static Field getDeclaredField(Class<?> c, String fieldName) {
       try {
          return c.getDeclaredField(fieldName);

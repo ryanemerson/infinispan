@@ -69,7 +69,8 @@ public class MarshallableLambda {
 
    public static MarshallableLambda create(Object o) {
       try {
-         Method writeReplace = SecurityActions.getMethodAndSetAccessible(o, "writeReplace");
+         Method writeReplace = o.getClass().getDeclaredMethod("writeReplace");
+         writeReplace.setAccessible(true);
          SerializedLambda sl = (SerializedLambda) writeReplace.invoke(o);
 
          int numberOfArgs = sl.getCapturedArgCount();
@@ -104,7 +105,8 @@ public class MarshallableLambda {
                functionalInterfaceMethodSignature, implMethodKind, implClass, implMethodName, implMethodSignature,
                instantiatedMethodType, args);
 
-         Method method = SecurityActions.getMethodAndSetAccessible(clazz, "$deserializeLambda$", SerializedLambda.class);
+         Method method = clazz.getDeclaredMethod("$deserializeLambda$", SerializedLambda.class);
+         method.setAccessible(true);
          return method.invoke(null, sl);
       } catch (ClassNotFoundException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
          throw new MarshallingException(e);

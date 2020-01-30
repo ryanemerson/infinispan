@@ -1,12 +1,12 @@
 package org.infinispan.commands.topology;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
 import java.util.concurrent.CompletionStage;
 
-import org.infinispan.commons.marshall.MarshallUtil;
+import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.factories.GlobalComponentRegistry;
+import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.remoting.transport.Address;
 
 /**
@@ -15,18 +15,29 @@ import org.infinispan.remoting.transport.Address;
  * @author Ryan Emerson
  * @since 11.0
  */
+@ProtoTypeId(ProtoStreamTypeIds.REBALANCE_PHASE_CONFIRM_COMMAND)
 public class RebalancePhaseConfirmCommand extends AbstractCacheControlCommand {
 
    public static final byte COMMAND_ID = 87;
 
-   private String cacheName;
-   private Throwable throwable;
-   private int topologyId;
-   private int viewId;
+   @ProtoField(number = 1)
+   final String cacheName;
 
-   // For CommandIdUniquenessTest only
-   public RebalancePhaseConfirmCommand() {
-      super(COMMAND_ID);
+   // TODO how to handle?
+   // Create a Wrapper that is able to recreate a generic throwable object? Can this be done without reflection?
+//   @ProtoField(number = 2)
+   private Throwable throwable;
+
+   @ProtoField(number = 3, defaultValue = "-1")
+   final int topologyId;
+
+   @ProtoField(number = 4, defaultValue = "-1")
+   final int viewId;
+
+//   RebalancePhaseConfirmCommand(String cacheName, Throwable throwable, int topologyId, int viewId) {
+   @ProtoFactory
+   RebalancePhaseConfirmCommand(String cacheName, int topologyId, int viewId) {
+      this(cacheName, null, null, topologyId, viewId);
    }
 
    public RebalancePhaseConfirmCommand(String cacheName, Address origin, Throwable throwable, int topologyId, int viewId) {
@@ -45,22 +56,6 @@ public class RebalancePhaseConfirmCommand extends AbstractCacheControlCommand {
 
    public String getCacheName() {
       return cacheName;
-   }
-
-   @Override
-   public void writeTo(ObjectOutput output) throws IOException {
-      MarshallUtil.marshallString(cacheName, output);
-      output.writeObject(throwable);
-      output.writeInt(topologyId);
-      output.writeInt(viewId);
-   }
-
-   @Override
-   public void readFrom(ObjectInput input) throws IOException, ClassNotFoundException {
-      cacheName = MarshallUtil.unmarshallString(input);
-      throwable = (Throwable) input.readObject();
-      topologyId = input.readInt();
-      viewId = input.readInt();
    }
 
    @Override

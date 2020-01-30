@@ -2,7 +2,6 @@ package org.infinispan.marshall.core.proto;
 
 import java.io.IOException;
 
-import org.infinispan.commands.RemoteCommandsFactory;
 import org.infinispan.commons.dataconversion.MediaType;
 import org.infinispan.commons.io.ByteBuffer;
 import org.infinispan.commons.marshall.BufferSizePredictor;
@@ -25,7 +24,7 @@ import org.infinispan.marshall.protostream.impl.SerializationContextRegistry;
 public class DelegatingGlobalMarshaller implements Marshaller {
 
    // Set to false in order to determine what can't be serialized with the new marshaller
-   private static final boolean DELEGATE = true;
+   private static final boolean DELEGATE = false;
 
    final org.infinispan.marshall.core.next.GlobalMarshaller newMarshaller;
    final GlobalMarshaller oldMarshaller;
@@ -34,8 +33,7 @@ public class DelegatingGlobalMarshaller implements Marshaller {
 
    @Inject
    GlobalComponentRegistry gcr;
-   @Inject
-   RemoteCommandsFactory cmdFactory;
+
    @Inject @ComponentName(KnownComponentNames.PERSISTENCE_MARSHALLER)
    PersistenceMarshaller persistenceMarshaller;
 
@@ -53,15 +51,15 @@ public class DelegatingGlobalMarshaller implements Marshaller {
    }
 
    @Override
-   @Start(priority = 8) // Should start after the externalizer table and before transport
+   @Start() // Should start after the externalizer table and before transport
    public void start() {
       newMarshaller.init(gcr, ctxRegistry, userMarshallerRef.running());
-      oldMarshaller.init(gcr, cmdFactory, persistenceMarshaller);
+      oldMarshaller.init(gcr, persistenceMarshaller);
       oldMarshaller.start();
    }
 
    @Override
-   @Stop(priority = 130) // Stop after transport to avoid send/receive and marshaller not being ready
+   @Stop() // Stop after transport to avoid send/receive and marshaller not being ready
    public void stop() {
       persistenceMarshaller.stop();
    }

@@ -32,6 +32,7 @@ public class GlobalMarshaller extends AbstractInternalProtoStreamMarshaller {
       this.gcr = gcr;
       this.ctxRegistry = ctxRegistry;
       this.userMarshaller = userMarshaller;
+      this.classLoader = gcr.getGlobalConfiguration().classLoader();
    }
 
    @Override
@@ -43,6 +44,23 @@ public class GlobalMarshaller extends AbstractInternalProtoStreamMarshaller {
    @Override
    public ImmutableSerializationContext getSerializationContext() {
       return ctxRegistry.getGlobalCtx();
+   }
+
+   @Override
+   protected boolean isMarshallableWithProtoStream(Object o) {
+      return o instanceof String ||
+            o instanceof Long ||
+            o instanceof Integer ||
+            o instanceof Double ||
+            o instanceof Float ||
+            o instanceof Boolean ||
+            o instanceof byte[] ||
+            o instanceof Byte ||
+            o instanceof Short ||
+            o instanceof Character ||
+            o instanceof java.util.Date ||
+            o instanceof java.time.Instant ||
+            super.isMarshallableWithProtoStream(o);
    }
 
    @Override

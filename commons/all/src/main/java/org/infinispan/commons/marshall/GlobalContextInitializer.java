@@ -1,6 +1,5 @@
-package org.infinispan.commons;
+package org.infinispan.commons.marshall;
 
-import org.infinispan.commons.util.KeyValueWithPrevious;
 import org.infinispan.protostream.SerializationContextInitializer;
 import org.infinispan.protostream.annotations.AutoProtoSchemaBuilder;
 
@@ -11,16 +10,17 @@ import org.infinispan.protostream.annotations.AutoProtoSchemaBuilder;
  * @author Ryan Emerson
  * @since 10.0
  */
-// TODO
-//            org.infinispan.commons.api.CacheContainerAdmin.AdminFlag.class,
-//      org.infinispan.commons.tx.XidImpl.class,
 @AutoProtoSchemaBuilder(
-      includeClasses = KeyValueWithPrevious.class,
+      includeClasses = {
+            org.infinispan.commons.api.CacheContainerAdmin.AdminFlag.class,
+            org.infinispan.commons.tx.XidImpl.class,
+            org.infinispan.commons.util.KeyValueWithPrevious.class,
+      },
       schemaFileName = "global.commons.proto",
       schemaFilePath = "proto/generated",
       schemaPackageName = "org.infinispan.global.commons",
       service = false
 )
 public interface GlobalContextInitializer extends SerializationContextInitializer {
-   GlobalContextInitializer INSTANCE = new GlobalContextInitializerImpl();
+   org.infinispan.commons.marshall.GlobalContextInitializer INSTANCE = new GlobalContextInitializerImpl();
 }

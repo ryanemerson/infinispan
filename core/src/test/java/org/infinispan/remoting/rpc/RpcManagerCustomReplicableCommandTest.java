@@ -23,6 +23,7 @@ import org.testng.annotations.Test;
  * @author anistor@redhat.com
  * @since 5.3
  */
+// TODO how to handle this custom command? Is it still valid?
 @Test(testName = "remoting.rpc.RpcManagerCustomReplicableCommandTest", groups = "functional")
 public class RpcManagerCustomReplicableCommandTest extends MultipleCacheManagersTest {
 
@@ -33,7 +34,7 @@ public class RpcManagerCustomReplicableCommandTest extends MultipleCacheManagers
    @Override
    protected void createCacheManagers() throws Throwable {
       ConfigurationBuilder builder = getDefaultClusteredCacheConfig(CacheMode.REPL_SYNC, true);
-      createClusteredCaches(2, TEST_CACHE, builder);
+      createClusteredCaches(2, TEST_CACHE, RpcSCI.INSTANCE, builder);
    }
 
    protected ReplicableCommand createReplicableCommandForTest(Object arg) {

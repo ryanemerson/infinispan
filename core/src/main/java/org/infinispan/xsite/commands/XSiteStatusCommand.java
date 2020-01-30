@@ -1,10 +1,14 @@
 package org.infinispan.xsite.commands;
 
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
 import org.infinispan.commands.remote.BaseRpcCommand;
+import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.factories.ComponentRegistry;
+import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.util.ByteString;
 import org.infinispan.xsite.BackupSender;
 import org.infinispan.xsite.status.TakeOfflineManager;
@@ -15,21 +19,18 @@ import org.infinispan.xsite.status.TakeOfflineManager;
  * @author Ryan Emerson
  * @since 11.0
  */
+@ProtoTypeId(ProtoStreamTypeIds.XSITE_STATUS_COMMAND)
 public class XSiteStatusCommand extends BaseRpcCommand {
 
    public static final int COMMAND_ID = 100;
 
-   // For CommandIdUniquenessTest only
-   public XSiteStatusCommand() {
-      this(null);
-   }
-
+   @ProtoFactory
    public XSiteStatusCommand(ByteString cacheName) {
       super(cacheName);
    }
 
    @Override
-   public CompletionStage<?> invokeAsync(ComponentRegistry registry) throws Throwable {
+   public CompletionStage<Map<String, Boolean>> invokeAsync(ComponentRegistry registry) throws Throwable {
       TakeOfflineManager takeOfflineManager = registry.getTakeOfflineManager().running();
       return CompletableFuture.completedFuture(takeOfflineManager.status());
    }
