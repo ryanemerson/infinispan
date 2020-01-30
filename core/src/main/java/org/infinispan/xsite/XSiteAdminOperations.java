@@ -512,9 +512,7 @@ public class XSiteAdminOperations implements CustomMetricsSupplier {
 
       @Override
       void storeResponse(Address sender, ValidResponse response) {
-         Object value = response.getResponseValue();
-         assert value instanceof Boolean;
-         okResponses.put(sender, (Boolean) value);
+         okResponses.put(sender, response.getResponseObject());
       }
    }
 
@@ -526,8 +524,7 @@ public class XSiteAdminOperations implements CustomMetricsSupplier {
 
       @Override
       void storeResponse(Address sender, ValidResponse response) {
-         //noinspection unchecked
-         okResponses.put(sender, (Map<String, Boolean>) response.getResponseValue());
+         okResponses.put(sender, response.getResponseMap());
       }
    }
 }

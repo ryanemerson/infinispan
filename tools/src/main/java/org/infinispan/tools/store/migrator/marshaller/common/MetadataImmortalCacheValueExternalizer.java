@@ -2,11 +2,9 @@ package org.infinispan.tools.store.migrator.marshaller.common;
 
 import java.io.IOException;
 import java.io.ObjectInput;
-import java.io.ObjectOutput;
-import java.util.Collections;
 import java.util.Set;
 
-import org.infinispan.commons.marshall.AdvancedExternalizer;
+import org.infinispan.commons.util.Util;
 import org.infinispan.container.entries.metadata.MetadataImmortalCacheValue;
 import org.infinispan.marshall.core.Ids;
 import org.infinispan.metadata.Metadata;
@@ -17,11 +15,13 @@ import org.infinispan.metadata.Metadata;
  * @author Pedro Ruivo
  * @since 11.0
  */
-public class MetadataImmortalCacheValueExternalizer implements AdvancedExternalizer<MetadataImmortalCacheValue> {
+public class MetadataImmortalCacheValueExternalizer extends AbstractMigratorExternalizer<MetadataImmortalCacheValue> {
 
    @Override
-   public Set<Class<? extends MetadataImmortalCacheValue>> getTypeClasses() {
-      return Collections.singleton(MetadataImmortalCacheValue.class);
+   public MetadataImmortalCacheValue readObject(ObjectInput input) throws IOException, ClassNotFoundException {
+      Object v = input.readObject();
+      Metadata metadata = (Metadata) input.readObject();
+      return new MetadataImmortalCacheValue(v, null, metadata);
    }
 
    @Override
@@ -30,16 +30,7 @@ public class MetadataImmortalCacheValueExternalizer implements AdvancedExternali
    }
 
    @Override
-   public void writeObject(ObjectOutput output, MetadataImmortalCacheValue icv) throws IOException {
-      output.writeObject(icv.getValue());
-      output.writeObject(icv.getMetadata());
+   public Set<Class<? extends MetadataImmortalCacheValue>> getTypeClasses() {
+      return Util.asSet(MetadataImmortalCacheValue.class);
    }
-
-   @Override
-   public MetadataImmortalCacheValue readObject(ObjectInput input) throws IOException, ClassNotFoundException {
-      Object value = input.readObject();
-      Metadata metadata = (Metadata) input.readObject();
-      return new MetadataImmortalCacheValue(value, metadata);
-   }
-
 }

@@ -8,14 +8,13 @@ import java.util.List;
 import org.infinispan.commons.marshall.MarshallingException;
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.commons.util.Util;
-import org.infinispan.protostream.ImmutableSerializationContext;
-import org.infinispan.protostream.RawProtoStreamReader;
-import org.infinispan.protostream.RawProtoStreamWriter;
-import org.infinispan.protostream.RawProtobufMarshaller;
+import org.infinispan.protostream.ProtobufTagMarshaller;
+import org.infinispan.protostream.TagReader;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
-import org.infinispan.protostream.impl.WireFormat;
+import org.infinispan.protostream.annotations.impl.GeneratedMarshallerBase;
+import org.infinispan.protostream.descriptors.WireType;
 
 /**
  * A wrapper for collections of objects whose type is unknown until runtime. This is equivalent to utilising a
@@ -82,7 +81,7 @@ public class MarshallableArray<T> {
       return new IllegalStateException(this.getClass().getSimpleName() + " marshaller not overridden in SerializationContext");
    }
 
-   public static class Marshaller implements RawProtobufMarshaller<MarshallableArray> {
+   public static class Marshaller extends GeneratedMarshallerBase implements ProtobufTagMarshaller<MarshallableArray> {
       private final String typeName;
       private final org.infinispan.commons.marshall.Marshaller marshaller;
 
@@ -92,7 +91,8 @@ public class MarshallableArray<T> {
       }
 
       @Override
-      public MarshallableArray readFrom(ImmutableSerializationContext ctx, RawProtoStreamReader in) throws IOException {
+      public MarshallableArray read(ReadContext ctx) throws IOException {
+         final TagReader in = ctx.getReader();
          try {
             ArrayList<Object> entries = new ArrayList<>();
             boolean done = false;
@@ -102,7 +102,7 @@ public class MarshallableArray<T> {
                   case 0:
                      done = true;
                      break;
-                  case 1 << 3 | WireFormat.WIRETYPE_LENGTH_DELIMITED: {
+                  case 1 << 3 | WireType.WIRETYPE_LENGTH_DELIMITED: {
                      byte[] bytes = in.readByteArray();
                      Object entry = bytes.length == 0 ? null : marshaller.objectFromByteBuffer(bytes);
                      entries.add(entry);
@@ -121,15 +121,14 @@ public class MarshallableArray<T> {
       }
 
       @Override
-      public void writeTo(ImmutableSerializationContext ctx, RawProtoStreamWriter out,
-                          MarshallableArray marshallableArray) throws IOException {
+      public void write(WriteContext ctx, MarshallableArray marshallableArray) throws IOException {
          try {
             Object[] array = marshallableArray.get();
             if (array != null) {
                for (Object entry : array) {
                   // If entry is null, write an empty byte array so that the null value can be recreated on the receiver.
                   byte[] bytes = entry == null ? Util.EMPTY_BYTE_ARRAY : marshaller.objectToByteBuffer(entry);
-                  out.writeBytes(1, bytes);
+                  ctx.getWriter().writeBytes(1, bytes);
                }
             }
          } catch (InterruptedException e) {

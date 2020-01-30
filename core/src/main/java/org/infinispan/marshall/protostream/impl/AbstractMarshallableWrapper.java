@@ -6,12 +6,11 @@ import java.util.Objects;
 import org.infinispan.commons.marshall.MarshallingException;
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.commons.util.Util;
-import org.infinispan.protostream.ImmutableSerializationContext;
-import org.infinispan.protostream.RawProtoStreamReader;
-import org.infinispan.protostream.RawProtoStreamWriter;
-import org.infinispan.protostream.RawProtobufMarshaller;
+import org.infinispan.protostream.ProtobufTagMarshaller;
+import org.infinispan.protostream.TagReader;
 import org.infinispan.protostream.annotations.ProtoField;
-import org.infinispan.protostream.impl.WireFormat;
+import org.infinispan.protostream.annotations.impl.GeneratedMarshallerBase;
+import org.infinispan.protostream.descriptors.WireType;
 
 /**
  * An abstract class which provides the basis of wrapper implementations which need to delegate the marshalling of an
@@ -99,7 +98,7 @@ abstract class AbstractMarshallableWrapper<T> {
             '}';
    }
 
-   protected abstract static class Marshaller implements RawProtobufMarshaller<AbstractMarshallableWrapper<Object>> {
+   protected abstract static class Marshaller extends GeneratedMarshallerBase implements ProtobufTagMarshaller<AbstractMarshallableWrapper<Object>> {
 
       private final String typeName;
       private final org.infinispan.commons.marshall.Marshaller marshaller;
@@ -117,7 +116,8 @@ abstract class AbstractMarshallableWrapper<T> {
       abstract AbstractMarshallableWrapper<Object> newWrapperInstance(Object o);
 
       @Override
-      public AbstractMarshallableWrapper<Object> readFrom(ImmutableSerializationContext ctx, RawProtoStreamReader in) throws IOException {
+      public AbstractMarshallableWrapper<Object> read(ReadContext ctx) throws IOException {
+         final TagReader in = ctx.getReader();
          try {
             byte[] bytes = null;
             boolean done = false;
@@ -127,7 +127,7 @@ abstract class AbstractMarshallableWrapper<T> {
                   case 0:
                      done = true;
                      break;
-                  case 1 << 3 | WireFormat.WIRETYPE_LENGTH_DELIMITED: {
+                  case 1 << 3 | WireType.WIRETYPE_LENGTH_DELIMITED: {
                      bytes = in.readByteArray();
                      break;
                   }
@@ -145,14 +145,14 @@ abstract class AbstractMarshallableWrapper<T> {
       }
 
       @Override
-      public void writeTo(ImmutableSerializationContext ctx, RawProtoStreamWriter out, AbstractMarshallableWrapper wrapper) throws IOException {
+      public void write(WriteContext ctx, AbstractMarshallableWrapper<Object> wrapper) throws IOException {
          try {
             Object object = wrapper.get();
             if (object == null)
                return;
 
             byte[] bytes = marshaller.objectToByteBuffer(object);
-            out.writeBytes(1, bytes);
+            ctx.getWriter().writeBytes(1, bytes);
          } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new MarshallingException(e);

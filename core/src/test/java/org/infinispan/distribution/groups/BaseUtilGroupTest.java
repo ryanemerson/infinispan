@@ -10,6 +10,7 @@ import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.distribution.DistributionInfo;
 import org.infinispan.distribution.DistributionManager;
 import org.infinispan.distribution.group.Group;
+import org.infinispan.marshall.core.next.impl.GlobalContextInitializer;
 import org.infinispan.protostream.SerializationContextInitializer;
 import org.infinispan.protostream.annotations.AutoProtoSchemaBuilder;
 import org.infinispan.protostream.annotations.ProtoFactory;
@@ -201,9 +202,9 @@ public abstract class BaseUtilGroupTest extends MultipleCacheManagersTest {
    }
 
    @AutoProtoSchemaBuilder(
+         dependsOn = GlobalContextInitializer.class,
          includeClasses = {
                GroupKey.class,
-               CacheMode.class,
          },
          schemaFileName = "test.core.GroupTestsSCI.proto",
          schemaFilePath = "proto/generated",

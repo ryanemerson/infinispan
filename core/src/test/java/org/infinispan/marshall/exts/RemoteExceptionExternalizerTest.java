@@ -1,15 +1,15 @@
 package org.infinispan.marshall.exts;
 
+import static org.testng.AssertJUnit.assertEquals;
+
 import org.infinispan.commons.IllegalLifecycleStateException;
+import org.infinispan.commons.marshall.Marshaller;
 import org.infinispan.manager.EmbeddedCacheManager;
-import org.infinispan.marshall.core.GlobalMarshaller;
 import org.infinispan.remoting.RemoteException;
 import org.infinispan.test.SingleCacheManagerTest;
 import org.infinispan.test.TestingUtil;
 import org.infinispan.test.fwk.TestCacheManagerFactory;
 import org.testng.annotations.Test;
-
-import static org.testng.AssertJUnit.assertEquals;
 
 @Test(groups = "unit", testName = "marshall.RemoteExceptionExternalizerTest")
 public class RemoteExceptionExternalizerTest extends SingleCacheManagerTest {
@@ -20,7 +20,7 @@ public class RemoteExceptionExternalizerTest extends SingleCacheManagerTest {
     }
 
     public void testKnownThrowable() throws Exception {
-        GlobalMarshaller marshaller = TestingUtil.extractGlobalMarshaller(cacheManager);
+        Marshaller marshaller = TestingUtil.extractGlobalMarshaller(cacheManager);
 
         Throwable cause = new IllegalStateException(IllegalStateException.class.getSimpleName());
         cause.addSuppressed(new IllegalArgumentException(IllegalArgumentException.class.getSimpleName()));
@@ -39,7 +39,7 @@ public class RemoteExceptionExternalizerTest extends SingleCacheManagerTest {
     }
 
     public void testGenericThrowable() throws Exception {
-        GlobalMarshaller marshaller = TestingUtil.extractGlobalMarshaller(cacheManager);
+        Marshaller marshaller = TestingUtil.extractGlobalMarshaller(cacheManager);
 
         Throwable exception = new IllegalStateException(IllegalStateException.class.getSimpleName());
         exception.addSuppressed(new IllegalArgumentException(IllegalArgumentException.class.getSimpleName()));

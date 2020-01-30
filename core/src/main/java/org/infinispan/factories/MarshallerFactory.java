@@ -4,10 +4,8 @@ import org.infinispan.commons.dataconversion.MediaType;
 import org.infinispan.commons.marshall.ImmutableProtoStreamMarshaller;
 import org.infinispan.commons.marshall.Marshaller;
 import org.infinispan.commons.marshall.StreamAwareMarshaller;
-import org.infinispan.commons.marshall.StreamingMarshaller;
 import org.infinispan.factories.annotations.DefaultFactoryFor;
 import org.infinispan.factories.annotations.Inject;
-import org.infinispan.factories.impl.ComponentAlias;
 import org.infinispan.factories.impl.ComponentRef;
 import org.infinispan.marshall.core.GlobalMarshaller;
 import org.infinispan.marshall.core.impl.DelegatingUserMarshaller;
@@ -39,11 +37,6 @@ public class MarshallerFactory extends AbstractComponentFactory implements AutoI
 
    @Override
    public Object construct(String componentName) {
-
-      if (componentName.equals(StreamingMarshaller.class.getName())) {
-         return ComponentAlias.of(KnownComponentNames.INTERNAL_MARSHALLER);
-      }
-
       switch (componentName) {
          case KnownComponentNames.PERSISTENCE_MARSHALLER:
             return new PersistenceMarshallerImpl();

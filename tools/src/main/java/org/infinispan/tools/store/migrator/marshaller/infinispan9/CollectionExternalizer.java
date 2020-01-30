@@ -1,8 +1,7 @@
-package org.infinispan.marshall.exts;
+package org.infinispan.tools.store.migrator.marshaller.infinispan9;
 
 import java.io.IOException;
 import java.io.ObjectInput;
-import java.io.ObjectOutput;
 import java.util.AbstractMap;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -12,19 +11,18 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.infinispan.commons.marshall.AdvancedExternalizer;
 import org.infinispan.commons.marshall.MarshallUtil;
 import org.infinispan.commons.util.FastCopyHashMap;
 import org.infinispan.commons.util.Util;
 import org.infinispan.distribution.util.ReadOnlySegmentAwareCollection;
 import org.infinispan.marshall.core.Ids;
+import org.infinispan.tools.store.migrator.marshaller.common.AbstractMigratorExternalizer;
 
-public class CollectionExternalizer implements AdvancedExternalizer<Collection> {
+public class CollectionExternalizer extends AbstractMigratorExternalizer<Collection> {
 
    private static final int ARRAY_LIST = 0;
    private static final int LINKED_LIST = 1;
@@ -61,39 +59,6 @@ public class CollectionExternalizer implements AdvancedExternalizer<Collection> 
       numbers.put(FastCopyHashMap.KeySet.class, HASH_SET);
       numbers.put(FastCopyHashMap.Values.class, ARRAY_LIST);
       numbers.put(FastCopyHashMap.EntrySet.class, ENTRY_SET);
-   }
-
-   @Override
-   public void writeObject(ObjectOutput output, Collection collection) throws IOException {
-      int number = numbers.getOrDefault(collection.getClass(), -1);
-      output.writeByte(number);
-      switch (number) {
-         case ARRAY_LIST:
-         case LINKED_LIST:
-         case HASH_SET:
-         case SYNCHRONIZED_SET:
-         case ARRAY_DEQUE:
-         case READ_ONLY_SEGMENT_AWARE_COLLECTION:
-            MarshallUtil.marshallCollection(collection, output);
-            break;
-         case SINGLETON_LIST:
-            output.writeObject(((List) collection).get(0));
-            break;
-         case SINGLETON_SET:
-            output.writeObject(collection.iterator().next());
-            break;
-         case TREE_SET:
-            output.writeObject(((TreeSet) collection).comparator());
-            MarshallUtil.marshallCollection(collection, output);
-            break;
-         case ENTRY_SET:
-            MarshallUtil.marshallCollection(collection, output, (out, element) -> {
-               Map.Entry entry = (Map.Entry) element;
-               out.writeObject(entry.getKey());
-               out.writeObject(entry.getValue());
-            });
-            break;
-      }
    }
 
    @Override
@@ -211,7 +176,4 @@ public class CollectionExternalizer implements AdvancedExternalizer<Collection> 
    private static Class<Collection> getCollectionClass(String className) {
       return Util.loadClass(className, Collection.class.getClassLoader());
    }
-
-
-
 }

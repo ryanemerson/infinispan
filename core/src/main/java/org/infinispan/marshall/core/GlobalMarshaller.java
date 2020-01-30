@@ -10,7 +10,6 @@ import java.io.OutputStream;
 import java.io.Serializable;
 import java.lang.reflect.Array;
 
-import org.infinispan.commands.RemoteCommandsFactory;
 import org.infinispan.commons.CacheException;
 import org.infinispan.commons.dataconversion.MediaType;
 import org.infinispan.commons.io.ByteBuffer;
@@ -98,7 +97,6 @@ public class GlobalMarshaller implements StreamingMarshaller {
    private final MarshallableTypeHints marshallableTypeHints = new MarshallableTypeHints();
 
    GlobalComponentRegistry gcr;
-   RemoteCommandsFactory cmdFactory;
    PersistenceMarshaller persistenceMarshaller;
 
    ClassToExternalizerMap internalExts;
@@ -111,9 +109,8 @@ public class GlobalMarshaller implements StreamingMarshaller {
    public GlobalMarshaller() {
    }
 
-   public void init(GlobalComponentRegistry gcr, RemoteCommandsFactory cmdFactory, PersistenceMarshaller persistenceMarshaller) {
+   public void init(GlobalComponentRegistry gcr, PersistenceMarshaller persistenceMarshaller) {
       this.gcr = gcr;
-      this.cmdFactory = cmdFactory;
       this.persistenceMarshaller = persistenceMarshaller;
    }
 
@@ -121,7 +118,7 @@ public class GlobalMarshaller implements StreamingMarshaller {
    public void start() {
       GlobalConfiguration globalCfg = gcr.getGlobalConfiguration();
       classLoader = globalCfg.classLoader();
-      internalExts = InternalExternalizers.load(gcr, cmdFactory);
+      internalExts = InternalExternalizers.load();
       reverseInternalExts = internalExts.reverseMap(Ids.MAX_ID);
       if (log.isTraceEnabled()) {
          log.tracef("Internal class to externalizer ids: %s", internalExts);

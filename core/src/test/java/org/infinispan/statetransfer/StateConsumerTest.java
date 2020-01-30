@@ -260,8 +260,7 @@ public class StateConsumerTest extends AbstractInfinispanTest {
       assertEquals(stateConsumer.inflightRequestCount(), inflightCounter);
       for (Map.Entry<Address, Set<Integer>> entry : requestedSegments.entrySet()) {
          for (Integer segment : entry.getValue()) {
-            Collection<StateChunk> chunks = Collections.singletonList(
-                  new StateChunk(segment, Collections.emptyList(), true));
+            Collection<StateChunk> chunks = Collections.singletonList(StateChunk.create(segment, true));
             stateConsumer.applyState(entry.getKey(), topologyId, chunks)
                   .toCompletableFuture()
                   .get(10, TimeUnit.SECONDS);
@@ -276,8 +275,7 @@ public class StateConsumerTest extends AbstractInfinispanTest {
 
    private static void applyState(StateConsumer stateConsumer, Map<Address, Set<Integer>> requestedSegments, Collection<InternalCacheEntry<?, ?>> cacheEntries) {
       Map.Entry<Address, Set<Integer>> entry = requestedSegments.entrySet().iterator().next();
-      Collection<StateChunk> chunks = Collections.singletonList(
-            new StateChunk(entry.getValue().iterator().next(), cacheEntries, true));
+      Collection<StateChunk> chunks = Collections.singletonList(StateChunk.create(entry.getValue().iterator().next(), true));
       stateConsumer.applyState(entry.getKey(), 22, chunks);
    }
 

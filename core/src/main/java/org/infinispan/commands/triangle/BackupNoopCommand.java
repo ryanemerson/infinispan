@@ -1,9 +1,5 @@
 package org.infinispan.commands.triangle;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
-
 import org.infinispan.commands.write.WriteCommand;
 import org.infinispan.util.ByteString;
 
@@ -16,34 +12,14 @@ import org.infinispan.util.ByteString;
 public class BackupNoopCommand extends BackupWriteCommand {
 
    public static final byte COMMAND_ID = 81;
-   //for testing
-   @SuppressWarnings("unused")
-   public BackupNoopCommand() {
-      super(null);
-   }
 
-   public BackupNoopCommand(ByteString cacheName) {
-      super(cacheName);
+   public BackupNoopCommand(ByteString cacheName, WriteCommand command, long sequence, int segmentId) {
+      super(cacheName, command, sequence, segmentId);
    }
 
    @Override
    public byte getCommandId() {
       return COMMAND_ID;
-   }
-
-   public void setWriteCommand(WriteCommand command) {
-      super.setCommonAttributesFromCommand(command);
-   }
-
-
-   @Override
-   public void writeTo(ObjectOutput output) throws IOException {
-      writeBase(output);
-   }
-
-   @Override
-   public void readFrom(ObjectInput input) throws IOException, ClassNotFoundException {
-      readBase(input);
    }
 
    @Override

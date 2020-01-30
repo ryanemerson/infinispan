@@ -1,8 +1,7 @@
-package org.infinispan.marshall.exts;
+package org.infinispan.tools.store.migrator.marshaller.common;
 
 import java.io.IOException;
 import java.io.ObjectInput;
-import java.io.ObjectOutput;
 import java.util.AbstractSet;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -11,20 +10,13 @@ import java.util.Map;
 import java.util.Set;
 
 import org.infinispan.commons.io.UnsignedNumeric;
-import org.infinispan.commons.marshall.AbstractExternalizer;
 import org.infinispan.commons.util.Util;
 import org.infinispan.marshall.core.Ids;
 
 import net.jcip.annotations.Immutable;
 
-/**
- * {@link EnumSet} externalizer.
- *
- * @author Galder Zamarreño
- * @since 6.0
- */
 @Immutable
-public class EnumSetExternalizer extends AbstractExternalizer<Set> {
+public class EnumSetExternalizer extends AbstractMigratorExternalizer<Set> {
 
    private static final int UNKNOWN_ENUM_SET = 0;
    private static final int ENUM_SET = 1;
@@ -46,21 +38,6 @@ public class EnumSetExternalizer extends AbstractExternalizer<Set> {
    private void addEnumSetClass(Class<EnumSet> clazz, int index) {
       if (clazz != null)
          numbers.put(clazz, index);
-   }
-
-   @Override
-   public void writeObject(ObjectOutput output, Set set) throws IOException {
-      Integer number = numbers.get(set.getClass());
-      if (number == null) {
-         // Fallback on standard object write
-         output.writeObject(set);
-      } else {
-         output.writeByte(number);
-         UnsignedNumeric.writeUnsignedInt(output, set.size());
-         for (Object o : set) {
-            output.writeObject(o);
-         }
-      }
    }
 
    @Override
@@ -133,5 +110,4 @@ public class EnumSetExternalizer extends AbstractExternalizer<Set> {
          return null; // Ignore
       }
    }
-
 }

@@ -19,7 +19,7 @@ public class DoubleSummaryStatisticsMarshaller extends AbstractMessageMarshaller
    static final Constructor<DoubleSummaryStatistics> constructor;
 
    static {
-      constructor = SecurityActions.getConstructor(DoubleSummaryStatistics.class, long.class, double.class, double.class, double.class);
+      constructor = Util.getConstructor(DoubleSummaryStatistics.class, long.class, double.class, double.class, double.class);
 
       if (constructor != null) {
          // since JDK 10, *SummaryStatistics have parametrized constructors, so reflection can be avoided
@@ -31,10 +31,10 @@ public class DoubleSummaryStatisticsMarshaller extends AbstractMessageMarshaller
 
          canSerialize = true;
       } else {
-         countField = SecurityActions.getField(DoubleSummaryStatistics.class, "count");
-         sumField = SecurityActions.getField(DoubleSummaryStatistics.class, "sum");
-         minField = SecurityActions.getField(DoubleSummaryStatistics.class, "min");
-         maxField = SecurityActions.getField(DoubleSummaryStatistics.class, "max");
+         countField = Util.getField(DoubleSummaryStatistics.class, "count");
+         sumField = Util.getField(DoubleSummaryStatistics.class, "sum");
+         minField = Util.getField(DoubleSummaryStatistics.class, "min");
+         maxField = Util.getField(DoubleSummaryStatistics.class, "max");
 
          // We can only properly serialize if all of the fields are non null
          canSerialize = countField != null && sumField != null && minField != null && maxField != null;
