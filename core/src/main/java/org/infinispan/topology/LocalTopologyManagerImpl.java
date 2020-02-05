@@ -20,8 +20,15 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-import org.infinispan.commands.GlobalRpcCommand;
 import org.infinispan.commands.ReplicableCommand;
+import org.infinispan.commands.topology.CacheJoinCommand;
+import org.infinispan.commands.topology.CacheAvailabilityUpdateCommand;
+import org.infinispan.commands.topology.RebalancePhaseConfirmCommand;
+import org.infinispan.commands.topology.RebalancePolicyRequestCommand;
+import org.infinispan.commands.topology.RebalanceStatusRequestCommand;
+import org.infinispan.commands.topology.RebalancePolicyUpdateCommand;
+import org.infinispan.commands.topology.CacheLeaveCommand;
+import org.infinispan.commands.topology.CacheShutdownRequestCommand;
 import org.infinispan.commons.IllegalLifecycleStateException;
 import org.infinispan.commons.marshall.MarshallingException;
 import org.infinispan.commons.marshall.NotSerializableException;
@@ -46,7 +53,6 @@ import org.infinispan.jmx.annotations.MBean;
 import org.infinispan.jmx.annotations.ManagedAttribute;
 import org.infinispan.partitionhandling.AvailabilityMode;
 import org.infinispan.partitionhandling.impl.PartitionHandlingManager;
-import org.infinispan.remoting.responses.SuccessfulResponse;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.remoting.transport.Transport;
 import org.infinispan.remoting.transport.impl.VoidResponseCollector;
@@ -160,8 +166,7 @@ public class LocalTopologyManagerImpl implements LocalTopologyManager, GlobalSta
    public CompletionStage<CacheStatusResponse> sendJoinRequest(String cacheName, CacheJoinInfo joinInfo, long timeout,
                                                                long endTime) {
       int viewId = transport.getViewId();
-      ReplicableCommand command = new CacheTopologyControlCommand(cacheName, CacheTopologyControlCommand.Type.JOIN,
-                                                                  transport.getAddress(), joinInfo, viewId);
+      ReplicableCommand command = new CacheJoinCommand(cacheName, transport.getAddress(), joinInfo, viewId);
       return handleAndCompose(helper.executeOnCoordinator(transport, command, timeout), (response, throwable) -> {
          int currentViewId = transport.getViewId();
          if (viewId != currentViewId) {
@@ -235,8 +240,7 @@ public class LocalTopologyManagerImpl implements LocalTopologyManager, GlobalSta
       log.debugf("Node %s leaving cache %s", transport.getAddress(), cacheName);
       runningCaches.remove(cacheName);
 
-      ReplicableCommand command = new CacheTopologyControlCommand(cacheName, CacheTopologyControlCommand.Type.LEAVE,
-                                                                  transport.getAddress(), transport.getViewId());
+      ReplicableCommand command = new CacheLeaveCommand(cacheName, transport.getAddress(), transport.getViewId());
       try {
          CompletionStages.join(helper.executeOnCoordinator(transport, command, timeout));
       } catch (Exception e) {
@@ -246,15 +250,11 @@ public class LocalTopologyManagerImpl implements LocalTopologyManager, GlobalSta
 
    @Override
    public void confirmRebalancePhase(String cacheName, int topologyId, int rebalanceId, Throwable throwable) {
-      // Note that if the coordinator changes again after we sent the command, we will get another
-      // query for the status of our running caches. So we don't need to retry if the command failed.
-      ReplicableCommand command = new CacheTopologyControlCommand(cacheName,
-                                                                  CacheTopologyControlCommand.Type.REBALANCE_PHASE_CONFIRM,
-                                                                  transport.getAddress(),
-                                                                  topologyId, rebalanceId, throwable,
-                                                                  transport.getViewId());
       try {
-         helper.executeOnCoordinatorAsync(transport, command);
+         // Note that if the coordinator changes again after we sent the command, we will get another
+         // query for the status of our running caches. So we don't need to retry if the command failed.
+         helper.executeOnCoordinatorAsync(transport,
+               new RebalancePhaseConfirmCommand(cacheName, transport.getAddress(), throwable, topologyId, transport.getViewId()));
       } catch (Exception e) {
          log.debugf(e, "Error sending the rebalance completed notification for cache %s to the coordinator",
                     cacheName);
@@ -289,13 +289,9 @@ public class LocalTopologyManagerImpl implements LocalTopologyManager, GlobalSta
 
          boolean rebalancingEnabled = true;
          // Avoid adding a direct dependency to the ClusterTopologyManager
-         GlobalRpcCommand command = new CacheTopologyControlCommand(null,
-                                                                     CacheTopologyControlCommand.Type.POLICY_GET_STATUS,
-                                                                     transport.getAddress(), transport.getViewId());
+         RebalancePolicyRequestCommand command = new RebalancePolicyRequestCommand();
          try {
-            gcr.wireDependencies(command);
-            SuccessfulResponse response = (SuccessfulResponse) CompletionStages.join(command.invokeAsync(gcr));
-            rebalancingEnabled = (Boolean) response.getResponseValue();
+            rebalancingEnabled = CompletionStages.join(command.invokeAsync(gcr));
          } catch (Throwable t) {
             log.warn("Failed to obtain the rebalancing status", t);
          }
@@ -628,9 +624,7 @@ public class LocalTopologyManagerImpl implements LocalTopologyManager, GlobalSta
    @Override
    public boolean isCacheRebalancingEnabled(String cacheName) {
       int viewId = transport.getViewId();
-      ReplicableCommand command = new CacheTopologyControlCommand(cacheName,
-                                                                  CacheTopologyControlCommand.Type.POLICY_GET_STATUS,
-                                                                  transport.getAddress(), viewId);
+      ReplicableCommand command = new RebalancePolicyRequestCommand(cacheName);
       return (boolean) CompletionStages.join(
             executeOnCoordinatorRetry(command, viewId, timeService.expectedEndTime(getGlobalTimeout(), MILLISECONDS)));
    }
@@ -657,22 +651,16 @@ public class LocalTopologyManagerImpl implements LocalTopologyManager, GlobalSta
 
    @Override
    public void setCacheRebalancingEnabled(String cacheName, boolean enabled) {
-      CacheTopologyControlCommand.Type type = enabled ? CacheTopologyControlCommand.Type.POLICY_ENABLE
-                                                      : CacheTopologyControlCommand.Type.POLICY_DISABLE;
-      ReplicableCommand command = new CacheTopologyControlCommand(cacheName, type, transport.getAddress(),
-                                                                  transport.getViewId());
+      ReplicableCommand command = new RebalancePolicyUpdateCommand(cacheName, enabled);
       CompletionStages.join(helper.executeOnClusterSync(transport, command, getGlobalTimeout(),
-            VoidResponseCollector.ignoreLeavers()));
+                                                        VoidResponseCollector.ignoreLeavers()));
    }
 
    @Override
    public RebalancingStatus getRebalancingStatus(String cacheName) {
-      ReplicableCommand command = new CacheTopologyControlCommand(cacheName,
-                                                                  CacheTopologyControlCommand.Type.REBALANCING_GET_STATUS,
-                                                                  transport.getAddress(), transport.getViewId());
-      int viewId = transport.getViewId();
+      ReplicableCommand command = new RebalanceStatusRequestCommand(cacheName);
       return (RebalancingStatus) CompletionStages.join(
-            executeOnCoordinatorRetry(command, viewId, timeService.expectedEndTime(getGlobalTimeout(), MILLISECONDS)));
+            executeOnCoordinatorRetry(command, transport.getViewId(), timeService.expectedEndTime(getGlobalTimeout(), MILLISECONDS)));
    }
 
    @ManagedAttribute(description = "Cluster availability", displayName = "Cluster availability",
@@ -696,17 +684,13 @@ public class LocalTopologyManagerImpl implements LocalTopologyManager, GlobalSta
 
    @Override
    public void setCacheAvailability(String cacheName, AvailabilityMode availabilityMode) {
-      CacheTopologyControlCommand.Type type = CacheTopologyControlCommand.Type.AVAILABILITY_MODE_CHANGE;
-      ReplicableCommand command = new CacheTopologyControlCommand(cacheName, type, transport.getAddress(),
-                                                                  availabilityMode, transport.getViewId());
+      ReplicableCommand command = new CacheAvailabilityUpdateCommand(cacheName, availabilityMode);
       CompletionStages.join(helper.executeOnCoordinator(transport, command, getGlobalTimeout()));
    }
 
    @Override
    public void cacheShutdown(String name) {
-      ReplicableCommand command =
-            new CacheTopologyControlCommand(name, CacheTopologyControlCommand.Type.SHUTDOWN_REQUEST,
-                                            transport.getAddress(), transport.getViewId());
+      ReplicableCommand command = new CacheShutdownRequestCommand(name);
       CompletionStages.join(helper.executeOnCoordinator(transport, command, getGlobalTimeout()));
    }
 
