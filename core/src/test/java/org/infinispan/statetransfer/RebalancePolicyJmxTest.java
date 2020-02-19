@@ -126,7 +126,7 @@ public class RebalancePolicyJmxTest extends MultipleCacheManagersTest {
       ConsistentHash ch = dm0.getCacheTopology().getCurrentCH();
       assertEquals(Arrays.asList(address(0), address(1), address(2), address(3)), ch.getMembers());
       for (int i = 0; i < ch.getNumSegments(); i++) {
-         assertEquals(ch.getNumOwners(), ch.locateOwnersForSegment(i).size());
+         assertEquals(2, ch.locateOwnersForSegment(i).size());
       }
 
       // Suspend rebalancing again
@@ -174,7 +174,7 @@ public class RebalancePolicyJmxTest extends MultipleCacheManagersTest {
       ch = dm2.getCacheTopology().getCurrentCH();
       assertEquals(Arrays.asList(address(2), address(3)), ch.getMembers());
       for (int i = 0; i < ch.getNumSegments(); i++) {
-         assertEquals(ch.getNumOwners(), ch.locateOwnersForSegment(i).size());
+         assertEquals(2, ch.locateOwnersForSegment(i).size());
       }
    }
 }

@@ -102,11 +102,11 @@ public class RehashWithL1Test extends MultipleCacheManagersTest {
    @SerializeWith(MyBaseControlledConsistentHashFactory.Ext.class)
    private static class MyBaseControlledConsistentHashFactory extends BaseControlledConsistentHashFactory<DefaultConsistentHash> {
       public MyBaseControlledConsistentHashFactory() {
-         super(new DefaultTrait(), 1);
+         super(new DefaultTrait(1), 1);
       }
 
       @Override
-      protected int[][] assignOwners(int numSegments, int numOwners, List<Address> members) {
+      protected int[][] assignOwners(int numSegments, List<Address> members) {
          return new int[][]{{members.size() - 1}};
       }
 

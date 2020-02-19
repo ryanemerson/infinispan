@@ -155,7 +155,7 @@ public class PerCacheRebalancePolicyJmxTest extends MultipleCacheManagersTest {
       ConsistentHash ch = dm.getCacheTopology().getCurrentCH();
       assertEquals(addresses, ch.getMembers());
       for (int i = 0; i < ch.getNumSegments(); i++) {
-         assertEquals(ch.getNumOwners(), ch.locateOwnersForSegment(i).size());
+         assertEquals(2, ch.locateOwnersForSegment(i).size());
       }
    }
 }

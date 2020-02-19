@@ -167,7 +167,7 @@ public class DefaultConsistentHashFactoryTest extends AbstractInfinispanTest {
       return baseCH;
    }
 
-   private void checkDistribution(ConsistentHash ch, Map<Address, Float> lfMap, boolean allowExtraOwners) {
+   private void checkDistribution(DefaultConsistentHash ch, Map<Address, Float> lfMap, boolean allowExtraOwners) {
       int numSegments = ch.getNumSegments();
       List<Address> nodes = ch.getMembers();
       int numNodes = nodes.size();

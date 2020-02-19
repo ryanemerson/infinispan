@@ -39,12 +39,6 @@ import org.infinispan.remoting.transport.Address;
  * @since 4.0
  */
 public interface ConsistentHash {
-   /**
-    * @return The configured number of owners. Note that the actual number of owners of each key may be different.
-    * @deprecated Since 9.1, it should not be used to obtain the number of owners of a particular key.
-    */
-   @Deprecated
-   int getNumOwners();
 
    /**
     * @return The actual number of hash space segments. Note that it may not be the same as the number

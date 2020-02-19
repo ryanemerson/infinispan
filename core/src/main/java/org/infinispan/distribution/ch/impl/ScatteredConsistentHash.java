@@ -136,8 +136,7 @@ public class ScatteredConsistentHash extends AbstractConsistentHash {
       return segmentOwners[segmentId];
    }
 
-   @Override
-   public int getNumOwners() {
+   private int getNumOwners() {
       return 1;
    }
 

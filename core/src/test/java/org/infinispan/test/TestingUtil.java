@@ -392,7 +392,7 @@ public class TestingUtil {
                chContainsAllMembers = currentCH.getMembers().size() == caches.length;
                currentChIsBalanced = true;
 
-               int actualNumOwners = Math.min(currentCH.getNumOwners(), currentCH.getMembers().size());
+               int actualNumOwners = currentCH.getMembers().size();
                for (int i = 0; i < currentCH.getNumSegments(); i++) {
                   if (currentCH.locateOwnersForSegment(i).size() < actualNumOwners) {
                      currentChIsBalanced = false;

@@ -187,12 +187,11 @@ public class NonTxPrimaryOwnerBecomingNonOwnerTest extends MultipleCacheManagers
    @ProtoName("PrimaryOwnerCustomConsistentHashFactory")
    public static class CustomConsistentHashFactory extends BaseControlledConsistentHashFactory.Default {
       CustomConsistentHashFactory() {
-         super(1);
+         super(1, 2);
       }
 
       @Override
-      protected int[][] assignOwners(int numSegments, int numOwners, List<Address> members) {
-         assertEquals(2, numOwners);
+      protected int[][] assignOwners(int numSegments, List<Address> members) {
          switch (members.size()) {
             case 1:
                return new int[][]{{0}};

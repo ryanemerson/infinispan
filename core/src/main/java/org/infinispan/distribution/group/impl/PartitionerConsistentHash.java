@@ -32,11 +32,6 @@ public class PartitionerConsistentHash implements ConsistentHash {
    }
 
    @Override
-   public int getNumOwners() {
-      return ch.getNumOwners();
-   }
-
-   @Override
    public List<Address> getMembers() {
       return ch.getMembers();
    }

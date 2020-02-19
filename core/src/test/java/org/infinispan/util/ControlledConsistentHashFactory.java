@@ -86,7 +86,7 @@ public abstract class ControlledConsistentHashFactory<CH extends ConsistentHash>
    }
 
    @Override
-   protected int[][] assignOwners(int numSegments, int numOwners, List<Address> members) {
+   protected int[][] assignOwners(int numSegments, List<Address> members) {
       return Arrays.stream(ownerIndexes)
                    .map(indexes -> mapOwnersToCurrentMembers(members, indexes))
                    .toArray(int[][]::new);
@@ -124,11 +124,12 @@ public abstract class ControlledConsistentHashFactory<CH extends ConsistentHash>
    @SerializeWith(Externalizer.class)
    public static class Default extends ControlledConsistentHashFactory<DefaultConsistentHash> {
       public Default(int primaryOwnerIndex, int... backupOwnerIndexes) {
-         super(new DefaultTrait(), primaryOwnerIndex, backupOwnerIndexes);
+         super(new DefaultTrait(1 + (backupOwnerIndexes == null ? 0 : backupOwnerIndexes.length)),
+               primaryOwnerIndex, backupOwnerIndexes);
       }
 
       public Default(int[][] segmentOwners) {
-         super(new DefaultTrait(), segmentOwners);
+         super(new DefaultTrait(segmentOwners.length), segmentOwners);
       }
    }
 

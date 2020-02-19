@@ -824,12 +824,11 @@ public class RemoteGetDuringStateTransferTest extends MultipleCacheManagersTest 
    public static class SingleKeyConsistentHashFactory extends BaseControlledConsistentHashFactory.Default {
 
       SingleKeyConsistentHashFactory() {
-         super(1);
+         super(1, 1);
       }
 
       @Override
-      protected int[][] assignOwners(int numSegments, int numOwners, List<Address> members) {
-         assertEquals("Wrong number of owners.", 1, numOwners);
+      protected int[][] assignOwners(int numSegments, List<Address> members) {
          return new int[][]{{members.size() - 1}};
       }
    }
