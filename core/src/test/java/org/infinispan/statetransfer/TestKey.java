@@ -4,6 +4,8 @@ import java.io.Serializable;
 import java.util.Random;
 
 import org.infinispan.distribution.ch.ConsistentHash;
+import org.infinispan.distribution.ch.KeyPartitioner;
+import org.infinispan.distribution.ch.impl.HashFunctionPartitioner;
 
 /**
  * A key that maps to a given data segment of the ConsistentHash.
@@ -32,10 +34,11 @@ final class TestKey implements Serializable {
       this.name = name;
 
       Random rnd = new Random();
+      KeyPartitioner keyPartitioner = new HashFunctionPartitioner(ch.getNumSegments());
       Integer r;
       do {
          r = rnd.nextInt();
-      } while (segmentId != ch.getSegment(r));
+      } while (segmentId != keyPartitioner.getSegment(r));
 
       hashCode = r;
    }

@@ -126,8 +126,9 @@ public class NonTxPrimaryOwnerBecomingNonOwnerTest extends MultipleCacheManagers
       CacheTopology duringJoinTopology = ltm0.getCacheTopology(cacheName);
       assertEquals(joinTopologyId, duringJoinTopology.getTopologyId());
       assertNotNull(duringJoinTopology.getPendingCH());
+      int keySegment = TestingUtil.getSegmentForKey(key, cache0);
       log.tracef("Rebalance started. Found key %s with current owners %s and pending owners %s", key,
-            duringJoinTopology.getCurrentCH().locateOwners(key), duringJoinTopology.getPendingCH().locateOwners(key));
+            duringJoinTopology.getCurrentCH().locateOwnersForSegment(keySegment), duringJoinTopology.getPendingCH().locateOwnersForSegment(keySegment));
 
       // Every operation command will be blocked before reaching the distribution interceptor on cache0 (the originator)
       CyclicBarrier beforeCache0Barrier = new CyclicBarrier(2);

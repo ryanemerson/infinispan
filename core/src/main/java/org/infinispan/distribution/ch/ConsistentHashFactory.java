@@ -37,8 +37,29 @@ public interface ConsistentHashFactory<CH extends ConsistentHash> {
     * @param capacityFactors The capacity factor of each member. Determines the relative capacity of each node compared
     *                        to the others. The implementation may ignore this parameter.
     *                        If {@code null}, all the members are assumed to have a capacity factor of 1.
+    * @deprecated since 11.0. hashFunction is ignored, use {@link #create(int, int, List, Map)} instead.
     */
-   CH create(Hash hashFunction, int numOwners, int numSegments, List<Address> members,
+   @Deprecated
+   default CH create(Hash hashFunction, int numOwners, int numSegments, List<Address> members,
+             Map<Address, Float> capacityFactors) {
+      return create(numOwners, numSegments, members, capacityFactors);
+   }
+
+   /**
+    * Create a new consistent hash instance.
+    *
+    * The consistent hash will be <em>balanced</em>.
+    *
+    * @param numOwners The ideal number of owners for each key. The created consistent hash
+    *                  can have more or less owners, but each key will have at least one owner.
+    * @param numSegments Number of hash-space segments. The implementation may round up the number
+    *                    of segments for performance, or may ignore the parameter altogether.
+    * @param members A list of addresses representing the new cache members.
+    * @param capacityFactors The capacity factor of each member. Determines the relative capacity of each node compared
+    *                        to the others. The implementation may ignore this parameter.
+    *                        If {@code null}, all the members are assumed to have a capacity factor of 1.
+    */
+   CH create(int numOwners, int numSegments, List<Address> members,
              Map<Address, Float> capacityFactors);
 
    /**

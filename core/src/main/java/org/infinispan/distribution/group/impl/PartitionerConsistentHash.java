@@ -42,11 +42,6 @@ public class PartitionerConsistentHash implements ConsistentHash {
    }
 
    @Override
-   public int getSegment(Object key) {
-      return keyPartitioner.getSegment(key);
-   }
-
-   @Override
    public List<Address> locateOwnersForSegment(int segmentId) {
       return ch.locateOwnersForSegment(segmentId);
    }
@@ -79,17 +74,6 @@ public class PartitionerConsistentHash implements ConsistentHash {
    @Override
    public String getRoutingTableAsString() {
       return ch.getRoutingTableAsString();
-   }
-
-   @Override
-   public boolean isKeyLocalToNode(Address nodeAddress, Object key) {
-      int segment = ch.isReplicated() ? 0 : getSegment(key);
-      return ch.isSegmentLocalToNode(nodeAddress, segment);
-   }
-
-   @Override
-   public Hash getHashFunction() {
-      return ch.getHashFunction();
    }
 
    public KeyPartitioner getKeyPartitioner() {

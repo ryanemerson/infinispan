@@ -103,7 +103,7 @@ public class DefaultConsistentHashFactoryTest extends AbstractInfinispanTest {
          List<Address> newMembers = new ArrayList<>(baseMembers);
          HashMap<Address, Float> newCapacityFactors = lfMap != null ? new HashMap<>(lfMap) : null;
          for (int k = 0; k < nodesToRemove; k++) {
-            int indexToRemove = Math.abs(baseCH.getHashFunction().hash(k) % newMembers.size());
+            int indexToRemove = Math.abs(MurmurHash3.getInstance().hash(k) % newMembers.size());
             if (newCapacityFactors != null) {
                newCapacityFactors.remove(newMembers.get(indexToRemove));
             }

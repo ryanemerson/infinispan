@@ -148,7 +148,7 @@ public class NumOwnersNodeCrashInSequenceTest extends MultipleCacheManagersTest 
       ConsistentHash ch = cache(a0).getAdvancedCache().getDistributionManager().getReadConsistentHash();
       assertEquals(3, ch.getMembers().size());
       for (Object k : allKeys) {
-         Collection<Address> owners = ch.locateOwners(k);
+         Collection<Address> owners = ch.locateOwnersForSegment(TestingUtil.getSegmentForKey(k, cache(a0)));
          try {
             cache(a0).get(k);
             if (owners.contains(address0) || owners.contains(address1)) {
