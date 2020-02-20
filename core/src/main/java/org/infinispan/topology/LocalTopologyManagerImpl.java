@@ -21,14 +21,13 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import org.infinispan.commands.ReplicableCommand;
-import org.infinispan.commands.topology.CacheJoinCommand;
 import org.infinispan.commands.topology.CacheAvailabilityUpdateCommand;
-import org.infinispan.commands.topology.RebalancePhaseConfirmCommand;
-import org.infinispan.commands.topology.RebalancePolicyRequestCommand;
-import org.infinispan.commands.topology.RebalanceStatusRequestCommand;
-import org.infinispan.commands.topology.RebalancePolicyUpdateCommand;
+import org.infinispan.commands.topology.CacheJoinCommand;
 import org.infinispan.commands.topology.CacheLeaveCommand;
 import org.infinispan.commands.topology.CacheShutdownRequestCommand;
+import org.infinispan.commands.topology.RebalancePhaseConfirmCommand;
+import org.infinispan.commands.topology.RebalancePolicyUpdateCommand;
+import org.infinispan.commands.topology.RebalanceStatusRequestCommand;
 import org.infinispan.commons.IllegalLifecycleStateException;
 import org.infinispan.commons.marshall.MarshallingException;
 import org.infinispan.commons.marshall.NotSerializableException;
@@ -287,16 +286,8 @@ public class LocalTopologyManagerImpl implements LocalTopologyManager, GlobalSta
             }
          }
 
-         boolean rebalancingEnabled = true;
-         // Avoid adding a direct dependency to the ClusterTopologyManager
-         RebalancePolicyRequestCommand command = new RebalancePolicyRequestCommand();
-         try {
-            rebalancingEnabled = CompletionStages.join(command.invokeAsync(gcr));
-         } catch (Throwable t) {
-            log.warn("Failed to obtain the rebalancing status", t);
-         }
          log.debugf("Sending cluster status response for view %d", viewId);
-         return new ManagerStatusResponse(caches, rebalancingEnabled);
+         return new ManagerStatusResponse(caches, gcr.getClusterTopologyManager().isRebalancingEnabled());
       });
    }
 
@@ -624,9 +615,10 @@ public class LocalTopologyManagerImpl implements LocalTopologyManager, GlobalSta
    @Override
    public boolean isCacheRebalancingEnabled(String cacheName) {
       int viewId = transport.getViewId();
-      ReplicableCommand command = new RebalancePolicyRequestCommand(cacheName);
-      return (boolean) CompletionStages.join(
+      ReplicableCommand command = new RebalanceStatusRequestCommand(cacheName);
+      RebalancingStatus status = (RebalancingStatus) CompletionStages.join(
             executeOnCoordinatorRetry(command, viewId, timeService.expectedEndTime(getGlobalTimeout(), MILLISECONDS)));
+      return status != RebalancingStatus.SUSPENDED;
    }
 
    public CompletionStage<Object> executeOnCoordinatorRetry(ReplicableCommand command, int viewId, long endNanos) {

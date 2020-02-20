@@ -15,8 +15,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import org.infinispan.commands.topology.CacheStatusRequestCommand;
-import org.infinispan.commands.topology.RebalancePolicyRequestCommand;
 import org.infinispan.commands.topology.RebalanceStartCommand;
+import org.infinispan.commands.topology.RebalanceStatusRequestCommand;
 import org.infinispan.commands.topology.TopologyUpdateCommand;
 import org.infinispan.commands.topology.TopologyUpdateStableCommand;
 import org.infinispan.commons.hash.MurmurHash3;
@@ -195,7 +195,7 @@ public class ClusterTopologyManagerImplTest extends AbstractInfinispanTest {
       // When CTMI starts as regular member it requests the rebalancing status from the coordinator
       runConcurrently(
             ctm::start,
-            () -> transport.expectCommand(RebalancePolicyRequestCommand.class)
+            () -> transport.expectCommand(RebalanceStatusRequestCommand.class)
                   .singleResponse(A, SuccessfulResponse.create(true)));
 
       // Wait for the initial view update in CTMI to finish

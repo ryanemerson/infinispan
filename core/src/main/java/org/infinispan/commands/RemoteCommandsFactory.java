@@ -33,16 +33,15 @@ import org.infinispan.commands.remote.recovery.TxCompletionNotificationCommand;
 import org.infinispan.commands.topology.CacheAvailabilityUpdateCommand;
 import org.infinispan.commands.topology.CacheJoinCommand;
 import org.infinispan.commands.topology.CacheLeaveCommand;
+import org.infinispan.commands.topology.CacheShutdownCommand;
 import org.infinispan.commands.topology.CacheShutdownRequestCommand;
 import org.infinispan.commands.topology.CacheStatusRequestCommand;
-import org.infinispan.commands.topology.CacheShutdownCommand;
 import org.infinispan.commands.topology.RebalancePhaseConfirmCommand;
 import org.infinispan.commands.topology.RebalancePolicyUpdateCommand;
 import org.infinispan.commands.topology.RebalanceStartCommand;
-import org.infinispan.commands.topology.RebalancePolicyRequestCommand;
-import org.infinispan.commands.topology.TopologyUpdateStableCommand;
-import org.infinispan.commands.topology.TopologyUpdateCommand;
 import org.infinispan.commands.topology.RebalanceStatusRequestCommand;
+import org.infinispan.commands.topology.TopologyUpdateCommand;
+import org.infinispan.commands.topology.TopologyUpdateStableCommand;
 import org.infinispan.commands.triangle.MultiEntriesFunctionalBackupWriteCommand;
 import org.infinispan.commands.triangle.MultiKeyFunctionalBackupWriteCommand;
 import org.infinispan.commands.triangle.PutMapBackupWriteCommand;
@@ -228,9 +227,6 @@ public class RemoteCommandsFactory {
                break;
             case RebalancePolicyUpdateCommand.COMMAND_ID:
                command = new RebalancePolicyUpdateCommand();
-               break;
-            case RebalancePolicyRequestCommand.COMMAND_ID:
-               command = new RebalancePolicyRequestCommand();
                break;
             case RebalanceStartCommand.COMMAND_ID:
                command = new RebalanceStartCommand();

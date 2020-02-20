@@ -33,8 +33,13 @@ public class RebalanceStatusRequestCommand extends AbstractCacheControlCommand {
    }
 
    @Override
-   public CompletionStage<?> invokeAsync(GlobalComponentRegistry gcr) throws Throwable {
-      RebalancingStatus status = gcr.getClusterTopologyManager().getRebalancingStatus(cacheName);
+   public CompletionStage<RebalancingStatus> invokeAsync(GlobalComponentRegistry gcr) throws Throwable {
+      RebalancingStatus status;
+      if (cacheName == null) {
+         status = gcr.getClusterTopologyManager().isRebalancingEnabled() ? RebalancingStatus.PENDING : RebalancingStatus.SUSPENDED;
+      } else {
+         status = gcr.getClusterTopologyManager().getRebalancingStatus(cacheName);
+      }
       return CompletableFuture.completedFuture(status);
    }
 

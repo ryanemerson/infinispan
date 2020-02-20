@@ -27,15 +27,14 @@ import org.infinispan.commands.remote.GetKeysInGroupCommand;
 import org.infinispan.commands.topology.CacheAvailabilityUpdateCommand;
 import org.infinispan.commands.topology.CacheJoinCommand;
 import org.infinispan.commands.topology.CacheLeaveCommand;
-import org.infinispan.commands.topology.RebalancePhaseConfirmCommand;
-import org.infinispan.commands.topology.RebalancePolicyRequestCommand;
-import org.infinispan.commands.topology.RebalancePolicyUpdateCommand;
-import org.infinispan.commands.topology.RebalanceStatusRequestCommand;
-import org.infinispan.commands.topology.RebalanceStartCommand;
-import org.infinispan.commands.topology.CacheStatusRequestCommand;
-import org.infinispan.commands.topology.TopologyUpdateCommand;
 import org.infinispan.commands.topology.CacheShutdownCommand;
 import org.infinispan.commands.topology.CacheShutdownRequestCommand;
+import org.infinispan.commands.topology.CacheStatusRequestCommand;
+import org.infinispan.commands.topology.RebalancePhaseConfirmCommand;
+import org.infinispan.commands.topology.RebalancePolicyUpdateCommand;
+import org.infinispan.commands.topology.RebalanceStartCommand;
+import org.infinispan.commands.topology.RebalanceStatusRequestCommand;
+import org.infinispan.commands.topology.TopologyUpdateCommand;
 import org.infinispan.commands.topology.TopologyUpdateStableCommand;
 import org.infinispan.commands.write.ClearCommand;
 import org.infinispan.commands.write.ComputeCommand;
@@ -148,7 +147,7 @@ public class ReplicableCommandExternalizer extends AbstractExternalizer<Replicab
             ReplicableRunnableCommand.class, ReplicableManagerFunctionCommand.class,
             HeartBeatCommand.class, CacheStatusRequestCommand.class, RebalancePhaseConfirmCommand.class,
             TopologyUpdateCommand.class, RebalancePolicyUpdateCommand.class,
-            RebalancePolicyRequestCommand.class, RebalanceStartCommand.class, RebalanceStatusRequestCommand.class,
+            RebalanceStartCommand.class, RebalanceStatusRequestCommand.class,
             CacheShutdownCommand.class, CacheShutdownRequestCommand.class, TopologyUpdateStableCommand.class,
             CacheJoinCommand.class, CacheLeaveCommand.class, CacheAvailabilityUpdateCommand.class);
       // Search only those commands that replicable and not cache specific replicable commands

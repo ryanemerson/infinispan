@@ -30,10 +30,10 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
 
 import org.infinispan.commands.ReplicableCommand;
-import org.infinispan.commands.topology.CacheStatusRequestCommand;
 import org.infinispan.commands.topology.CacheShutdownCommand;
-import org.infinispan.commands.topology.RebalancePolicyRequestCommand;
+import org.infinispan.commands.topology.CacheStatusRequestCommand;
 import org.infinispan.commands.topology.RebalanceStartCommand;
+import org.infinispan.commands.topology.RebalanceStatusRequestCommand;
 import org.infinispan.commands.topology.TopologyUpdateCommand;
 import org.infinispan.commands.topology.TopologyUpdateStableCommand;
 import org.infinispan.commons.IllegalLifecycleStateException;
@@ -158,12 +158,12 @@ public class ClusterTopologyManagerImpl implements ClusterTopologyManager {
       if (transport.isCoordinator()) {
          return CompletableFutures.completedTrue();
       }
-      ReplicableCommand command = new RebalancePolicyRequestCommand();
+      ReplicableCommand command = new RebalanceStatusRequestCommand();
       Address coordinator = transport.getCoordinator();
       return helper.executeOnCoordinator(transport, command, getGlobalTimeout() / INITIAL_CONNECTION_ATTEMPTS)
-                   .handle((value, throwable) -> {
+                   .handle((rebalancingStatus, throwable) -> {
                       if (throwable == null)
-                         return CompletableFuture.completedFuture((Boolean) value);
+                         return CompletableFuture.completedFuture(rebalancingStatus != RebalancingStatus.SUSPENDED);
 
                       if (attempts == 1 || !(throwable instanceof TimeoutException)) {
                          log.errorReadingRebalancingStatus(coordinator, throwable);
