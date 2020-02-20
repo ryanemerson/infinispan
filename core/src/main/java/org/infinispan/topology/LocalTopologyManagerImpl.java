@@ -87,7 +87,7 @@ public class LocalTopologyManagerImpl implements LocalTopologyManager, GlobalSta
    @Inject TimeService timeService;
    @Inject GlobalStateManager globalStateManager;
    @Inject PersistentUUIDManager persistentUUIDManager;
-   // Not used directly, but we have to start the ClusterTopologyManager before sending the join request
+   // We have to start the ClusterTopologyManager before sending the join request
    @Inject ClusterTopologyManager clusterTopologyManager;
 
    private TopologyManagementHelper helper;
@@ -220,6 +220,7 @@ public class LocalTopologyManagerImpl implements LocalTopologyManager, GlobalSta
    public CompletionStage<CacheTopology> handleJoinResponse(String cacheName, LocalCacheStatus cacheStatus,
                                                             CacheStatusResponse initialStatus) {
       int viewId = transport.getViewId();
+      clusterTopologyManager.setRebalancingEnabled(initialStatus.isRebalanceEnabled());
       return doHandleTopologyUpdate(cacheName, initialStatus.getCacheTopology(), initialStatus.getAvailabilityMode(),
                                     viewId, transport.getCoordinator(), cacheStatus)
                    .thenCompose(applied -> {
@@ -279,10 +280,10 @@ public class LocalTopologyManagerImpl implements LocalTopologyManager, GlobalSta
                   continue;
 
                caches.put(e.getKey(), new CacheStatusResponse(cacheStatus.getJoinInfo(),
-                                                              cacheStatus.getCurrentTopology(),
-                                                              cacheStatus.getStableTopology(),
-                                                              cacheStatus.getPartitionHandlingManager()
-                                                                         .getAvailabilityMode()));
+                     cacheStatus.getCurrentTopology(),
+                     cacheStatus.getStableTopology(),
+                     cacheStatus.getPartitionHandlingManager().getAvailabilityMode(),
+                     clusterTopologyManager.isRebalancingEnabled()));
             }
          }
 

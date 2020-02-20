@@ -5,7 +5,6 @@ import static java.util.concurrent.CompletableFuture.runAsync;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.infinispan.factories.KnownComponentNames.ASYNC_TRANSPORT_EXECUTOR;
 import static org.infinispan.factories.KnownComponentNames.TIMEOUT_SCHEDULE_EXECUTOR;
-import static org.infinispan.util.concurrent.CompletionStages.join;
 import static org.infinispan.util.logging.Log.CLUSTER;
 import static org.infinispan.util.logging.events.Messages.MESSAGES;
 
@@ -27,13 +26,11 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.Function;
 
 import org.infinispan.commands.ReplicableCommand;
 import org.infinispan.commands.topology.CacheShutdownCommand;
 import org.infinispan.commands.topology.CacheStatusRequestCommand;
 import org.infinispan.commands.topology.RebalanceStartCommand;
-import org.infinispan.commands.topology.RebalanceStatusRequestCommand;
 import org.infinispan.commands.topology.TopologyUpdateCommand;
 import org.infinispan.commands.topology.TopologyUpdateStableCommand;
 import org.infinispan.commons.IllegalLifecycleStateException;
@@ -137,7 +134,7 @@ public class ClusterTopologyManagerImpl implements ClusterTopologyManager {
    private AtomicInteger recoveryAttemptCount = new AtomicInteger();
 
    // The global rebalancing status
-   private boolean globalRebalancingEnabled = true;
+   boolean globalRebalancingEnabled = true;
 
    private final ClusterViewListener viewListener = new ClusterViewListener();
 
@@ -150,30 +147,6 @@ public class ClusterTopologyManagerImpl implements ClusterTopologyManager {
       cacheManagerNotifier.addListener(viewListener);
       // The listener already missed the initial view
       handleClusterView(false, transport.getViewId());
-
-      globalRebalancingEnabled = join(fetchRebalancingStatusFromCoordinator(INITIAL_CONNECTION_ATTEMPTS));
-   }
-
-   private CompletionStage<Boolean> fetchRebalancingStatusFromCoordinator(int attempts) {
-      if (transport.isCoordinator()) {
-         return CompletableFutures.completedTrue();
-      }
-      ReplicableCommand command = new RebalanceStatusRequestCommand();
-      Address coordinator = transport.getCoordinator();
-      return helper.executeOnCoordinator(transport, command, getGlobalTimeout() / INITIAL_CONNECTION_ATTEMPTS)
-                   .handle((rebalancingStatus, throwable) -> {
-                      if (throwable == null)
-                         return CompletableFuture.completedFuture(rebalancingStatus != RebalancingStatus.SUSPENDED);
-
-                      if (attempts == 1 || !(throwable instanceof TimeoutException)) {
-                         log.errorReadingRebalancingStatus(coordinator, throwable);
-                         return CompletableFutures.completedTrue();
-                      }
-                      // Assume any timeout is because the coordinator doesn't have a CommandAwareRpcDispatcher yet
-                      // (possible with ForkChannels or JGroupsChannelLookup and shouldConnect = false), and retry.
-                      log.debug("Timed out waiting for rebalancing status from coordinator, trying again");
-                      return fetchRebalancingStatusFromCoordinator(attempts - 1);
-                   }).thenCompose(Function.identity());
    }
 
    @Stop(priority = 100)
@@ -328,7 +301,7 @@ public class ClusterTopologyManagerImpl implements ClusterTopologyManager {
                Map<Address, CacheStatusResponse> cacheResponses =
                      responsesByCache.computeIfAbsent(cacheName, k -> new HashMap<>());
                cacheResponses.put(sender, new CacheStatusResponse(info, cacheTopology, stableTopology,
-                                                                  csr.getAvailabilityMode()));
+                                                                  csr.getAvailabilityMode(), rebalancingEnabled));
             }
          }
          return null;
@@ -680,7 +653,11 @@ public class ClusterTopologyManagerImpl implements ClusterTopologyManager {
          }
       }
       globalRebalancingEnabled = enabled;
-      cacheStatusMap.values().forEach(ClusterCacheStatus::startQueuedRebalance);
+      cacheStatusMap.values().forEach(status -> {
+         // Queue a rebalance only if the initial topology has been established
+         if (status.getCurrentTopology() != null)
+            status.startQueuedRebalance();
+      });
       return CompletableFutures.completedNull();
    }
 

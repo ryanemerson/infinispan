@@ -41,8 +41,8 @@ class MockLocalTopologyManager implements LocalTopologyManager {
    }
 
    public void init(CacheJoinInfo joinInfo, CacheTopology topology, CacheTopology stableTopology,
-                    AvailabilityMode availabilityMode) {
-      this.status = new CacheStatusResponse(joinInfo, topology, stableTopology, availabilityMode);
+                    AvailabilityMode availabilityMode, boolean rebalanceEnabled) {
+      this.status = new CacheStatusResponse(joinInfo, topology, stableTopology, availabilityMode, rebalanceEnabled);
    }
 
    public void verifyTopology(CacheTopology topology, int topologyId, List<Address> currentMembers,
@@ -87,29 +87,29 @@ class MockLocalTopologyManager implements LocalTopologyManager {
       Map<String, CacheStatusResponse> caches = status.getCacheJoinInfo() != null ?
                                                 singletonMap(cacheName, status) :
                                                 Collections.emptyMap();
-      return CompletableFuture.completedFuture(new ManagerStatusResponse(caches, true));
+      return CompletableFuture.completedFuture(new ManagerStatusResponse(caches, status.isRebalanceEnabled()));
    }
 
    @Override
    public CompletionStage<Void> handleTopologyUpdate(String cacheName, CacheTopology cacheTopology, AvailabilityMode availabilityMode,
                                                      int viewId, Address sender) {
       status = new CacheStatusResponse(status.getCacheJoinInfo(), cacheTopology,
-                                       status.getStableTopology(), availabilityMode);
+                                       status.getStableTopology(), availabilityMode, status.isRebalanceEnabled());
       topologies.add(cacheTopology);
       return CompletableFutures.completedNull();
    }
 
    @Override
    public CompletionStage<Void> handleStableTopologyUpdate(String cacheName, CacheTopology cacheTopology, Address sender, int viewId) {
-      status = new CacheStatusResponse(status.getCacheJoinInfo(), status.getCacheTopology(),
-                                       cacheTopology, status.getAvailabilityMode());
+      status = new CacheStatusResponse(status.getCacheJoinInfo(), status.getCacheTopology(), cacheTopology,
+            status.getAvailabilityMode(), status.isRebalanceEnabled());
       return CompletableFutures.completedNull();
    }
 
    @Override
    public CompletionStage<Void> handleRebalance(String cacheName, CacheTopology cacheTopology, int viewId, Address sender) {
       status = new CacheStatusResponse(status.getCacheJoinInfo(), cacheTopology,
-                                       status.getStableTopology(), status.getAvailabilityMode());
+                                       status.getStableTopology(), status.getAvailabilityMode(), status.isRebalanceEnabled());
       topologies.add(cacheTopology);
       return CompletableFutures.completedNull();
    }

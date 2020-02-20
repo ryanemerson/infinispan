@@ -685,7 +685,8 @@ public class ClusterCacheStatus implements AvailabilityStrategyContext {
       if (!isFirstMember && !memberJoined) {
          if (trace) log.tracef("Trying to add node %s to cache %s, but it is already a member: " +
                "members = %s, joiners = %s", joiner, cacheName, expectedMembers, joiners);
-         return new CacheStatusResponse(null, currentTopology, stableTopology, availabilityMode);
+         return new CacheStatusResponse(null, currentTopology, stableTopology, availabilityMode,
+               clusterTopologyManager.isRebalancingEnabled());
       }
       if (status == ComponentStatus.INSTANTIATED) {
          if (persistentState.isPresent()) {
@@ -700,7 +701,8 @@ public class ClusterCacheStatus implements AvailabilityStrategyContext {
                   topology.getMembers(), topology.getTopologyId()));
                clusterTopologyManager.broadcastTopologyUpdate(cacheName, topology, availabilityMode);
                clusterTopologyManager.broadcastStableTopologyUpdate(cacheName, topology);
-               return new CacheStatusResponse(null, currentTopology, stableTopology, availabilityMode);
+               return new CacheStatusResponse(null, currentTopology, stableTopology, availabilityMode,
+                     clusterTopologyManager.isRebalancingEnabled());
             }
          } else {
             if (isFirstMember) {
@@ -722,7 +724,8 @@ public class ClusterCacheStatus implements AvailabilityStrategyContext {
       if (topologyBeforeRebalance != null)
          availabilityStrategy.onJoin(this, joiner);
 
-      return new CacheStatusResponse(null, topologyBeforeRebalance, stableTopology, availabilityMode);
+      return new CacheStatusResponse(null, topologyBeforeRebalance, stableTopology, availabilityMode,
+            clusterTopologyManager.isRebalancingEnabled());
    }
 
    @GuardedBy("this")

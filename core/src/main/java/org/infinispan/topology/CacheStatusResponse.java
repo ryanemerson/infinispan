@@ -20,13 +20,15 @@ public class CacheStatusResponse implements Serializable {
    private final CacheTopology cacheTopology;
    private final CacheTopology stableTopology;
    private final AvailabilityMode availabilityMode;
+   private final boolean rebalanceEnabled;
 
    public CacheStatusResponse(CacheJoinInfo cacheJoinInfo, CacheTopology cacheTopology, CacheTopology stableTopology,
-         AvailabilityMode availabilityMode) {
+         AvailabilityMode availabilityMode, boolean rebalanceEnabled) {
       this.cacheJoinInfo = cacheJoinInfo;
       this.cacheTopology = cacheTopology;
       this.stableTopology = stableTopology;
       this.availabilityMode = availabilityMode;
+      this.rebalanceEnabled = rebalanceEnabled;
    }
 
    public CacheJoinInfo getCacheJoinInfo() {
@@ -48,6 +50,10 @@ public class CacheStatusResponse implements Serializable {
       return availabilityMode;
    }
 
+   public boolean isRebalanceEnabled() {
+      return rebalanceEnabled;
+   }
+
    @Override
    public String toString() {
       return "StatusResponse{" +
@@ -64,6 +70,7 @@ public class CacheStatusResponse implements Serializable {
          output.writeObject(cacheStatusResponse.cacheTopology);
          output.writeObject(cacheStatusResponse.stableTopology);
          output.writeObject(cacheStatusResponse.availabilityMode);
+         output.writeBoolean(cacheStatusResponse.rebalanceEnabled);
       }
 
       @Override
@@ -72,7 +79,8 @@ public class CacheStatusResponse implements Serializable {
          CacheTopology cacheTopology = (CacheTopology) unmarshaller.readObject();
          CacheTopology stableTopology = (CacheTopology) unmarshaller.readObject();
          AvailabilityMode availabilityMode = (AvailabilityMode) unmarshaller.readObject();
-         return new CacheStatusResponse(cacheJoinInfo, cacheTopology, stableTopology, availabilityMode);
+         boolean rebalanceEnabled = unmarshaller.readBoolean();
+         return new CacheStatusResponse(cacheJoinInfo, cacheTopology, stableTopology, availabilityMode, rebalanceEnabled);
       }
 
       @Override

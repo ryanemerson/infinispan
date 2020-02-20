@@ -9,6 +9,7 @@ import org.infinispan.commons.marshall.MarshallUtil;
 import org.infinispan.factories.GlobalComponentRegistry;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.topology.CacheJoinInfo;
+import org.infinispan.topology.CacheStatusResponse;
 
 /**
  * A node is requesting to join the cluster.
@@ -37,7 +38,7 @@ public class CacheJoinCommand extends AbstractCacheControlCommand {
    }
 
    @Override
-   public CompletionStage<?> invokeAsync(GlobalComponentRegistry gcr) throws Throwable {
+   public CompletionStage<CacheStatusResponse> invokeAsync(GlobalComponentRegistry gcr) throws Throwable {
       return gcr.getClusterTopologyManager()
             .handleJoin(cacheName, origin, joinInfo, viewId);
    }

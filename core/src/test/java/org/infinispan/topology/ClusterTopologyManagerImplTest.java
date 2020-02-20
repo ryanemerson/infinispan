@@ -16,7 +16,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.infinispan.commands.topology.CacheStatusRequestCommand;
 import org.infinispan.commands.topology.RebalanceStartCommand;
-import org.infinispan.commands.topology.RebalanceStatusRequestCommand;
 import org.infinispan.commands.topology.TopologyUpdateCommand;
 import org.infinispan.commands.topology.TopologyUpdateStableCommand;
 import org.infinispan.commons.hash.MurmurHash3;
@@ -36,7 +35,6 @@ import org.infinispan.manager.TestModuleRepository;
 import org.infinispan.notifications.cachemanagerlistener.CacheManagerNotifier;
 import org.infinispan.notifications.cachemanagerlistener.CacheManagerNotifierImpl;
 import org.infinispan.partitionhandling.AvailabilityMode;
-import org.infinispan.remoting.responses.SuccessfulResponse;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.remoting.transport.MockTransport;
 import org.infinispan.remoting.transport.Transport;
@@ -92,7 +90,7 @@ public class ClusterTopologyManagerImplTest extends AbstractInfinispanTest {
 
       // Initial conditions
       transport.init(1, singletonList(A));
-      ltm.init(null, null, null, null);
+      ltm.init(null, null, null, null, true);
 
       // Component under test: ClusterTopologyManagerImpl on the coordinator (A)
       ClusterTopologyManagerImpl ctm = new ClusterTopologyManagerImpl();
@@ -181,7 +179,7 @@ public class ClusterTopologyManagerImplTest extends AbstractInfinispanTest {
       CacheTopology stableTopology = new CacheTopology(1, 1, stableCH, null,
                                                        CacheTopology.Phase.NO_REBALANCE, singletonList(A),
                                                        singletonList(joinInfoA.getPersistentUUID()));
-      ltm.init(joinInfoA, initialTopology, stableTopology, AvailabilityMode.AVAILABLE);
+      ltm.init(joinInfoA, initialTopology, stableTopology, AvailabilityMode.AVAILABLE, true);
       // Normally LocalTopologyManagerImpl.start()/doHandleTopologyUpdate() registers the persistent UUIDs
       // TODO Write test with asymmetric caches leaving the PersistentUUIDManager cache incomplete
       persistentUUIDManager.addPersistentAddressMapping(A, joinInfoA.getPersistentUUID());
@@ -191,12 +189,7 @@ public class ClusterTopologyManagerImplTest extends AbstractInfinispanTest {
       ClusterTopologyManagerImpl ctm = new ClusterTopologyManagerImpl();
       gbcr.replaceComponent(ClusterTopologyManager.class.getName(), ctm, false);
       gcr.rewire();
-
-      // When CTMI starts as regular member it requests the rebalancing status from the coordinator
-      runConcurrently(
-            ctm::start,
-            () -> transport.expectCommand(RebalanceStatusRequestCommand.class)
-                  .singleResponse(A, SuccessfulResponse.create(true)));
+      ctm.start();
 
       // Wait for the initial view update in CTMI to finish
       eventuallyEquals(ClusterTopologyManager.ClusterManagerStatus.REGULAR_MEMBER, ctm::getStatus);

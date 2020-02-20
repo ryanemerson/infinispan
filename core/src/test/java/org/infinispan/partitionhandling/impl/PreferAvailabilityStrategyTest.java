@@ -109,7 +109,7 @@ public class PreferAvailabilityStrategyTest extends AbstractInfinispanTest {
    public void testSinglePartitionOnlyJoiners() {
       // There's no cache topology, so the first cache topology is created with the joiners
       List<Address> joiners = asList(A, B);
-      CacheStatusResponse response = new CacheStatusResponse(JOIN_INFO, null, null, AVAILABLE);
+      CacheStatusResponse response = new CacheStatusResponse(JOIN_INFO, null, null, AVAILABLE, true);
       Map<Address, CacheStatusResponse> statusResponses = mapOf(A, response, B, response);
 
       when(context.getCacheName()).thenReturn(CACHE_NAME);
@@ -127,7 +127,7 @@ public class PreferAvailabilityStrategyTest extends AbstractInfinispanTest {
       List<Address> mergeMembers = asList(B, C);
       TestClusterCacheStatus cacheA = start(JOIN_INFO, A);
       CacheStatusResponse responseB = availableResponse(B, cacheA);
-      CacheStatusResponse responseC = new CacheStatusResponse(JOIN_INFO, null, null, AVAILABLE);
+      CacheStatusResponse responseC = new CacheStatusResponse(JOIN_INFO, null, null, AVAILABLE, true);
       Map<Address, CacheStatusResponse> statusResponses = mapOf(B, responseB, C, responseC);
 
       when(context.getCacheName()).thenReturn(CACHE_NAME);
@@ -468,7 +468,7 @@ public class PreferAvailabilityStrategyTest extends AbstractInfinispanTest {
 
    private CacheStatusResponse availableResponse(Address a, TestClusterCacheStatus cacheStatus) {
       return new CacheStatusResponse(cacheStatus.joinInfo(a), cacheStatus.topology(), cacheStatus.stableTopology(),
-                                     AVAILABLE);
+                                     AVAILABLE, true);
    }
 
    @Override
