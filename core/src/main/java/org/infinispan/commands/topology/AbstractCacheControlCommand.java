@@ -5,6 +5,12 @@ import org.infinispan.factories.scopes.Scope;
 import org.infinispan.factories.scopes.Scopes;
 import org.infinispan.remoting.transport.Address;
 
+/**
+ * Abstract class that is the basis for the Cache, Rebalance and Topology commands.
+ *
+ * @author Ryan Emerson
+ * @since 11.0
+ */
 @Scope(Scopes.NONE)
 public abstract class AbstractCacheControlCommand implements GlobalRpcCommand {
 
