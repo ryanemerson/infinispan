@@ -5,19 +5,13 @@ import static org.testng.AssertJUnit.assertNull;
 
 import java.io.IOException;
 
-import org.infinispan.commons.time.TimeService;
-import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.container.entries.InternalCacheEntry;
-import org.infinispan.eviction.EvictionType;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.persistence.BaseStoreTest;
-import org.infinispan.persistence.rest.configuration.RestStoreConfigurationBuilder;
 import org.infinispan.persistence.spi.AdvancedLoadWriteStore;
 import org.infinispan.persistence.spi.PersistenceException;
 import org.infinispan.rest.RestServer;
-import org.infinispan.rest.configuration.RestServerConfigurationBuilder;
 import org.infinispan.test.TestingUtil;
-import org.infinispan.test.fwk.TestCacheManagerFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
@@ -34,29 +28,30 @@ public class RestStoreTest extends BaseStoreTest {
 
    @Override
    protected AdvancedLoadWriteStore createStore() throws Exception {
-      ConfigurationBuilder localBuilder = TestCacheManagerFactory.getDefaultCacheConfiguration(false);
-      localBuilder.memory().evictionType(EvictionType.COUNT).size(WRITE_DELETE_BATCH_MAX_ENTRIES).expiration().wakeUpInterval(10L);
-
-      localCacheManager = TestCacheManagerFactory.createServerModeCacheManager(localBuilder);
-      localCacheManager.defineConfiguration(REMOTE_CACHE, localCacheManager.getDefaultCacheConfiguration());
-      localCacheManager.getCache(REMOTE_CACHE);
-      TestingUtil.replaceComponent(localCacheManager, TimeService.class, timeService, true);
-      localCacheManager.getCache(REMOTE_CACHE).getAdvancedCache().getComponentRegistry().rewire();
-
-      RestServerConfigurationBuilder restServerConfigurationBuilder = new RestServerConfigurationBuilder();
-      restServerConfigurationBuilder.port(0);
-      restServer = new RestServer();
-      restServer.start(restServerConfigurationBuilder.build(), localCacheManager);
-
-      ConfigurationBuilder builder = TestCacheManagerFactory.getDefaultCacheConfiguration(false);
-      RestStoreConfigurationBuilder storeConfigurationBuilder = builder.persistence()
-            .addStore(RestStoreConfigurationBuilder.class);
-      storeConfigurationBuilder.host(restServer.getHost()).port(restServer.getPort()).cacheName(REMOTE_CACHE);
-      storeConfigurationBuilder.connectionPool().maxTotalConnections(10).maxConnectionsPerHost(10);
-      storeConfigurationBuilder.segmented(false);
-      RestStore restStore = new RestStore();
-      restStore.init(createContext(builder.build()));
-      return restStore;
+//      ConfigurationBuilder localBuilder = TestCacheManagerFactory.getDefaultCacheConfiguration(false);
+//      localBuilder.memory().evictionType(EvictionType.COUNT).size(WRITE_DELETE_BATCH_MAX_ENTRIES).expiration().wakeUpInterval(10L);
+//
+//      localCacheManager = TestCacheManagerFactory.createServerModeCacheManager(localBuilder);
+//      localCacheManager.defineConfiguration(REMOTE_CACHE, localCacheManager.getDefaultCacheConfiguration());
+//      localCacheManager.getCache(REMOTE_CACHE);
+//      TestingUtil.replaceComponent(localCacheManager, TimeService.class, timeService, true);
+//      localCacheManager.getCache(REMOTE_CACHE).getAdvancedCache().getComponentRegistry().rewire();
+//
+//      RestServerConfigurationBuilder restServerConfigurationBuilder = new RestServerConfigurationBuilder();
+//      restServerConfigurationBuilder.port(0);
+//      restServer = new RestServer();
+//      restServer.start(restServerConfigurationBuilder.build(), localCacheManager);
+//
+//      ConfigurationBuilder builder = TestCacheManagerFactory.getDefaultCacheConfiguration(false);
+//      RestStoreConfigurationBuilder storeConfigurationBuilder = builder.persistence()
+//            .addStore(RestStoreConfigurationBuilder.class);
+//      storeConfigurationBuilder.host(restServer.getHost()).port(restServer.getPort()).cacheName(REMOTE_CACHE);
+//      storeConfigurationBuilder.connectionPool().maxTotalConnections(10).maxConnectionsPerHost(10);
+//      storeConfigurationBuilder.segmented(false);
+//      RestStore restStore = new RestStore();
+//      restStore.init(createContext(builder.build()));
+//      return restStore;
+      return null;
    }
 
    @Override
