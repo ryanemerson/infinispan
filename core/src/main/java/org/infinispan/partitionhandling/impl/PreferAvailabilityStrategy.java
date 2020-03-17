@@ -13,6 +13,7 @@ import org.infinispan.commons.util.InfinispanCollections;
 import org.infinispan.distribution.ch.ConsistentHash;
 import org.infinispan.partitionhandling.AvailabilityMode;
 import org.infinispan.remoting.transport.Address;
+import org.infinispan.topology.CacheJoinInfo;
 import org.infinispan.topology.CacheStatusResponse;
 import org.infinispan.topology.CacheTopology;
 import org.infinispan.topology.PersistentUUIDManager;
@@ -36,7 +37,7 @@ public class PreferAvailabilityStrategy implements AvailabilityStrategy {
    }
 
    @Override
-   public void onJoin(AvailabilityStrategyContext context, Address joiner) {
+   public void onJoin(AvailabilityStrategyContext context, Address joiner, CacheJoinInfo joinInfo) {
       context.queueRebalance(context.getExpectedMembers());
    }
 

@@ -15,6 +15,7 @@ import org.infinispan.remoting.transport.Address;
 import org.infinispan.topology.CacheJoinInfo;
 import org.infinispan.topology.CacheStatusResponse;
 import org.infinispan.topology.CacheTopology;
+import org.infinispan.topology.PersistentUUID;
 import org.infinispan.topology.PersistentUUIDManager;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
@@ -34,8 +35,20 @@ public class PreferConsistencyStrategy implements AvailabilityStrategy {
    }
 
    @Override
-   public void onJoin(AvailabilityStrategyContext context, Address joiner) {
+   public void onJoin(AvailabilityStrategyContext context, Address joiner, CacheJoinInfo joinInfo) {
       if (context.getAvailabilityMode() != AvailabilityMode.AVAILABLE) {
+         // Update availability mode if join recreates the stable topology with the same persistent uuid and the
+         // num nodes is equal to the numOwners.
+         CacheTopology currentTopology = context.getCurrentTopology();
+         if (currentTopology.getActualMembers().size() + 1 == joinInfo.getNumOwners()) {
+            List<PersistentUUID> allMembers = new ArrayList<>(currentTopology.getMembersPersistentUUIDs());
+            allMembers.add(joinInfo.getPersistentUUID());
+            if (context.getStableTopology().getMembersPersistentUUIDs().equals(allMembers)) {
+               persistentUUIDManager.addPersistentAddressMapping(joiner, joinInfo.getPersistentUUID());
+               context.updateAvailabilityMode(context.getExpectedMembers(), AvailabilityMode.AVAILABLE, false);
+               return;
+            }
+         }
          log.debugf("Cache %s not available (%s), postponing rebalance for joiner %s", context.getCacheName(),
                context.getAvailabilityMode(), joiner);
          return;

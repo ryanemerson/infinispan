@@ -7,6 +7,7 @@ import org.infinispan.distribution.ch.ConsistentHash;
 import org.infinispan.distribution.ch.ConsistentHashFactory;
 import org.infinispan.partitionhandling.AvailabilityMode;
 import org.infinispan.remoting.transport.Address;
+import org.infinispan.topology.CacheJoinInfo;
 import org.infinispan.topology.CacheStatusResponse;
 import org.infinispan.topology.CacheTopology;
 
@@ -52,7 +53,7 @@ public interface AvailabilityStrategy {
    /**
     * Called when a node joins.
     */
-   void onJoin(AvailabilityStrategyContext context, Address joiner);
+   void onJoin(AvailabilityStrategyContext context, Address joiner, CacheJoinInfo joinInfo);
 
    /**
     * Called when a node leaves gracefully.

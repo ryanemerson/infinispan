@@ -719,8 +719,9 @@ public class ClusterCacheStatus implements AvailabilityStrategyContext {
 
       CacheTopology topologyBeforeRebalance = getCurrentTopology();
       // Only trigger availability strategy if we have a topology installed
-      if (topologyBeforeRebalance != null)
-         availabilityStrategy.onJoin(this, joiner);
+      if (topologyBeforeRebalance != null) {
+         availabilityStrategy.onJoin(this, joiner, joinInfo);
+      }
 
       return new CacheStatusResponse(null, topologyBeforeRebalance, stableTopology, availabilityMode);
    }
