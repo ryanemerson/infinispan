@@ -32,7 +32,6 @@ import org.infinispan.factories.annotations.Inject;
 import org.infinispan.factories.scopes.Scope;
 import org.infinispan.factories.scopes.Scopes;
 import org.infinispan.marshall.core.EncoderRegistry;
-import org.infinispan.marshall.persistence.PersistenceMarshaller;
 import org.infinispan.registry.InternalCacheRegistry;
 
 /**
@@ -120,10 +119,9 @@ public final class DataConversion {
    /**
     * Obtain the configured {@link MediaType} for this instance, or assume sensible defaults.
     */
-   private MediaType getStorageMediaType(Configuration configuration, boolean embeddedMode, boolean internalCache, PersistenceMarshaller persistenceMarshaller) {
+   private MediaType getStorageMediaType(Configuration configuration, boolean embeddedMode, boolean internalCache, Marshaller userMarshaller) {
       EncodingConfiguration encodingConfiguration = configuration.encoding();
       ContentTypeConfiguration contentTypeConfiguration = isKey ? encodingConfiguration.keyDataType() : encodingConfiguration.valueDataType();
-      Marshaller userMarshaller = persistenceMarshaller.getUserMarshaller();
       MediaType mediaType = userMarshaller.mediaType();
       boolean heap = configuration.memory().storageType() == StorageType.OBJECT;
       // If explicitly configured, use the value provided
@@ -162,7 +160,7 @@ public final class DataConversion {
    }
 
    @Inject
-   public void injectDependencies(@ComponentName(KnownComponentNames.PERSISTENCE_MARSHALLER) PersistenceMarshaller persistenceMarshaller,
+   public void injectDependencies(@ComponentName(KnownComponentNames.USER_MARSHALLER) Marshaller userMarshaller,
                                   @ComponentName(KnownComponentNames.CACHE_NAME) String cacheName,
                                   InternalCacheRegistry icr, GlobalConfiguration gcr,
                                   EncoderRegistry encoderRegistry, Configuration configuration) {
@@ -173,7 +171,7 @@ public final class DataConversion {
       }
       boolean internalCache = icr.isInternalCache(cacheName);
       boolean embeddedMode = Configurations.isEmbeddedMode(gcr);
-      this.storageMediaType = getStorageMediaType(configuration, embeddedMode, internalCache, persistenceMarshaller);
+      this.storageMediaType = getStorageMediaType(configuration, embeddedMode, internalCache, userMarshaller);
 
       lookupEncoder(encoderRegistry);
       this.lookupWrapper();
