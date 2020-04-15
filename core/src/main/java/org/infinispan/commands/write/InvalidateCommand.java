@@ -10,7 +10,7 @@ import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.commons.util.Util;
 import org.infinispan.context.InvocationContext;
 import org.infinispan.context.impl.FlagBitSets;
-import org.infinispan.marshall.protostream.impl.MarshallableUserCollection;
+import org.infinispan.marshall.protostream.impl.MarshallableCollection;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
@@ -28,21 +28,21 @@ public class InvalidateCommand extends AbstractTopologyAffectedCommand implement
    public static final int COMMAND_ID = 6;
 
    @ProtoField(number = 3)
-   protected MarshallableUserCollection<Object> keys;
+   protected MarshallableCollection<Object> keys;
 
    @ProtoField(number = 4)
    protected CommandInvocationId commandInvocationId;
 
    @ProtoFactory
    InvalidateCommand(long flagsWithoutRemote, int topologyId, CommandInvocationId commandInvocationId,
-                     MarshallableUserCollection<Object> keys) {
+                     MarshallableCollection<Object> keys) {
       super(flagsWithoutRemote, topologyId);
       this.keys = keys;
       this.commandInvocationId = commandInvocationId;
    }
 
    public InvalidateCommand(long flagsBitSet, CommandInvocationId commandInvocationId, Object... keys) {
-      this(flagsBitSet, -1, commandInvocationId, MarshallableUserCollection.create(keys));
+      this(flagsBitSet, -1, commandInvocationId, MarshallableCollection.create(keys));
    }
 
    public InvalidateCommand(long flagsBitSet, Collection<Object> keys, CommandInvocationId commandInvocationId) {
@@ -65,7 +65,7 @@ public class InvalidateCommand extends AbstractTopologyAffectedCommand implement
    }
 
    public Object[] getKeys() {
-      return MarshallableUserCollection.unwrapAsArray(keys, Object[]::new);
+      return MarshallableCollection.unwrapAsArray(keys, Object[]::new);
    }
 
    @Override
@@ -89,7 +89,7 @@ public class InvalidateCommand extends AbstractTopologyAffectedCommand implement
 
    @Override
    public Collection<?> getAffectedKeys() {
-      return MarshallableUserCollection.unwrap(keys);
+      return MarshallableCollection.unwrap(keys);
    }
 
    @Override

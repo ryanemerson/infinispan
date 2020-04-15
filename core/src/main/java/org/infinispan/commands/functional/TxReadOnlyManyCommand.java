@@ -12,7 +12,6 @@ import org.infinispan.functional.EntryView;
 import org.infinispan.functional.impl.Params;
 import org.infinispan.marshall.protostream.impl.MarshallableCollection;
 import org.infinispan.marshall.protostream.impl.MarshallableObject;
-import org.infinispan.marshall.protostream.impl.MarshallableUserCollection;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
@@ -38,7 +37,7 @@ public class TxReadOnlyManyCommand<K, V, R> extends ReadOnlyManyCommand<K, V, R>
    }
 
    @ProtoFactory
-   TxReadOnlyManyCommand(long flagsWithoutRemote, int topologyId, MarshallableUserCollection<?> keys,
+   TxReadOnlyManyCommand(long flagsWithoutRemote, int topologyId, MarshallableCollection<?> keys,
                          MarshallableObject<Function<EntryView.ReadEntryView<K, V>, R>> function,
                          Params params, DataConversion keyDataConversion, DataConversion valueDataConversion,
                          MarshallableCollection<MarshallableCollection<Mutation<K, V, ?>>> wrappedMutations) {

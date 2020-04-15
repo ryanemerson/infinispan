@@ -10,7 +10,7 @@ import org.infinispan.container.versioning.InequalVersionComparisonResult;
 import org.infinispan.container.versioning.SimpleClusteredVersion;
 import org.infinispan.distribution.DistributionManager;
 import org.infinispan.factories.ComponentRegistry;
-import org.infinispan.marshall.protostream.impl.MarshallableUserCollection;
+import org.infinispan.marshall.protostream.impl.MarshallableCollection;
 import org.infinispan.persistence.manager.OrderedUpdatesManager;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
@@ -51,14 +51,14 @@ public class InvalidateVersionsCommand extends BaseRpcCommand {
    final boolean removed;
 
    @ProtoFactory
-   InvalidateVersionsCommand(ByteString cacheName, int topologyId, MarshallableUserCollection<Object> keys,
+   InvalidateVersionsCommand(ByteString cacheName, int topologyId, MarshallableCollection<Object> keys,
                              int[] topologyIds, long[] versions, boolean removed) {
-      this(cacheName, topologyId, MarshallableUserCollection.unwrapAsArray(keys, Object[]::new), topologyIds, versions, removed);
+      this(cacheName, topologyId, MarshallableCollection.unwrapAsArray(keys, Object[]::new), topologyIds, versions, removed);
    }
 
    @ProtoField(number = 6)
-   MarshallableUserCollection<Object> getKeys() {
-      return MarshallableUserCollection.create(keys);
+   MarshallableCollection<Object> getKeys() {
+      return MarshallableCollection.create(keys);
    }
 
    public InvalidateVersionsCommand(ByteString cacheName, int topologyId, Object[] keys, int[] topologyIds,

@@ -50,13 +50,13 @@ public class MarshallableLambda {
    final String instantiatedMethodType;
 
    @ProtoField(number = 10)
-   final MarshallableUserCollection<Object> arguments;
+   final MarshallableCollection<Object> arguments;
 
    @ProtoFactory
    MarshallableLambda(String capturingClass, String functionalInterfaceClass,
                       String functionalInterfaceMethodName, String functionalInterfaceMethodSignature,
                       int implMethodKind, String implClass, String implMethodName, String implMethodSignature,
-                      String instantiatedMethodType, MarshallableUserCollection<Object> arguments) {
+                      String instantiatedMethodType, MarshallableCollection<Object> arguments) {
       this.capturingClass = capturingClass;
       this.functionalInterfaceClass = functionalInterfaceClass;
       this.functionalInterfaceMethodName = functionalInterfaceMethodName;
@@ -76,7 +76,7 @@ public class MarshallableLambda {
 
          int numberOfArgs = sl.getCapturedArgCount();
          List<Object> args = new ArrayList<>(numberOfArgs);
-         MarshallableUserCollection<Object> wrappedArgs = MarshallableUserCollection.create(args);
+         MarshallableCollection<Object> wrappedArgs = MarshallableCollection.create(args);
          for (int i = 0; i < numberOfArgs; i++)
             args.add(sl.getCapturedArg(i));
 
@@ -100,7 +100,7 @@ public class MarshallableLambda {
    public Object unwrap(ClassLoader classLoader) {
       try {
          Class<?> clazz = Class.forName(capturingClass, true, classLoader);
-         Object[] args = MarshallableUserCollection.unwrapAsArray(arguments, Object[]::new);
+         Object[] args = MarshallableCollection.unwrapAsArray(arguments, Object[]::new);
 
          SerializedLambda sl = new SerializedLambda(clazz, functionalInterfaceClass, functionalInterfaceMethodName,
                functionalInterfaceMethodSignature, implMethodKind, implClass, implMethodName, implMethodSignature,

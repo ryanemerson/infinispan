@@ -3,7 +3,6 @@ package org.infinispan.interceptors.distribution;
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.container.versioning.EntryVersion;
 import org.infinispan.marshall.protostream.impl.MarshallableCollection;
-import org.infinispan.marshall.protostream.impl.MarshallableUserCollection;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
@@ -19,14 +18,14 @@ public class VersionedResults {
    }
 
    @ProtoFactory
-   VersionedResults(MarshallableUserCollection<Object> values, MarshallableCollection<EntryVersion> versions) {
-      this.values = MarshallableUserCollection.unwrapAsArray(values, Object[]::new);
+   VersionedResults(MarshallableCollection<Object> values, MarshallableCollection<EntryVersion> versions) {
+      this.values = MarshallableCollection.unwrapAsArray(values, Object[]::new);
       this.versions = MarshallableCollection.unwrapAsArray(versions, EntryVersion[]::new);
    }
 
    @ProtoField(number = 1)
-   MarshallableUserCollection<Object> getValues() {
-      return MarshallableUserCollection.create(values);
+   MarshallableCollection<Object> getValues() {
+      return MarshallableCollection.create(values);
    }
 
    // We have to marshall as MarshallableCollection, instead of two fields for SimpleClusteredVersion and NumericVersion

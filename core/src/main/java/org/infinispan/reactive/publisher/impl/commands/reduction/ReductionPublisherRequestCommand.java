@@ -13,8 +13,8 @@ import org.infinispan.commons.util.IntSet;
 import org.infinispan.commons.util.IntSets;
 import org.infinispan.commons.util.Util;
 import org.infinispan.factories.ComponentRegistry;
+import org.infinispan.marshall.protostream.impl.MarshallableCollection;
 import org.infinispan.marshall.protostream.impl.MarshallableObject;
-import org.infinispan.marshall.protostream.impl.MarshallableUserCollection;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
@@ -60,11 +60,11 @@ public class ReductionPublisherRequestCommand<K> extends BaseRpcCommand implemen
    @ProtoFactory
    ReductionPublisherRequestCommand(ByteString cacheName, int topologyId, boolean parallelStream,
                                     DeliveryGuarantee deliveryGuarantee, Set<Integer> segmentsWorkaround,
-                                    boolean includeLoader, boolean entryStream, MarshallableUserCollection<K> keys,
-                                    MarshallableUserCollection<K> excludedKeys, MarshallableObject<Function<?, ?>> transformer,
+                                    boolean includeLoader, boolean entryStream, MarshallableCollection<K> keys,
+                                    MarshallableCollection<K> excludedKeys, MarshallableObject<Function<?, ?>> transformer,
                                     MarshallableObject<Function<?, ?>> finalizer) {
       this(cacheName, parallelStream, deliveryGuarantee, segmentsWorkaround == null ? null : IntSets.from(segmentsWorkaround),
-            MarshallableUserCollection.unwrapAsSet(keys), MarshallableUserCollection.unwrapAsSet(excludedKeys), includeLoader,
+            MarshallableCollection.unwrapAsSet(keys), MarshallableCollection.unwrapAsSet(excludedKeys), includeLoader,
             entryStream, MarshallableObject.unwrap(transformer), MarshallableObject.unwrap(finalizer));
       this.topologyId = topologyId;
    }
@@ -86,13 +86,13 @@ public class ReductionPublisherRequestCommand<K> extends BaseRpcCommand implemen
    }
 
    @ProtoField(number = 8)
-   MarshallableUserCollection<K> getKeys() {
-      return MarshallableUserCollection.create(keys);
+   MarshallableCollection<K> getKeys() {
+      return MarshallableCollection.create(keys);
    }
 
    @ProtoField(number = 9)
-   MarshallableUserCollection<K> getExcludedKeys() {
-      return MarshallableUserCollection.create(excludedKeys);
+   MarshallableCollection<K> getExcludedKeys() {
+      return MarshallableCollection.create(excludedKeys);
    }
 
    @ProtoField(number = 10)

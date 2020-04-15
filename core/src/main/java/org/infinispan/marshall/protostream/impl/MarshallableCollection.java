@@ -3,7 +3,9 @@ package org.infinispan.marshall.protostream.impl;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -69,6 +71,18 @@ public class MarshallableCollection<T> extends AbstractMarshallableCollectionWra
 
       Collection<T> collection = wrapper.get();
       return collection instanceof List ? (List<T>) collection : new ArrayList<>(collection);
+   }
+
+   /**
+    * @param wrapper the {@link MarshallableCollection} instance to unwrap.
+    * @return a {@link Set} representation of the wrapped {@link Collection} or null if the provided wrapper does not exist.
+    */
+   public static <T> Set<T> unwrapAsSet(MarshallableCollection<T> wrapper) {
+      if (wrapper == null)
+         return null;
+
+      Collection<T> collection = wrapper.get();
+      return collection instanceof Set ? (Set<T>) collection : new HashSet<>(collection);
    }
 
    // TODO replace unwrapAsList with this?

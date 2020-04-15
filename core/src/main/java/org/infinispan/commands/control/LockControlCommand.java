@@ -18,7 +18,7 @@ import org.infinispan.context.impl.FlagBitSets;
 import org.infinispan.context.impl.RemoteTxInvocationContext;
 import org.infinispan.context.impl.TxInvocationContext;
 import org.infinispan.factories.ComponentRegistry;
-import org.infinispan.marshall.protostream.impl.MarshallableUserCollection;
+import org.infinispan.marshall.protostream.impl.MarshallableCollection;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
@@ -49,7 +49,7 @@ public class LockControlCommand extends AbstractTransactionBoundaryCommand imple
    public static final int COMMAND_ID = 3;
 
    @ProtoField(number = 3)
-   MarshallableUserCollection<Object> keys;
+   MarshallableCollection<Object> keys;
 
    @ProtoField(number = 4, defaultValue = "false")
    boolean unlock = false;
@@ -58,7 +58,7 @@ public class LockControlCommand extends AbstractTransactionBoundaryCommand imple
    long flags = EnumUtil.EMPTY_BIT_SET;
 
    @ProtoFactory
-   LockControlCommand(ByteString cacheName, GlobalTransaction globalTransaction, MarshallableUserCollection<Object> keys,
+   LockControlCommand(ByteString cacheName, GlobalTransaction globalTransaction, MarshallableCollection<Object> keys,
                       boolean unlock, long flags) {
       super(cacheName, globalTransaction);
       this.keys = keys;
@@ -69,13 +69,13 @@ public class LockControlCommand extends AbstractTransactionBoundaryCommand imple
    public LockControlCommand(Collection<?> keys, ByteString cacheName, long flags, GlobalTransaction globalTx) {
       super(cacheName, globalTx);
       //building defensive copies is here in order to support replaceKey operation
-      this.keys = MarshallableUserCollection.create(keys == null ? Collections.emptyList() : new ArrayList<>(keys));
+      this.keys = MarshallableCollection.create(keys == null ? Collections.emptyList() : new ArrayList<>(keys));
       this.flags = flags;
       this.globalTx = globalTx;
    }
 
    public LockControlCommand(Object key, ByteString cacheName, long flags, GlobalTransaction globalTx) {
-      this(cacheName, globalTx, MarshallableUserCollection.create(key), false, flags);
+      this(cacheName, globalTx, MarshallableCollection.create(key), false, flags);
    }
 
    public void setGlobalTransaction(GlobalTransaction gtx) {
@@ -83,7 +83,7 @@ public class LockControlCommand extends AbstractTransactionBoundaryCommand imple
    }
 
    public Collection<Object> getKeys() {
-      return MarshallableUserCollection.unwrap(keys);
+      return MarshallableCollection.unwrap(keys);
    }
 
    public boolean multipleKeys() {

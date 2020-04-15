@@ -6,7 +6,7 @@ import java.util.concurrent.CompletionStage;
 import org.infinispan.commands.write.BackupAckCommand;
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.factories.ComponentRegistry;
-import org.infinispan.marshall.protostream.impl.MarshallableUserCollection;
+import org.infinispan.marshall.protostream.impl.MarshallableCollection;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
@@ -47,13 +47,13 @@ public class RevokeBiasCommand extends BaseRpcCommand {
    }
 
    @ProtoFactory
-   RevokeBiasCommand(ByteString cacheName, JGroupsAddress ackTarget, long id, int topologyId, MarshallableUserCollection<?> keys) {
-      this(cacheName, ackTarget, id, topologyId, MarshallableUserCollection.unwrap(keys));
+   RevokeBiasCommand(ByteString cacheName, JGroupsAddress ackTarget, long id, int topologyId, MarshallableCollection<?> keys) {
+      this(cacheName, ackTarget, id, topologyId, MarshallableCollection.unwrap(keys));
    }
 
    @ProtoField(number = 5)
-   MarshallableUserCollection<?> getKeys() {
-      return MarshallableUserCollection.create(keys);
+   MarshallableCollection<?> getKeys() {
+      return MarshallableCollection.create(keys);
    }
 
    @Override

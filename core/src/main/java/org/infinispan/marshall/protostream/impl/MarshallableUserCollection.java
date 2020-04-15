@@ -20,7 +20,7 @@ import org.infinispan.protostream.annotations.ProtoTypeId;
  * @author Ryan Emerson
  * @since 11.0
  */
-// TODO implement Collection directly?
+// TODO remove
 @ProtoTypeId(ProtoStreamTypeIds.MARSHALLABLE_USER_COLLECTION)
 public class MarshallableUserCollection<T> extends AbstractMarshallableCollectionWrapper<T> {
 

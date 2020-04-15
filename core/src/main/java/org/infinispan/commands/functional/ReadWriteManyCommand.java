@@ -12,8 +12,8 @@ import org.infinispan.encoding.DataConversion;
 import org.infinispan.factories.ComponentRegistry;
 import org.infinispan.functional.EntryView.ReadWriteEntryView;
 import org.infinispan.functional.impl.Params;
+import org.infinispan.marshall.protostream.impl.MarshallableCollection;
 import org.infinispan.marshall.protostream.impl.MarshallableObject;
-import org.infinispan.marshall.protostream.impl.MarshallableUserCollection;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
@@ -26,7 +26,7 @@ public final class ReadWriteManyCommand<K, V, R> extends AbstractWriteManyComman
    public static final byte COMMAND_ID = 52;
 
    @ProtoField(number = 8)
-   MarshallableUserCollection<?> keys;
+   MarshallableCollection<?> keys;
 
    @ProtoField(number = 9)
    final MarshallableObject<Function<ReadWriteEntryView<K, V>, R>> f;
@@ -34,7 +34,7 @@ public final class ReadWriteManyCommand<K, V, R> extends AbstractWriteManyComman
    @ProtoFactory
    ReadWriteManyCommand(CommandInvocationId commandInvocationId, boolean forwarded, int topologyId, Params params,
                         long flags, DataConversion keyDataConversion, DataConversion valueDataConversion,
-                        MarshallableUserCollection<?> keys, MarshallableObject<Function<ReadWriteEntryView<K, V>, R>> f) {
+                        MarshallableCollection<?> keys, MarshallableObject<Function<ReadWriteEntryView<K, V>, R>> f) {
       super(commandInvocationId, forwarded, topologyId, params, flags, keyDataConversion, valueDataConversion);
       this.keys = keys;
       this.f = f;
@@ -66,7 +66,7 @@ public final class ReadWriteManyCommand<K, V, R> extends AbstractWriteManyComman
    }
 
    public void setKeys(Collection<?> keys) {
-      this.keys = MarshallableUserCollection.create(keys);
+      this.keys = MarshallableCollection.create(keys);
    }
 
    public final ReadWriteManyCommand<K, V, R> withKeys(Collection<?> keys) {
@@ -90,7 +90,7 @@ public final class ReadWriteManyCommand<K, V, R> extends AbstractWriteManyComman
 
    @Override
    public Collection<?> getAffectedKeys() {
-      return MarshallableUserCollection.unwrap(keys);
+      return MarshallableCollection.unwrap(keys);
    }
 
    @Override

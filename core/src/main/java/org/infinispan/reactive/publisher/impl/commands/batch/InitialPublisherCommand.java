@@ -12,8 +12,8 @@ import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.commons.util.IntSet;
 import org.infinispan.commons.util.IntSets;
 import org.infinispan.factories.ComponentRegistry;
+import org.infinispan.marshall.protostream.impl.MarshallableCollection;
 import org.infinispan.marshall.protostream.impl.MarshallableObject;
-import org.infinispan.marshall.protostream.impl.MarshallableUserCollection;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
@@ -44,10 +44,10 @@ public class InitialPublisherCommand<K, I, R> extends BaseRpcCommand implements 
    protected Set<Integer> segmentsWorkaround;
 
    @ProtoField(number = 6)
-   final MarshallableUserCollection<K> keys;
+   final MarshallableCollection<K> keys;
 
    @ProtoField(number = 7)
-   final MarshallableUserCollection<K> excludedKeys;
+   final MarshallableCollection<K> excludedKeys;
 
    @ProtoField(number = 8, defaultValue = "false")
    final boolean includeLoader;
@@ -66,7 +66,7 @@ public class InitialPublisherCommand<K, I, R> extends BaseRpcCommand implements 
 
    @ProtoFactory
    InitialPublisherCommand(ByteString cacheName, String requestId, DeliveryGuarantee deliveryGuarantee, int batchSize,
-                           Set<Integer> segmentsWorkaround, MarshallableUserCollection<K> keys, MarshallableUserCollection<K> excludedKeys,
+                           Set<Integer> segmentsWorkaround, MarshallableCollection<K> keys, MarshallableCollection<K> excludedKeys,
                            boolean includeLoader, boolean entryStream, boolean trackKeys,
                            MarshallableObject<Function<? super Publisher<I>, ? extends Publisher<R>>> transformer, int topologyId) {
       super(cacheName);
@@ -93,8 +93,8 @@ public class InitialPublisherCommand<K, I, R> extends BaseRpcCommand implements 
       this.batchSize = batchSize;
       this.segments = segments;
       this.segmentsWorkaround = new HashSet<>(segments);
-      this.keys = MarshallableUserCollection.create(keys);
-      this.excludedKeys = MarshallableUserCollection.create(excludedKeys);
+      this.keys = MarshallableCollection.create(keys);
+      this.excludedKeys = MarshallableCollection.create(excludedKeys);
       this.includeLoader = includeLoader;
       this.entryStream = entryStream;
       this.trackKeys = trackKeys;
@@ -118,11 +118,11 @@ public class InitialPublisherCommand<K, I, R> extends BaseRpcCommand implements 
    }
 
    public Set<K> getKeys() {
-      return MarshallableUserCollection.unwrapAsSet(keys);
+      return MarshallableCollection.unwrapAsSet(keys);
    }
 
    public Set<K> getExcludedKeys() {
-      return MarshallableUserCollection.unwrapAsSet(excludedKeys);
+      return MarshallableCollection.unwrapAsSet(excludedKeys);
    }
 
    public boolean isIncludeLoader() {

@@ -7,7 +7,7 @@ import org.infinispan.commands.CommandInvocationId;
 import org.infinispan.commands.Visitor;
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.context.InvocationContext;
-import org.infinispan.marshall.protostream.impl.MarshallableUserCollection;
+import org.infinispan.marshall.protostream.impl.MarshallableCollection;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
@@ -30,7 +30,7 @@ public class InvalidateL1Command extends InvalidateCommand {
 
    @ProtoFactory
    InvalidateL1Command(long flagsWithoutRemote, int topologyId, CommandInvocationId commandInvocationId,
-                       MarshallableUserCollection<Object> keys, JGroupsAddress writeOrigin) {
+                       MarshallableCollection<Object> keys, JGroupsAddress writeOrigin) {
       super(flagsWithoutRemote, topologyId, commandInvocationId, keys);
       this.writeOrigin = writeOrigin;
    }
@@ -41,7 +41,7 @@ public class InvalidateL1Command extends InvalidateCommand {
 
    public InvalidateL1Command(Address writeOrigin, long flagsBitSet, Collection<Object> keys,
          CommandInvocationId commandInvocationId) {
-      this(flagsBitSet, -1, commandInvocationId, MarshallableUserCollection.create(keys), (JGroupsAddress) writeOrigin);
+      this(flagsBitSet, -1, commandInvocationId, MarshallableCollection.create(keys), (JGroupsAddress) writeOrigin);
    }
 
    @Override
@@ -50,7 +50,7 @@ public class InvalidateL1Command extends InvalidateCommand {
    }
 
    public void setKeys(Object[] keys) {
-      this.keys = MarshallableUserCollection.create(keys);
+      this.keys = MarshallableCollection.create(keys);
    }
 
    @Override

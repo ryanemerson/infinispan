@@ -7,7 +7,6 @@ import java.util.Set;
 import org.infinispan.commands.write.WriteCommand;
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.marshall.protostream.impl.MarshallableCollection;
-import org.infinispan.marshall.protostream.impl.MarshallableUserCollection;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
@@ -30,14 +29,14 @@ public class TransactionInfo {
    final MarshallableCollection<WriteCommand> modifications;
 
    @ProtoField(number = 3)
-   final MarshallableUserCollection<Object> lockedKeys;
+   final MarshallableCollection<Object> lockedKeys;
 
    @ProtoField(number = 4, defaultValue = "-1")
    final int topologyId;
 
    @ProtoFactory
    TransactionInfo(GlobalTransaction globalTransaction, int topologyId,
-                   MarshallableCollection<WriteCommand> modifications, MarshallableUserCollection<Object> lockedKeys) {
+                   MarshallableCollection<WriteCommand> modifications, MarshallableCollection<Object> lockedKeys) {
       this.globalTransaction = globalTransaction;
       this.modifications = modifications;
       this.lockedKeys = lockedKeys;
@@ -47,7 +46,7 @@ public class TransactionInfo {
    public TransactionInfo(GlobalTransaction globalTransaction, int topologyId, List<WriteCommand> modifications, Set<Object> lockedKeys) {
       this(globalTransaction, topologyId,
             modifications.isEmpty() ? null : MarshallableCollection.create(modifications),
-            MarshallableUserCollection.create(lockedKeys));
+            MarshallableCollection.create(lockedKeys));
    }
 
    public GlobalTransaction getGlobalTransaction() {
@@ -60,7 +59,7 @@ public class TransactionInfo {
    }
 
    public Collection<Object> getLockedKeys() {
-      return MarshallableUserCollection.unwrap(lockedKeys);
+      return MarshallableCollection.unwrap(lockedKeys);
    }
 
    public int getTopologyId() {
