@@ -20,7 +20,7 @@ import org.infinispan.protostream.annotations.ProtoTypeId;
 @ProtoTypeId(ProtoStreamTypeIds.METADATA_MORTAL_ENTRY)
 public class MetadataMortalCacheEntry extends AbstractInternalCacheEntry implements MetadataAware {
 
-   protected MarshallableObject<Metadata> metadata;
+   protected Metadata metadata;
    protected long created;
 
    public MetadataMortalCacheEntry(Object key, Object value, Metadata metadata, long created) {
@@ -28,9 +28,9 @@ public class MetadataMortalCacheEntry extends AbstractInternalCacheEntry impleme
    }
 
    protected MetadataMortalCacheEntry(Object key, Object value, MetaParamsInternalMetadata internalMetadata,
-                                      Metadata metadata, long created) {
+         Metadata metadata, long created) {
       super(key, value, internalMetadata);
-      this.setMetadata(metadata);
+      this.metadata = metadata;
       this.created = created;
    }
 
@@ -39,13 +39,13 @@ public class MetadataMortalCacheEntry extends AbstractInternalCacheEntry impleme
                             MetaParamsInternalMetadata internalMetadata, MarshallableObject<Metadata> wrappedMetadata,
                             long created) {
       super(wrappedKey, wrappedValue, internalMetadata);
-      this.metadata = wrappedMetadata;
+      this.metadata = MarshallableObject.unwrap(wrappedMetadata);
       this.created = created;
    }
 
    @ProtoField(number = 4, name ="metadata")
    public MarshallableObject<Metadata> getWrappedMetadata() {
-      return metadata;
+      return MarshallableObject.create(metadata);
    }
 
    @Override
@@ -71,7 +71,7 @@ public class MetadataMortalCacheEntry extends AbstractInternalCacheEntry impleme
 
    @Override
    public final long getLifespan() {
-      return getMetadata().lifespan();
+      return metadata.lifespan();
    }
 
    @Override
@@ -81,7 +81,7 @@ public class MetadataMortalCacheEntry extends AbstractInternalCacheEntry impleme
 
    @Override
    public final long getExpiryTime() {
-      long lifespan = getMetadata().lifespan();
+      long lifespan = metadata.lifespan();
       return lifespan > -1 ? created + lifespan : -1;
    }
 
@@ -102,12 +102,12 @@ public class MetadataMortalCacheEntry extends AbstractInternalCacheEntry impleme
 
    @Override
    public Metadata getMetadata() {
-      return MarshallableObject.unwrap(metadata);
+      return metadata;
    }
 
    @Override
    public void setMetadata(Metadata metadata) {
-      this.metadata = MarshallableObject.create(metadata);
+      this.metadata = metadata;
    }
 
    @Override

@@ -19,15 +19,7 @@ import org.infinispan.protostream.annotations.ProtoTypeId;
 @ProtoTypeId(ProtoStreamTypeIds.METADATA_IMMORTAL_VALUE)
 public class MetadataImmortalCacheValue extends ImmortalCacheValue implements MetadataAware {
 
-   @ProtoField(number = 3)
-   MarshallableObject<Metadata> metadata;
-
-   @ProtoFactory
-   MetadataImmortalCacheValue(MarshallableObject<?> wrappedValue, MetaParamsInternalMetadata internalMetadata,
-                              MarshallableObject<Metadata> metadata) {
-      super(wrappedValue, internalMetadata);
-      this.metadata = metadata;
-   }
+   Metadata metadata;
 
    public MetadataImmortalCacheValue(Object value, Metadata metadata) {
       this(value, null, metadata);
@@ -35,22 +27,34 @@ public class MetadataImmortalCacheValue extends ImmortalCacheValue implements Me
 
    protected MetadataImmortalCacheValue(Object value, MetaParamsInternalMetadata internalMetadata, Metadata metadata) {
       super(value, internalMetadata);
-      setMetadata(metadata);
+      this.metadata = metadata;
+   }
+
+   @ProtoFactory
+   MetadataImmortalCacheValue(MarshallableObject<?> wrappedValue, MetaParamsInternalMetadata internalMetadata,
+                              MarshallableObject<Metadata> wrappedMetadata) {
+      super(wrappedValue, internalMetadata);
+      this.metadata = MarshallableObject.unwrap(wrappedMetadata);
+   }
+
+   @ProtoField(number = 3, name = "metadata")
+   MarshallableObject<Metadata> getWrappedMetadata() {
+      return MarshallableObject.create(metadata);
    }
 
    @Override
    public InternalCacheEntry<?, ?> toInternalCacheEntry(Object key) {
-      return new MetadataImmortalCacheEntry(MarshallableObject.create(key), value, internalMetadata, metadata);
+      return new MetadataImmortalCacheEntry(key, value, internalMetadata, metadata);
    }
 
    @Override
    public Metadata getMetadata() {
-      return MarshallableObject.unwrap(metadata);
+      return metadata;
    }
 
    @Override
    public void setMetadata(Metadata metadata) {
-      this.metadata = MarshallableObject.create(metadata);
+      this.metadata = metadata;
    }
 
    @Override

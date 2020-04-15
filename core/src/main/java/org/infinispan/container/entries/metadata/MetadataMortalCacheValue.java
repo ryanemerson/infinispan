@@ -20,7 +20,7 @@ import org.infinispan.protostream.annotations.ProtoTypeId;
 @ProtoTypeId(ProtoStreamTypeIds.METADATA_MORTAL_VALUE)
 public class MetadataMortalCacheValue extends ImmortalCacheValue implements MetadataAware {
 
-   MarshallableObject<Metadata> metadata;
+   Metadata metadata;
    long created;
 
    public MetadataMortalCacheValue(Object value, Metadata metadata, long created) {
@@ -28,9 +28,9 @@ public class MetadataMortalCacheValue extends ImmortalCacheValue implements Meta
    }
 
    protected MetadataMortalCacheValue(Object value, MetaParamsInternalMetadata internalMetadata, Metadata metadata,
-                                      long created) {
+         long created) {
       super(value, internalMetadata);
-      this.setMetadata(metadata);
+      this.metadata = metadata;
       this.created = created;
    }
 
@@ -38,13 +38,13 @@ public class MetadataMortalCacheValue extends ImmortalCacheValue implements Meta
    MetadataMortalCacheValue(MarshallableObject<?> wrappedValue, MetaParamsInternalMetadata internalMetadata,
                             MarshallableObject<Metadata> wrappedMetadata, long created) {
       super(wrappedValue, internalMetadata);
-      this.metadata = wrappedMetadata;
+      this.metadata = MarshallableObject.unwrap(wrappedMetadata);
       this.created = created;
    }
 
    @ProtoField(number = 3, name ="metadata")
    public MarshallableObject<Metadata> getWrappedMetadata() {
-      return metadata;
+      return MarshallableObject.create(metadata);
    }
 
    @Override
@@ -55,32 +55,32 @@ public class MetadataMortalCacheValue extends ImmortalCacheValue implements Meta
 
    @Override
    public InternalCacheEntry<?, ?> toInternalCacheEntry(Object key) {
-      return new MetadataMortalCacheEntry((MarshallableObject<?>) key, value, internalMetadata, metadata, created);
+      return new MetadataMortalCacheEntry(key, value, internalMetadata, metadata, created);
    }
 
    @Override
    public Metadata getMetadata() {
-      return MarshallableObject.unwrap(metadata);
+      return metadata;
    }
 
    @Override
    public void setMetadata(Metadata metadata) {
-      this.metadata = MarshallableObject.create(metadata);
+      this.metadata = metadata;
    }
 
    @Override
    public final long getLifespan() {
-      return getMetadata().lifespan();
+      return metadata.lifespan();
    }
 
    @Override
    public boolean isExpired(long now) {
-      return ExpiryHelper.isExpiredMortal(getMetadata().lifespan(), created, now);
+      return ExpiryHelper.isExpiredMortal(metadata.lifespan(), created, now);
    }
 
    @Override
    public long getExpiryTime() {
-      long lifespan = getMetadata().lifespan();
+      long lifespan = metadata.lifespan();
       return lifespan > -1 ? created + lifespan : -1;
    }
 

@@ -24,7 +24,7 @@ import org.infinispan.protostream.annotations.ProtoTypeId;
 @ProtoTypeId(ProtoStreamTypeIds.METADATA_TRANSIENT_MORTAL_CACHE_ENTRY)
 public class MetadataTransientMortalCacheEntry extends AbstractInternalCacheEntry implements MetadataAware {
 
-   MarshallableObject<Metadata> metadata;
+   Metadata metadata;
    long created;
    long lastUsed;
 
@@ -39,7 +39,7 @@ public class MetadataTransientMortalCacheEntry extends AbstractInternalCacheEntr
    protected MetadataTransientMortalCacheEntry(Object key, Object value, MetaParamsInternalMetadata internalMetadata,
          Metadata metadata, long lastUsed, long created) {
       super(key, value, internalMetadata);
-      this.setMetadata(metadata);
+      this.metadata = metadata;
       this.lastUsed = lastUsed;
       this.created = created;
    }
@@ -49,14 +49,14 @@ public class MetadataTransientMortalCacheEntry extends AbstractInternalCacheEntr
                                      MetaParamsInternalMetadata internalMetadata, MarshallableObject<Metadata> wrappedMetadata,
                                      long created, long lastUsed) {
       super(wrappedKey, wrappedValue, internalMetadata);
-      this.metadata = wrappedMetadata;
+      this.metadata = MarshallableObject.unwrap(wrappedMetadata);
       this.created = created;
       this.lastUsed = lastUsed;
    }
 
    @ProtoField(number = 4, name ="metadata")
    public MarshallableObject<Metadata> getWrappedMetadata() {
-      return metadata;
+      return MarshallableObject.create(metadata);
    }
 
    @Override
@@ -73,7 +73,7 @@ public class MetadataTransientMortalCacheEntry extends AbstractInternalCacheEntr
 
    @Override
    public long getLifespan() {
-      return getMetadata().lifespan();
+      return metadata.lifespan();
    }
 
    @Override
@@ -83,8 +83,8 @@ public class MetadataTransientMortalCacheEntry extends AbstractInternalCacheEntr
 
    @Override
    public boolean isExpired(long now) {
-      Metadata metadata = getMetadata();
-      return ExpiryHelper.isExpiredTransientMortal(metadata.maxIdle(), lastUsed, metadata.lifespan(), created, now);
+      return ExpiryHelper.isExpiredTransientMortal(
+            metadata.maxIdle(), lastUsed, metadata.lifespan(), created, now);
    }
 
    @Override
@@ -94,7 +94,6 @@ public class MetadataTransientMortalCacheEntry extends AbstractInternalCacheEntr
 
    @Override
    public final long getExpiryTime() {
-      Metadata metadata = getMetadata();
       long lifespan = metadata.lifespan();
       long lset = lifespan > -1 ? created + lifespan : -1;
       long maxIdle = metadata.maxIdle();
@@ -125,17 +124,17 @@ public class MetadataTransientMortalCacheEntry extends AbstractInternalCacheEntr
 
    @Override
    public long getMaxIdle() {
-      return getMetadata().maxIdle();
+      return metadata.maxIdle();
    }
 
    @Override
    public Metadata getMetadata() {
-      return MarshallableObject.unwrap(metadata);
+      return metadata;
    }
 
    @Override
    public void setMetadata(Metadata metadata) {
-      this.metadata = MarshallableObject.create(metadata);
+      this.metadata = metadata;
    }
 
    @Override

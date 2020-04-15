@@ -3,6 +3,7 @@ package org.infinispan.container.entries;
 import java.util.Map;
 import java.util.Objects;
 
+import org.infinispan.commons.util.Util;
 import org.infinispan.container.DataContainer;
 import org.infinispan.functional.impl.MetaParamsInternalMetadata;
 import org.infinispan.marshall.protostream.impl.MarshallableObject;
@@ -17,30 +18,29 @@ import org.infinispan.protostream.annotations.ProtoField;
  */
 public abstract class AbstractInternalCacheEntry implements InternalCacheEntry {
 
-   protected MarshallableObject<?> key;
-   protected MarshallableObject<?> value;
+   protected Object key;
+   protected Object value;
    protected MetaParamsInternalMetadata internalMetadata;
 
    protected AbstractInternalCacheEntry(Object key, Object value, MetaParamsInternalMetadata internalMetadata) {
-      this(MarshallableObject.create(key), MarshallableObject.create(value), internalMetadata);
-   }
-
-   // TODO change name to wrappedKey and wrappedValue and marshall lazily
-   protected AbstractInternalCacheEntry(MarshallableObject<?> key, MarshallableObject<?> value,
-                                        MetaParamsInternalMetadata internalMetadata) {
       this.key = key;
       this.value = value;
       this.internalMetadata = internalMetadata;
    }
 
+   protected AbstractInternalCacheEntry(MarshallableObject<?> wrappedKey, MarshallableObject<?> wrappedValue,
+                                        MetaParamsInternalMetadata internalMetadata) {
+      this(MarshallableObject.unwrap(wrappedKey), MarshallableObject.unwrap(wrappedValue), internalMetadata);
+   }
+
    @ProtoField(number = 1, name = "key")
    public MarshallableObject<?> getWrappedKey() {
-      return key;
+      return MarshallableObject.create(key);
    }
 
    @ProtoField(number = 2,  name = "value")
    public MarshallableObject<?> getWrappedValue() {
-      return value;
+      return MarshallableObject.create(value);
    }
 
    @Override
@@ -121,18 +121,18 @@ public abstract class AbstractInternalCacheEntry implements InternalCacheEntry {
 
    @Override
    public final Object getKey() {
-      return MarshallableObject.unwrap(key);
+      return key;
    }
 
    @Override
    public final Object getValue() {
-      return MarshallableObject.unwrap(value);
+      return value;
    }
 
    @Override
    public final Object setValue(Object value) {
-      Object old = getValue();
-      this.value = MarshallableObject.create(value);
+      Object old = this.value;
+      this.value = value;
       return old;
    }
 
@@ -169,6 +169,7 @@ public abstract class AbstractInternalCacheEntry implements InternalCacheEntry {
       if (!(o instanceof Map.Entry)) return false;
 
       Map.Entry that = (Map.Entry) o;
+
       return Objects.equals(getKey(), that.getKey()) && Objects.equals(getValue(), that.getValue());
    }
 
@@ -178,8 +179,8 @@ public abstract class AbstractInternalCacheEntry implements InternalCacheEntry {
    }
 
    protected void appendFieldsToString(StringBuilder builder) {
-      builder.append("key=").append(key);
-      builder.append(", value=").append(value);
+      builder.append("key=").append(Util.toStr(key));
+      builder.append(", value=").append(Util.toStr(value));
       builder.append(", internalMetadata=").append(internalMetadata);
    }
 }

@@ -20,29 +20,38 @@ import org.infinispan.protostream.annotations.ProtoTypeId;
 @ProtoTypeId(ProtoStreamTypeIds.METADATA_IMMORTAL_ENTRY)
 public class MetadataImmortalCacheEntry extends ImmortalCacheEntry implements MetadataAware {
 
-   @ProtoField(number = 4)
-   protected MarshallableObject<Metadata> metadata;
+   protected Metadata metadata;
 
-   @ProtoFactory
-   MetadataImmortalCacheEntry(MarshallableObject<?> wrappedKey, MarshallableObject<?> wrappedValue,
-                              MetaParamsInternalMetadata internalMetadata, MarshallableObject<Metadata> metadata) {
-      super(wrappedKey, wrappedValue, internalMetadata);
+   public MetadataImmortalCacheEntry(Object key, Object value, Metadata metadata) {
+      this(key, value, null, metadata);
+   }
+
+   protected MetadataImmortalCacheEntry(Object key, Object value, MetaParamsInternalMetadata internalMetadata,
+         Metadata metadata) {
+      super(key, value, internalMetadata);
       this.metadata = metadata;
    }
 
-   public MetadataImmortalCacheEntry(Object key, Object value, Metadata metadata) {
-      super(key, value, null);
-      setMetadata(metadata);
+   @ProtoFactory
+   MetadataImmortalCacheEntry(MarshallableObject<?> wrappedKey, MarshallableObject<?> wrappedValue,
+                              MetaParamsInternalMetadata internalMetadata, MarshallableObject<Metadata> wrappedMetadata) {
+      super(wrappedKey, wrappedValue, internalMetadata);
+      this.metadata = MarshallableObject.unwrap(wrappedMetadata);
+   }
+
+   @ProtoField(number = 4)
+   MarshallableObject<Metadata> getWrappedMetadata() {
+      return MarshallableObject.create(metadata);
    }
 
    @Override
    public Metadata getMetadata() {
-      return MarshallableObject.unwrap(metadata);
+      return metadata;
    }
 
    @Override
    public void setMetadata(Metadata metadata) {
-      this.metadata = MarshallableObject.create(metadata);
+      this.metadata = metadata;
    }
 
    @Override

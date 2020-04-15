@@ -3,6 +3,7 @@ package org.infinispan.container.entries;
 import java.util.Objects;
 
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
+import org.infinispan.commons.util.Util;
 import org.infinispan.functional.impl.MetaParamsInternalMetadata;
 import org.infinispan.marshall.protostream.impl.MarshallableObject;
 import org.infinispan.metadata.EmbeddedMetadata;
@@ -20,8 +21,7 @@ import org.infinispan.protostream.annotations.ProtoTypeId;
 @ProtoTypeId(ProtoStreamTypeIds.IMMORTAL_CACHE_VALUE)
 public class ImmortalCacheValue implements InternalCacheValue, Cloneable {
 
-   // TODO change to wrap lazily
-   protected MarshallableObject<?> value;
+   public Object value;
    protected MetaParamsInternalMetadata internalMetadata;
 
    public ImmortalCacheValue(Object value) {
@@ -40,7 +40,7 @@ public class ImmortalCacheValue implements InternalCacheValue, Cloneable {
 
    @ProtoField(number = 1, name ="value")
    public MarshallableObject<?> getWrappedValue() {
-      return value;
+      return MarshallableObject.create(value);
    }
 
    @Override
@@ -55,14 +55,14 @@ public class ImmortalCacheValue implements InternalCacheValue, Cloneable {
    }
 
    public final Object setValue(Object value) {
-      Object old = getValue();
-      this.value = MarshallableObject.create(value);
+      Object old = this.value;
+      this.value = value;
       return old;
    }
 
    @Override
    public Object getValue() {
-      return MarshallableObject.unwrap(value);
+      return value;
    }
 
    @Override
@@ -146,7 +146,7 @@ public class ImmortalCacheValue implements InternalCacheValue, Cloneable {
    }
 
    protected void appendFieldsToString(StringBuilder builder) {
-      builder.append("value=").append(value);
+      builder.append("value=").append(Util.toStr(value));
       builder.append(", internalMetadata=").append(internalMetadata);
    }
 }
