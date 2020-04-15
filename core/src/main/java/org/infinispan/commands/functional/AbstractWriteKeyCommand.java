@@ -8,7 +8,7 @@ import org.infinispan.commands.write.ValueMatcher;
 import org.infinispan.encoding.DataConversion;
 import org.infinispan.factories.ComponentRegistry;
 import org.infinispan.functional.impl.Params;
-import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
+import org.infinispan.marshall.protostream.impl.MarshallableObject;
 import org.infinispan.protostream.annotations.ProtoField;
 
 public abstract class AbstractWriteKeyCommand<K, V> extends AbstractDataWriteCommand implements FunctionalCommand<K, V> {
@@ -28,7 +28,7 @@ public abstract class AbstractWriteKeyCommand<K, V> extends AbstractDataWriteCom
    final DataConversion valueDataConversion;
 
 
-   protected AbstractWriteKeyCommand(MarshallableUserObject<?> wrappedKey, long flags, int topologyId, int segment,
+   protected AbstractWriteKeyCommand(MarshallableObject<?> wrappedKey, long flags, int topologyId, int segment,
                                      CommandInvocationId commandInvocationId, Params params, ValueMatcher valueMatcher,
                                      DataConversion keyDataConversion, DataConversion valueDataConversion) {
       super(wrappedKey, flags, topologyId, segment, commandInvocationId);

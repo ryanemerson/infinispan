@@ -2,7 +2,7 @@ package org.infinispan.container.entries;
 
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.functional.impl.MetaParamsInternalMetadata;
-import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
+import org.infinispan.marshall.protostream.impl.MarshallableObject;
 import org.infinispan.metadata.EmbeddedMetadata;
 import org.infinispan.metadata.Metadata;
 import org.infinispan.protostream.annotations.ProtoFactory;
@@ -33,7 +33,7 @@ public class MortalCacheEntry extends AbstractInternalCacheEntry {
    }
 
    @ProtoFactory
-   MortalCacheEntry(MarshallableUserObject<?> wrappedKey, MarshallableUserObject<?> wrappedValue,
+   MortalCacheEntry(MarshallableObject<?> wrappedKey, MarshallableObject<?> wrappedValue,
                     MetaParamsInternalMetadata internalMetadata, long created, long lifespan) {
       super(wrappedKey, wrappedValue, internalMetadata);
       this.created = created;

@@ -13,7 +13,6 @@ import org.infinispan.factories.ComponentRegistry;
 import org.infinispan.functional.EntryView.WriteEntryView;
 import org.infinispan.functional.impl.Params;
 import org.infinispan.marshall.protostream.impl.MarshallableObject;
-import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
@@ -27,7 +26,7 @@ public final class WriteOnlyKeyCommand<K, V> extends AbstractWriteKeyCommand<K, 
    MarshallableObject<Consumer<WriteEntryView<K, V>>> f;
 
    @ProtoFactory
-   WriteOnlyKeyCommand(MarshallableUserObject<?> wrappedKey, long flagsWithoutRemote, int topologyId, int segment,
+   WriteOnlyKeyCommand(MarshallableObject<?> wrappedKey, long flagsWithoutRemote, int topologyId, int segment,
                        CommandInvocationId commandInvocationId, Params params, ValueMatcher valueMatcher,
                        DataConversion keyDataConversion, DataConversion valueDataConversion,
                        MarshallableObject<Consumer<WriteEntryView<K, V>>> f) {

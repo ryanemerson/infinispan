@@ -6,7 +6,7 @@ import java.util.Collections;
 import org.infinispan.commands.CommandInvocationId;
 import org.infinispan.commands.read.AbstractDataCommand;
 import org.infinispan.context.impl.FlagBitSets;
-import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
+import org.infinispan.marshall.protostream.impl.MarshallableObject;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.util.concurrent.locks.RemoteLockCommand;
 
@@ -20,7 +20,7 @@ public abstract class AbstractDataWriteCommand extends AbstractDataCommand imple
 
    protected CommandInvocationId commandInvocationId;
 
-   protected AbstractDataWriteCommand(MarshallableUserObject<?> key, long flags, int topologyId, int segment,
+   protected AbstractDataWriteCommand(MarshallableObject<?> key, long flags, int topologyId, int segment,
                                       CommandInvocationId commandInvocationId) {
       super(key, flags, topologyId, segment);
       this.commandInvocationId = commandInvocationId;

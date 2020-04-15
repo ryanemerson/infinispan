@@ -5,7 +5,6 @@ import org.infinispan.container.entries.ImmortalCacheEntry;
 import org.infinispan.container.entries.InternalCacheValue;
 import org.infinispan.functional.impl.MetaParamsInternalMetadata;
 import org.infinispan.marshall.protostream.impl.MarshallableObject;
-import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
 import org.infinispan.metadata.Metadata;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
@@ -25,7 +24,7 @@ public class MetadataImmortalCacheEntry extends ImmortalCacheEntry implements Me
    protected MarshallableObject<Metadata> metadata;
 
    @ProtoFactory
-   MetadataImmortalCacheEntry(MarshallableUserObject<?> wrappedKey, MarshallableUserObject<?> wrappedValue,
+   MetadataImmortalCacheEntry(MarshallableObject<?> wrappedKey, MarshallableObject<?> wrappedValue,
                               MetaParamsInternalMetadata internalMetadata, MarshallableObject<Metadata> metadata) {
       super(wrappedKey, wrappedValue, internalMetadata);
       this.metadata = metadata;

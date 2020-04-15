@@ -13,7 +13,6 @@ import org.infinispan.factories.ComponentRegistry;
 import org.infinispan.functional.EntryView.ReadWriteEntryView;
 import org.infinispan.functional.impl.Params;
 import org.infinispan.marshall.protostream.impl.MarshallableObject;
-import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
 import org.infinispan.metadata.Metadata;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
@@ -26,23 +25,23 @@ public final class ReadWriteKeyValueCommand<K, V, T, R> extends AbstractWriteKey
 
    // TODO should this be MarshallableObject?
    @ProtoField(number = 10)
-   final MarshallableUserObject<?> argument;
+   final MarshallableObject<?> argument;
 
    @ProtoField(number = 11)
    final MarshallableObject<BiFunction<T, ReadWriteEntryView<K, V>, R>> f;
 
    @ProtoField(number = 12)
-   MarshallableUserObject<?> prevValue;
+   MarshallableObject<?> prevValue;
 
    @ProtoField(number = 13)
    MarshallableObject<Metadata> prevMetadata;
 
    @ProtoFactory
-   ReadWriteKeyValueCommand(MarshallableUserObject<?> wrappedKey, long flagsWithoutRemote, int topologyId, int segment,
+   ReadWriteKeyValueCommand(MarshallableObject<?> wrappedKey, long flagsWithoutRemote, int topologyId, int segment,
                                    CommandInvocationId commandInvocationId, Params params, ValueMatcher valueMatcher,
                                    DataConversion keyDataConversion, DataConversion valueDataConversion,
-                                   MarshallableUserObject<?> argument, MarshallableObject<BiFunction<T,
-         ReadWriteEntryView<K, V>, R>> f, MarshallableUserObject<?> prevValue, MarshallableObject<Metadata> prevMetadata) {
+                                   MarshallableObject<?> argument, MarshallableObject<BiFunction<T,
+         ReadWriteEntryView<K, V>, R>> f, MarshallableObject<?> prevValue, MarshallableObject<Metadata> prevMetadata) {
       super(wrappedKey, flagsWithoutRemote, topologyId, segment, commandInvocationId, params, valueMatcher, keyDataConversion, valueDataConversion);
       this.argument = argument;
       this.f = f;
@@ -54,7 +53,7 @@ public final class ReadWriteKeyValueCommand<K, V, T, R> extends AbstractWriteKey
                                    int segment, CommandInvocationId id, ValueMatcher valueMatcher, Params params,
                                    DataConversion keyDataConversion, DataConversion valueDataConversion) {
       super(key, valueMatcher, segment, id, params, keyDataConversion, valueDataConversion);
-      this.argument = MarshallableUserObject.create(argument);
+      this.argument = MarshallableObject.create(argument);
       this.f = MarshallableObject.create(f);
    }
 
@@ -109,12 +108,12 @@ public final class ReadWriteKeyValueCommand<K, V, T, R> extends AbstractWriteKey
    }
 
    public void setPrevValueAndMetadata(Object prevValue, Metadata prevMetadata) {
-      this.prevValue = MarshallableUserObject.create(prevValue);
+      this.prevValue = MarshallableObject.create(prevValue);
       this.prevMetadata = MarshallableObject.create(prevMetadata);
    }
 
    public Object getArgument() {
-      return MarshallableUserObject.unwrap(argument);
+      return MarshallableObject.unwrap(argument);
    }
 
    public BiFunction<T, ReadWriteEntryView<K, V>, R> getBiFunction() {
@@ -122,7 +121,7 @@ public final class ReadWriteKeyValueCommand<K, V, T, R> extends AbstractWriteKey
    }
 
    public Object getPrevValue() {
-      return MarshallableUserObject.unwrap(prevValue);
+      return MarshallableObject.unwrap(prevValue);
    }
 
    public Metadata getPrevMetadata() {

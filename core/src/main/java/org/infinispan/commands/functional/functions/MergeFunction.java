@@ -9,7 +9,6 @@ import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.factories.ComponentRegistry;
 import org.infinispan.functional.EntryView;
 import org.infinispan.marshall.protostream.impl.MarshallableObject;
-import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
 import org.infinispan.metadata.Metadata;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
@@ -29,15 +28,15 @@ public class MergeFunction<K, V> implements Function<EntryView.ReadWriteEntryVie
    }
 
    @ProtoFactory
-   MergeFunction(MarshallableUserObject<V> value, MarshallableObject<BiFunction<? super V, ? super V, ? extends V>> remappingFunction,
+   MergeFunction(MarshallableObject<V> value, MarshallableObject<BiFunction<? super V, ? super V, ? extends V>> remappingFunction,
                  MarshallableObject<Metadata> metadata) {
-      this(MarshallableUserObject.unwrap(value), MarshallableObject.unwrap(remappingFunction),
+      this(MarshallableObject.unwrap(value), MarshallableObject.unwrap(remappingFunction),
             MarshallableObject.unwrap(metadata));
    }
 
    @ProtoField(number = 1)
-   MarshallableUserObject<V> getValue() {
-      return MarshallableUserObject.create(value);
+   MarshallableObject<V> getValue() {
+      return MarshallableObject.create(value);
    }
 
    @ProtoField(number = 2)

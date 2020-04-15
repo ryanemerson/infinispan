@@ -5,7 +5,7 @@ import org.infinispan.commands.VisitableCommand;
 import org.infinispan.commands.Visitor;
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.context.InvocationContext;
-import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
+import org.infinispan.marshall.protostream.impl.MarshallableObject;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
@@ -22,20 +22,20 @@ public class GetKeysInGroupCommand extends AbstractTopologyAffectedCommand imple
    public static final byte COMMAND_ID = 43;
 
    @ProtoField(number = 3)
-   final MarshallableUserObject<?> groupName;
+   final MarshallableObject<?> groupName;
    /*
    local state to avoid checking everywhere if the node in which this command is executed is the group owner.
     */
    private transient boolean isGroupOwner;
 
    @ProtoFactory
-   GetKeysInGroupCommand(long flagsWithoutRemote, int topologyId, MarshallableUserObject<?> groupName) {
+   GetKeysInGroupCommand(long flagsWithoutRemote, int topologyId, MarshallableObject<?> groupName) {
       super(flagsWithoutRemote, topologyId);
       this.groupName = groupName;
    }
 
    public GetKeysInGroupCommand(long flagsBitSet, Object groupName) {
-      this(flagsBitSet, -1, MarshallableUserObject.create(groupName));
+      this(flagsBitSet, -1, MarshallableObject.create(groupName));
    }
 
    @Override
@@ -59,7 +59,7 @@ public class GetKeysInGroupCommand extends AbstractTopologyAffectedCommand imple
    }
 
    public Object getGroupName() {
-      return MarshallableUserObject.unwrap(groupName);
+      return MarshallableObject.unwrap(groupName);
    }
 
    @Override

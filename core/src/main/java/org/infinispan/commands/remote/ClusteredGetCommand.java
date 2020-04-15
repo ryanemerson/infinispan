@@ -16,7 +16,7 @@ import org.infinispan.context.InvocationContextFactory;
 import org.infinispan.context.impl.FlagBitSets;
 import org.infinispan.factories.ComponentRegistry;
 import org.infinispan.interceptors.AsyncInterceptorChain;
-import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
+import org.infinispan.marshall.protostream.impl.MarshallableObject;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
@@ -43,7 +43,7 @@ public class ClusteredGetCommand extends BaseRpcCommand implements SegmentSpecif
    int topologyId;
 
    @ProtoField(number = 3)
-   final MarshallableUserObject<?> key;
+   final MarshallableObject<?> key;
 
    @ProtoField(number = 4, defaultValue = "-1")
    final int segment;
@@ -54,7 +54,7 @@ public class ClusteredGetCommand extends BaseRpcCommand implements SegmentSpecif
    private boolean isWrite;
 
    @ProtoFactory
-   ClusteredGetCommand(ByteString cacheName, int topologyId, MarshallableUserObject<?> key, int segment, long flagsWithoutRemote) {
+   ClusteredGetCommand(ByteString cacheName, int topologyId, MarshallableObject<?> key, int segment, long flagsWithoutRemote) {
       super(cacheName);
       if (segment < 0) {
          throw new IllegalArgumentException("Segment must 0 or greater!");
@@ -67,7 +67,7 @@ public class ClusteredGetCommand extends BaseRpcCommand implements SegmentSpecif
    }
 
    public ClusteredGetCommand(Object key, ByteString cacheName, int segment, long flags) {
-      this(cacheName, -1, MarshallableUserObject.create(key), segment, flags);
+      this(cacheName, -1, MarshallableObject.create(key), segment, flags);
    }
 
    @ProtoField(number = 5, name = "flags", defaultValue = "0")
@@ -126,7 +126,7 @@ public class ClusteredGetCommand extends BaseRpcCommand implements SegmentSpecif
    }
 
    public Object getKey() {
-      return MarshallableUserObject.unwrap(key);
+      return MarshallableObject.unwrap(key);
    }
 
    @Override

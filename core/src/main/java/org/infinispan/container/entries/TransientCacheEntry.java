@@ -4,7 +4,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.functional.impl.MetaParamsInternalMetadata;
-import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
+import org.infinispan.marshall.protostream.impl.MarshallableObject;
 import org.infinispan.metadata.EmbeddedMetadata;
 import org.infinispan.metadata.Metadata;
 import org.infinispan.protostream.annotations.ProtoFactory;
@@ -35,7 +35,7 @@ public class TransientCacheEntry extends AbstractInternalCacheEntry {
    }
 
    @ProtoFactory
-   TransientCacheEntry(MarshallableUserObject<?> wrappedKey, MarshallableUserObject<?> wrappedValue,
+   TransientCacheEntry(MarshallableObject<?> wrappedKey, MarshallableObject<?> wrappedValue,
                        MetaParamsInternalMetadata internalMetadata, long maxIdle, long lastUsed) {
       super(wrappedKey, wrappedValue, internalMetadata);
       this.maxIdle = maxIdle;

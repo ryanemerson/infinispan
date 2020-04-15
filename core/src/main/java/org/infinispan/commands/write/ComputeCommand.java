@@ -10,7 +10,6 @@ import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.context.InvocationContext;
 import org.infinispan.factories.ComponentRegistry;
 import org.infinispan.marshall.protostream.impl.MarshallableObject;
-import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
 import org.infinispan.metadata.Metadata;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
@@ -33,7 +32,7 @@ public class ComputeCommand extends AbstractDataWriteCommand implements Metadata
    boolean computeIfPresent;
 
    @ProtoFactory
-   ComputeCommand(MarshallableUserObject<?> wrappedKey, long flagsWithoutRemote, int topologyId, int segment,
+   ComputeCommand(MarshallableObject<?> wrappedKey, long flagsWithoutRemote, int topologyId, int segment,
                   CommandInvocationId commandInvocationId, MarshallableObject<BiFunction<?, ?, ?>> remappingBiFunction,
                   MarshallableObject<Metadata> metadata, boolean computeIfPresent) {
       super(wrappedKey, flagsWithoutRemote, topologyId, segment, commandInvocationId);

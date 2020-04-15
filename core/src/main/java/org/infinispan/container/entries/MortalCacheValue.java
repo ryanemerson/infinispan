@@ -2,7 +2,7 @@ package org.infinispan.container.entries;
 
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.functional.impl.MetaParamsInternalMetadata;
-import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
+import org.infinispan.marshall.protostream.impl.MarshallableObject;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
@@ -30,7 +30,7 @@ public class MortalCacheValue extends ImmortalCacheValue {
    }
 
    @ProtoFactory
-   MortalCacheValue(MarshallableUserObject<?> wrappedValue, MetaParamsInternalMetadata internalMetadata, long created,
+   MortalCacheValue(MarshallableObject<?> wrappedValue, MetaParamsInternalMetadata internalMetadata, long created,
                     long lifespan) {
       super(wrappedValue, internalMetadata);
       this.created = created;

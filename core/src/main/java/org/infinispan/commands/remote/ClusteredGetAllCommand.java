@@ -17,7 +17,7 @@ import org.infinispan.context.Flag;
 import org.infinispan.context.InvocationContext;
 import org.infinispan.context.impl.FlagBitSets;
 import org.infinispan.factories.ComponentRegistry;
-import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
+import org.infinispan.marshall.protostream.impl.MarshallableObject;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
@@ -43,7 +43,7 @@ public class ClusteredGetAllCommand<K, V> extends BaseRpcCommand implements Topo
    int topologyId;
 
    @ProtoField(number = 3, collectionImplementation = ArrayList.class)
-   final List<MarshallableUserObject<?>> keys;
+   final List<MarshallableObject<?>> keys;
 
    @ProtoField(number = 4, name = "globalTransaction")
    final GlobalTransaction gtx;
@@ -51,7 +51,7 @@ public class ClusteredGetAllCommand<K, V> extends BaseRpcCommand implements Topo
    final long flags;
 
    @ProtoFactory
-   ClusteredGetAllCommand(ByteString cacheName, int topologyId, List<MarshallableUserObject<?>> keys,
+   ClusteredGetAllCommand(ByteString cacheName, int topologyId, List<MarshallableObject<?>> keys,
                           GlobalTransaction gtx, long flagsWithoutRemote) {
       super(cacheName);
       this.topologyId = topologyId;
@@ -62,7 +62,7 @@ public class ClusteredGetAllCommand<K, V> extends BaseRpcCommand implements Topo
 
    public ClusteredGetAllCommand(ByteString cacheName, List<?> keys, long flags, GlobalTransaction gtx) {
       super(cacheName);
-      this.keys = keys.stream().map(MarshallableUserObject::new).collect(Collectors.toList());
+      this.keys = keys.stream().map(MarshallableObject::new).collect(Collectors.toList());
       this.gtx = gtx;
       this.flags = flags;
    }
@@ -99,7 +99,7 @@ public class ClusteredGetAllCommand<K, V> extends BaseRpcCommand implements Topo
 
          Map<K, CacheEntry<K, V>> map = (Map<K, CacheEntry<K, V>>) rv;
          return keys.stream()
-               .map(MarshallableUserObject::unwrap)
+               .map(MarshallableObject::unwrap)
                .map(map::get)
                .map(entry -> {
                   if (entry == null) {

@@ -6,7 +6,6 @@ import org.infinispan.container.entries.ExpiryHelper;
 import org.infinispan.container.entries.InternalCacheValue;
 import org.infinispan.functional.impl.MetaParamsInternalMetadata;
 import org.infinispan.marshall.protostream.impl.MarshallableObject;
-import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
 import org.infinispan.metadata.Metadata;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
@@ -37,7 +36,7 @@ public class MetadataTransientCacheEntry extends AbstractInternalCacheEntry impl
    }
 
    @ProtoFactory
-   protected MetadataTransientCacheEntry(MarshallableUserObject<?> wrappedKey, MarshallableUserObject<?> wrappedValue,
+   protected MetadataTransientCacheEntry(MarshallableObject<?> wrappedKey, MarshallableObject<?> wrappedValue,
                                         MetaParamsInternalMetadata internalMetadata, MarshallableObject<Metadata> wrappedMetadata,
                                         long lastUsed) {
       super(wrappedKey, wrappedValue, internalMetadata);

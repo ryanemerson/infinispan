@@ -13,7 +13,6 @@ import org.infinispan.factories.ComponentRegistry;
 import org.infinispan.functional.EntryView.ReadWriteEntryView;
 import org.infinispan.functional.impl.Params;
 import org.infinispan.marshall.protostream.impl.MarshallableObject;
-import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
@@ -29,7 +28,7 @@ public final class ReadWriteKeyCommand<K, V, R> extends AbstractWriteKeyCommand<
    final MarshallableObject<Function<ReadWriteEntryView<K, V>, R>> f;
 
    @ProtoFactory
-   ReadWriteKeyCommand(MarshallableUserObject<?> wrappedKey, long flagsWithoutRemote, int topologyId, int segment,
+   ReadWriteKeyCommand(MarshallableObject<?> wrappedKey, long flagsWithoutRemote, int topologyId, int segment,
                        CommandInvocationId commandInvocationId, Params params, ValueMatcher valueMatcher,
                        DataConversion keyDataConversion, DataConversion valueDataConversion,
                        MarshallableObject<Function<ReadWriteEntryView<K, V>, R>> f) {

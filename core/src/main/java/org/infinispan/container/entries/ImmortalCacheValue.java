@@ -4,7 +4,7 @@ import java.util.Objects;
 
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.functional.impl.MetaParamsInternalMetadata;
-import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
+import org.infinispan.marshall.protostream.impl.MarshallableObject;
 import org.infinispan.metadata.EmbeddedMetadata;
 import org.infinispan.metadata.Metadata;
 import org.infinispan.protostream.annotations.ProtoFactory;
@@ -21,7 +21,7 @@ import org.infinispan.protostream.annotations.ProtoTypeId;
 public class ImmortalCacheValue implements InternalCacheValue, Cloneable {
 
    // TODO change to wrap lazily
-   protected MarshallableUserObject<?> value;
+   protected MarshallableObject<?> value;
    protected MetaParamsInternalMetadata internalMetadata;
 
    public ImmortalCacheValue(Object value) {
@@ -29,17 +29,17 @@ public class ImmortalCacheValue implements InternalCacheValue, Cloneable {
    }
 
    public ImmortalCacheValue(Object value, MetaParamsInternalMetadata internalMetadata) {
-      this(MarshallableUserObject.create(value), internalMetadata);
+      this(MarshallableObject.create(value), internalMetadata);
    }
 
    @ProtoFactory
-   public ImmortalCacheValue(MarshallableUserObject<?> wrappedValue, MetaParamsInternalMetadata internalMetadata) {
+   public ImmortalCacheValue(MarshallableObject<?> wrappedValue, MetaParamsInternalMetadata internalMetadata) {
       this.value = wrappedValue;
       this.internalMetadata = internalMetadata;
    }
 
    @ProtoField(number = 1, name ="value")
-   public MarshallableUserObject<?> getWrappedValue() {
+   public MarshallableObject<?> getWrappedValue() {
       return value;
    }
 
@@ -51,18 +51,18 @@ public class ImmortalCacheValue implements InternalCacheValue, Cloneable {
 
    @Override
    public InternalCacheEntry toInternalCacheEntry(Object key) {
-      return new ImmortalCacheEntry(MarshallableUserObject.create(key), value, internalMetadata);
+      return new ImmortalCacheEntry(MarshallableObject.create(key), value, internalMetadata);
    }
 
    public final Object setValue(Object value) {
       Object old = getValue();
-      this.value = MarshallableUserObject.create(value);
+      this.value = MarshallableObject.create(value);
       return old;
    }
 
    @Override
    public Object getValue() {
-      return MarshallableUserObject.unwrap(value);
+      return MarshallableObject.unwrap(value);
    }
 
    @Override

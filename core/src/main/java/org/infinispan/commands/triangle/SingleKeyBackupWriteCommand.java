@@ -21,7 +21,6 @@ import org.infinispan.commands.write.ReplaceCommand;
 import org.infinispan.commands.write.WriteCommand;
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.marshall.protostream.impl.MarshallableObject;
-import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
 import org.infinispan.metadata.Metadata;
 import org.infinispan.protostream.annotations.ProtoEnumValue;
 import org.infinispan.protostream.annotations.ProtoFactory;
@@ -45,18 +44,18 @@ public class SingleKeyBackupWriteCommand extends BackupWriteCommand {
    final Operation operation;
 
    @ProtoField(number = 8)
-   final MarshallableUserObject<?> key;
+   final MarshallableObject<?> key;
 
    @ProtoField(number = 9)
-   final MarshallableUserObject<?> valueOrFunction;
+   final MarshallableObject<?> valueOrFunction;
 
    @ProtoField(number = 10)
    final MarshallableObject<Metadata> metadata;
 
    @ProtoFactory
    SingleKeyBackupWriteCommand(ByteString cacheName, CommandInvocationId commandInvocationId, int topologyId,
-                               long flags, long sequence, int segmentId, Operation operation, MarshallableUserObject<?> key,
-                               MarshallableUserObject<?> valueOrFunction, MarshallableObject<Metadata> metadata) {
+                               long flags, long sequence, int segmentId, Operation operation, MarshallableObject<?> key,
+                               MarshallableObject<?> valueOrFunction, MarshallableObject<Metadata> metadata) {
       super(cacheName, commandInvocationId, topologyId, flags, sequence, segmentId);
       this.operation = operation;
       this.key = key;
@@ -68,8 +67,8 @@ public class SingleKeyBackupWriteCommand extends BackupWriteCommand {
                                       Operation operation, Object key, Object valueOrFunction, Metadata metadata) {
       super(cacheName, command, sequence, segmentId);
       this.operation = operation;
-      this.key = MarshallableUserObject.create(key);
-      this.valueOrFunction = MarshallableUserObject.create(valueOrFunction);
+      this.key = MarshallableObject.create(key);
+      this.valueOrFunction = MarshallableObject.create(valueOrFunction);
       this.metadata = MarshallableObject.create(metadata);
    }
 
@@ -114,8 +113,8 @@ public class SingleKeyBackupWriteCommand extends BackupWriteCommand {
    @Override
    WriteCommand createWriteCommand() {
       // TODO can we remove unwrapping once commands have been updated to have a ProtoFactory
-      Object key = MarshallableUserObject.unwrap(this.key);
-      Object valueOrFunction = MarshallableUserObject.unwrap(this.valueOrFunction);
+      Object key = MarshallableObject.unwrap(this.key);
+      Object valueOrFunction = MarshallableObject.unwrap(this.valueOrFunction);
       Metadata metadata = MarshallableObject.unwrap(this.metadata);
       switch (operation) {
          case REMOVE:

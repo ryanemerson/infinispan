@@ -10,7 +10,6 @@ import org.infinispan.container.entries.TransientMortalCacheEntry;
 import org.infinispan.container.entries.versioned.Versioned;
 import org.infinispan.functional.impl.MetaParamsInternalMetadata;
 import org.infinispan.marshall.protostream.impl.MarshallableObject;
-import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
 import org.infinispan.metadata.Metadata;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
@@ -46,7 +45,7 @@ public class MetadataTransientMortalCacheEntry extends AbstractInternalCacheEntr
    }
 
    @ProtoFactory
-   MetadataTransientMortalCacheEntry(MarshallableUserObject<?> wrappedKey, MarshallableUserObject<?> wrappedValue,
+   MetadataTransientMortalCacheEntry(MarshallableObject<?> wrappedKey, MarshallableObject<?> wrappedValue,
                                      MetaParamsInternalMetadata internalMetadata, MarshallableObject<Metadata> wrappedMetadata,
                                      long created, long lastUsed) {
       super(wrappedKey, wrappedValue, internalMetadata);

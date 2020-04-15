@@ -15,7 +15,7 @@ import org.infinispan.functional.EntryView.ReadWriteEntryView;
 import org.infinispan.functional.EntryView.WriteEntryView;
 import org.infinispan.functional.MetaParam;
 import org.infinispan.marshall.protostream.impl.MarshallableCollection;
-import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
+import org.infinispan.marshall.protostream.impl.MarshallableObject;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
@@ -402,14 +402,14 @@ public final class MarshallableFunctions {
       }
 
       @ProtoFactory
-      SetValueIfEqualsReturnBoolean(MarshallableUserObject<V> oldValue, MarshallableCollection<MetaParam.Writable> metas) {
+      SetValueIfEqualsReturnBoolean(MarshallableObject<V> oldValue, MarshallableCollection<MetaParam.Writable> metas) {
          super(metas);
-         this.oldValue = MarshallableUserObject.unwrap(oldValue);
+         this.oldValue = MarshallableObject.unwrap(oldValue);
       }
 
       @ProtoField(number = 2)
-      MarshallableUserObject<V> getOldValue() {
-         return MarshallableUserObject.create(oldValue);
+      MarshallableObject<V> getOldValue() {
+         return MarshallableObject.create(oldValue);
       }
 
       @Override

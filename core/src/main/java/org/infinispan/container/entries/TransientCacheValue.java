@@ -2,7 +2,7 @@ package org.infinispan.container.entries;
 
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.functional.impl.MetaParamsInternalMetadata;
-import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
+import org.infinispan.marshall.protostream.impl.MarshallableObject;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
@@ -29,7 +29,7 @@ public class TransientCacheValue extends ImmortalCacheValue {
    }
 
    @ProtoFactory
-   TransientCacheValue(MarshallableUserObject<?> wrappedValue, MetaParamsInternalMetadata internalMetadata,
+   TransientCacheValue(MarshallableObject<?> wrappedValue, MetaParamsInternalMetadata internalMetadata,
                        long maxIdle, long lastUsed) {
       super(wrappedValue, internalMetadata);
       this.maxIdle = maxIdle;

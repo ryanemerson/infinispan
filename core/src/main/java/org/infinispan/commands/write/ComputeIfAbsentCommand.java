@@ -10,7 +10,6 @@ import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.context.InvocationContext;
 import org.infinispan.factories.ComponentRegistry;
 import org.infinispan.marshall.protostream.impl.MarshallableObject;
-import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
 import org.infinispan.metadata.Metadata;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
@@ -30,7 +29,7 @@ public class ComputeIfAbsentCommand extends AbstractDataWriteCommand implements 
    MarshallableObject<Metadata> metadata;
 
    @ProtoFactory
-   ComputeIfAbsentCommand(MarshallableUserObject<?> wrappedKey, long flagsWithoutRemote, int topologyId, int segment,
+   ComputeIfAbsentCommand(MarshallableObject<?> wrappedKey, long flagsWithoutRemote, int topologyId, int segment,
                           CommandInvocationId commandInvocationId, MarshallableObject<Function<?, ?>> mappingFunction,
                           MarshallableObject<Metadata> metadata) {
       super(wrappedKey, flagsWithoutRemote, topologyId, segment, commandInvocationId);

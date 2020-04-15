@@ -5,7 +5,6 @@ import org.infinispan.container.entries.ImmortalCacheValue;
 import org.infinispan.container.entries.InternalCacheEntry;
 import org.infinispan.functional.impl.MetaParamsInternalMetadata;
 import org.infinispan.marshall.protostream.impl.MarshallableObject;
-import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
 import org.infinispan.metadata.Metadata;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
@@ -24,7 +23,7 @@ public class MetadataImmortalCacheValue extends ImmortalCacheValue implements Me
    MarshallableObject<Metadata> metadata;
 
    @ProtoFactory
-   MetadataImmortalCacheValue(MarshallableUserObject<?> wrappedValue, MetaParamsInternalMetadata internalMetadata,
+   MetadataImmortalCacheValue(MarshallableObject<?> wrappedValue, MetaParamsInternalMetadata internalMetadata,
                               MarshallableObject<Metadata> metadata) {
       super(wrappedValue, internalMetadata);
       this.metadata = metadata;
@@ -41,7 +40,7 @@ public class MetadataImmortalCacheValue extends ImmortalCacheValue implements Me
 
    @Override
    public InternalCacheEntry<?, ?> toInternalCacheEntry(Object key) {
-      return new MetadataImmortalCacheEntry(MarshallableUserObject.create(key), value, internalMetadata, metadata);
+      return new MetadataImmortalCacheEntry(MarshallableObject.create(key), value, internalMetadata, metadata);
    }
 
    @Override

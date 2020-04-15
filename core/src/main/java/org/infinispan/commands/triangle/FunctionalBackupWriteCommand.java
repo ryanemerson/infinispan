@@ -6,7 +6,7 @@ import org.infinispan.commands.functional.AbstractWriteManyCommand;
 import org.infinispan.commands.functional.FunctionalCommand;
 import org.infinispan.encoding.DataConversion;
 import org.infinispan.functional.impl.Params;
-import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
+import org.infinispan.marshall.protostream.impl.MarshallableObject;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.util.ByteString;
 
@@ -19,7 +19,7 @@ import org.infinispan.util.ByteString;
 abstract class FunctionalBackupWriteCommand extends BackupWriteCommand {
 
    @ProtoField(number = 7)
-   final MarshallableUserObject<?> function;
+   final MarshallableObject<?> function;
 
    @ProtoField(number = 8)
    final Params params;
@@ -32,7 +32,7 @@ abstract class FunctionalBackupWriteCommand extends BackupWriteCommand {
 
    // Used by ProtoFactory implementations
    protected FunctionalBackupWriteCommand(ByteString cacheName, CommandInvocationId commandInvocationId, int topologyId,
-                                          long flags, long sequence, int segmentId, MarshallableUserObject<?> function,
+                                          long flags, long sequence, int segmentId, MarshallableObject<?> function,
                                           Params params, DataConversion keyDataConversion, DataConversion valueDataConversion) {
       super(cacheName, commandInvocationId, topologyId, flags, sequence, segmentId);
       this.function = function;
@@ -47,7 +47,7 @@ abstract class FunctionalBackupWriteCommand extends BackupWriteCommand {
       this.params = command.getParams();
       this.keyDataConversion = command.getKeyDataConversion();
       this.valueDataConversion = command.getValueDataConversion();
-      this.function = MarshallableUserObject.create(function);
+      this.function = MarshallableObject.create(function);
    }
 
    protected FunctionalBackupWriteCommand(ByteString cacheName, AbstractWriteManyCommand<?, ?> command, long sequence,
@@ -56,6 +56,6 @@ abstract class FunctionalBackupWriteCommand extends BackupWriteCommand {
       this.params = command.getParams();
       this.keyDataConversion = command.getKeyDataConversion();
       this.valueDataConversion = command.getValueDataConversion();
-      this.function = MarshallableUserObject.create(function);
+      this.function = MarshallableObject.create(function);
    }
 }

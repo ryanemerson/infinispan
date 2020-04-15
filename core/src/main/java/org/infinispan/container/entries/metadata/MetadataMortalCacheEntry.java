@@ -6,7 +6,6 @@ import org.infinispan.container.entries.ExpiryHelper;
 import org.infinispan.container.entries.InternalCacheValue;
 import org.infinispan.functional.impl.MetaParamsInternalMetadata;
 import org.infinispan.marshall.protostream.impl.MarshallableObject;
-import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
 import org.infinispan.metadata.Metadata;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
@@ -36,7 +35,7 @@ public class MetadataMortalCacheEntry extends AbstractInternalCacheEntry impleme
    }
 
    @ProtoFactory
-   MetadataMortalCacheEntry(MarshallableUserObject<?> wrappedKey, MarshallableUserObject<?> wrappedValue,
+   MetadataMortalCacheEntry(MarshallableObject<?> wrappedKey, MarshallableObject<?> wrappedValue,
                             MetaParamsInternalMetadata internalMetadata, MarshallableObject<Metadata> wrappedMetadata,
                             long created) {
       super(wrappedKey, wrappedValue, internalMetadata);

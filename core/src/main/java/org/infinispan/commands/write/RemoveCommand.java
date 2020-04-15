@@ -9,7 +9,6 @@ import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.context.InvocationContext;
 import org.infinispan.context.impl.FlagBitSets;
 import org.infinispan.marshall.protostream.impl.MarshallableObject;
-import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
 import org.infinispan.metadata.Metadata;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
@@ -33,7 +32,7 @@ public class RemoveCommand extends AbstractDataWriteCommand implements MetadataA
     * When null, the entry should be removed regardless of what value it is mapped to.
     */
    @ProtoField(number = 6)
-   protected MarshallableUserObject<?> value;
+   protected MarshallableObject<?> value;
 
    @ProtoField(number = 7)
    protected MarshallableObject<Metadata> metadata;
@@ -42,8 +41,8 @@ public class RemoveCommand extends AbstractDataWriteCommand implements MetadataA
    protected ValueMatcher valueMatcher;
 
    @ProtoFactory
-   RemoveCommand(MarshallableUserObject<?> wrappedKey, long flagsWithoutRemote, int topologyId, int segment,
-                 CommandInvocationId commandInvocationId, MarshallableUserObject<?> value,
+   RemoveCommand(MarshallableObject<?> wrappedKey, long flagsWithoutRemote, int topologyId, int segment,
+                 CommandInvocationId commandInvocationId, MarshallableObject<?> value,
                  MarshallableObject<Metadata> metadata, ValueMatcher valueMatcher) {
       super(wrappedKey, flagsWithoutRemote, topologyId, segment, commandInvocationId);
       this.value = value;
@@ -144,7 +143,7 @@ public class RemoveCommand extends AbstractDataWriteCommand implements MetadataA
    }
 
    public void setValue(Object value) {
-      this.value = MarshallableUserObject.create(value);
+      this.value = MarshallableObject.create(value);
    }
 
    @Override

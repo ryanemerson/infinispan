@@ -11,8 +11,8 @@ import org.infinispan.encoding.DataConversion;
 import org.infinispan.factories.ComponentRegistry;
 import org.infinispan.functional.EntryView.ReadEntryView;
 import org.infinispan.functional.impl.Params;
+import org.infinispan.marshall.protostream.impl.MarshallableObject;
 import org.infinispan.marshall.protostream.impl.MarshallableUserCollection;
-import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
@@ -25,7 +25,7 @@ public class ReadOnlyManyCommand<K, V, R> extends AbstractTopologyAffectedComman
    protected MarshallableUserCollection<?> keys;
 
    @ProtoField(number = 4)
-   protected MarshallableUserObject<Function<ReadEntryView<K, V>, R>> function;
+   protected MarshallableObject<Function<ReadEntryView<K, V>, R>> function;
 
    @ProtoField(number = 5)
    protected Params params;
@@ -38,7 +38,7 @@ public class ReadOnlyManyCommand<K, V, R> extends AbstractTopologyAffectedComman
 
    @ProtoFactory
    ReadOnlyManyCommand(long flagsWithoutRemote, int topologyId, MarshallableUserCollection<?> keys,
-                       MarshallableUserObject<Function<ReadEntryView<K, V>, R>> function, Params params,
+                       MarshallableObject<Function<ReadEntryView<K, V>, R>> function, Params params,
                        DataConversion keyDataConversion, DataConversion valueDataConversion) {
       super(flagsWithoutRemote, topologyId);
       this.keys = keys;
@@ -53,7 +53,7 @@ public class ReadOnlyManyCommand<K, V, R> extends AbstractTopologyAffectedComman
                               Params params,
                               DataConversion keyDataConversion,
                               DataConversion valueDataConversion) {
-      this(params.toFlagsBitSet(), -1, MarshallableUserCollection.create(keys), MarshallableUserObject.create(function),
+      this(params.toFlagsBitSet(), -1, MarshallableUserCollection.create(keys), MarshallableObject.create(function),
             params, keyDataConversion, valueDataConversion);
    }
 
@@ -114,7 +114,7 @@ public class ReadOnlyManyCommand<K, V, R> extends AbstractTopologyAffectedComman
    }
 
    public Function<ReadEntryView<K, V>, R> getFunction() {
-      return MarshallableUserObject.unwrap(function);
+      return MarshallableObject.unwrap(function);
    }
 
    @Override

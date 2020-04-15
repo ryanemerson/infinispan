@@ -9,7 +9,6 @@ import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.context.InvocationContext;
 import org.infinispan.context.impl.FlagBitSets;
 import org.infinispan.marshall.protostream.impl.MarshallableObject;
-import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
 import org.infinispan.metadata.Metadata;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
@@ -31,7 +30,7 @@ public class PutKeyValueCommand extends AbstractDataWriteCommand implements Meta
    public static final byte COMMAND_ID = 8;
 
    @ProtoField(number = 6)
-   MarshallableUserObject<?> value;
+   MarshallableObject<?> value;
 
    @ProtoField(number = 7)
    MarshallableObject<Metadata> metadata;
@@ -45,8 +44,8 @@ public class PutKeyValueCommand extends AbstractDataWriteCommand implements Meta
    private transient boolean successful = true;
 
    @ProtoFactory
-   PutKeyValueCommand(MarshallableUserObject<?> wrappedKey, long flagsWithoutRemote, int topologyId, int segment,
-                      CommandInvocationId commandInvocationId, MarshallableUserObject<?> value,
+   PutKeyValueCommand(MarshallableObject<?> wrappedKey, long flagsWithoutRemote, int topologyId, int segment,
+                      CommandInvocationId commandInvocationId, MarshallableObject<?> value,
                       MarshallableObject<Metadata> metadata, ValueMatcher valueMatcher, boolean putIfAbsent) {
       super(wrappedKey, flagsWithoutRemote, topologyId, segment, commandInvocationId);
       this.value = value;
@@ -65,11 +64,11 @@ public class PutKeyValueCommand extends AbstractDataWriteCommand implements Meta
    }
 
    public Object getValue() {
-      return MarshallableUserObject.unwrap(value);
+      return MarshallableObject.unwrap(value);
    }
 
    public void setValue(Object value) {
-      this.value = MarshallableUserObject.create(value);
+      this.value = MarshallableObject.create(value);
    }
 
    @Override

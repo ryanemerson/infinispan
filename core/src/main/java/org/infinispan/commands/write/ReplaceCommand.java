@@ -8,7 +8,6 @@ import org.infinispan.commands.Visitor;
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.context.InvocationContext;
 import org.infinispan.marshall.protostream.impl.MarshallableObject;
-import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
 import org.infinispan.metadata.Metadata;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
@@ -24,10 +23,10 @@ public class ReplaceCommand extends AbstractDataWriteCommand implements Metadata
    public static final byte COMMAND_ID = 11;
 
    @ProtoField(number = 6)
-   MarshallableUserObject<?> oldValue;
+   MarshallableObject<?> oldValue;
 
    @ProtoField(number = 7)
-   MarshallableUserObject<?> newValue;
+   MarshallableObject<?> newValue;
 
    @ProtoField(number = 8)
    MarshallableObject<Metadata> metadata;
@@ -38,9 +37,9 @@ public class ReplaceCommand extends AbstractDataWriteCommand implements Metadata
    private transient boolean successful = true;
 
    @ProtoFactory
-   ReplaceCommand(MarshallableUserObject<?> wrappedKey, long flagsWithoutRemote, int topologyId, int segment,
-                  CommandInvocationId commandInvocationId, MarshallableUserObject<?> oldValue,
-                  MarshallableUserObject<?> newValue, MarshallableObject<Metadata> metadata, ValueMatcher valueMatcher) {
+   ReplaceCommand(MarshallableObject<?> wrappedKey, long flagsWithoutRemote, int topologyId, int segment,
+                  CommandInvocationId commandInvocationId, MarshallableObject<?> oldValue,
+                  MarshallableObject<?> newValue, MarshallableObject<Metadata> metadata, ValueMatcher valueMatcher) {
       super(wrappedKey, flagsWithoutRemote, topologyId, segment, commandInvocationId);
       this.oldValue = oldValue;
       this.newValue = newValue;
@@ -109,19 +108,19 @@ public class ReplaceCommand extends AbstractDataWriteCommand implements Metadata
    }
 
    public Object getOldValue() {
-      return MarshallableUserObject.unwrap(oldValue);
+      return MarshallableObject.unwrap(oldValue);
    }
 
    public void setOldValue(Object oldValue) {
-      this.oldValue = MarshallableUserObject.create(oldValue);
+      this.oldValue = MarshallableObject.create(oldValue);
    }
 
    public Object getNewValue() {
-      return MarshallableUserObject.unwrap(newValue);
+      return MarshallableObject.unwrap(newValue);
    }
 
    public void setNewValue(Object newValue) {
-      this.newValue = MarshallableUserObject.create(newValue);
+      this.newValue = MarshallableObject.create(newValue);
    }
 
    @Override

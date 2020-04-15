@@ -9,7 +9,6 @@ import org.infinispan.container.entries.TransientMortalCacheValue;
 import org.infinispan.container.entries.versioned.Versioned;
 import org.infinispan.functional.impl.MetaParamsInternalMetadata;
 import org.infinispan.marshall.protostream.impl.MarshallableObject;
-import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
 import org.infinispan.metadata.Metadata;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
@@ -37,7 +36,7 @@ public class MetadataTransientMortalCacheValue extends MetadataMortalCacheValue 
    }
 
    @ProtoFactory
-   MetadataTransientMortalCacheValue(MarshallableUserObject<?> wrappedValue, MetaParamsInternalMetadata internalMetadata,
+   MetadataTransientMortalCacheValue(MarshallableObject<?> wrappedValue, MetaParamsInternalMetadata internalMetadata,
                                      MarshallableObject<Metadata> wrappedMetadata, long created, long lastUsed) {
       super(wrappedValue, internalMetadata, wrappedMetadata, created);
       this.lastUsed = lastUsed;
@@ -51,7 +50,7 @@ public class MetadataTransientMortalCacheValue extends MetadataMortalCacheValue 
 
    @Override
    public InternalCacheEntry<?, ?> toInternalCacheEntry(Object key) {
-      return new MetadataTransientMortalCacheEntry((MarshallableUserObject<?>) key, value, internalMetadata, metadata,
+      return new MetadataTransientMortalCacheEntry((MarshallableObject<?>) key, value, internalMetadata, metadata,
             lastUsed, created);
    }
 

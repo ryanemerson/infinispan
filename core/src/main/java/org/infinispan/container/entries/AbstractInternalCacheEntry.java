@@ -5,7 +5,7 @@ import java.util.Objects;
 
 import org.infinispan.container.DataContainer;
 import org.infinispan.functional.impl.MetaParamsInternalMetadata;
-import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
+import org.infinispan.marshall.protostream.impl.MarshallableObject;
 import org.infinispan.metadata.Metadata;
 import org.infinispan.protostream.annotations.ProtoField;
 
@@ -17,16 +17,16 @@ import org.infinispan.protostream.annotations.ProtoField;
  */
 public abstract class AbstractInternalCacheEntry implements InternalCacheEntry {
 
-   protected MarshallableUserObject<?> key;
-   protected MarshallableUserObject<?> value;
+   protected MarshallableObject<?> key;
+   protected MarshallableObject<?> value;
    protected MetaParamsInternalMetadata internalMetadata;
 
    protected AbstractInternalCacheEntry(Object key, Object value, MetaParamsInternalMetadata internalMetadata) {
-      this(MarshallableUserObject.create(key), MarshallableUserObject.create(value), internalMetadata);
+      this(MarshallableObject.create(key), MarshallableObject.create(value), internalMetadata);
    }
 
    // TODO change name to wrappedKey and wrappedValue and marshall lazily
-   protected AbstractInternalCacheEntry(MarshallableUserObject<?> key, MarshallableUserObject<?> value,
+   protected AbstractInternalCacheEntry(MarshallableObject<?> key, MarshallableObject<?> value,
                                         MetaParamsInternalMetadata internalMetadata) {
       this.key = key;
       this.value = value;
@@ -34,12 +34,12 @@ public abstract class AbstractInternalCacheEntry implements InternalCacheEntry {
    }
 
    @ProtoField(number = 1, name = "key")
-   public MarshallableUserObject<?> getWrappedKey() {
+   public MarshallableObject<?> getWrappedKey() {
       return key;
    }
 
    @ProtoField(number = 2,  name = "value")
-   public MarshallableUserObject<?> getWrappedValue() {
+   public MarshallableObject<?> getWrappedValue() {
       return value;
    }
 
@@ -121,18 +121,18 @@ public abstract class AbstractInternalCacheEntry implements InternalCacheEntry {
 
    @Override
    public final Object getKey() {
-      return MarshallableUserObject.unwrap(key);
+      return MarshallableObject.unwrap(key);
    }
 
    @Override
    public final Object getValue() {
-      return MarshallableUserObject.unwrap(value);
+      return MarshallableObject.unwrap(value);
    }
 
    @Override
    public final Object setValue(Object value) {
       Object old = getValue();
-      this.value = MarshallableUserObject.create(value);
+      this.value = MarshallableObject.create(value);
       return old;
    }
 

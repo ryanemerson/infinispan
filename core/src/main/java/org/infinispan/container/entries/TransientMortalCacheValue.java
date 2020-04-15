@@ -4,7 +4,7 @@ import static java.lang.Math.min;
 
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.functional.impl.MetaParamsInternalMetadata;
-import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
+import org.infinispan.marshall.protostream.impl.MarshallableObject;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
@@ -32,7 +32,7 @@ public class TransientMortalCacheValue extends MortalCacheValue {
    }
 
    @ProtoFactory
-   TransientMortalCacheValue(MarshallableUserObject<?> wrappedValue, MetaParamsInternalMetadata internalMetadata,
+   TransientMortalCacheValue(MarshallableObject<?> wrappedValue, MetaParamsInternalMetadata internalMetadata,
                              long created, long lifespan, long maxIdle, long lastUsed) {
       super(wrappedValue, internalMetadata, created, lifespan);
       this.maxIdle = maxIdle;

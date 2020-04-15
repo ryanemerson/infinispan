@@ -7,7 +7,6 @@ import org.infinispan.container.entries.InternalCacheEntry;
 import org.infinispan.container.entries.TransientCacheEntry;
 import org.infinispan.functional.impl.MetaParamsInternalMetadata;
 import org.infinispan.marshall.protostream.impl.MarshallableObject;
-import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
 import org.infinispan.metadata.Metadata;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
@@ -37,7 +36,7 @@ public class MetadataTransientCacheValue extends ImmortalCacheValue implements M
    }
 
    @ProtoFactory
-   protected MetadataTransientCacheValue(MarshallableUserObject<?> wrappedValue, MetaParamsInternalMetadata internalMetadata,
+   protected MetadataTransientCacheValue(MarshallableObject<?> wrappedValue, MetaParamsInternalMetadata internalMetadata,
                                          MarshallableObject<Metadata> wrappedMetadata, long lastUsed) {
       super(wrappedValue, internalMetadata);
       this.metadata = MarshallableObject.unwrap(wrappedMetadata);

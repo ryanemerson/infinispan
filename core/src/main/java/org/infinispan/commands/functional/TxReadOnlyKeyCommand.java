@@ -10,7 +10,6 @@ import org.infinispan.functional.EntryView;
 import org.infinispan.functional.impl.Params;
 import org.infinispan.marshall.protostream.impl.MarshallableCollection;
 import org.infinispan.marshall.protostream.impl.MarshallableObject;
-import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
@@ -23,7 +22,7 @@ public class TxReadOnlyKeyCommand<K, V, R> extends ReadOnlyKeyCommand<K, V, R> {
    final MarshallableCollection<Mutation<K, V, ?>> mutations;
 
    @ProtoFactory
-   TxReadOnlyKeyCommand(MarshallableUserObject<?> wrappedKey, long flagsWithoutRemote, int topologyId, int segment,
+   TxReadOnlyKeyCommand(MarshallableObject<?> wrappedKey, long flagsWithoutRemote, int topologyId, int segment,
                         MarshallableObject<Function<EntryView.ReadEntryView<K, V>, R>> f, Params params,
                         DataConversion keyDataConversion, DataConversion valueDataConversion,
                         MarshallableCollection<Mutation<K, V, ?>> mutations) {

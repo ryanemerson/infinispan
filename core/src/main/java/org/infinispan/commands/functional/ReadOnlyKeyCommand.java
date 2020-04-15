@@ -14,7 +14,6 @@ import org.infinispan.functional.impl.EntryViews;
 import org.infinispan.functional.impl.Params;
 import org.infinispan.functional.impl.StatsEnvelope;
 import org.infinispan.marshall.protostream.impl.MarshallableObject;
-import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
@@ -37,7 +36,7 @@ public class ReadOnlyKeyCommand<K, V, R> extends AbstractDataCommand {
    final DataConversion valueDataConversion;
 
    @ProtoFactory
-   ReadOnlyKeyCommand(MarshallableUserObject<?> wrappedKey, long flagsWithoutRemote, int topologyId, int segment,
+   ReadOnlyKeyCommand(MarshallableObject<?> wrappedKey, long flagsWithoutRemote, int topologyId, int segment,
                       MarshallableObject<Function<ReadEntryView<K, V>, R>> f, Params params, DataConversion keyDataConversion,
                       DataConversion valueDataConversion) {
       super(wrappedKey, flagsWithoutRemote, topologyId, segment);

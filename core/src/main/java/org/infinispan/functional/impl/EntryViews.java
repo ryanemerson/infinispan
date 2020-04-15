@@ -16,7 +16,6 @@ import org.infinispan.functional.EntryView.ReadWriteEntryView;
 import org.infinispan.functional.EntryView.WriteEntryView;
 import org.infinispan.functional.MetaParam;
 import org.infinispan.marshall.protostream.impl.MarshallableObject;
-import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
 import org.infinispan.metadata.Metadata;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
@@ -154,9 +153,9 @@ public final class EntryViews {
       }
 
       @ProtoFactory
-      ReadOnlySnapshotView(MarshallableUserObject<K> key, MarshallableUserObject<V> value,
+      ReadOnlySnapshotView(MarshallableObject<K> key, MarshallableObject<V> value,
                            MarshallableObject<Metadata> metadata) {
-         this(MarshallableUserObject.unwrap(key), MarshallableUserObject.unwrap(value), MarshallableObject.unwrap(metadata));
+         this(MarshallableObject.unwrap(key), MarshallableObject.unwrap(value), MarshallableObject.unwrap(metadata));
       }
 
       @Override
@@ -481,13 +480,13 @@ public final class EntryViews {
       }
 
       @ProtoFactory
-      NoValueReadOnlyView(MarshallableUserObject<K> key) {
-         this(MarshallableUserObject.unwrap(key), null);
+      NoValueReadOnlyView(MarshallableObject<K> key) {
+         this(MarshallableObject.unwrap(key), null);
       }
 
       @ProtoField(number = 1)
-      MarshallableUserObject<K> getKey() {
-         return MarshallableUserObject.create(key);
+      MarshallableObject<K> getKey() {
+         return MarshallableObject.create(key);
       }
 
       @Override
@@ -528,13 +527,13 @@ public final class EntryViews {
       }
 
       @ProtoField(number = 1)
-      MarshallableUserObject<K> getKey() {
-         return MarshallableUserObject.create(key);
+      MarshallableObject<K> getKey() {
+         return MarshallableObject.create(key);
       }
 
       @ProtoField(number = 2)
-      MarshallableUserObject<V> getValue() {
-         return MarshallableUserObject.create(value);
+      MarshallableObject<V> getValue() {
+         return MarshallableObject.create(value);
       }
 
       @ProtoField(number = 3)
@@ -580,9 +579,9 @@ public final class EntryViews {
       }
 
       @ProtoFactory
-      ReadWriteSnapshotView(MarshallableUserObject<K> key, MarshallableUserObject<V> value,
+      ReadWriteSnapshotView(MarshallableObject<K> key, MarshallableObject<V> value,
                            MarshallableObject<Metadata> metadata) {
-         this(MarshallableUserObject.unwrap(key), MarshallableUserObject.unwrap(value), MarshallableObject.unwrap(metadata));
+         this(MarshallableObject.unwrap(key), MarshallableObject.unwrap(value), MarshallableObject.unwrap(metadata));
       }
 
       @Override

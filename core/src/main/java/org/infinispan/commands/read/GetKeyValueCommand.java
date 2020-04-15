@@ -5,7 +5,7 @@ import static org.infinispan.commons.util.Util.toStr;
 import org.infinispan.commands.Visitor;
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.context.InvocationContext;
-import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
+import org.infinispan.marshall.protostream.impl.MarshallableObject;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoTypeId;
 
@@ -22,7 +22,7 @@ public class GetKeyValueCommand extends AbstractDataCommand {
    public static final byte COMMAND_ID = 4;
 
    @ProtoFactory
-   GetKeyValueCommand(MarshallableUserObject<?> wrappedKey, long flagsWithoutRemote, int topologyId, int segment) {
+   GetKeyValueCommand(MarshallableObject<?> wrappedKey, long flagsWithoutRemote, int topologyId, int segment) {
       super(wrappedKey, flagsWithoutRemote, topologyId, segment);
    }
 

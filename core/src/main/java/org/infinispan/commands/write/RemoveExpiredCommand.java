@@ -7,7 +7,6 @@ import org.infinispan.commands.Visitor;
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.context.InvocationContext;
 import org.infinispan.marshall.protostream.impl.MarshallableObject;
-import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
 import org.infinispan.metadata.Metadata;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
@@ -28,8 +27,8 @@ public class RemoveExpiredCommand extends RemoveCommand {
    Long lifespan;
 
    @ProtoFactory
-   RemoveExpiredCommand(MarshallableUserObject<?> wrappedKey, long flagsWithoutRemote, int topologyId, int segment,
-                 CommandInvocationId commandInvocationId, MarshallableUserObject<?> value,
+   RemoveExpiredCommand(MarshallableObject<?> wrappedKey, long flagsWithoutRemote, int topologyId, int segment,
+                 CommandInvocationId commandInvocationId, MarshallableObject<?> value,
                  MarshallableObject<Metadata> metadata, ValueMatcher valueMatcher, Long lifespan) {
       super(wrappedKey, flagsWithoutRemote, topologyId, segment, commandInvocationId);
       this.value = value;

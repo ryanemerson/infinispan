@@ -11,7 +11,7 @@ import org.infinispan.distribution.DistributionInfo;
 import org.infinispan.distribution.DistributionManager;
 import org.infinispan.distribution.LocalizedCacheTopology;
 import org.infinispan.factories.ComponentRegistry;
-import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
+import org.infinispan.marshall.protostream.impl.MarshallableObject;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
@@ -29,7 +29,7 @@ public class TouchCommand extends BaseRpcCommand implements TopologyAffectedComm
    public static final byte COMMAND_ID = 66;
 
    @ProtoField(number = 2)
-   final MarshallableUserObject<Object> key;
+   final MarshallableObject<Object> key;
 
    @ProtoField(number = 3, defaultValue = "-1")
    final int segment;
@@ -38,7 +38,7 @@ public class TouchCommand extends BaseRpcCommand implements TopologyAffectedComm
    int topologyId = -1;
 
    @ProtoFactory
-   TouchCommand(ByteString cacheName, MarshallableUserObject<Object> key, int segment, int topologyId) {
+   TouchCommand(ByteString cacheName, MarshallableObject<Object> key, int segment, int topologyId) {
       super(cacheName);
       this.key = key;
       this.segment = segment;
@@ -47,7 +47,7 @@ public class TouchCommand extends BaseRpcCommand implements TopologyAffectedComm
 
    public TouchCommand(ByteString cacheName, Object key, int segment) {
       super(cacheName);
-      this.key = MarshallableUserObject.create(key);
+      this.key = MarshallableObject.create(key);
       this.segment = segment;
    }
 
@@ -74,7 +74,7 @@ public class TouchCommand extends BaseRpcCommand implements TopologyAffectedComm
    public CompletionStage<Object> invokeAsync(ComponentRegistry componentRegistry, long currentTimeMilli) {
       DistributionManager distributionManager = componentRegistry.getDistributionManager();
       InternalDataContainer internalDataContainer = componentRegistry.getInternalDataContainer().running();
-      Object key = MarshallableUserObject.unwrap(this.key);
+      Object key = MarshallableObject.unwrap(this.key);
       boolean touched = internalDataContainer.touch(segment, key, currentTimeMilli);
       // Hibernate currently disables clustered expiration manager, which means we can have a topology id of -1
       // when using a clustered cache mode. Invalidation mode will also result in a topology id of -1.

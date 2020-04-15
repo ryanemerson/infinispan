@@ -22,7 +22,6 @@ import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.encoding.DataConversion;
 import org.infinispan.functional.impl.Params;
 import org.infinispan.marshall.protostream.impl.MarshallableObject;
-import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
 import org.infinispan.metadata.Metadata;
 import org.infinispan.protostream.annotations.ProtoEnumValue;
 import org.infinispan.protostream.annotations.ProtoFactory;
@@ -46,13 +45,13 @@ public class SingleKeyFunctionalBackupWriteCommand extends FunctionalBackupWrite
    final Operation operation;
 
    @ProtoField(number = 12)
-   final MarshallableUserObject<?> key;
+   final MarshallableObject<?> key;
 
    @ProtoField(number = 13)
-   final MarshallableUserObject<?> value;
+   final MarshallableObject<?> value;
 
    @ProtoField(number = 14)
-   final MarshallableUserObject<?> prevValue;
+   final MarshallableObject<?> prevValue;
 
    @ProtoField(number = 15)
    final MarshallableObject<Metadata> prevMetadata;
@@ -60,10 +59,10 @@ public class SingleKeyFunctionalBackupWriteCommand extends FunctionalBackupWrite
 
    @ProtoFactory
    SingleKeyFunctionalBackupWriteCommand(ByteString cacheName, CommandInvocationId commandInvocationId, int topologyId,
-                                         long flags, long sequence, int segmentId, MarshallableUserObject<?> function,
+                                         long flags, long sequence, int segmentId, MarshallableObject<?> function,
                                          Params params, DataConversion keyDataConversion, DataConversion valueDataConversion,
-                                         Operation operation, MarshallableUserObject<?> key, MarshallableUserObject<?> value,
-                                         MarshallableUserObject<?> prevValue, MarshallableObject<Metadata> prevMetadata) {
+                                         Operation operation, MarshallableObject<?> key, MarshallableObject<?> value,
+                                         MarshallableObject<?> prevValue, MarshallableObject<Metadata> prevMetadata) {
       super(cacheName, commandInvocationId, topologyId, flags, sequence, segmentId, function, params, keyDataConversion,
             valueDataConversion);
       this.operation = operation;
@@ -78,9 +77,9 @@ public class SingleKeyFunctionalBackupWriteCommand extends FunctionalBackupWrite
                                                  Metadata prevMetadata, Object function) {
       super(cacheName, command, sequence, segmentId, function);
       this.operation = operation;
-      this.key = MarshallableUserObject.create(key);
-      this.value = MarshallableUserObject.create(value);
-      this.prevValue = MarshallableUserObject.create(prevValue);
+      this.key = MarshallableObject.create(key);
+      this.value = MarshallableObject.create(value);
+      this.prevValue = MarshallableObject.create(prevValue);
       this.prevMetadata = MarshallableObject.create(prevMetadata);
    }
 
@@ -113,10 +112,10 @@ public class SingleKeyFunctionalBackupWriteCommand extends FunctionalBackupWrite
    @Override
    WriteCommand createWriteCommand() {
       // TODO can we remove unwrapping once commands have been updated to have a ProtoFactory
-      Object key = MarshallableUserObject.unwrap(this.key);
-      Object value = MarshallableUserObject.unwrap(this.value);
-      Object function = MarshallableUserObject.unwrap(this.function);
-      Object prevValue = MarshallableUserObject.unwrap(this.prevValue);
+      Object key = MarshallableObject.unwrap(this.key);
+      Object value = MarshallableObject.unwrap(this.value);
+      Object function = MarshallableObject.unwrap(this.function);
+      Object prevValue = MarshallableObject.unwrap(this.prevValue);
       Metadata prevMetadata = MarshallableObject.unwrap(this.prevMetadata);
       switch (operation) {
          case READ_WRITE:

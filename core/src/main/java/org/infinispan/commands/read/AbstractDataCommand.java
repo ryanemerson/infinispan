@@ -8,7 +8,7 @@ import org.infinispan.commands.DataCommand;
 import org.infinispan.commands.SegmentSpecificCommand;
 import org.infinispan.context.Flag;
 import org.infinispan.context.impl.FlagBitSets;
-import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
+import org.infinispan.marshall.protostream.impl.MarshallableObject;
 import org.infinispan.protostream.annotations.ProtoField;
 
 /**
@@ -18,14 +18,14 @@ import org.infinispan.protostream.annotations.ProtoField;
  */
 public abstract class AbstractDataCommand implements DataCommand, SegmentSpecificCommand {
 
-   protected MarshallableUserObject<?> key;
+   protected MarshallableObject<?> key;
    private long flags;
    // These 2 ints have to stay next to each other to ensure they are aligned together
    protected int topologyId = -1;
    protected int segment;
 
    // For ProtoFactory implementations
-   protected AbstractDataCommand(MarshallableUserObject<?> wrappedKey, long flagsWithoutRemote, int topologyId, int segment) {
+   protected AbstractDataCommand(MarshallableObject<?> wrappedKey, long flagsWithoutRemote, int topologyId, int segment) {
       this.key = wrappedKey;
       this.flags = flagsWithoutRemote;
       this.topologyId = topologyId;
@@ -36,7 +36,7 @@ public abstract class AbstractDataCommand implements DataCommand, SegmentSpecifi
    }
 
    protected AbstractDataCommand(Object key, int segment, long flagsBitSet) {
-      this(MarshallableUserObject.create(key), flagsBitSet, 0, segment);
+      this(MarshallableObject.create(key), flagsBitSet, 0, segment);
    }
 
    // TODO remove
@@ -45,7 +45,7 @@ public abstract class AbstractDataCommand implements DataCommand, SegmentSpecifi
    }
 
    @ProtoField(number = 1, name = "key")
-   public MarshallableUserObject<?> getWrappedKey() {
+   public MarshallableObject<?> getWrappedKey() {
       return key;
    }
 
@@ -83,11 +83,11 @@ public abstract class AbstractDataCommand implements DataCommand, SegmentSpecifi
 
    @Override
    public Object getKey() {
-      return MarshallableUserObject.unwrap(key);
+      return MarshallableObject.unwrap(key);
    }
 
    public void setKey(Object key) {
-      this.key = MarshallableUserObject.create(key);
+      this.key = MarshallableObject.create(key);
    }
 
    @Override

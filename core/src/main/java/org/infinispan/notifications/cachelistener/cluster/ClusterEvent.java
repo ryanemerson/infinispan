@@ -5,7 +5,6 @@ import java.util.Objects;
 import org.infinispan.Cache;
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.marshall.protostream.impl.MarshallableObject;
-import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
 import org.infinispan.metadata.Metadata;
 import org.infinispan.notifications.cachelistener.event.CacheEntryCreatedEvent;
 import org.infinispan.notifications.cachelistener.event.CacheEntryEvent;
@@ -102,27 +101,27 @@ public class ClusterEvent<K, V> implements CacheEntryCreatedEvent<K, V>, CacheEn
    }
 
    @ProtoFactory
-   ClusterEvent(MarshallableUserObject<K> wrappedKey, MarshallableUserObject<V> wrappedValue,
-                MarshallableUserObject<V> wrappedOldValue, MarshallableObject<Metadata> wrappedMetadata,
+   ClusterEvent(MarshallableObject<K> wrappedKey, MarshallableObject<V> wrappedValue,
+                MarshallableObject<V> wrappedOldValue, MarshallableObject<Metadata> wrappedMetadata,
                 GlobalTransaction transaction, JGroupsAddress origin, Type type, boolean commandRetried) {
-      this(MarshallableUserObject.unwrap(wrappedKey), MarshallableUserObject.unwrap(wrappedValue),
-            MarshallableUserObject.unwrap(wrappedOldValue), MarshallableObject.unwrap(wrappedMetadata),
+      this(MarshallableObject.unwrap(wrappedKey), MarshallableObject.unwrap(wrappedValue),
+            MarshallableObject.unwrap(wrappedOldValue), MarshallableObject.unwrap(wrappedMetadata),
             type, origin, transaction, commandRetried);
    }
 
    @ProtoField(number = 5, name = "key")
-   MarshallableUserObject<K> getWrappedKey() {
-      return MarshallableUserObject.create(key);
+   MarshallableObject<K> getWrappedKey() {
+      return MarshallableObject.create(key);
    }
 
    @ProtoField(number = 6, name = "value")
-   MarshallableUserObject<V> getWrappedValue() {
-      return MarshallableUserObject.create(value);
+   MarshallableObject<V> getWrappedValue() {
+      return MarshallableObject.create(value);
    }
 
    @ProtoField(number = 7, name = "oldValue")
-   MarshallableUserObject<V> getWrappedOldValue() {
-      return MarshallableUserObject.create(value);
+   MarshallableObject<V> getWrappedOldValue() {
+      return MarshallableObject.create(value);
    }
 
    @ProtoField(number = 8, name = "metadata")

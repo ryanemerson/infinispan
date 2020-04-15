@@ -4,7 +4,7 @@ import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.container.versioning.EntryVersion;
 import org.infinispan.container.versioning.NumericVersion;
 import org.infinispan.container.versioning.SimpleClusteredVersion;
-import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
+import org.infinispan.marshall.protostream.impl.MarshallableObject;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
@@ -20,14 +20,14 @@ public class VersionedResult {
    }
 
    @ProtoFactory
-   VersionedResult(MarshallableUserObject<?> result, NumericVersion numericVersion, SimpleClusteredVersion clusteredVersion) {
-      this.result = MarshallableUserObject.unwrap(result);
+   VersionedResult(MarshallableObject<?> result, NumericVersion numericVersion, SimpleClusteredVersion clusteredVersion) {
+      this.result = MarshallableObject.unwrap(result);
       this.version = numericVersion != null ? numericVersion : clusteredVersion;
    }
 
    @ProtoField(number = 1)
-   MarshallableUserObject<?> getResult() {
-      return MarshallableUserObject.create(result);
+   MarshallableObject<?> getResult() {
+      return MarshallableObject.create(result);
    }
 
    @ProtoField(number = 2)

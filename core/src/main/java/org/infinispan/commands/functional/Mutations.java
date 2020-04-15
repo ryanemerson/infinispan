@@ -15,11 +15,10 @@ import org.infinispan.functional.EntryView;
 import org.infinispan.marshall.core.EncoderRegistry;
 import org.infinispan.marshall.persistence.PersistenceMarshaller;
 import org.infinispan.marshall.protostream.impl.MarshallableObject;
-import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
-import org.infinispan.registry.InternalCacheRegistry;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
+import org.infinispan.registry.InternalCacheRegistry;
 
 /**
  * Helper class for marshalling, also hiding implementations of {@link Mutation} from the interface.
@@ -89,14 +88,14 @@ public final class Mutations {
    public static class ReadWriteWithValue<K, V, T, R> extends BaseMutation<K, V, R> {
 
       @ProtoField(number = 3)
-      final MarshallableUserObject<?> argument;
+      final MarshallableObject<?> argument;
 
       @ProtoField(number = 4, name = "function")
       final MarshallableObject<BiFunction<T, EntryView.ReadWriteEntryView<K, V>, R>> f;
 
       @ProtoFactory
       ReadWriteWithValue(DataConversion keyDataConversion, DataConversion valueDataConversion,
-                         MarshallableUserObject<?> argument,
+                         MarshallableObject<?> argument,
                          MarshallableObject<BiFunction<T, EntryView.ReadWriteEntryView<K, V>, R>> f) {
          super(keyDataConversion, valueDataConversion);
          this.argument = argument;
@@ -104,7 +103,7 @@ public final class Mutations {
       }
 
       ReadWriteWithValue(DataConversion keyDataConversion, DataConversion valueDataConversion, Object argument, BiFunction<T, EntryView.ReadWriteEntryView<K, V>, R> f) {
-         this(keyDataConversion, valueDataConversion,  MarshallableUserObject.create(argument), MarshallableObject.create(f));
+         this(keyDataConversion, valueDataConversion,  MarshallableObject.create(argument), MarshallableObject.create(f));
       }
 
       @Override
@@ -141,21 +140,21 @@ public final class Mutations {
    public static class WriteWithValue<K, V, T> extends BaseMutation<K, V, Void> {
 
       @ProtoField(number = 3)
-      final MarshallableUserObject<?> argument;
+      final MarshallableObject<?> argument;
 
       @ProtoField(number = 4, name = "function")
       final MarshallableObject<BiConsumer<T, EntryView.WriteEntryView<K, V>>> f;
 
       @ProtoFactory
       WriteWithValue(DataConversion keyDataConversion, DataConversion valueDataConversion,
-                     MarshallableUserObject<?> argument, MarshallableObject<BiConsumer<T, EntryView.WriteEntryView<K, V>>> f) {
+                     MarshallableObject<?> argument, MarshallableObject<BiConsumer<T, EntryView.WriteEntryView<K, V>>> f) {
          super(keyDataConversion, valueDataConversion);
          this.argument = argument;
          this.f = f;
       }
 
       WriteWithValue(DataConversion keyDataConversion, DataConversion valueDataConversion, Object argument, BiConsumer<T, EntryView.WriteEntryView<K, V>> f) {
-         this(keyDataConversion, valueDataConversion, MarshallableUserObject.create(argument), MarshallableObject.create(f));
+         this(keyDataConversion, valueDataConversion, MarshallableObject.create(argument), MarshallableObject.create(f));
       }
 
       @Override

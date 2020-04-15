@@ -13,7 +13,6 @@ import org.infinispan.factories.ComponentRegistry;
 import org.infinispan.functional.EntryView.WriteEntryView;
 import org.infinispan.functional.impl.Params;
 import org.infinispan.marshall.protostream.impl.MarshallableObject;
-import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
@@ -28,14 +27,14 @@ public final class WriteOnlyKeyValueCommand<K, V, T> extends AbstractWriteKeyCom
 
    // TODO should this be MarshallableObject?
    @ProtoField(number = 11)
-   final MarshallableUserObject<?> argument;
+   final MarshallableObject<?> argument;
 
    @ProtoFactory
-   WriteOnlyKeyValueCommand(MarshallableUserObject<?> wrappedKey, long flagsWithoutRemote, int topologyId, int segment,
+   WriteOnlyKeyValueCommand(MarshallableObject<?> wrappedKey, long flagsWithoutRemote, int topologyId, int segment,
                             CommandInvocationId commandInvocationId, Params params, ValueMatcher valueMatcher,
                             DataConversion keyDataConversion, DataConversion valueDataConversion,
                             MarshallableObject<BiConsumer<T, WriteEntryView<K, V>>> f,
-                            MarshallableUserObject<?> argument) {
+                            MarshallableObject<?> argument) {
       super(wrappedKey, flagsWithoutRemote, topologyId, segment, commandInvocationId, params, valueMatcher,
             keyDataConversion, valueDataConversion);
       this.f = f;
@@ -47,7 +46,7 @@ public final class WriteOnlyKeyValueCommand<K, V, T> extends AbstractWriteKeyCom
                                    DataConversion keyDataConversion, DataConversion valueDataConversion) {
       super(key, valueMatcher, segment, id, params, keyDataConversion, valueDataConversion);
       this.f = MarshallableObject.create(f);
-      this.argument = MarshallableUserObject.create(argument);
+      this.argument = MarshallableObject.create(argument);
    }
 
    @Override
@@ -87,6 +86,6 @@ public final class WriteOnlyKeyValueCommand<K, V, T> extends AbstractWriteKeyCom
    }
 
    public Object getArgument() {
-      return MarshallableUserObject.unwrap(argument);
+      return MarshallableObject.unwrap(argument);
    }
 }

@@ -3,7 +3,7 @@ package org.infinispan.container.entries;
 import static java.lang.Math.min;
 
 import org.infinispan.functional.impl.MetaParamsInternalMetadata;
-import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
+import org.infinispan.marshall.protostream.impl.MarshallableObject;
 import org.infinispan.metadata.EmbeddedMetadata;
 import org.infinispan.metadata.Metadata;
 import org.infinispan.protostream.annotations.ProtoFactory;
@@ -41,7 +41,7 @@ public class TransientMortalCacheEntry extends AbstractInternalCacheEntry {
    }
 
    @ProtoFactory
-   TransientMortalCacheEntry(MarshallableUserObject<?> wrappedKey, MarshallableUserObject<?> wrappedValue,
+   TransientMortalCacheEntry(MarshallableObject<?> wrappedKey, MarshallableObject<?> wrappedValue,
                              MetaParamsInternalMetadata internalMetadata, long maxIdle, long lastUsed,
                              long lifespan, long created) {
       super(wrappedKey, wrappedValue, internalMetadata);
