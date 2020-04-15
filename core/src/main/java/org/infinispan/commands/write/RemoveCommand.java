@@ -1,5 +1,7 @@
 package org.infinispan.commands.write;
 
+import static org.infinispan.commons.util.Util.toStr;
+
 import java.util.Objects;
 
 import org.infinispan.commands.CommandInvocationId;
@@ -23,38 +25,48 @@ import org.infinispan.protostream.annotations.ProtoTypeId;
 @ProtoTypeId(ProtoStreamTypeIds.REMOVE_COMMAND)
 public class RemoveCommand extends AbstractDataWriteCommand implements MetadataAwareCommand {
    public static final byte COMMAND_ID = 10;
+   protected transient boolean successful = true;
 
-   private transient boolean successful = true;
-   private transient boolean nonExistent = false;
+   protected Metadata metadata;
+   protected ValueMatcher valueMatcher;
 
    /**
     * When not null, value indicates that the entry should only be removed if the key is mapped to this value.
     * When null, the entry should be removed regardless of what value it is mapped to.
     */
-   @ProtoField(number = 6)
-   protected MarshallableObject<?> value;
-
-   @ProtoField(number = 7)
-   protected MarshallableObject<Metadata> metadata;
-
-   @ProtoField(number = 8)
-   protected ValueMatcher valueMatcher;
-
-   @ProtoFactory
-   RemoveCommand(MarshallableObject<?> wrappedKey, long flagsWithoutRemote, int topologyId, int segment,
-                 CommandInvocationId commandInvocationId, MarshallableObject<?> value,
-                 MarshallableObject<Metadata> metadata, ValueMatcher valueMatcher) {
-      super(wrappedKey, flagsWithoutRemote, topologyId, segment, commandInvocationId);
-      this.value = value;
-      this.metadata = metadata;
-      this.valueMatcher = valueMatcher;
-   }
+   protected Object value;
 
    public RemoveCommand(Object key, Object value, int segment, long flagsBitSet,
                         CommandInvocationId commandInvocationId) {
       super(key, segment, flagsBitSet, commandInvocationId);
       setValue(value);
       this.valueMatcher = value != null ? ValueMatcher.MATCH_EXPECTED : ValueMatcher.MATCH_ALWAYS;
+   }
+
+   @ProtoFactory
+   RemoveCommand(MarshallableObject<?> wrappedKey, long flagsWithoutRemote, int topologyId, int segment,
+                 CommandInvocationId commandInvocationId, MarshallableObject<?> wrappedValue,
+                 MarshallableObject<Metadata> wrappedMetadata, ValueMatcher valueMatcher) {
+      super(wrappedKey, flagsWithoutRemote, topologyId, segment, commandInvocationId);
+      this.value = MarshallableObject.unwrap(wrappedValue);
+      this.metadata = MarshallableObject.unwrap(wrappedMetadata);
+      this.valueMatcher = valueMatcher;
+   }
+
+   @ProtoField(number = 6, name = "value")
+   protected MarshallableObject<?> getWrappedValue() {
+      return MarshallableObject.create(value);
+   }
+
+   @ProtoField(number = 7, name = "metadata")
+   protected MarshallableObject<Metadata> getWrappedMetadata() {
+      return MarshallableObject.create(metadata);
+   }
+
+   @Override
+   @ProtoField(number = 8)
+   public ValueMatcher getValueMatcher() {
+      return valueMatcher;
    }
 
    @Override
@@ -69,12 +81,12 @@ public class RemoveCommand extends AbstractDataWriteCommand implements MetadataA
 
    @Override
    public void setMetadata(Metadata metadata) {
-      this.metadata = MarshallableObject.create(metadata);
+      this.metadata = metadata;
    }
 
    @Override
    public Metadata getMetadata() {
-      return MarshallableObject.unwrap(metadata);
+      return metadata;
    }
 
    @Override
@@ -98,8 +110,8 @@ public class RemoveCommand extends AbstractDataWriteCommand implements MetadataA
 
    @Override
    public String toString() {
-      return "RemoveCommand{key=" + key +
-            ", value=" + value +
+      return "RemoveCommand{key=" + toStr(key) +
+            ", value=" + toStr(value) +
             ", metadata=" + metadata +
             ", flags=" + printFlags() +
             ", commandInvocationId=" + CommandInvocationId.show(commandInvocationId) +
@@ -116,11 +128,6 @@ public class RemoveCommand extends AbstractDataWriteCommand implements MetadataA
    @Override
    public boolean isConditional() {
       return value != null;
-   }
-
-   @Override
-   public ValueMatcher getValueMatcher() {
-      return valueMatcher;
    }
 
    @Override
@@ -143,7 +150,7 @@ public class RemoveCommand extends AbstractDataWriteCommand implements MetadataA
    }
 
    public void setValue(Object value) {
-      this.value = MarshallableObject.create(value);
+      this.value = value;
    }
 
    @Override

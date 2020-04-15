@@ -24,34 +24,41 @@ public final class WriteOnlyManyEntriesCommand<K, V, T> extends AbstractWriteMan
 
    public static final byte COMMAND_ID = 57;
 
-   @ProtoField(number = 8)
-   MarshallableMap<?, ?> arguments;
-
-   @ProtoField(number = 9)
-   final MarshallableObject<BiConsumer<T, WriteEntryView<K, V>>> f;
-
-   @ProtoFactory
-   WriteOnlyManyEntriesCommand(CommandInvocationId commandInvocationId, boolean forwarded, int topologyId,
-                               Params params, long flags, DataConversion keyDataConversion,
-                               DataConversion valueDataConversion, MarshallableMap<?, ?> arguments,
-                               MarshallableObject<BiConsumer<T, WriteEntryView<K, V>>> f) {
-      super(commandInvocationId, forwarded, topologyId, params, flags, keyDataConversion, valueDataConversion);
-      this.arguments = arguments;
-      this.f = f;
-   }
+   private Map<?, ?> arguments;
+   private BiConsumer<T, WriteEntryView<K, V>> f;
 
    public WriteOnlyManyEntriesCommand(Map<?, ?> arguments, BiConsumer<T, WriteEntryView<K, V>> f, Params params,
                                       CommandInvocationId commandInvocationId, DataConversion keyDataConversion,
                                       DataConversion valueDataConversion) {
       super(commandInvocationId, params, keyDataConversion, valueDataConversion);
-      this.setArguments(arguments);
-      this.f = MarshallableObject.create(f);
+      this.arguments = arguments;
+      this.f = f;
    }
 
    public WriteOnlyManyEntriesCommand(WriteOnlyManyEntriesCommand<K, V, T> command) {
       super(command);
       this.arguments = command.arguments;
       this.f = command.f;
+   }
+
+   @ProtoFactory
+   WriteOnlyManyEntriesCommand(CommandInvocationId commandInvocationId, boolean forwarded, int topologyId,
+                               Params params, long flags, DataConversion keyDataConversion,
+                               DataConversion valueDataConversion, MarshallableMap<?, ?> wrappedArguments,
+                               MarshallableObject<BiConsumer<T, WriteEntryView<K, V>>> wrappedBiConsumer) {
+      super(commandInvocationId, forwarded, topologyId, params, flags, keyDataConversion, valueDataConversion);
+      this.arguments = MarshallableMap.unwrap(wrappedArguments);
+      this.f = MarshallableObject.unwrap(wrappedBiConsumer);
+   }
+
+   @ProtoField(number = 8, name = "arguments")
+   MarshallableMap<?, ?> getWrappedArguments() {
+      return MarshallableMap.create(arguments);
+   }
+
+   @ProtoField(number = 9, name = "biconsumer")
+   MarshallableObject<BiConsumer<T, WriteEntryView<K, V>>> getWrappedBiConsumer() {
+      return MarshallableObject.create(f);
    }
 
    @Override
@@ -62,15 +69,15 @@ public final class WriteOnlyManyEntriesCommand<K, V, T> extends AbstractWriteMan
    }
 
    public BiConsumer<T, WriteEntryView<K, V>> getBiConsumer() {
-      return MarshallableObject.unwrap(f);
+      return f;
    }
 
    public Map<?, ?> getArguments() {
-      return MarshallableMap.unwrap(arguments);
+      return arguments;
    }
 
    public void setArguments(Map<?, ?> arguments) {
-      this.arguments = MarshallableMap.create(arguments);
+      this.arguments = arguments;
    }
 
    public final WriteOnlyManyEntriesCommand<K, V, T> withArguments(Map<?, ?> entries) {
@@ -110,11 +117,11 @@ public final class WriteOnlyManyEntriesCommand<K, V, T> extends AbstractWriteMan
 
    @Override
    public Collection<?> getKeysToLock() {
-      return getAffectedKeys();
+      return arguments.keySet();
    }
 
    @Override
    public Mutation<K, V, ?> toMutation(Object key) {
-      return new Mutations.WriteWithValue<>(keyDataConversion, valueDataConversion, getArguments().get(key), getBiConsumer());
+      return new Mutations.WriteWithValue<>(keyDataConversion, valueDataConversion, arguments.get(key), f);
    }
 }

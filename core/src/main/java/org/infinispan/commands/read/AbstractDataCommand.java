@@ -21,7 +21,7 @@ public abstract class AbstractDataCommand implements DataCommand, SegmentSpecifi
    protected MarshallableObject<?> key;
    private long flags;
    // These 2 ints have to stay next to each other to ensure they are aligned together
-   protected int topologyId = -1;
+   protected int topologyId;
    protected int segment;
 
    // For ProtoFactory implementations
@@ -37,11 +37,6 @@ public abstract class AbstractDataCommand implements DataCommand, SegmentSpecifi
 
    protected AbstractDataCommand(Object key, int segment, long flagsBitSet) {
       this(MarshallableObject.create(key), flagsBitSet, 0, segment);
-   }
-
-   // TODO remove
-   protected AbstractDataCommand() {
-      this.segment = -1;
    }
 
    @ProtoField(number = 1, name = "key")

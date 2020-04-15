@@ -39,35 +39,46 @@ public class ClusteredGetCommand extends BaseRpcCommand implements SegmentSpecif
    private static final Log log = LogFactory.getLog(ClusteredGetCommand.class);
    private static final boolean trace = log.isTraceEnabled();
 
-   @ProtoField(number = 2, defaultValue = "-1")
-   int topologyId;
-
-   @ProtoField(number = 3)
-   final MarshallableObject<?> key;
-
-   @ProtoField(number = 4, defaultValue = "-1")
-   final int segment;
-
-   final long flags;
+   private Object key;
 
    //only used by extended statistics. this boolean is local.
    private boolean isWrite;
+   private int segment;
+   private int topologyId;
+   private long flags;
 
-   @ProtoFactory
-   ClusteredGetCommand(ByteString cacheName, int topologyId, MarshallableObject<?> key, int segment, long flagsWithoutRemote) {
+   public ClusteredGetCommand(Object key, ByteString cacheName, int segment, long flags) {
       super(cacheName);
+      this.key = key;
+      this.isWrite = false;
       if (segment < 0) {
          throw new IllegalArgumentException("Segment must 0 or greater!");
       }
-      this.topologyId = topologyId;
-      this.key = key;
       this.segment = segment;
-      this.flags = flagsWithoutRemote;
-      this.isWrite = false;
+      this.flags = flags;
    }
 
-   public ClusteredGetCommand(Object key, ByteString cacheName, int segment, long flags) {
-      this(cacheName, -1, MarshallableObject.create(key), segment, flags);
+   @ProtoFactory
+   ClusteredGetCommand(ByteString cacheName, int topologyId, MarshallableObject<?> wrappedKey, int segment, long flagsWithoutRemote) {
+      this(MarshallableObject.unwrap(wrappedKey), cacheName, segment, flagsWithoutRemote);
+      this.topologyId = topologyId;
+   }
+
+   @Override
+   @ProtoField(number = 2, defaultValue = "-1")
+   public int getTopologyId() {
+      return topologyId;
+   }
+
+   @ProtoField(number = 3, name = "key")
+   MarshallableObject<?> getWrappedKey() {
+      return MarshallableObject.create(key);
+   }
+
+   @Override
+   @ProtoField(number = 4, defaultValue = "-1")
+   public int getSegment() {
+      return segment;
    }
 
    @ProtoField(number = 5, name = "flags", defaultValue = "0")
@@ -85,7 +96,7 @@ public class ClusteredGetCommand extends BaseRpcCommand implements SegmentSpecif
       // as our caller is already calling the ClusteredGetCommand on all the relevant nodes
       // CACHE_MODE_LOCAL is not used as it can be used when we want to ignore the ownership with respect to reads
       long flagBitSet = EnumUtil.bitSetOf(Flag.SKIP_REMOTE_LOOKUP);
-      GetCacheEntryCommand command = componentRegistry.getCommandsFactory().buildGetCacheEntryCommand(key.get(), segment,
+      GetCacheEntryCommand command = componentRegistry.getCommandsFactory().buildGetCacheEntryCommand(key, segment,
             EnumUtil.mergeBitSets(flagBitSet, flags));
       command.setTopologyId(topologyId);
       InvocationContextFactory icf = componentRegistry.getInvocationContextFactory().running();
@@ -93,7 +104,7 @@ public class ClusteredGetCommand extends BaseRpcCommand implements SegmentSpecif
       AsyncInterceptorChain invoker = componentRegistry.getInterceptorChain().running();
       return invoker.invokeAsync(invocationContext, command)
             .thenApply(rv -> {
-               if (trace) log.tracef("Return value for key=%s is %s", key.get(), rv);
+               if (trace) log.tracef("Return value for key=%s is %s", key, rv);
                //this might happen if the value was fetched from a cache loader
                if (rv instanceof MVCCEntry) {
                   MVCCEntry mvccEntry = (MVCCEntry) rv;
@@ -110,38 +121,6 @@ public class ClusteredGetCommand extends BaseRpcCommand implements SegmentSpecif
    @Override
    public byte getCommandId() {
       return COMMAND_ID;
-   }
-
-   public boolean isWrite() {
-      return isWrite;
-   }
-
-   public void setWrite(boolean write) {
-      isWrite = write;
-   }
-
-   @Override
-   public int getSegment() {
-      return segment;
-   }
-
-   public Object getKey() {
-      return MarshallableObject.unwrap(key);
-   }
-
-   @Override
-   public boolean isReturnValueExpected() {
-      return true;
-   }
-
-   @Override
-   public int getTopologyId() {
-      return topologyId;
-   }
-
-   @Override
-   public void setTopologyId(int topologyId) {
-      this.topologyId = topologyId;
    }
 
    @Override
@@ -164,5 +143,27 @@ public class ClusteredGetCommand extends BaseRpcCommand implements SegmentSpecif
             ", flags=" + EnumUtil.prettyPrintBitSet(flags, Flag.class) +
             ", topologyId=" + topologyId +
             "}";
+   }
+
+   public boolean isWrite() {
+      return isWrite;
+   }
+
+   public void setWrite(boolean write) {
+      isWrite = write;
+   }
+
+   public Object getKey() {
+      return key;
+   }
+
+   @Override
+   public boolean isReturnValueExpected() {
+      return true;
+   }
+
+   @Override
+   public void setTopologyId(int topologyId) {
+      this.topologyId = topologyId;
    }
 }

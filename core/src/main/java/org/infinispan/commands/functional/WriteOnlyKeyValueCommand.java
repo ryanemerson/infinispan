@@ -22,31 +22,37 @@ public final class WriteOnlyKeyValueCommand<K, V, T> extends AbstractWriteKeyCom
 
    public static final byte COMMAND_ID = 55;
 
-   @ProtoField(number = 10)
-   final MarshallableObject<BiConsumer<T, WriteEntryView<K, V>>> f;
-
-   // TODO should this be MarshallableObject?
-   @ProtoField(number = 11)
-   final MarshallableObject<?> argument;
-
-   @ProtoFactory
-   WriteOnlyKeyValueCommand(MarshallableObject<?> wrappedKey, long flagsWithoutRemote, int topologyId, int segment,
-                            CommandInvocationId commandInvocationId, Params params, ValueMatcher valueMatcher,
-                            DataConversion keyDataConversion, DataConversion valueDataConversion,
-                            MarshallableObject<BiConsumer<T, WriteEntryView<K, V>>> f,
-                            MarshallableObject<?> argument) {
-      super(wrappedKey, flagsWithoutRemote, topologyId, segment, commandInvocationId, params, valueMatcher,
-            keyDataConversion, valueDataConversion);
-      this.f = f;
-      this.argument = argument;
-   }
+   private BiConsumer<T, WriteEntryView<K, V>> f;
+   private Object argument;
 
    public WriteOnlyKeyValueCommand(Object key, Object argument, BiConsumer<T, WriteEntryView<K, V>> f, int segment,
                                    CommandInvocationId id, ValueMatcher valueMatcher, Params params,
                                    DataConversion keyDataConversion, DataConversion valueDataConversion) {
       super(key, valueMatcher, segment, id, params, keyDataConversion, valueDataConversion);
-      this.f = MarshallableObject.create(f);
+      this.f = f;
       this.argument = MarshallableObject.create(argument);
+   }
+
+   @ProtoFactory
+   WriteOnlyKeyValueCommand(MarshallableObject<?> wrappedKey, long flagsWithoutRemote, int topologyId, int segment,
+                            CommandInvocationId commandInvocationId, Params params, ValueMatcher valueMatcher,
+                            DataConversion keyDataConversion, DataConversion valueDataConversion,
+                            MarshallableObject<BiConsumer<T, WriteEntryView<K, V>>> wrappedBiConsumer,
+                            MarshallableObject<?> wrappedArgument) {
+      super(wrappedKey, flagsWithoutRemote, topologyId, segment, commandInvocationId, params, valueMatcher,
+            keyDataConversion, valueDataConversion);
+      this.f = MarshallableObject.unwrap(wrappedBiConsumer);
+      this.argument = MarshallableObject.unwrap(wrappedArgument);
+   }
+
+   @ProtoField(number = 10, name = "biconsumer")
+   MarshallableObject<BiConsumer<T, WriteEntryView<K, V>>> getWrappedBiConsumer() {
+      return MarshallableObject.create(f);
+   }
+
+   @ProtoField(number = 11, name = "argument")
+   MarshallableObject<?> getWrappedArgument() {
+      return  MarshallableObject.create(argument);
    }
 
    @Override
@@ -78,14 +84,14 @@ public final class WriteOnlyKeyValueCommand<K, V, T> extends AbstractWriteKeyCom
 
    @Override
    public Mutation<K, V, ?> toMutation(Object key) {
-      return new Mutations.WriteWithValue<>(keyDataConversion, valueDataConversion, argument, getBiConsumer());
+      return new Mutations.WriteWithValue<>(keyDataConversion, valueDataConversion, argument, f);
    }
 
    public BiConsumer<T, WriteEntryView<K, V>> getBiConsumer() {
-      return MarshallableObject.unwrap(f);
+      return f;
    }
 
    public Object getArgument() {
-      return MarshallableObject.unwrap(argument);
+      return argument;
    }
 }

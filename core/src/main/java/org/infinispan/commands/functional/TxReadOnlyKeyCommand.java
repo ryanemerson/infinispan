@@ -18,22 +18,26 @@ import org.infinispan.protostream.annotations.ProtoTypeId;
 public class TxReadOnlyKeyCommand<K, V, R> extends ReadOnlyKeyCommand<K, V, R> {
    public static final byte COMMAND_ID = 64;
 
-   @ProtoField(number = 9)
-   final MarshallableCollection<Mutation<K, V, ?>> mutations;
-
-   @ProtoFactory
-   TxReadOnlyKeyCommand(MarshallableObject<?> wrappedKey, long flagsWithoutRemote, int topologyId, int segment,
-                        MarshallableObject<Function<EntryView.ReadEntryView<K, V>, R>> f, Params params,
-                        DataConversion keyDataConversion, DataConversion valueDataConversion,
-                        MarshallableCollection<Mutation<K, V, ?>> mutations) {
-      super(wrappedKey, flagsWithoutRemote, topologyId, segment, f, params, keyDataConversion, valueDataConversion);
-      this.mutations = mutations;
-   }
+   private List<Mutation<K, V, ?>> mutations;
 
    public TxReadOnlyKeyCommand(Object key, Function<EntryView.ReadEntryView<K, V>, R> f, List<Mutation<K, V, ?>> mutations,
                                int segment, Params params, DataConversion keyDataConversion, DataConversion valueDataConversion) {
       super(key, f, segment, params, keyDataConversion, valueDataConversion);
-      this.mutations = MarshallableCollection.create(mutations);
+      this.mutations = mutations;
+   }
+
+   @ProtoFactory
+   TxReadOnlyKeyCommand(MarshallableObject<?> wrappedKey, long flagsWithoutRemote, int topologyId, int segment,
+                        MarshallableObject<Function<EntryView.ReadEntryView<K, V>, R>> wrappedFunction, Params params,
+                        DataConversion keyDataConversion, DataConversion valueDataConversion,
+                        MarshallableCollection<Mutation<K, V, ?>> wrappedMutations) {
+      super(wrappedKey, flagsWithoutRemote, topologyId, segment, wrappedFunction, params, keyDataConversion, valueDataConversion);
+      this.mutations = MarshallableCollection.unwrapAsList(wrappedMutations);
+   }
+
+   @ProtoField(number = 9, name = "mutations")
+   MarshallableCollection<Mutation<K, V, ?>> getWrappedMutations() {
+      return MarshallableCollection.create(mutations);
    }
 
    @Override
@@ -65,6 +69,6 @@ public class TxReadOnlyKeyCommand<K, V, R> extends ReadOnlyKeyCommand<K, V, R> {
    }
 
    public List<Mutation<K, V, ?>> getMutations() {
-      return MarshallableCollection.unwrapAsList(mutations);
+      return mutations;
    }
 }

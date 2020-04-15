@@ -22,23 +22,27 @@ public final class WriteOnlyKeyCommand<K, V> extends AbstractWriteKeyCommand<K, 
 
    public static final byte COMMAND_ID = 54;
 
-   @ProtoField(number = 10)
-   MarshallableObject<Consumer<WriteEntryView<K, V>>> f;
-
-   @ProtoFactory
-   WriteOnlyKeyCommand(MarshallableObject<?> wrappedKey, long flagsWithoutRemote, int topologyId, int segment,
-                       CommandInvocationId commandInvocationId, Params params, ValueMatcher valueMatcher,
-                       DataConversion keyDataConversion, DataConversion valueDataConversion,
-                       MarshallableObject<Consumer<WriteEntryView<K, V>>> f) {
-      super(wrappedKey, flagsWithoutRemote, topologyId, segment, commandInvocationId, params, valueMatcher, keyDataConversion, valueDataConversion);
-      this.f = f;
-   }
+   private Consumer<WriteEntryView<K, V>> f;
 
    public WriteOnlyKeyCommand(Object key, Consumer<WriteEntryView<K, V>> f, int segment, CommandInvocationId id,
                               ValueMatcher valueMatcher, Params params, DataConversion keyDataConversion,
                               DataConversion valueDataConversion) {
       super(key, valueMatcher, segment, id, params, keyDataConversion, valueDataConversion);
-      this.f = MarshallableObject.create(f);
+      this.f = f;
+   }
+
+   @ProtoFactory
+   WriteOnlyKeyCommand(MarshallableObject<?> wrappedKey, long flagsWithoutRemote, int topologyId, int segment,
+                       CommandInvocationId commandInvocationId, Params params, ValueMatcher valueMatcher,
+                       DataConversion keyDataConversion, DataConversion valueDataConversion,
+                       MarshallableObject<Consumer<WriteEntryView<K, V>>> wrappedConsumer) {
+      super(wrappedKey, flagsWithoutRemote, topologyId, segment, commandInvocationId, params, valueMatcher, keyDataConversion, valueDataConversion);
+      this.f = MarshallableObject.unwrap(wrappedConsumer);
+   }
+
+   @ProtoField(number = 10, name = "consumer")
+   MarshallableObject<Consumer<WriteEntryView<K, V>>> getWrappedConsumer() {
+      return MarshallableObject.create(f);
    }
 
    @Override
@@ -70,10 +74,10 @@ public final class WriteOnlyKeyCommand<K, V> extends AbstractWriteKeyCommand<K, 
 
    @Override
    public Mutation<K, V, ?> toMutation(Object key) {
-      return new Mutations.Write(keyDataConversion, valueDataConversion, getConsumer());
+      return new Mutations.Write(keyDataConversion, valueDataConversion, f);
    }
 
    public Consumer<WriteEntryView<K, V>> getConsumer() {
-      return MarshallableObject.unwrap(f);
+      return f;
    }
 }

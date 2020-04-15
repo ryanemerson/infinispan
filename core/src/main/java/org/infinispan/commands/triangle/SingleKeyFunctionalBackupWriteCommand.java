@@ -41,21 +41,22 @@ public class SingleKeyFunctionalBackupWriteCommand extends FunctionalBackupWrite
 
    public static final byte COMMAND_ID = 77;
 
-   @ProtoField(number = 11)
-   final Operation operation;
+   private Operation operation;
+   private Object key;
+   private Object value;
+   private Object prevValue;
+   private Metadata prevMetadata;
 
-   @ProtoField(number = 12)
-   final MarshallableObject<?> key;
-
-   @ProtoField(number = 13)
-   final MarshallableObject<?> value;
-
-   @ProtoField(number = 14)
-   final MarshallableObject<?> prevValue;
-
-   @ProtoField(number = 15)
-   final MarshallableObject<Metadata> prevMetadata;
-
+   private SingleKeyFunctionalBackupWriteCommand(ByteString cacheName, AbstractWriteKeyCommand<?, ?> command, long sequence, int segmentId,
+                                                 Operation operation, Object key, Object value, Object prevValue,
+                                                 Metadata prevMetadata, Object function) {
+      super(cacheName, command, sequence, segmentId, function);
+      this.operation = operation;
+      this.key = key;
+      this.value = value;
+      this.prevValue = prevValue;
+      this.prevMetadata = prevMetadata;
+   }
 
    @ProtoFactory
    SingleKeyFunctionalBackupWriteCommand(ByteString cacheName, CommandInvocationId commandInvocationId, int topologyId,
@@ -66,21 +67,10 @@ public class SingleKeyFunctionalBackupWriteCommand extends FunctionalBackupWrite
       super(cacheName, commandInvocationId, topologyId, flags, sequence, segmentId, function, params, keyDataConversion,
             valueDataConversion);
       this.operation = operation;
-      this.key = key;
-      this.value = value;
-      this.prevValue = prevValue;
-      this.prevMetadata = prevMetadata;
-   }
-
-   private SingleKeyFunctionalBackupWriteCommand(ByteString cacheName, AbstractWriteKeyCommand<?, ?> command, long sequence, int segmentId,
-                                                 Operation operation, Object key, Object value, Object prevValue,
-                                                 Metadata prevMetadata, Object function) {
-      super(cacheName, command, sequence, segmentId, function);
-      this.operation = operation;
-      this.key = MarshallableObject.create(key);
-      this.value = MarshallableObject.create(value);
-      this.prevValue = MarshallableObject.create(prevValue);
-      this.prevMetadata = MarshallableObject.create(prevMetadata);
+      this.key = MarshallableObject.unwrap(key);
+      this.value = MarshallableObject.unwrap(value);
+      this.prevValue = MarshallableObject.unwrap(prevValue);
+      this.prevMetadata = MarshallableObject.unwrap(prevMetadata);
    }
 
    public static SingleKeyFunctionalBackupWriteCommand create(ByteString cacheName, ReadWriteKeyCommand<?, ?, ?> command, long sequence, int segmentId) {
@@ -104,6 +94,31 @@ public class SingleKeyFunctionalBackupWriteCommand extends FunctionalBackupWrite
             null, command.getConsumer());
    }
 
+   @ProtoField(number = 11)
+   Operation getOperation() {
+      return operation;
+   }
+
+   @ProtoField(number = 12)
+   MarshallableObject<?> getKey() {
+      return MarshallableObject.create(key);
+   }
+
+   @ProtoField(number = 13)
+   MarshallableObject<?> getValue() {
+      return MarshallableObject.create(value);
+   }
+
+   @ProtoField(number = 14)
+   MarshallableObject<?> getPrevValue() {
+      return MarshallableObject.create(prevValue);
+   }
+
+   @ProtoField(number = 15)
+   MarshallableObject<Metadata> getPrevMetadata() {
+      return MarshallableObject.create(prevMetadata);
+   }
+
    @Override
    public byte getCommandId() {
       return COMMAND_ID;
@@ -111,12 +126,6 @@ public class SingleKeyFunctionalBackupWriteCommand extends FunctionalBackupWrite
 
    @Override
    WriteCommand createWriteCommand() {
-      // TODO can we remove unwrapping once commands have been updated to have a ProtoFactory
-      Object key = MarshallableObject.unwrap(this.key);
-      Object value = MarshallableObject.unwrap(this.value);
-      Object function = MarshallableObject.unwrap(this.function);
-      Object prevValue = MarshallableObject.unwrap(this.prevValue);
-      Metadata prevMetadata = MarshallableObject.unwrap(this.prevMetadata);
       switch (operation) {
          case READ_WRITE:
             //noinspection unchecked

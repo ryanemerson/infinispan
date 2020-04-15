@@ -40,37 +40,10 @@ public class SingleKeyBackupWriteCommand extends BackupWriteCommand {
 
    public static final byte COMMAND_ID = 76;
 
-   @ProtoField(number = 7)
-   final Operation operation;
-
-   @ProtoField(number = 8)
-   final MarshallableObject<?> key;
-
-   @ProtoField(number = 9)
-   final MarshallableObject<?> valueOrFunction;
-
-   @ProtoField(number = 10)
-   final MarshallableObject<Metadata> metadata;
-
-   @ProtoFactory
-   SingleKeyBackupWriteCommand(ByteString cacheName, CommandInvocationId commandInvocationId, int topologyId,
-                               long flags, long sequence, int segmentId, Operation operation, MarshallableObject<?> key,
-                               MarshallableObject<?> valueOrFunction, MarshallableObject<Metadata> metadata) {
-      super(cacheName, commandInvocationId, topologyId, flags, sequence, segmentId);
-      this.operation = operation;
-      this.key = key;
-      this.valueOrFunction = valueOrFunction;
-      this.metadata = metadata;
-   }
-
-   public SingleKeyBackupWriteCommand(ByteString cacheName, WriteCommand command, long sequence, int segmentId,
-                                      Operation operation, Object key, Object valueOrFunction, Metadata metadata) {
-      super(cacheName, command, sequence, segmentId);
-      this.operation = operation;
-      this.key = MarshallableObject.create(key);
-      this.valueOrFunction = MarshallableObject.create(valueOrFunction);
-      this.metadata = MarshallableObject.create(metadata);
-   }
+   private Operation operation;
+   private Object key;
+   private Object valueOrFunction;
+   private Metadata metadata;
 
    public static SingleKeyBackupWriteCommand create(ByteString cacheName, PutKeyValueCommand command, long sequence, int segmentId) {
       return new SingleKeyBackupWriteCommand(cacheName, command, sequence, segmentId, WRITE,
@@ -89,6 +62,26 @@ public class SingleKeyBackupWriteCommand extends BackupWriteCommand {
             command.getNewValue(), command.getMetadata());
    }
 
+   public SingleKeyBackupWriteCommand(ByteString cacheName, WriteCommand command, long sequence, int segmentId,
+                                      Operation operation, Object key, Object valueOrFunction, Metadata metadata) {
+      super(cacheName, command, sequence, segmentId);
+      this.operation = operation;
+      this.key = key;
+      this.valueOrFunction = valueOrFunction;
+      this.metadata = metadata;
+   }
+
+   @ProtoFactory
+   SingleKeyBackupWriteCommand(ByteString cacheName, CommandInvocationId commandInvocationId, int topologyId,
+                               long flags, long sequence, int segmentId, Operation operation, MarshallableObject<?> key,
+                               MarshallableObject<?> valueOrFunction, MarshallableObject<Metadata> metadata) {
+      super(cacheName, commandInvocationId, topologyId, flags, sequence, segmentId);
+      this.operation = operation;
+      this.key = MarshallableObject.unwrap(key);
+      this.valueOrFunction = MarshallableObject.unwrap(valueOrFunction);
+      this.metadata = MarshallableObject.unwrap(metadata);
+   }
+
    public static SingleKeyBackupWriteCommand create(ByteString cacheName, ComputeIfAbsentCommand command, long sequence, int segmentId) {
       return new SingleKeyBackupWriteCommand(cacheName, command, sequence, segmentId, COMPUTE_IF_ABSENT,
             command.getKey(), command.getMappingFunction(), command.getMetadata());
@@ -98,6 +91,25 @@ public class SingleKeyBackupWriteCommand extends BackupWriteCommand {
       Operation operation = command.isComputeIfPresent() ? COMPUTE_IF_PRESENT : COMPUTE;
       return new SingleKeyBackupWriteCommand(cacheName, command, sequence, segmentId, operation, command.getKey(),
             command.getRemappingBiFunction(), command.getMetadata());
+   }
+
+   @ProtoField(number = 7)
+   Operation getOperation() {
+      return operation;
+   }
+
+   @ProtoField(number = 8)
+   MarshallableObject<?> getKey() {
+      return MarshallableObject.create(key);
+   }
+   @ProtoField(number = 9)
+   MarshallableObject<?> getValueOrFunction() {
+      return MarshallableObject.create(valueOrFunction);
+   }
+
+   @ProtoField(number = 10)
+   MarshallableObject<Metadata> getMetadata() {
+      return MarshallableObject.create(metadata);
    }
 
    @Override
@@ -112,10 +124,6 @@ public class SingleKeyBackupWriteCommand extends BackupWriteCommand {
 
    @Override
    WriteCommand createWriteCommand() {
-      // TODO can we remove unwrapping once commands have been updated to have a ProtoFactory
-      Object key = MarshallableObject.unwrap(this.key);
-      Object valueOrFunction = MarshallableObject.unwrap(this.valueOrFunction);
-      Metadata metadata = MarshallableObject.unwrap(this.metadata);
       switch (operation) {
          case REMOVE:
             return new RemoveCommand(key, null, segmentId, getFlags(), getCommandInvocationId());

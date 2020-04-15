@@ -9,7 +9,6 @@ import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.context.InvocationContext;
 import org.infinispan.context.InvocationContextFactory;
 import org.infinispan.factories.ComponentRegistry;
-import org.infinispan.marshall.protostream.impl.WrappedMessages;
 import org.infinispan.protostream.WrappedMessage;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
@@ -31,17 +30,22 @@ public class SingleRpcCommand extends BaseRpcCommand {
    private static final Log log = LogFactory.getLog(SingleRpcCommand.class);
    private static final boolean trace = log.isTraceEnabled();
 
-   @ProtoField(number = 2)
-   final WrappedMessage command;
+   private VisitableCommand command;
 
    public SingleRpcCommand(ByteString cacheName, VisitableCommand command) {
-      this(cacheName, new WrappedMessage(command));
+      super(cacheName);
+      this.command = command;
    }
 
    @ProtoFactory
-   SingleRpcCommand(ByteString cacheName, WrappedMessage command) {
-      super(cacheName);
-      this.command = command;
+   SingleRpcCommand(ByteString cacheName, WrappedMessage wrappedCommand) {
+      this(cacheName, (VisitableCommand) wrappedCommand.getValue());
+   }
+
+
+   @ProtoField(number = 2, name = "command")
+   WrappedMessage getWrappedCommand() {
+      return new WrappedMessage(command);
    }
 
    @Override
@@ -51,7 +55,6 @@ public class SingleRpcCommand extends BaseRpcCommand {
 
    @Override
    public CompletionStage<?> invokeAsync(ComponentRegistry componentRegistry) throws Throwable {
-      VisitableCommand command = WrappedMessages.unwrap(this.command);
       command.init(componentRegistry);
       InvocationContextFactory icf = componentRegistry.getInvocationContextFactory().running();
       InvocationContext ctx = icf.createRemoteInvocationContextForCommand(command, getOrigin());
@@ -91,21 +94,21 @@ public class SingleRpcCommand extends BaseRpcCommand {
    }
 
    public ReplicableCommand getCommand() {
-      return WrappedMessages.unwrap(command);
+      return command;
    }
 
    @Override
    public boolean isReturnValueExpected() {
-      return getCommand().isReturnValueExpected();
+      return command.isReturnValueExpected();
    }
 
    @Override
    public boolean isSuccessful() {
-      return getCommand().isSuccessful();
+      return command.isSuccessful();
    }
 
    @Override
    public boolean canBlock() {
-      return getCommand().canBlock();
+      return command.canBlock();
    }
 }

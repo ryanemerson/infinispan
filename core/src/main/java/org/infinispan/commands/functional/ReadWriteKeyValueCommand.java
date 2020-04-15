@@ -1,5 +1,7 @@
 package org.infinispan.commands.functional;
 
+import static org.infinispan.commons.util.Util.toStr;
+
 import java.util.function.BiFunction;
 
 import org.infinispan.commands.CommandInvocationId;
@@ -23,38 +25,50 @@ public final class ReadWriteKeyValueCommand<K, V, T, R> extends AbstractWriteKey
 
    public static final byte COMMAND_ID = 51;
 
-   // TODO should this be MarshallableObject?
-   @ProtoField(number = 10)
-   final MarshallableObject<?> argument;
-
-   @ProtoField(number = 11)
-   final MarshallableObject<BiFunction<T, ReadWriteEntryView<K, V>, R>> f;
-
-   @ProtoField(number = 12)
-   MarshallableObject<?> prevValue;
-
-   @ProtoField(number = 13)
-   MarshallableObject<Metadata> prevMetadata;
-
-   @ProtoFactory
-   ReadWriteKeyValueCommand(MarshallableObject<?> wrappedKey, long flagsWithoutRemote, int topologyId, int segment,
-                                   CommandInvocationId commandInvocationId, Params params, ValueMatcher valueMatcher,
-                                   DataConversion keyDataConversion, DataConversion valueDataConversion,
-                                   MarshallableObject<?> argument, MarshallableObject<BiFunction<T,
-         ReadWriteEntryView<K, V>, R>> f, MarshallableObject<?> prevValue, MarshallableObject<Metadata> prevMetadata) {
-      super(wrappedKey, flagsWithoutRemote, topologyId, segment, commandInvocationId, params, valueMatcher, keyDataConversion, valueDataConversion);
-      this.argument = argument;
-      this.f = f;
-      this.prevValue = prevValue;
-      this.prevMetadata = prevMetadata;
-   }
+   private Object argument;
+   private BiFunction<T, ReadWriteEntryView<K, V>, R> f;
+   private Object prevValue;
+   private Metadata prevMetadata;
 
    public ReadWriteKeyValueCommand(Object key, Object argument, BiFunction<T, ReadWriteEntryView<K, V>, R> f,
                                    int segment, CommandInvocationId id, ValueMatcher valueMatcher, Params params,
                                    DataConversion keyDataConversion, DataConversion valueDataConversion) {
       super(key, valueMatcher, segment, id, params, keyDataConversion, valueDataConversion);
-      this.argument = MarshallableObject.create(argument);
-      this.f = MarshallableObject.create(f);
+      this.argument = argument;
+      this.f = f;
+   }
+
+   @ProtoFactory
+   ReadWriteKeyValueCommand(MarshallableObject<?> wrappedKey, long flagsWithoutRemote, int topologyId, int segment,
+                            CommandInvocationId commandInvocationId, Params params, ValueMatcher valueMatcher,
+                            DataConversion keyDataConversion, DataConversion valueDataConversion,
+                            MarshallableObject<?> wrappedArgument, MarshallableObject<BiFunction<T,
+         ReadWriteEntryView<K, V>, R>> wrappedFunction, MarshallableObject<?> wrappedPrevValue, MarshallableObject<Metadata> wrappedPrevMetadata) {
+      super(wrappedKey, flagsWithoutRemote, topologyId, segment, commandInvocationId, params, valueMatcher, keyDataConversion, valueDataConversion);
+      this.argument = MarshallableObject.unwrap(wrappedArgument);
+      this.f = MarshallableObject.unwrap(wrappedFunction);
+      this.prevValue = MarshallableObject.unwrap(wrappedPrevValue);
+      this.prevMetadata = MarshallableObject.unwrap(wrappedPrevMetadata);
+   }
+
+   @ProtoField(number = 10, name = "argument")
+   MarshallableObject<?> getWrappedArgument() {
+      return MarshallableObject.create(argument);
+   }
+
+   @ProtoField(number = 11, name = "function")
+   MarshallableObject<BiFunction<T, ReadWriteEntryView<K, V>, R>> getWrappedFunction() {
+      return MarshallableObject.create(f);
+   }
+
+   @ProtoField(number = 12)
+   MarshallableObject<?> getWrappedPrevValue() {
+      return MarshallableObject.create(prevValue);
+   }
+
+   @ProtoField(number = 13)
+   MarshallableObject<Metadata> getWrappedPrevMetadata() {
+      return MarshallableObject.create(prevMetadata);
    }
 
    @Override
@@ -87,11 +101,11 @@ public final class ReadWriteKeyValueCommand<K, V, T, R> extends AbstractWriteKey
    @Override
    public String toString() {
       return "ReadWriteKeyValueCommand{" +
-            "key=" + key +
-            ", argument=" + argument +
+            "key=" + toStr(key) +
+            ", argument=" + toStr(argument) +
             ", f=" + getBiFunction().getClass().getName() +
-            ", prevValue=" + prevValue +
-            ", prevMetadata=" + prevMetadata +
+            ", prevValue=" + toStr(prevValue) +
+            ", prevMetadata=" + toStr(prevMetadata) +
             ", flags=" + printFlags() +
             ", commandInvocationId=" + commandInvocationId +
             ", topologyId=" + getTopologyId() +
@@ -104,27 +118,27 @@ public final class ReadWriteKeyValueCommand<K, V, T, R> extends AbstractWriteKey
 
    @Override
    public Mutation<K, V, R> toMutation(Object key) {
-      return new Mutations.ReadWriteWithValue<>(keyDataConversion, valueDataConversion, getArgument(), getBiFunction());
+      return new Mutations.ReadWriteWithValue<>(keyDataConversion, valueDataConversion, argument, f);
    }
 
    public void setPrevValueAndMetadata(Object prevValue, Metadata prevMetadata) {
-      this.prevValue = MarshallableObject.create(prevValue);
-      this.prevMetadata = MarshallableObject.create(prevMetadata);
+      this.prevMetadata = prevMetadata;
+      this.prevValue = prevValue;
    }
 
    public Object getArgument() {
-      return MarshallableObject.unwrap(argument);
+      return argument;
    }
 
    public BiFunction<T, ReadWriteEntryView<K, V>, R> getBiFunction() {
-      return MarshallableObject.unwrap(f);
+      return f;
    }
 
    public Object getPrevValue() {
-      return MarshallableObject.unwrap(prevValue);
+      return prevValue;
    }
 
    public Metadata getPrevMetadata() {
-      return MarshallableObject.unwrap(prevMetadata);
+      return prevMetadata;
    }
 }

@@ -13,20 +13,11 @@ import org.infinispan.protostream.annotations.ProtoField;
 
 public abstract class AbstractWriteKeyCommand<K, V> extends AbstractDataWriteCommand implements FunctionalCommand<K, V> {
 
-   transient boolean successful = true;
-
-   @ProtoField(number = 6)
-   final Params params;
-
-   @ProtoField(number = 7)
+   Params params;
    ValueMatcher valueMatcher;
-
-   @ProtoField(number = 8)
-   final DataConversion keyDataConversion;
-
-   @ProtoField(number = 9)
-   final DataConversion valueDataConversion;
-
+   boolean successful = true;
+   DataConversion keyDataConversion;
+   DataConversion valueDataConversion;
 
    protected AbstractWriteKeyCommand(MarshallableObject<?> wrappedKey, long flags, int topologyId, int segment,
                                      CommandInvocationId commandInvocationId, Params params, ValueMatcher valueMatcher,
@@ -56,8 +47,27 @@ public abstract class AbstractWriteKeyCommand<K, V> extends AbstractDataWriteCom
    }
 
    @Override
+   @ProtoField(number = 6)
+   public Params getParams() {
+      return params;
+   }
+
+   @Override
+   @ProtoField(number = 7)
    public ValueMatcher getValueMatcher() {
       return valueMatcher;
+   }
+
+   @Override
+   @ProtoField(number = 8)
+   public DataConversion getKeyDataConversion() {
+      return keyDataConversion;
+   }
+
+   @Override
+   @ProtoField(number = 9)
+   public DataConversion getValueDataConversion() {
+      return valueDataConversion;
    }
 
    @Override
@@ -68,11 +78,6 @@ public abstract class AbstractWriteKeyCommand<K, V> extends AbstractDataWriteCom
    @Override
    public boolean isSuccessful() {
       return successful;
-   }
-
-   @Override
-   public Params getParams() {
-      return params;
    }
 
    @Override
@@ -90,15 +95,5 @@ public abstract class AbstractWriteKeyCommand<K, V> extends AbstractDataWriteCom
             ", valueMatcher=" + valueMatcher +
             ", successful=" + successful +
             "}";
-   }
-
-   @Override
-   public DataConversion getKeyDataConversion() {
-      return keyDataConversion;
-   }
-
-   @Override
-   public DataConversion getValueDataConversion() {
-      return valueDataConversion;
    }
 }

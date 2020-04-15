@@ -1,4 +1,5 @@
 package org.infinispan.commands.functional;
+import static org.infinispan.commons.util.Util.toStr;
 
 import java.util.function.Function;
 
@@ -24,25 +25,29 @@ public final class ReadWriteKeyCommand<K, V, R> extends AbstractWriteKeyCommand<
 
    public static final byte COMMAND_ID = 50;
 
-   @ProtoField(number = 10)
-   final MarshallableObject<Function<ReadWriteEntryView<K, V>, R>> f;
-
-   @ProtoFactory
-   ReadWriteKeyCommand(MarshallableObject<?> wrappedKey, long flagsWithoutRemote, int topologyId, int segment,
-                       CommandInvocationId commandInvocationId, Params params, ValueMatcher valueMatcher,
-                       DataConversion keyDataConversion, DataConversion valueDataConversion,
-                       MarshallableObject<Function<ReadWriteEntryView<K, V>, R>> f) {
-      super(wrappedKey, flagsWithoutRemote, topologyId, segment, commandInvocationId, params, valueMatcher,
-            keyDataConversion, valueDataConversion);
-      this.f = f;
-   }
+   private Function<ReadWriteEntryView<K, V>, R> f;
 
    public ReadWriteKeyCommand(Object key, Function<ReadWriteEntryView<K, V>, R> f, int segment,
                               CommandInvocationId id, ValueMatcher valueMatcher, Params params,
                               DataConversion keyDataConversion,
                               DataConversion valueDataConversion) {
       super(key, valueMatcher, segment, id, params, keyDataConversion, valueDataConversion);
-      this.f = MarshallableObject.create(f);
+      this.f = f;
+   }
+
+   @ProtoFactory
+   ReadWriteKeyCommand(MarshallableObject<?> wrappedKey, long flagsWithoutRemote, int topologyId, int segment,
+                       CommandInvocationId commandInvocationId, Params params, ValueMatcher valueMatcher,
+                       DataConversion keyDataConversion, DataConversion valueDataConversion,
+                       MarshallableObject<Function<ReadWriteEntryView<K, V>, R>> wrappedFunction) {
+      super(wrappedKey, flagsWithoutRemote, topologyId, segment, commandInvocationId, params, valueMatcher,
+            keyDataConversion, valueDataConversion);
+      this.f = MarshallableObject.unwrap(wrappedFunction);
+   }
+
+   @ProtoField(number = 10, name = "function")
+   MarshallableObject<Function<ReadWriteEntryView<K, V>, R>> getWrappedFunction() {
+      return MarshallableObject.create(f);
    }
 
    @Override
@@ -78,12 +83,12 @@ public final class ReadWriteKeyCommand<K, V, R> extends AbstractWriteKeyCommand<
    }
 
    public Function<ReadWriteEntryView<K, V>, R> getFunction() {
-      return MarshallableObject.unwrap(f);
+      return f;
    }
 
    @Override
    public String toString() {
-      return "ReadWriteKeyCommand{" + "key=" + key +
+      return "ReadWriteKeyCommand{" + "key=" + toStr(key) +
             ", f=" + f.getClass().getName() +
             ", flags=" + printFlags() +
             ", commandInvocationId=" + commandInvocationId +

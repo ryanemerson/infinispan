@@ -1,5 +1,7 @@
 package org.infinispan.commands.write;
 
+import static org.infinispan.commons.util.Util.toStr;
+
 import java.util.Objects;
 
 import org.infinispan.commands.CommandInvocationId;
@@ -22,30 +24,11 @@ import org.infinispan.protostream.annotations.ProtoTypeId;
 public class ReplaceCommand extends AbstractDataWriteCommand implements MetadataAwareCommand {
    public static final byte COMMAND_ID = 11;
 
-   @ProtoField(number = 6)
-   MarshallableObject<?> oldValue;
-
-   @ProtoField(number = 7)
-   MarshallableObject<?> newValue;
-
-   @ProtoField(number = 8)
-   MarshallableObject<Metadata> metadata;
-
-   @ProtoField(number = 9)
-   ValueMatcher valueMatcher;
-
+   private Object oldValue;
+   private Object newValue;
+   private Metadata metadata;
+   private ValueMatcher valueMatcher;
    private transient boolean successful = true;
-
-   @ProtoFactory
-   ReplaceCommand(MarshallableObject<?> wrappedKey, long flagsWithoutRemote, int topologyId, int segment,
-                  CommandInvocationId commandInvocationId, MarshallableObject<?> oldValue,
-                  MarshallableObject<?> newValue, MarshallableObject<Metadata> metadata, ValueMatcher valueMatcher) {
-      super(wrappedKey, flagsWithoutRemote, topologyId, segment, commandInvocationId);
-      this.oldValue = oldValue;
-      this.newValue = newValue;
-      this.metadata = metadata;
-      this.valueMatcher = valueMatcher;
-   }
 
    public ReplaceCommand(Object key, Object oldValue, Object newValue, Metadata metadata, int segment, long flagsBitSet,
                          CommandInvocationId commandInvocationId) {
@@ -54,6 +37,38 @@ public class ReplaceCommand extends AbstractDataWriteCommand implements Metadata
       setNewValue(newValue);
       setMetadata(metadata);
       this.valueMatcher = oldValue != null ? ValueMatcher.MATCH_EXPECTED : ValueMatcher.MATCH_NON_NULL;
+   }
+
+   @ProtoFactory
+   ReplaceCommand(MarshallableObject<?> wrappedKey, long flagsWithoutRemote, int topologyId, int segment,
+                  CommandInvocationId commandInvocationId, MarshallableObject<?> wrappedOldValue,
+                  MarshallableObject<?> wrappedNewValue, MarshallableObject<Metadata> wrappedMetadata, ValueMatcher valueMatcher) {
+      super(wrappedKey, flagsWithoutRemote, topologyId, segment, commandInvocationId);
+      this.oldValue = MarshallableObject.unwrap(wrappedOldValue);
+      this.newValue = MarshallableObject.unwrap(wrappedNewValue);
+      this.metadata = MarshallableObject.unwrap(wrappedMetadata);
+      this.valueMatcher = valueMatcher;
+   }
+
+   @ProtoField(number = 6, name = "oldValue")
+   MarshallableObject<?> getWrappedOldValue() {
+      return MarshallableObject.create(oldValue);
+   }
+
+   @ProtoField(number = 7, name = "newValue")
+   MarshallableObject<?> getWrappedNewValue() {
+      return MarshallableObject.create(newValue);
+   }
+
+   @ProtoField(number = 8, name = "metadata")
+   MarshallableObject<Metadata> getWrappedMetadata() {
+      return MarshallableObject.create(metadata);
+   }
+
+   @Override
+   @ProtoField(number = 9)
+   public ValueMatcher getValueMatcher() {
+      return valueMatcher;
    }
 
    @Override
@@ -99,33 +114,28 @@ public class ReplaceCommand extends AbstractDataWriteCommand implements Metadata
 
    @Override
    public Metadata getMetadata() {
-      return MarshallableObject.unwrap(metadata);
+      return metadata;
    }
 
    @Override
    public void setMetadata(Metadata metadata) {
-      this.metadata = MarshallableObject.create(metadata);
+      this.metadata = metadata;
    }
 
    public Object getOldValue() {
-      return MarshallableObject.unwrap(oldValue);
+      return oldValue;
    }
 
    public void setOldValue(Object oldValue) {
-      this.oldValue = MarshallableObject.create(oldValue);
+      this.oldValue = oldValue;
    }
 
    public Object getNewValue() {
-      return MarshallableObject.unwrap(newValue);
+      return newValue;
    }
 
    public void setNewValue(Object newValue) {
-      this.newValue = MarshallableObject.create(newValue);
-   }
-
-   @Override
-   public ValueMatcher getValueMatcher() {
-      return valueMatcher;
+      this.newValue = newValue;
    }
 
    @Override
@@ -146,9 +156,9 @@ public class ReplaceCommand extends AbstractDataWriteCommand implements Metadata
    @Override
    public String toString() {
       return "ReplaceCommand{" +
-            "key=" + key +
-            ", oldValue=" + oldValue +
-            ", newValue=" + newValue +
+            "key=" + toStr(key) +
+            ", oldValue=" + toStr(oldValue) +
+            ", newValue=" + toStr(newValue) +
             ", metadata=" + metadata +
             ", flags=" + printFlags() +
             ", commandInvocationId=" + CommandInvocationId.show(commandInvocationId) +

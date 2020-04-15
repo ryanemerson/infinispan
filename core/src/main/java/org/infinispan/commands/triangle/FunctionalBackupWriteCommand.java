@@ -19,23 +19,27 @@ import org.infinispan.util.ByteString;
 abstract class FunctionalBackupWriteCommand extends BackupWriteCommand {
 
    @ProtoField(number = 7)
-   final MarshallableObject<?> function;
-
-   @ProtoField(number = 8)
    final Params params;
 
-   @ProtoField(number = 9)
+   @ProtoField(number = 8)
    final DataConversion keyDataConversion;
 
-   @ProtoField(number = 10)
+   @ProtoField(number = 9)
    final DataConversion valueDataConversion;
+
+   final Object function;
+
+   @ProtoField(number = 10)
+   MarshallableObject<?> getFunction() {
+      return MarshallableObject.create(function);
+   }
 
    // Used by ProtoFactory implementations
    protected FunctionalBackupWriteCommand(ByteString cacheName, CommandInvocationId commandInvocationId, int topologyId,
                                           long flags, long sequence, int segmentId, MarshallableObject<?> function,
                                           Params params, DataConversion keyDataConversion, DataConversion valueDataConversion) {
       super(cacheName, commandInvocationId, topologyId, flags, sequence, segmentId);
-      this.function = function;
+      this.function = MarshallableObject.unwrap(function);
       this.params = params;
       this.keyDataConversion = keyDataConversion;
       this.valueDataConversion = valueDataConversion;
@@ -47,7 +51,7 @@ abstract class FunctionalBackupWriteCommand extends BackupWriteCommand {
       this.params = command.getParams();
       this.keyDataConversion = command.getKeyDataConversion();
       this.valueDataConversion = command.getValueDataConversion();
-      this.function = MarshallableObject.create(function);
+      this.function = function;
    }
 
    protected FunctionalBackupWriteCommand(ByteString cacheName, AbstractWriteManyCommand<?, ?> command, long sequence,
@@ -56,6 +60,6 @@ abstract class FunctionalBackupWriteCommand extends BackupWriteCommand {
       this.params = command.getParams();
       this.keyDataConversion = command.getKeyDataConversion();
       this.valueDataConversion = command.getValueDataConversion();
-      this.function = MarshallableObject.create(function);
+      this.function = function;
    }
 }

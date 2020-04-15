@@ -21,21 +21,26 @@ public class GetKeysInGroupCommand extends AbstractTopologyAffectedCommand imple
 
    public static final byte COMMAND_ID = 43;
 
-   @ProtoField(number = 3)
-   final MarshallableObject<?> groupName;
+   private Object groupName;
    /*
    local state to avoid checking everywhere if the node in which this command is executed is the group owner.
     */
    private transient boolean isGroupOwner;
 
-   @ProtoFactory
-   GetKeysInGroupCommand(long flagsWithoutRemote, int topologyId, MarshallableObject<?> groupName) {
-      super(flagsWithoutRemote, topologyId);
+   public GetKeysInGroupCommand(long flagsBitSet, Object groupName) {
+      super(flagsBitSet, -1);
       this.groupName = groupName;
    }
 
-   public GetKeysInGroupCommand(long flagsBitSet, Object groupName) {
-      this(flagsBitSet, -1, MarshallableObject.create(groupName));
+   @ProtoFactory
+   GetKeysInGroupCommand(long flagsWithoutRemote, int topologyId, MarshallableObject<?> wrappedGroupName) {
+      super(flagsWithoutRemote, topologyId);
+      this.groupName = MarshallableObject.unwrap(wrappedGroupName);
+   }
+
+   @ProtoField(number = 3, name = "groupName")
+   MarshallableObject<?> getWrappedGroupName() {
+      return MarshallableObject.create(groupName);
    }
 
    @Override
@@ -59,7 +64,7 @@ public class GetKeysInGroupCommand extends AbstractTopologyAffectedCommand imple
    }
 
    public Object getGroupName() {
-      return MarshallableObject.unwrap(groupName);
+      return groupName;
    }
 
    @Override

@@ -1,6 +1,5 @@
 package org.infinispan.commands.remote;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -13,10 +12,12 @@ import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.commons.util.EnumUtil;
 import org.infinispan.container.entries.CacheEntry;
 import org.infinispan.container.entries.InternalCacheEntry;
+import org.infinispan.container.entries.InternalCacheValue;
 import org.infinispan.context.Flag;
 import org.infinispan.context.InvocationContext;
 import org.infinispan.context.impl.FlagBitSets;
 import org.infinispan.factories.ComponentRegistry;
+import org.infinispan.marshall.protostream.impl.MarshallableCollection;
 import org.infinispan.marshall.protostream.impl.MarshallableObject;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
@@ -39,32 +40,42 @@ public class ClusteredGetAllCommand<K, V> extends BaseRpcCommand implements Topo
    private static final Log log = LogFactory.getLog(ClusteredGetAllCommand.class);
    private static final boolean trace = log.isTraceEnabled();
 
-   @ProtoField(number = 2, defaultValue = "-1")
-   int topologyId;
-
-   @ProtoField(number = 3, collectionImplementation = ArrayList.class)
-   final List<MarshallableObject<?>> keys;
-
-   @ProtoField(number = 4, name = "globalTransaction")
-   final GlobalTransaction gtx;
-
+   private List<?> keys;
+   private GlobalTransaction gtx;
+   private int topologyId;
    final long flags;
-
-   @ProtoFactory
-   ClusteredGetAllCommand(ByteString cacheName, int topologyId, List<MarshallableObject<?>> keys,
-                          GlobalTransaction gtx, long flagsWithoutRemote) {
-      super(cacheName);
-      this.topologyId = topologyId;
-      this.keys = keys;
-      this.gtx = gtx;
-      this.flags = flagsWithoutRemote;
-   }
 
    public ClusteredGetAllCommand(ByteString cacheName, List<?> keys, long flags, GlobalTransaction gtx) {
       super(cacheName);
       this.keys = keys.stream().map(MarshallableObject::new).collect(Collectors.toList());
       this.gtx = gtx;
       this.flags = flags;
+   }
+
+   @ProtoFactory
+   ClusteredGetAllCommand(ByteString cacheName, int topologyId, MarshallableCollection<?> wrappedKeys,
+                          GlobalTransaction globalTransaction, long flagsWithoutRemote) {
+      super(cacheName);
+      this.topologyId = topologyId;
+      this.keys = MarshallableCollection.unwrapAsList(wrappedKeys);
+      this.gtx = globalTransaction;
+      this.flags = flagsWithoutRemote;
+   }
+
+   @Override
+   @ProtoField(number = 2, defaultValue = "-1")
+   public int getTopologyId() {
+      return topologyId;
+   }
+
+   @ProtoField(number = 3, name = "keys")
+   MarshallableCollection<?> getWrappedKeys() {
+      return MarshallableCollection.create(keys);
+   }
+
+   @ProtoField(number = 4)
+   GlobalTransaction getGlobalTransaction() {
+      return gtx;
    }
 
    @ProtoField(number = 5, name = "flags", defaultValue = "0")
@@ -98,19 +109,21 @@ public class ClusteredGetAllCommand<K, V> extends BaseRpcCommand implements Topo
          }
 
          Map<K, CacheEntry<K, V>> map = (Map<K, CacheEntry<K, V>>) rv;
-         return keys.stream()
-               .map(MarshallableObject::unwrap)
-               .map(map::get)
-               .map(entry -> {
-                  if (entry == null) {
-                     return null;
-                  } else if (entry instanceof InternalCacheEntry) {
-                     return ((InternalCacheEntry<K, V>) entry).toInternalCacheValue();
-                  } else {
-                     return cr.getInternalEntryFactory().running().createValue(entry);
-                  }
-               })
-               .collect(Collectors.toList());
+         InternalCacheValue<V>[] values = new InternalCacheValue[keys.size()];
+         int i = 0;
+         for (Object key : keys) {
+            CacheEntry<K, V> entry = map.get(key);
+            InternalCacheValue<V> value;
+            if (entry == null) {
+               value = null;
+            } else if (entry instanceof InternalCacheEntry) {
+               value = ((InternalCacheEntry<K, V>) entry).toInternalCacheValue();
+            } else {
+               value = cr.getInternalEntryFactory().running().createValue(entry);
+            }
+            values[i++] = value;
+         }
+         return values;
       });
    }
 
@@ -126,11 +139,6 @@ public class ClusteredGetAllCommand<K, V> extends BaseRpcCommand implements Topo
    @Override
    public boolean isReturnValueExpected() {
       return true;
-   }
-
-   @Override
-   public int getTopologyId() {
-      return topologyId;
    }
 
    @Override

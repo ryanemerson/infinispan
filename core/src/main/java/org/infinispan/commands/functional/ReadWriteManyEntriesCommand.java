@@ -26,21 +26,8 @@ public final class ReadWriteManyEntriesCommand<K, V, T, R> extends AbstractWrite
 
    public static final byte COMMAND_ID = 53;
 
-   @ProtoField(number = 8)
-   MarshallableMap<?, ?> arguments;
-
-   @ProtoField(number = 9)
-   MarshallableObject<BiFunction<T, ReadWriteEntryView<K, V>, R>> f;
-
-   @ProtoFactory
-   ReadWriteManyEntriesCommand(CommandInvocationId commandInvocationId, boolean forwarded, int topologyId,
-                               Params params, long flags, DataConversion keyDataConversion,
-                               DataConversion valueDataConversion, MarshallableMap<?, ?> arguments,
-                               MarshallableObject<BiFunction<T, ReadWriteEntryView<K, V>, R>> f) {
-      super(commandInvocationId, forwarded, topologyId, params, flags, keyDataConversion, valueDataConversion);
-      this.arguments = arguments;
-      this.f = f;
-   }
+   private Map<?, ?> arguments;
+   private BiFunction<T, ReadWriteEntryView<K, V>, R> f;
 
    public ReadWriteManyEntriesCommand(Map<?, ?> arguments,
                                       BiFunction<T, ReadWriteEntryView<K, V>, R> f,
@@ -49,14 +36,34 @@ public final class ReadWriteManyEntriesCommand<K, V, T, R> extends AbstractWrite
                                       DataConversion keyDataConversion,
                                       DataConversion valueDataConversion) {
       super(commandInvocationId, params, keyDataConversion, valueDataConversion);
-      this.setArguments(arguments);
-      this.f = MarshallableObject.create(f);
+      this.arguments = arguments;
+      this.f = f;
    }
 
    public ReadWriteManyEntriesCommand(ReadWriteManyEntriesCommand command) {
       super(command);
       this.arguments = command.arguments;
       this.f = command.f;
+   }
+
+   @ProtoFactory
+   ReadWriteManyEntriesCommand(CommandInvocationId commandInvocationId, boolean forwarded, int topologyId,
+                               Params params, long flags, DataConversion keyDataConversion,
+                               DataConversion valueDataConversion, MarshallableMap<?, ?> wrappedArguments,
+                               MarshallableObject<BiFunction<T, ReadWriteEntryView<K, V>, R>> wrappedBiFunction) {
+      super(commandInvocationId, forwarded, topologyId, params, flags, keyDataConversion, valueDataConversion);
+      this.arguments = MarshallableMap.unwrap(wrappedArguments);
+      this.f = MarshallableObject.unwrap(wrappedBiFunction);
+   }
+
+   @ProtoField(number = 8, name = "arguments")
+   MarshallableMap<?, ?> getWrappedArguments() {
+      return MarshallableMap.create(arguments);
+   }
+
+   @ProtoField(number = 9, name = "bifunction")
+   MarshallableObject<BiFunction<T, ReadWriteEntryView<K, V>, R>> getWrappedBiFunction() {
+      return MarshallableObject.create(f);
    }
 
    @Override
@@ -67,15 +74,15 @@ public final class ReadWriteManyEntriesCommand<K, V, T, R> extends AbstractWrite
    }
 
    public BiFunction<T, ReadWriteEntryView<K, V>, R> getBiFunction() {
-      return MarshallableObject.unwrap(f);
+      return f;
    }
 
    public Map<?, ?> getArguments() {
-      return MarshallableMap.unwrap(arguments);
+      return arguments;
    }
 
    public void setArguments(Map<?, ?> arguments) {
-      this.arguments = MarshallableMap.create(arguments);
+      this.arguments = arguments;
    }
 
    public final ReadWriteManyEntriesCommand<K, V, T, R> withArguments(Map<?, ?> entries) {
@@ -95,7 +102,7 @@ public final class ReadWriteManyEntriesCommand<K, V, T, R> extends AbstractWrite
 
    @Override
    public Collection<?> getAffectedKeys() {
-      return getArguments().keySet();
+      return arguments.keySet();
    }
 
    public LoadType loadType() {
@@ -114,11 +121,11 @@ public final class ReadWriteManyEntriesCommand<K, V, T, R> extends AbstractWrite
 
    @Override
    public Collection<?> getKeysToLock() {
-      return getAffectedKeys();
+      return arguments.keySet();
    }
 
    @Override
    public Mutation<K, V, ?> toMutation(Object key) {
-      return new Mutations.ReadWriteWithValue(keyDataConversion, valueDataConversion, getArguments().get(key), getBiFunction());
+      return new Mutations.ReadWriteWithValue(keyDataConversion, valueDataConversion, arguments.get(key), f);
    }
 }

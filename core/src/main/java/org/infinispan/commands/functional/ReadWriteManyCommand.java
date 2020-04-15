@@ -25,33 +25,41 @@ public final class ReadWriteManyCommand<K, V, R> extends AbstractWriteManyComman
 
    public static final byte COMMAND_ID = 52;
 
-   @ProtoField(number = 8)
-   MarshallableCollection<?> keys;
-
-   @ProtoField(number = 9)
-   final MarshallableObject<Function<ReadWriteEntryView<K, V>, R>> f;
-
-   @ProtoFactory
-   ReadWriteManyCommand(CommandInvocationId commandInvocationId, boolean forwarded, int topologyId, Params params,
-                        long flags, DataConversion keyDataConversion, DataConversion valueDataConversion,
-                        MarshallableCollection<?> keys, MarshallableObject<Function<ReadWriteEntryView<K, V>, R>> f) {
-      super(commandInvocationId, forwarded, topologyId, params, flags, keyDataConversion, valueDataConversion);
-      this.keys = keys;
-      this.f = f;
-   }
+   private Collection<?> keys;
+   private Function<ReadWriteEntryView<K, V>, R> f;
+   boolean isForwarded = false;
 
    public ReadWriteManyCommand(Collection<?> keys, Function<ReadWriteEntryView<K, V>, R> f, Params params,
                                CommandInvocationId commandInvocationId, DataConversion keyDataConversion,
                                DataConversion valueDataConversion) {
       super(commandInvocationId, params, keyDataConversion, valueDataConversion);
-      this.setKeys(keys);
-      this.f = MarshallableObject.create(f);
+      this.keys = keys;
+      this.f = f;
    }
 
    public ReadWriteManyCommand(ReadWriteManyCommand command) {
       super(command);
       this.keys = command.keys;
       this.f = command.f;
+   }
+
+   @ProtoFactory
+   ReadWriteManyCommand(CommandInvocationId commandInvocationId, boolean forwarded, int topologyId, Params params,
+                        long flags, DataConversion keyDataConversion, DataConversion valueDataConversion,
+                        MarshallableCollection<?> keys, MarshallableObject<Function<ReadWriteEntryView<K, V>, R>> wrappedFunction) {
+      super(commandInvocationId, forwarded, topologyId, params, flags, keyDataConversion, valueDataConversion);
+      this.keys = MarshallableCollection.unwrap(keys);
+      this.f = MarshallableObject.unwrap(wrappedFunction);
+   }
+
+   @ProtoField(number = 8)
+   MarshallableCollection<?> getKeys() {
+      return MarshallableCollection.create(keys);
+   }
+
+   @ProtoField(number = 9, name = "function")
+   MarshallableObject<Function<ReadWriteEntryView<K, V>, R>> getWrappedFunction() {
+      return MarshallableObject.create(f);
    }
 
    @Override
@@ -62,11 +70,11 @@ public final class ReadWriteManyCommand<K, V, R> extends AbstractWriteManyComman
    }
 
    public Function<ReadWriteEntryView<K, V>, R> getFunction() {
-      return MarshallableObject.unwrap(f);
+      return f;
    }
 
    public void setKeys(Collection<?> keys) {
-      this.keys = MarshallableCollection.create(keys);
+      this.keys = keys;
    }
 
    public final ReadWriteManyCommand<K, V, R> withKeys(Collection<?> keys) {
@@ -90,7 +98,7 @@ public final class ReadWriteManyCommand<K, V, R> extends AbstractWriteManyComman
 
    @Override
    public Collection<?> getAffectedKeys() {
-      return MarshallableCollection.unwrap(keys);
+      return keys;
    }
 
    @Override
@@ -110,10 +118,10 @@ public final class ReadWriteManyCommand<K, V, R> extends AbstractWriteManyComman
 
    @Override
    public Collection<?> getKeysToLock() {
-      return getAffectedKeys();
+      return keys;
    }
 
    public Mutation toMutation(Object key) {
-      return new Mutations.ReadWrite<>(keyDataConversion, valueDataConversion, getFunction());
+      return new Mutations.ReadWrite<>(keyDataConversion, valueDataConversion, f);
    }
 }

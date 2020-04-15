@@ -23,33 +23,41 @@ public final class WriteOnlyManyCommand<K, V> extends AbstractWriteManyCommand<K
 
    public static final byte COMMAND_ID = 56;
 
-   @ProtoField(number = 8)
-   MarshallableCollection<?> keys;
+   private Collection<?> keys;
+   private Consumer<WriteEntryView<K, V>> f;
 
-   @ProtoField(number = 9)
-   final MarshallableObject<Consumer<WriteEntryView<K, V>>> f;
-
-   @ProtoFactory
-   WriteOnlyManyCommand(CommandInvocationId commandInvocationId, boolean forwarded, int topologyId, Params params,
-                        long flags, DataConversion keyDataConversion, DataConversion valueDataConversion,
-                        MarshallableCollection<?> keys, MarshallableObject<Consumer<WriteEntryView<K, V>>> f) {
-      super(commandInvocationId, forwarded, topologyId, params, flags, keyDataConversion, valueDataConversion);
-      this.keys = keys;
-      this.f = f;
-   }
 
    public WriteOnlyManyCommand(Collection<?> keys, Consumer<WriteEntryView<K, V>> f, Params params,
                                CommandInvocationId commandInvocationId, DataConversion keyDataConversion,
                                DataConversion valueDataConversion) {
       super(commandInvocationId, params, keyDataConversion, valueDataConversion);
-      this.setKeys(keys);
-      this.f = MarshallableObject.create(f);
+      this.keys = keys;
+      this.f = f;
    }
 
    public WriteOnlyManyCommand(WriteOnlyManyCommand<K, V> command) {
       super(command);
       this.keys = command.keys;
       this.f = command.f;
+   }
+
+   @ProtoFactory
+   WriteOnlyManyCommand(CommandInvocationId commandInvocationId, boolean forwarded, int topologyId, Params params,
+                        long flags, DataConversion keyDataConversion, DataConversion valueDataConversion,
+                        MarshallableCollection<?> keys, MarshallableObject<Consumer<WriteEntryView<K, V>>> wrappedConsumer) {
+      super(commandInvocationId, forwarded, topologyId, params, flags, keyDataConversion, valueDataConversion);
+      this.keys = MarshallableCollection.unwrap(keys);
+      this.f = MarshallableObject.unwrap(wrappedConsumer);
+   }
+
+   @ProtoField(number = 8)
+   MarshallableCollection<?> getKeys() {
+      return MarshallableCollection.create(keys);
+   }
+
+   @ProtoField(number = 9, name = "consumer")
+   MarshallableObject<Consumer<WriteEntryView<K, V>>> getWrappedConsumer() {
+      return MarshallableObject.create(f);
    }
 
    @Override
@@ -60,11 +68,11 @@ public final class WriteOnlyManyCommand<K, V> extends AbstractWriteManyCommand<K
    }
 
    public Consumer<WriteEntryView<K, V>> getConsumer() {
-      return MarshallableObject.unwrap(f);
+      return f;
    }
 
    public void setKeys(Collection<?> keys) {
-      this.keys = MarshallableCollection.create(keys);
+      this.keys = keys;
    }
 
    public final WriteOnlyManyCommand<K, V> withKeys(Collection<?> keys) {
@@ -84,7 +92,7 @@ public final class WriteOnlyManyCommand<K, V> extends AbstractWriteManyCommand<K
 
    @Override
    public Collection<?> getAffectedKeys() {
-      return MarshallableCollection.unwrap(keys);
+      return keys;
    }
 
    @Override
@@ -104,11 +112,11 @@ public final class WriteOnlyManyCommand<K, V> extends AbstractWriteManyCommand<K
 
    @Override
    public Collection<?> getKeysToLock() {
-      return getAffectedKeys();
+      return keys;
    }
 
    @Override
    public Mutation<K, V, ?> toMutation(Object key) {
-      return new Mutations.Write<>(keyDataConversion, valueDataConversion, getConsumer());
+      return new Mutations.Write<>(keyDataConversion, valueDataConversion, f);
    }
 }

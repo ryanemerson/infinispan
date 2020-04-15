@@ -1,5 +1,7 @@
 package org.infinispan.commands.write;
 
+import static org.infinispan.commons.util.Util.toStr;
+
 import java.util.Objects;
 import java.util.function.BiFunction;
 
@@ -20,35 +22,40 @@ public class ComputeCommand extends AbstractDataWriteCommand implements Metadata
 
    public static final int COMMAND_ID = 68;
 
+   private BiFunction<?, ?, ?> remappingBiFunction;
+   private Metadata metadata;
+   private boolean computeIfPresent;
    private transient boolean successful = true;
-
-   @ProtoField(number = 6)
-   final MarshallableObject<BiFunction<?, ?, ?>> remappingBiFunction;
-
-   @ProtoField(number = 7)
-   MarshallableObject<Metadata> metadata;
-
-   @ProtoField(number = 8, defaultValue = "false")
-   boolean computeIfPresent;
-
-   @ProtoFactory
-   ComputeCommand(MarshallableObject<?> wrappedKey, long flagsWithoutRemote, int topologyId, int segment,
-                  CommandInvocationId commandInvocationId, MarshallableObject<BiFunction<?, ?, ?>> remappingBiFunction,
-                  MarshallableObject<Metadata> metadata, boolean computeIfPresent) {
-      super(wrappedKey, flagsWithoutRemote, topologyId, segment, commandInvocationId);
-      this.remappingBiFunction = remappingBiFunction;
-      this.metadata = metadata;
-      this.computeIfPresent = computeIfPresent;
-   }
 
    public ComputeCommand(Object key, BiFunction<?, ?, ?> remappingBiFunction, boolean computeIfPresent, int segment,
                          long flagsBitSet, CommandInvocationId commandInvocationId, Metadata metadata) {
       super(key, segment, flagsBitSet, commandInvocationId);
-      this.remappingBiFunction = MarshallableObject.create(remappingBiFunction);
+      this.remappingBiFunction = remappingBiFunction;
       this.computeIfPresent = computeIfPresent;
       this.setMetadata(metadata);
    }
 
+   @ProtoFactory
+   ComputeCommand(MarshallableObject<?> wrappedKey, long flagsWithoutRemote, int topologyId, int segment,
+                  CommandInvocationId commandInvocationId, MarshallableObject<BiFunction<?, ?, ?>> wrappedRemappingBiFunction,
+                  MarshallableObject<Metadata> wrappedMetadata, boolean computeIfPresent) {
+      super(wrappedKey, flagsWithoutRemote, topologyId, segment, commandInvocationId);
+      this.remappingBiFunction = MarshallableObject.unwrap(wrappedRemappingBiFunction);
+      this.metadata = MarshallableObject.unwrap(wrappedMetadata);
+      this.computeIfPresent = computeIfPresent;
+   }
+
+   @ProtoField(number = 6, name = "remappingBiFunction")
+   MarshallableObject<BiFunction<?, ?, ?>> getWrappedRemappingBiFunction() {
+      return MarshallableObject.create(remappingBiFunction);
+   }
+
+   @ProtoField(number = 7, name = "metadata")
+   MarshallableObject<Metadata> getWrappedMetadata() {
+      return MarshallableObject.create(metadata);
+   }
+
+   @ProtoField(number = 8, defaultValue = "false")
    public boolean isComputeIfPresent() {
       return computeIfPresent;
    }
@@ -64,12 +71,12 @@ public class ComputeCommand extends AbstractDataWriteCommand implements Metadata
 
    @Override
    public Metadata getMetadata() {
-      return MarshallableObject.unwrap(metadata);
+      return metadata;
    }
 
    @Override
    public void setMetadata(Metadata metadata) {
-      this.metadata = MarshallableObject.create(metadata);
+      this.metadata = metadata;
    }
 
    @Override
@@ -103,7 +110,7 @@ public class ComputeCommand extends AbstractDataWriteCommand implements Metadata
    }
 
    public BiFunction getRemappingBiFunction() {
-      return MarshallableObject.unwrap(remappingBiFunction);
+      return remappingBiFunction;
    }
 
    @Override
@@ -135,9 +142,9 @@ public class ComputeCommand extends AbstractDataWriteCommand implements Metadata
    @Override
    public String toString() {
       return "ComputeCommand{" +
-            "key=" + key +
-            ", isComputeIfPresent=" + computeIfPresent +
-            ", remappingBiFunction=" + remappingBiFunction +
+            "key=" + toStr(key) +
+            ", isComputeIfPresent=" + toStr(computeIfPresent) +
+            ", remappingBiFunction=" + toStr(remappingBiFunction) +
             ", metadata=" + metadata +
             ", flags=" + printFlags() +
             ", successful=" + isSuccessful() +

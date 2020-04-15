@@ -21,24 +21,27 @@ import org.infinispan.util.concurrent.CommandAckCollector;
 @ProtoTypeId(ProtoStreamTypeIds.EXCEPTION_ACK_COMMAND)
 public class ExceptionAckCommand extends BackupAckCommand {
    public static final byte COMMAND_ID = 42;
+   private Throwable throwable;
 
-   @ProtoField(number = 4)
-   MarshallableThrowable throwable;
-
-   @ProtoFactory
-   ExceptionAckCommand(ByteString cacheName, long id, int topologyId, MarshallableThrowable throwable) {
+   public ExceptionAckCommand(ByteString cacheName, long id, Throwable throwable, int topologyId) {
       super(cacheName, id, topologyId);
       this.throwable = throwable;
    }
 
-   public ExceptionAckCommand(ByteString cacheName, long id, Throwable throwable, int topologyId) {
+   @ProtoFactory
+   ExceptionAckCommand(ByteString cacheName, long id, int topologyId, MarshallableThrowable throwable) {
       super(cacheName, id, topologyId);
-      this.throwable = MarshallableThrowable.create(throwable);
+      this.throwable = throwable.get();
+   }
+
+   @ProtoField(number = 4)
+   MarshallableThrowable getThrowable() {
+      return MarshallableThrowable.create(throwable);
    }
 
    @Override
    public void ack(CommandAckCollector ackCollector) {
-      CacheException remoteException = ResponseCollectors.wrapRemoteException(getOrigin(), throwable.get());
+      CacheException remoteException = ResponseCollectors.wrapRemoteException(getOrigin(), this.throwable);
       ackCollector.completeExceptionally(id, remoteException, topologyId);
    }
 

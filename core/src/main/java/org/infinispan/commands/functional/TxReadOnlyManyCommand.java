@@ -37,11 +37,11 @@ public class TxReadOnlyManyCommand<K, V, R> extends ReadOnlyManyCommand<K, V, R>
    }
 
    @ProtoFactory
-   TxReadOnlyManyCommand(long flagsWithoutRemote, int topologyId, MarshallableCollection<?> keys,
-                         MarshallableObject<Function<EntryView.ReadEntryView<K, V>, R>> function,
+   TxReadOnlyManyCommand(long flagsWithoutRemote, int topologyId, MarshallableCollection<?> wrappedKeys,
+                         MarshallableObject<Function<EntryView.ReadEntryView<K, V>, R>> wrappedFunction,
                          Params params, DataConversion keyDataConversion, DataConversion valueDataConversion,
                          MarshallableCollection<MarshallableCollection<Mutation<K, V, ?>>> wrappedMutations) {
-      super(flagsWithoutRemote, topologyId, keys, function, params, keyDataConversion, valueDataConversion);
+      super(flagsWithoutRemote, topologyId, wrappedKeys, wrappedFunction, params, keyDataConversion, valueDataConversion);
       this.mutations = wrappedMutations == null ? null :
             wrappedMutations.get().stream()
                   .map(MarshallableCollection::unwrapAsList)
@@ -77,7 +77,7 @@ public class TxReadOnlyManyCommand<K, V, R> extends ReadOnlyManyCommand<K, V, R>
    @Override
    public String toString() {
       return "TxReadOnlyManyCommand{" + "keys=" + keys +
-            ", f=" + function +
+            ", f=" + f +
             ", mutations=" + mutations +
             ", keyDataConversion=" + keyDataConversion +
             ", valueDataConversion=" + valueDataConversion +

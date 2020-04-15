@@ -1,5 +1,7 @@
 package org.infinispan.commands.write;
 
+import static org.infinispan.commons.util.Util.toStr;
+
 import java.util.Objects;
 import java.util.function.Function;
 
@@ -20,28 +22,34 @@ public class ComputeIfAbsentCommand extends AbstractDataWriteCommand implements 
 
    public static final int COMMAND_ID = 69;
 
+   private Function<?, ?> mappingFunction;
+   private Metadata metadata;
    private transient boolean successful = true;
-
-   @ProtoField(number = 6)
-   final MarshallableObject<Function<?, ?>> mappingFunction;
-
-   @ProtoField(number = 7)
-   MarshallableObject<Metadata> metadata;
-
-   @ProtoFactory
-   ComputeIfAbsentCommand(MarshallableObject<?> wrappedKey, long flagsWithoutRemote, int topologyId, int segment,
-                          CommandInvocationId commandInvocationId, MarshallableObject<Function<?, ?>> mappingFunction,
-                          MarshallableObject<Metadata> metadata) {
-      super(wrappedKey, flagsWithoutRemote, topologyId, segment, commandInvocationId);
-      this.mappingFunction = mappingFunction;
-      this.metadata = metadata;
-   }
 
    public ComputeIfAbsentCommand(Object key, Function<?, ?> mappingFunction, int segment, long flagsBitSet,
                                  CommandInvocationId commandInvocationId, Metadata metadata) {
       super(key, segment, flagsBitSet, commandInvocationId);
-      this.mappingFunction = MarshallableObject.create(mappingFunction);
+      this.mappingFunction = mappingFunction;
       this.setMetadata(metadata);
+   }
+
+   @ProtoFactory
+   ComputeIfAbsentCommand(MarshallableObject<?> wrappedKey, long flagsWithoutRemote, int topologyId, int segment,
+                          CommandInvocationId commandInvocationId, MarshallableObject<Function<?, ?>> wrappedMappingFunction,
+                          MarshallableObject<Metadata> wrappedMetadata) {
+      super(wrappedKey, flagsWithoutRemote, topologyId, segment, commandInvocationId);
+      this.mappingFunction = MarshallableObject.unwrap(wrappedMappingFunction);
+      this.metadata = MarshallableObject.unwrap(wrappedMetadata);
+   }
+
+   @ProtoField(number = 6, name = "mappingFunction")
+   MarshallableObject<Function<?, ?>> getWrappedMappingFunction() {
+      return MarshallableObject.create(mappingFunction);
+   }
+
+   @ProtoField(number = 7, name = "metadata")
+   MarshallableObject<Metadata> getWrappedMetadata() {
+      return MarshallableObject.create(metadata);
    }
 
    @Override
@@ -51,12 +59,12 @@ public class ComputeIfAbsentCommand extends AbstractDataWriteCommand implements 
 
    @Override
    public Metadata getMetadata() {
-      return MarshallableObject.unwrap(metadata);
+      return metadata;
    }
 
    @Override
    public void setMetadata(Metadata metadata) {
-      this.metadata = MarshallableObject.create(metadata);
+      this.metadata = metadata;
    }
 
    @Override
@@ -85,7 +93,7 @@ public class ComputeIfAbsentCommand extends AbstractDataWriteCommand implements 
    }
 
    public Function getMappingFunction() {
-      return MarshallableObject.unwrap(mappingFunction);
+      return mappingFunction;
    }
 
    @Override
@@ -123,8 +131,8 @@ public class ComputeIfAbsentCommand extends AbstractDataWriteCommand implements 
    @Override
    public String toString() {
       return "ComputeIfAbsentCommand{" +
-            "key=" + key +
-            ", mappingFunction=" + mappingFunction +
+            "key=" + toStr(key) +
+            ", mappingFunction=" + toStr(mappingFunction) +
             ", metadata=" + metadata +
             ", flags=" + printFlags() +
             ", successful=" + isSuccessful() +

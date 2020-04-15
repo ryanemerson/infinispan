@@ -22,38 +22,49 @@ import org.infinispan.protostream.annotations.ProtoTypeId;
 public class ReadOnlyKeyCommand<K, V, R> extends AbstractDataCommand {
 
    public static final int COMMAND_ID = 62;
+   protected Function<ReadEntryView<K, V>, R> f;
+   protected Params params;
+   protected DataConversion keyDataConversion;
+   protected DataConversion valueDataConversion;
 
-   @ProtoField(number = 5)
-   final MarshallableObject<Function<ReadEntryView<K, V>, R>> f;
-
-   @ProtoField(number = 6)
-   final Params params;
-
-   @ProtoField(number = 7)
-   final DataConversion keyDataConversion;
-
-   @ProtoField(number = 8)
-   final DataConversion valueDataConversion;
-
-   @ProtoFactory
-   ReadOnlyKeyCommand(MarshallableObject<?> wrappedKey, long flagsWithoutRemote, int topologyId, int segment,
-                      MarshallableObject<Function<ReadEntryView<K, V>, R>> f, Params params, DataConversion keyDataConversion,
-                      DataConversion valueDataConversion) {
-      super(wrappedKey, flagsWithoutRemote, topologyId, segment);
+   public ReadOnlyKeyCommand(Object key, Function<ReadEntryView<K, V>, R> f, int segment, Params params,
+                             DataConversion keyDataConversion, DataConversion valueDataConversion) {
+      super(key, segment, params.toFlagsBitSet());
       this.f = f;
       this.params = params;
       this.keyDataConversion = keyDataConversion;
       this.valueDataConversion = valueDataConversion;
    }
 
-   public ReadOnlyKeyCommand(Object key, Function<ReadEntryView<K, V>, R> f, int segment, Params params,
-                             DataConversion keyDataConversion,
-                             DataConversion valueDataConversion) {
-      super(key, segment, params.toFlagsBitSet());
-      this.f = MarshallableObject.create(f);
+   @ProtoFactory
+   ReadOnlyKeyCommand(MarshallableObject<?> wrappedKey, long flagsWithoutRemote, int topologyId, int segment,
+                      MarshallableObject<Function<ReadEntryView<K, V>, R>> wrappedFunction, Params params,
+                      DataConversion keyDataConversion, DataConversion valueDataConversion) {
+      super(wrappedKey, flagsWithoutRemote, topologyId, segment);
+      this.f = MarshallableObject.unwrap(wrappedFunction);
       this.params = params;
       this.keyDataConversion = keyDataConversion;
       this.valueDataConversion = valueDataConversion;
+   }
+
+   @ProtoField(number = 5)
+   MarshallableObject<Function<ReadEntryView<K, V>, R>> getWrappedFunction() {
+      return MarshallableObject.create(f);
+   }
+
+   @ProtoField(number = 6)
+   public Params getParams() {
+      return params;
+   }
+
+   @ProtoField(number = 7)
+   public DataConversion getKeyDataConversion() {
+      return keyDataConversion;
+   }
+
+   @ProtoField(number = 8)
+   public DataConversion getValueDataConversion() {
+      return valueDataConversion;
    }
 
    @Override
@@ -83,7 +94,7 @@ public class ReadOnlyKeyCommand<K, V, R> extends AbstractDataCommand {
     * Apply function on entry without any data
     */
    public Object performOnLostData() {
-      return StatsEnvelope.create(getFunction().apply(EntryViews.noValue(getKey(), keyDataConversion)), true);
+      return StatsEnvelope.create(f.apply(EntryViews.noValue(key, keyDataConversion)), true);
    }
 
    @Override
@@ -96,18 +107,6 @@ public class ReadOnlyKeyCommand<K, V, R> extends AbstractDataCommand {
    }
 
    public Function<ReadEntryView<K, V>, R> getFunction() {
-      return MarshallableObject.unwrap(f);
-   }
-
-   public DataConversion getKeyDataConversion() {
-      return keyDataConversion;
-   }
-
-   public DataConversion getValueDataConversion() {
-      return valueDataConversion;
-   }
-
-   public Params getParams() {
-      return params;
+      return f;
    }
 }

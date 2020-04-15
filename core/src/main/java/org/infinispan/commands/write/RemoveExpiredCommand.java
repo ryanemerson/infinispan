@@ -28,12 +28,9 @@ public class RemoveExpiredCommand extends RemoveCommand {
 
    @ProtoFactory
    RemoveExpiredCommand(MarshallableObject<?> wrappedKey, long flagsWithoutRemote, int topologyId, int segment,
-                 CommandInvocationId commandInvocationId, MarshallableObject<?> value,
-                 MarshallableObject<Metadata> metadata, ValueMatcher valueMatcher, Long lifespan) {
-      super(wrappedKey, flagsWithoutRemote, topologyId, segment, commandInvocationId);
-      this.value = value;
-      this.metadata = metadata;
-      this.valueMatcher = valueMatcher;
+                        CommandInvocationId commandInvocationId, MarshallableObject<?> wrappedValue,
+                        MarshallableObject<Metadata> wrappedMetadata, ValueMatcher valueMatcher, Long lifespan) {
+      super(wrappedKey, flagsWithoutRemote, topologyId, segment, commandInvocationId, wrappedValue, null, valueMatcher);
       this.lifespan = lifespan;
    }
 

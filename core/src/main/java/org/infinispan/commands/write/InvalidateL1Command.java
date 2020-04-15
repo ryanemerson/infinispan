@@ -30,8 +30,8 @@ public class InvalidateL1Command extends InvalidateCommand {
 
    @ProtoFactory
    InvalidateL1Command(long flagsWithoutRemote, int topologyId, CommandInvocationId commandInvocationId,
-                       MarshallableCollection<Object> keys, JGroupsAddress writeOrigin) {
-      super(flagsWithoutRemote, topologyId, commandInvocationId, keys);
+                       MarshallableCollection<Object> wrappedKeys, JGroupsAddress writeOrigin) {
+      super(flagsWithoutRemote, topologyId, commandInvocationId, wrappedKeys);
       this.writeOrigin = writeOrigin;
    }
 
@@ -41,7 +41,8 @@ public class InvalidateL1Command extends InvalidateCommand {
 
    public InvalidateL1Command(Address writeOrigin, long flagsBitSet, Collection<Object> keys,
          CommandInvocationId commandInvocationId) {
-      this(flagsBitSet, -1, commandInvocationId, MarshallableCollection.create(keys), (JGroupsAddress) writeOrigin);
+      super(flagsBitSet, keys, commandInvocationId);
+      this.writeOrigin = writeOrigin;
    }
 
    @Override
@@ -50,7 +51,7 @@ public class InvalidateL1Command extends InvalidateCommand {
    }
 
    public void setKeys(Object[] keys) {
-      this.keys = MarshallableCollection.create(keys);
+      this.keys = keys;
    }
 
    @Override
@@ -67,7 +68,7 @@ public class InvalidateL1Command extends InvalidateCommand {
    @Override
    public String toString() {
       return getClass().getSimpleName() + "{" +
-            "num keys=" + keys +
+            "num keys=" + (keys == null ? 0 : keys.length) +
             ", origin=" + writeOrigin +
             '}';
    }
