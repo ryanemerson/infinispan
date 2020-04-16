@@ -102,6 +102,7 @@ public class SingleKeyBackupWriteCommand extends BackupWriteCommand {
    MarshallableObject<?> getKey() {
       return MarshallableObject.create(key);
    }
+
    @ProtoField(number = 9)
    MarshallableObject<?> getValueOrFunction() {
       return MarshallableObject.create(valueOrFunction);

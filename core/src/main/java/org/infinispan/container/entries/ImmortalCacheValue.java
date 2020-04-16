@@ -34,7 +34,7 @@ public class ImmortalCacheValue implements InternalCacheValue, Cloneable {
 
    @ProtoFactory
    public ImmortalCacheValue(MarshallableObject<?> wrappedValue, MetaParamsInternalMetadata internalMetadata) {
-      this.value = wrappedValue;
+      this.value = MarshallableObject.unwrap(wrappedValue);
       this.internalMetadata = internalMetadata;
    }
 
@@ -50,8 +50,8 @@ public class ImmortalCacheValue implements InternalCacheValue, Cloneable {
    }
 
    @Override
-   public InternalCacheEntry toInternalCacheEntry(Object key) {
-      return new ImmortalCacheEntry(MarshallableObject.create(key), value, internalMetadata);
+   public InternalCacheEntry<?,?> toInternalCacheEntry(Object key) {
+      return new ImmortalCacheEntry(key, value, internalMetadata);
    }
 
    public final Object setValue(Object value) {

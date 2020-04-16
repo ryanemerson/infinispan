@@ -1,6 +1,7 @@
 package org.infinispan.commands.read;
 
 import static org.infinispan.commons.util.EnumUtil.prettyPrintBitSet;
+import static org.infinispan.commons.util.Util.toStr;
 
 import java.util.Objects;
 
@@ -17,8 +18,7 @@ import org.infinispan.protostream.annotations.ProtoField;
  * @since 4.0
  */
 public abstract class AbstractDataCommand implements DataCommand, SegmentSpecificCommand {
-
-   protected MarshallableObject<?> key;
+   protected Object key;
    private long flags;
    // These 2 ints have to stay next to each other to ensure they are aligned together
    protected int topologyId;
@@ -26,22 +26,22 @@ public abstract class AbstractDataCommand implements DataCommand, SegmentSpecifi
 
    // For ProtoFactory implementations
    protected AbstractDataCommand(MarshallableObject<?> wrappedKey, long flagsWithoutRemote, int topologyId, int segment) {
-      this.key = wrappedKey;
-      this.flags = flagsWithoutRemote;
+      this(MarshallableObject.unwrap(wrappedKey), segment, flagsWithoutRemote);
       this.topologyId = topologyId;
-      this.segment = segment;
-
-      if (segment < 0)
-         throw new IllegalArgumentException("Segment must be 0 or greater");
    }
 
    protected AbstractDataCommand(Object key, int segment, long flagsBitSet) {
-      this(MarshallableObject.create(key), flagsBitSet, 0, segment);
+      this.key = key;
+      if (segment < 0) {
+         throw new IllegalArgumentException("Segment must be 0 or greater");
+      }
+      this.segment = segment;
+      this.flags = flagsBitSet;
    }
 
    @ProtoField(number = 1, name = "key")
    public MarshallableObject<?> getWrappedKey() {
-      return key;
+      return MarshallableObject.create(key);
    }
 
    @Override
@@ -78,11 +78,11 @@ public abstract class AbstractDataCommand implements DataCommand, SegmentSpecifi
 
    @Override
    public Object getKey() {
-      return MarshallableObject.unwrap(key);
+      return key;
    }
 
    public void setKey(Object key) {
-      this.key = MarshallableObject.create(key);
+      this.key = key;
    }
 
    @Override
@@ -108,7 +108,7 @@ public abstract class AbstractDataCommand implements DataCommand, SegmentSpecifi
    @Override
    public String toString() {
       return getClass().getSimpleName() +
-            " {key=" + key +
+            " {key=" + toStr(key) +
             ", flags=" + printFlags() +
             "}";
    }

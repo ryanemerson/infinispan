@@ -83,7 +83,7 @@ public class PutKeyValueCommand extends AbstractDataWriteCommand implements Meta
    }
 
    public void setValue(Object value) {
-      this.value = MarshallableObject.create(value);
+      this.value = value;
    }
 
    @Override
