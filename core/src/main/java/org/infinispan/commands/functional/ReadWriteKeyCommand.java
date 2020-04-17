@@ -79,7 +79,7 @@ public final class ReadWriteKeyCommand<K, V, R> extends AbstractWriteKeyCommand<
 
    @Override
    public Mutation<K, V, ?> toMutation(Object key) {
-      return new Mutations.ReadWrite<>(keyDataConversion, valueDataConversion, getFunction());
+      return new Mutations.ReadWrite<>(keyDataConversion, valueDataConversion, f);
    }
 
    public Function<ReadWriteEntryView<K, V>, R> getFunction() {

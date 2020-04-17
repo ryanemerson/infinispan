@@ -18,6 +18,7 @@ import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.remoting.transport.jgroups.JGroupsAddress;
+import org.infinispan.test.TestDataSCI;
 import org.infinispan.topology.ClusterTopologyManager;
 
 /**
@@ -182,7 +183,8 @@ public abstract class ControlledConsistentHashFactory<CH extends ConsistentHash>
    @AutoProtoSchemaBuilder(
          dependsOn = {
                org.infinispan.marshall.persistence.impl.PersistenceContextInitializer.class,
-               org.infinispan.marshall.core.impl.GlobalContextInitializer.class
+               org.infinispan.marshall.core.impl.GlobalContextInitializer.class,
+               TestDataSCI.class
          },
          includeClasses = {
                Default.class,

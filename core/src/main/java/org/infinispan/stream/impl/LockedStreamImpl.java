@@ -202,12 +202,16 @@ public class LockedStreamImpl<K, V> implements LockedStream<K, V> {
    @Scope(Scopes.NONE)
    static abstract class LockHelper<K, V, R> {
       protected final Predicate<? super CacheEntry<K, V>> predicate;
-      @Inject protected transient LockManager lockManager;
+      protected volatile transient LockManager lockManager;
+
+      @Inject
+      void init(LockManager lockManager) {
+         this.lockManager = lockManager;
+      }
 
       protected LockHelper(Predicate<? super CacheEntry<K, V>> predicate) {
          this.predicate = predicate;
       }
-
 
       @ProtoField(number = 1)
       MarshallableObject<Predicate<? super CacheEntry<K, V>>> getPredicate() {

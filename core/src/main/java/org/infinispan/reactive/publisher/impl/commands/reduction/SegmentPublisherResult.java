@@ -18,31 +18,33 @@ import org.infinispan.protostream.annotations.ProtoTypeId;
  */
 @ProtoTypeId(ProtoStreamTypeIds.SEGMENT_PUBLISHER_RESULT)
 public class SegmentPublisherResult<R> implements PublisherResult<R> {
-
-//      @ProtoField(number = 1)
-   final IntSet suspectedSegments;
-
-   // TODO remove once IPROTO-131 issue fixed
-   @ProtoField(number = 1, collectionImplementation = HashSet.class)
-   final Set<Integer> suspectedSegmentsWorkaround;
-
-   @ProtoField(number = 2)
-   final MarshallableObject<R> result;
-
-   @ProtoFactory
-   SegmentPublisherResult(Set<Integer> suspectedSegmentsWorkaround, MarshallableObject<R> result) {
-      this.suspectedSegmentsWorkaround = suspectedSegmentsWorkaround;
-      this.suspectedSegments = IntSets.from(suspectedSegmentsWorkaround);
-      this.result = result;
-   }
+   private final IntSet suspectedSegments;
+   private final R result;
 
    public SegmentPublisherResult(IntSet suspectedSegments, R result) {
       this.suspectedSegments = suspectedSegments;
-      this.suspectedSegmentsWorkaround = suspectedSegments == null ? null : IntSets.from(suspectedSegments);
-      this.result = MarshallableObject.create(result);
+      this.result = result;
+   }
+
+   @ProtoFactory
+   SegmentPublisherResult(Set<Integer> suspectedSegmentsWorkaround, MarshallableObject<R> wrappedResult) {
+      this.suspectedSegments = IntSets.from(suspectedSegmentsWorkaround);
+      this.result = MarshallableObject.unwrap(wrappedResult);
+   }
+
+   // TODO remove once IPROTO-131 issue fixed
+   @ProtoField(number = 1, collectionImplementation = HashSet.class)
+   final Set<Integer> getSuspectedSegmentsWorkaround() {
+      return new HashSet<>(suspectedSegments);
+   }
+
+   @ProtoField(number = 2)
+   final MarshallableObject<R> getWrappedResult() {
+      return MarshallableObject.create(result);
    }
 
    @Override
+   //      @ProtoField(number = 1)
    public IntSet getSuspectedSegments() {
       return suspectedSegments;
    }
@@ -54,13 +56,13 @@ public class SegmentPublisherResult<R> implements PublisherResult<R> {
 
    @Override
    public R getResult() {
-      return MarshallableObject.unwrap(result);
+      return result;
    }
 
    @Override
    public String toString() {
       return "SegmentPublisherResult{" +
-            "result=" + getResult() +
+            "result=" + result +
             ", suspectedSegments=" + suspectedSegments +
             '}';
    }

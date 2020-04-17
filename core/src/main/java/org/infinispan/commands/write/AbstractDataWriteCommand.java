@@ -20,9 +20,9 @@ public abstract class AbstractDataWriteCommand extends AbstractDataCommand imple
 
    protected CommandInvocationId commandInvocationId;
 
-   protected AbstractDataWriteCommand(MarshallableObject<?> key, long flags, int topologyId, int segment,
+   protected AbstractDataWriteCommand(MarshallableObject<?> wrappedKey, long flags, int topologyId, int segment,
                                       CommandInvocationId commandInvocationId) {
-      super(key, flags, topologyId, segment);
+      super(wrappedKey, flags, topologyId, segment);
       this.commandInvocationId = commandInvocationId;
    }
 

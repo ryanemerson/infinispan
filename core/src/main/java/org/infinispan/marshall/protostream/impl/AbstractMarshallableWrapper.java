@@ -86,9 +86,17 @@ abstract class AbstractMarshallableWrapper<T> {
       }
    }
 
+//   @Override
+//   public String toString() {
+//      return Util.toStr(object);
+//   }
+
+
    @Override
    public String toString() {
-      return Util.toStr(object);
+      return getClass().getSimpleName() + "{" +
+            "object=" + Util.toStr(object) +
+            '}';
    }
 
    protected abstract static class Marshaller implements RawProtobufMarshaller<AbstractMarshallableWrapper<Object>> {

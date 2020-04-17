@@ -88,6 +88,7 @@ public abstract class AbstractInternalProtoStreamMarshaller implements Marshalle
    }
 
    protected ByteBuffer objectToBuffer(Object o, int estimatedSize) {
+      System.err.println("Marshall: " + o.getClass().getName());
       try {
          if (requiresWrapping(o))
             o = new MarshallableUserObject<>(o);
@@ -111,7 +112,9 @@ public abstract class AbstractInternalProtoStreamMarshaller implements Marshalle
 
    @Override
    public Object objectFromByteBuffer(byte[] buf, int offset, int length) throws IOException {
-      return unwrapAndInit(ProtobufUtil.fromWrappedByteArray(getSerializationContext(), buf, offset, length));
+      Object o = unwrapAndInit(ProtobufUtil.fromWrappedByteArray(getSerializationContext(), buf, offset, length));
+//      System.err.println("!!!!!! UnMarshall: " + o.getClass().getName());
+      return o;
    }
 
    @Override

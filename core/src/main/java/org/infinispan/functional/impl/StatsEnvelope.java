@@ -25,21 +25,8 @@ public class StatsEnvelope<T> {
    public static final byte UPDATE = 8;
    public static final byte DELETE = 16;
 
-   @ProtoField(number = 1)
-   final MarshallableObject<T> value;
-
-   @ProtoField(number = 2, defaultValue = "0")
-   final byte flags;
-
-   @ProtoFactory
-   StatsEnvelope(MarshallableObject<T> value, byte flags) {
-      this.value = value;
-      this.flags = flags;
-   }
-
-   private StatsEnvelope(T value, byte flags) {
-      this(MarshallableObject.create(value), flags);
-   }
+   private final T value;
+   private final byte flags;
 
    public static <T> StatsEnvelope<T> create(T returnValue, CacheEntry<?, ?> e, boolean exists, boolean isRead) {
       byte flags = 0;
@@ -76,10 +63,26 @@ public class StatsEnvelope<T> {
       return ((Stream<StatsEnvelope<?>>) o).map(StatsEnvelope::value);
    }
 
-   public T value() {
-      return MarshallableObject.unwrap(value);
+   private StatsEnvelope(T value, byte flags) {
+      this.value = value;
+      this.flags = flags;
    }
 
+   @ProtoFactory
+   StatsEnvelope(MarshallableObject<T> wrappedValue, byte flags) {
+      this(MarshallableObject.unwrap(wrappedValue), flags);
+   }
+
+   @ProtoField(number = 1, name = "value")
+   MarshallableObject<T> getWrappedValue() {
+      return MarshallableObject.create(value);
+   }
+
+   public T value() {
+      return value;
+   }
+
+   @ProtoField(number = 2, defaultValue = "0")
    public byte flags() {
       return flags;
    }

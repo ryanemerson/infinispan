@@ -47,6 +47,7 @@ import org.testng.annotations.Test;
  * @author wburns
  * @since 9.0
  */
+// TODO update BINARY and OFF_HEAP entry sizes
 @Test(groups = "functional", testName = "eviction.ExceptionEvictionTest")
 public class ExceptionEvictionTest extends MultipleCacheManagersTest {
    private static final int SIZE = 10;
