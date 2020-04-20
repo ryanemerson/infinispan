@@ -62,7 +62,7 @@ public class LockControlCommand extends AbstractTransactionBoundaryCommand imple
    }
 
    public LockControlCommand(Object key, ByteString cacheName, long flags, GlobalTransaction globalTx) {
-      this(cacheName, globalTx, MarshallableCollection.create(key), false, flags);
+      this(Collections.singletonList(key), cacheName, flags, globalTx);
    }
 
    @ProtoFactory

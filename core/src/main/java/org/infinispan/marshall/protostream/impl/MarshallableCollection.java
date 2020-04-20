@@ -7,7 +7,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.protostream.annotations.ProtoFactory;
@@ -30,8 +29,8 @@ public class MarshallableCollection<T> extends AbstractMarshallableCollectionWra
     * @return a new {@link MarshallableCollection} instance containing the passed object if the array is not null,
     * otherwise null.
     */
-   public static <T> MarshallableCollection<T> create(T... entries) {
-      return new MarshallableCollection<>(Arrays.stream(entries).collect(Collectors.toList()));
+   public static <T> MarshallableCollection<T> create(T[] entries) {
+      return new MarshallableCollection<>(Arrays.asList(entries));
    }
 
    /**

@@ -6,8 +6,8 @@ import java.util.Objects;
 
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.marshall.protostream.impl.MarshallableCollection;
+import org.infinispan.marshall.protostream.impl.MarshallableMap;
 import org.infinispan.marshall.protostream.impl.MarshallableObject;
-import org.infinispan.marshall.protostream.impl.MarshallableUserMap;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
@@ -30,24 +30,26 @@ public class SuccessfulResponse extends ValidResponse {
 
    // TODO do we need MarshallableMap for this to handle internal types?
    @ProtoField(number = 3)
-   final MarshallableUserMap<?, ?> map;
+   final MarshallableMap<?, ?> map;
 
    @ProtoFactory
    static SuccessfulResponse protoFactory(MarshallableObject<?> object, MarshallableCollection<?> collection,
-                                          MarshallableUserMap<?, ?> map) {
+                                          MarshallableMap<?, ?> map) {
       return object == null && collection == null && map == null? SUCCESSFUL_EMPTY_RESPONSE : new SuccessfulResponse(object, collection, map);
    }
 
    public static SuccessfulResponse create(Object responseValue) {
       if (responseValue == null) return SUCCESSFUL_EMPTY_RESPONSE;
       if (responseValue instanceof Collection)
-         return new SuccessfulResponse((Collection<?>) responseValue);
+         return new SuccessfulResponse(null, MarshallableCollection.create((Collection<?>) responseValue),null);
+      else if (responseValue.getClass().isArray())
+         return new SuccessfulResponse(null, MarshallableCollection.create((Object[]) responseValue), null);
       else if (responseValue instanceof Map)
-         return new SuccessfulResponse((Map<?, ?>) responseValue);
+         return new SuccessfulResponse(null, null, MarshallableMap.create((Map<?, ?>) responseValue));
       return new SuccessfulResponse(responseValue);
    }
 
-   private SuccessfulResponse(MarshallableObject<?> object, MarshallableCollection<?> collection, MarshallableUserMap<?, ?> map) {
+   private SuccessfulResponse(MarshallableObject<?> object, MarshallableCollection<?> collection, MarshallableMap<?, ?> map) {
       this.object = object;
       this.collection = collection;
       this.map = map;
@@ -55,14 +57,6 @@ public class SuccessfulResponse extends ValidResponse {
 
    protected SuccessfulResponse(Object responseValue) {
       this(MarshallableObject.create(responseValue), null, null);
-   }
-
-   private SuccessfulResponse(Collection<?> collection) {
-      this(null, MarshallableCollection.create(collection),null);
-   }
-
-   private SuccessfulResponse(Map<?, ?> map) {
-      this(null, null, MarshallableUserMap.create(map));
    }
 
    @Override

@@ -44,7 +44,7 @@ public class ClusteredGetCommand extends BaseRpcCommand implements SegmentSpecif
    //only used by extended statistics. this boolean is local.
    private boolean isWrite;
    private int segment;
-   private int topologyId;
+   private int topologyId = -1;
    private long flags;
 
    public ClusteredGetCommand(Object key, ByteString cacheName, int segment, long flags) {

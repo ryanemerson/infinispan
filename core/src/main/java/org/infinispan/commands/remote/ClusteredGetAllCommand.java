@@ -42,7 +42,7 @@ public class ClusteredGetAllCommand<K, V> extends BaseRpcCommand implements Topo
 
    private List<?> keys;
    private GlobalTransaction gtx;
-   private int topologyId;
+   private int topologyId = -1;
    final long flags;
 
    public ClusteredGetAllCommand(ByteString cacheName, List<?> keys, long flags, GlobalTransaction gtx) {

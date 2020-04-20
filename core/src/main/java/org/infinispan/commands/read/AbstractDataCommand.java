@@ -21,7 +21,7 @@ public abstract class AbstractDataCommand implements DataCommand, SegmentSpecifi
    protected Object key;
    private long flags;
    // These 2 ints have to stay next to each other to ensure they are aligned together
-   protected int topologyId;
+   protected int topologyId = -1;
    protected int segment;
 
    // For ProtoFactory implementations
