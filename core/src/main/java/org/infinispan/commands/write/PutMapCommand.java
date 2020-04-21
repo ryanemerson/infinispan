@@ -16,8 +16,8 @@ import org.infinispan.commands.Visitor;
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.context.InvocationContext;
 import org.infinispan.context.impl.FlagBitSets;
+import org.infinispan.marshall.protostream.impl.MarshallableMap;
 import org.infinispan.marshall.protostream.impl.MarshallableObject;
-import org.infinispan.marshall.protostream.impl.MarshallableUserMap;
 import org.infinispan.metadata.Metadata;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
@@ -56,18 +56,18 @@ public class PutMapCommand extends AbstractTopologyAffectedCommand implements Wr
    }
 
    @ProtoFactory
-   PutMapCommand(long flagsWithoutRemote, int topologyId, MarshallableUserMap<Object, Object> wrappedMap,
+   PutMapCommand(long flagsWithoutRemote, int topologyId, MarshallableMap<Object, Object> wrappedMap,
                  MarshallableObject<Metadata> wrappedMetadata, boolean forwarded, CommandInvocationId commandInvocationId) {
       super(flagsWithoutRemote, topologyId);
-      this.map = MarshallableUserMap.unwrap(wrappedMap);
+      this.map = MarshallableMap.unwrap(wrappedMap);
       this.metadata = MarshallableObject.unwrap(wrappedMetadata);
       this.isForwarded = forwarded;
       this.commandInvocationId = commandInvocationId;
    }
 
    @ProtoField(number = 3, name="wrappedMap")
-   MarshallableUserMap<Object, Object> getWrappedMap() {
-      return MarshallableUserMap.create(map);
+   MarshallableMap<Object, Object> getWrappedMap() {
+      return MarshallableMap.create(map);
    }
 
    @ProtoField(number = 4, name = "metadata")

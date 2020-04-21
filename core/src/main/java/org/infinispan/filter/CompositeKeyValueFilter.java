@@ -5,7 +5,7 @@ import org.infinispan.factories.ComponentRegistry;
 import org.infinispan.factories.annotations.Inject;
 import org.infinispan.factories.scopes.Scope;
 import org.infinispan.factories.scopes.Scopes;
-import org.infinispan.marshall.protostream.impl.MarshallableCollection;
+import org.infinispan.marshall.protostream.impl.MarshallableArray;
 import org.infinispan.metadata.Metadata;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
@@ -28,13 +28,13 @@ public class CompositeKeyValueFilter<K, V> implements KeyValueFilter<K, V> {
 
    @ProtoFactory
    @SuppressWarnings("unchecked")
-   CompositeKeyValueFilter(MarshallableCollection<KeyValueFilter<? super K, ? super V>> filters) {
-      this.filters = MarshallableCollection.unwrapAsArray(filters, KeyValueFilter[]::new);
+   CompositeKeyValueFilter(MarshallableArray<KeyValueFilter<? super K, ? super V>> filters) {
+      this.filters = MarshallableArray.unwrap(filters, new KeyValueFilter[0]);
    }
 
    @ProtoField(number = 1)
-   MarshallableCollection<KeyValueFilter<? super K, ? super V>> getFilters() {
-      return MarshallableCollection.create(filters);
+   MarshallableArray<KeyValueFilter<? super K, ? super V>> getFilters() {
+      return MarshallableArray.create(filters);
    }
 
    @Override

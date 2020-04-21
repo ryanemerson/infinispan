@@ -14,7 +14,7 @@ import org.infinispan.functional.EntryView.ReadEntryView;
 import org.infinispan.functional.EntryView.ReadWriteEntryView;
 import org.infinispan.functional.EntryView.WriteEntryView;
 import org.infinispan.functional.MetaParam;
-import org.infinispan.marshall.protostream.impl.MarshallableCollection;
+import org.infinispan.marshall.protostream.impl.MarshallableArray;
 import org.infinispan.marshall.protostream.impl.MarshallableObject;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
@@ -134,13 +134,13 @@ public final class MarshallableFunctions {
       }
 
       @ProtoFactory
-      AbstractParamWritableFunction(MarshallableCollection<MetaParam.Writable> metas) {
-         this(MarshallableCollection.unwrapAsArray(metas, MetaParam.Writable[]::new));
+      AbstractParamWritableFunction(MarshallableArray<MetaParam.Writable> metas) {
+         this(MarshallableArray.unwrap(metas, new MetaParam.Writable[0]));
       }
 
       @ProtoField(number = 1)
-      MarshallableCollection<MetaParam.Writable> getMetas() {
-         return MarshallableCollection.create(metas);
+      MarshallableArray<MetaParam.Writable> getMetas() {
+         return MarshallableArray.create(metas);
       }
    }
 
@@ -172,7 +172,7 @@ public final class MarshallableFunctions {
       }
 
       @ProtoFactory
-      SetValueMetasReturnPrevOrNull(MarshallableCollection<MetaParam.Writable> metas) {
+      SetValueMetasReturnPrevOrNull(MarshallableArray<MetaParam.Writable> metas) {
          super(metas);
       }
 
@@ -211,7 +211,7 @@ public final class MarshallableFunctions {
       }
 
       @ProtoFactory
-      SetValueMetasReturnView(MarshallableCollection<MetaParam.Writable> metas) {
+      SetValueMetasReturnView(MarshallableArray<MetaParam.Writable> metas) {
          super(metas);
       }
 
@@ -253,7 +253,7 @@ public final class MarshallableFunctions {
       }
 
       @ProtoFactory
-      SetValueMetasIfAbsentReturnPrevOrNull(MarshallableCollection<MetaParam.Writable> metas) {
+      SetValueMetasIfAbsentReturnPrevOrNull(MarshallableArray<MetaParam.Writable> metas) {
          super(metas);
       }
 
@@ -296,7 +296,7 @@ public final class MarshallableFunctions {
       }
 
       @ProtoFactory
-      SetValueMetasIfAbsentReturnBoolean(MarshallableCollection<MetaParam.Writable> metas) {
+      SetValueMetasIfAbsentReturnBoolean(MarshallableArray<MetaParam.Writable> metas) {
          super(metas);
       }
 
@@ -337,7 +337,7 @@ public final class MarshallableFunctions {
       }
 
       @ProtoFactory
-      SetValueMetasIfPresentReturnPrevOrNull(MarshallableCollection<MetaParam.Writable> metas) {
+      SetValueMetasIfPresentReturnPrevOrNull(MarshallableArray<MetaParam.Writable> metas) {
          super(metas);
       }
 
@@ -377,7 +377,7 @@ public final class MarshallableFunctions {
       }
 
       @ProtoFactory
-      SetValueMetasIfPresentReturnBoolean(MarshallableCollection<MetaParam.Writable> metas) {
+      SetValueMetasIfPresentReturnBoolean(MarshallableArray<MetaParam.Writable> metas) {
          super(metas);
       }
 
@@ -402,7 +402,7 @@ public final class MarshallableFunctions {
       }
 
       @ProtoFactory
-      SetValueIfEqualsReturnBoolean(MarshallableObject<V> oldValue, MarshallableCollection<MetaParam.Writable> metas) {
+      SetValueIfEqualsReturnBoolean(MarshallableObject<V> oldValue, MarshallableArray<MetaParam.Writable> metas) {
          super(metas);
          this.oldValue = MarshallableObject.unwrap(oldValue);
       }
@@ -506,7 +506,7 @@ public final class MarshallableFunctions {
       }
 
       @ProtoFactory
-      SetValueMetas(MarshallableCollection<MetaParam.Writable> metas) {
+      SetValueMetas(MarshallableArray<MetaParam.Writable> metas) {
          super(metas);
       }
 

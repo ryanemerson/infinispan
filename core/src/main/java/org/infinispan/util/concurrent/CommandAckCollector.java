@@ -3,7 +3,6 @@ package org.infinispan.util.concurrent;
 import static java.lang.String.format;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -399,7 +398,7 @@ public class CommandAckCollector {
       }
 
       @Override
-      public synchronized void addPendingAcks(boolean success, Address[] waitFor) {
+      public synchronized void addPendingAcks(boolean success, Collection<Address> waitFor) {
          if (success && waitFor != null) {
             Collection<Address> members = currentMembers;
             for (Address address : waitFor) {
@@ -528,7 +527,7 @@ public class CommandAckCollector {
       }
 
       @Override
-      public void addPendingAcks(boolean success, Address[] waitFor) {
+      public void addPendingAcks(boolean success, Collection<Address> waitFor) {
          if (success && waitFor != null) {
             parent.addPendingAcks(waitFor);
          }
@@ -567,10 +566,10 @@ public class CommandAckCollector {
          }
       }
 
-      synchronized void addPendingAcks(Address[] waitFor) {
+      synchronized void addPendingAcks(Collection<Address> waitFor) {
          if (trace) {
             log.tracef("[Collector#%s] Adding pending acks from %s, existing are %s",
-                  id, Arrays.toString(waitFor), pendingAcks);
+                  id, waitFor, pendingAcks);
          }
          Collection<Address> members = currentMembers;
          for (Address member : waitFor) {

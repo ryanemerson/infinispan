@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
+import org.infinispan.marshall.protostream.impl.MarshallableArray;
 import org.infinispan.marshall.protostream.impl.MarshallableCollection;
 import org.infinispan.marshall.protostream.impl.MarshallableMap;
 import org.infinispan.marshall.protostream.impl.MarshallableObject;
@@ -32,31 +33,38 @@ public class SuccessfulResponse extends ValidResponse {
    @ProtoField(number = 3)
    final MarshallableMap<?, ?> map;
 
+   @ProtoField(number = 4)
+   final MarshallableArray<?> array;
+
    @ProtoFactory
    static SuccessfulResponse protoFactory(MarshallableObject<?> object, MarshallableCollection<?> collection,
-                                          MarshallableMap<?, ?> map) {
-      return object == null && collection == null && map == null? SUCCESSFUL_EMPTY_RESPONSE : new SuccessfulResponse(object, collection, map);
+                                          MarshallableMap<?, ?> map, MarshallableArray<?> array) {
+      return object == null && collection == null && map == null && array == null ?
+            SUCCESSFUL_EMPTY_RESPONSE :
+            new SuccessfulResponse(object, collection, map, array);
    }
 
    public static SuccessfulResponse create(Object responseValue) {
       if (responseValue == null) return SUCCESSFUL_EMPTY_RESPONSE;
       if (responseValue instanceof Collection)
-         return new SuccessfulResponse(null, MarshallableCollection.create((Collection<?>) responseValue),null);
+         return new SuccessfulResponse(null, MarshallableCollection.create((Collection<?>) responseValue),null, null);
       else if (responseValue.getClass().isArray())
-         return new SuccessfulResponse(null, MarshallableCollection.create((Object[]) responseValue), null);
+         return new SuccessfulResponse(null, null, null, MarshallableArray.create((Object[]) responseValue));
       else if (responseValue instanceof Map)
-         return new SuccessfulResponse(null, null, MarshallableMap.create((Map<?, ?>) responseValue));
+         return new SuccessfulResponse(null, null, MarshallableMap.create((Map<?, ?>) responseValue), null);
       return new SuccessfulResponse(responseValue);
    }
 
-   private SuccessfulResponse(MarshallableObject<?> object, MarshallableCollection<?> collection, MarshallableMap<?, ?> map) {
+   protected SuccessfulResponse(MarshallableObject<?> object, MarshallableCollection<?> collection, MarshallableMap<?, ?> map,
+                              MarshallableArray<?> array) {
       this.object = object;
       this.collection = collection;
       this.map = map;
+      this.array = array;
    }
 
    protected SuccessfulResponse(Object responseValue) {
-      this(MarshallableObject.create(responseValue), null, null);
+      this(MarshallableObject.create(responseValue), null, null, null);
    }
 
    @Override
@@ -71,7 +79,15 @@ public class SuccessfulResponse extends ValidResponse {
       if (collection != null)
          return collection.get();
 
-      return map == null ? null: map.get();
+      if (map != null)
+         return map.get();
+
+      return array == null ? null : array.get();
+   }
+
+   @SuppressWarnings("unchecked")
+   public <T> T[] getResponseValueArray(T[] a) {
+      return MarshallableArray.unwrap((MarshallableArray<T>) array, a);
    }
 
    @Override
@@ -95,6 +111,7 @@ public class SuccessfulResponse extends ValidResponse {
             "object=" + object +
             ", collection=" + collection +
             ", map=" + map +
+            ", array=" + array +
             '}';
    }
 }

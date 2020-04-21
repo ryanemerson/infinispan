@@ -1,5 +1,6 @@
 package org.infinispan.marshall.protostream.impl;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -8,9 +9,17 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
 
+import org.infinispan.commons.marshall.MarshallingException;
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
+import org.infinispan.commons.util.Util;
+import org.infinispan.protostream.ImmutableSerializationContext;
+import org.infinispan.protostream.RawProtoStreamReader;
+import org.infinispan.protostream.RawProtoStreamWriter;
+import org.infinispan.protostream.RawProtobufMarshaller;
 import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
+import org.infinispan.protostream.impl.WireFormat;
 
 /**
  * A wrapper for collections of objects whose type is unknown until runtime. This is equivalent to utilising a
@@ -20,9 +29,8 @@ import org.infinispan.protostream.annotations.ProtoTypeId;
  * @author Ryan Emerson
  * @since 11.0
  */
-// TODO implement Collection directly?
 @ProtoTypeId(ProtoStreamTypeIds.MARSHALLABLE_COLLECTION)
-public class MarshallableCollection<T> extends AbstractMarshallableCollectionWrapper<T> {
+public class MarshallableCollection<T> {
 
    /**
     * @param entries an Array to be wrapped as a {@link MarshallableCollection}.
@@ -48,15 +56,6 @@ public class MarshallableCollection<T> extends AbstractMarshallableCollectionWra
     */
    public static <T> Collection<T> unwrap(MarshallableCollection<T> wrapper) {
       return wrapper == null ? null : wrapper.get();
-   }
-
-   /**
-    * @param wrapper the {@link MarshallableCollection} instance to unwrap.
-    * @return an array representation of the wrapped {@link Collection} or null if the provided wrapper does not exist.
-    */
-   @SuppressWarnings("unchecked")
-   public static <T> T[] unwrapAsArray(MarshallableCollection<T> wrapper, Function<Integer, T[]> builder) {
-      return wrapper == null ? null : wrapper.get().toArray(builder.apply(wrapper.get().size()));
    }
 
    /**
@@ -92,28 +91,94 @@ public class MarshallableCollection<T> extends AbstractMarshallableCollectionWra
       return builder.apply(wrapper.get());
    }
 
-   @ProtoFactory
-   MarshallableCollection(List<byte[]> bytes) {
-      super(bytes);
-   }
+   private final Collection<T> collection;
 
    private MarshallableCollection(Collection<T> collection) {
-      super(collection);
+      this.collection = collection;
    }
 
-   public static class Marshaller extends AbstractMarshallableCollectionWrapper.Marshaller {
+   @ProtoFactory
+   MarshallableCollection(List<byte[]> bytes) {
+      throw illegalState();
+   }
+
+   @ProtoField(number = 1, collectionImplementation = ArrayList.class)
+   List<byte[]> getBytes() {
+      throw illegalState();
+   }
+
+   public Collection<T> get() {
+      return collection;
+   }
+
+   private IllegalStateException illegalState() {
+      // no-op never actually used, as we override the default marshaller
+      return new IllegalStateException(this.getClass().getSimpleName() + " marshaller not overridden in SerializationContext");
+   }
+
+   public static class Marshaller implements RawProtobufMarshaller<MarshallableCollection> {
+      private final String typeName;
+      private final org.infinispan.commons.marshall.Marshaller marshaller;
 
       public Marshaller(String typeName, org.infinispan.commons.marshall.Marshaller marshaller) {
-         super(typeName, marshaller);
+         this.typeName = typeName;
+         this.marshaller = marshaller;
       }
 
-      public Class getJavaClass() {
+      @Override
+      public MarshallableCollection readFrom(ImmutableSerializationContext ctx, RawProtoStreamReader in) throws IOException {
+         try {
+            ArrayList<Object> entries = new ArrayList<>();
+            boolean done = false;
+            while (!done) {
+               final int tag = in.readTag();
+               switch (tag) {
+                  case 0:
+                     done = true;
+                     break;
+                  case 1 << 3 | WireFormat.WIRETYPE_LENGTH_DELIMITED: {
+                     byte[] bytes = in.readByteArray();
+                     Object entry = bytes.length == 0 ? null : marshaller.objectFromByteBuffer(bytes);
+                     entries.add(entry);
+                     break;
+                  }
+                  default: {
+                     if (!in.skipField(tag)) done = true;
+                  }
+               }
+            }
+            return new MarshallableCollection<>(entries);
+         } catch (ClassNotFoundException e) {
+            throw new MarshallingException(e);
+         }
+      }
+
+      @Override
+      public void writeTo(ImmutableSerializationContext ctx, RawProtoStreamWriter out,
+                          MarshallableCollection marshallableCollection) throws IOException {
+         try {
+            Collection<?> collection = marshallableCollection.get();
+            if (collection != null) {
+               for (Object entry : collection) {
+                  // If entry is null, write an empty byte array so that the null value can be recreated on the receiver.
+                  byte[] bytes = entry == null ? Util.EMPTY_BYTE_ARRAY : marshaller.objectToByteBuffer(entry);
+                  out.writeBytes(1, bytes);
+               }
+            }
+         } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new MarshallingException(e);
+         }
+      }
+
+      @Override
+      public Class<? extends MarshallableCollection> getJavaClass() {
          return MarshallableCollection.class;
       }
 
       @Override
-      AbstractMarshallableCollectionWrapper<Object> newWrapperInstance(Collection<Object> o) {
-         return new MarshallableCollection<>(o);
+      public String getTypeName() {
+         return typeName;
       }
    }
 }

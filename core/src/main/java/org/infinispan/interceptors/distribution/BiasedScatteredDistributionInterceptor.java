@@ -145,12 +145,11 @@ public class BiasedScatteredDistributionInterceptor extends ScatteredDistributio
       if (!cmd.isSuccessful() || (revocation = biasManager.startRevokingRemoteBias(cmd.getKey(), ctx.getOrigin())) == null) {
          return returnValue;
       } else if (revocation.shouldRevoke()) {
-         Address[] waitFor = revocation.biased().toArray(new Address[revocation.biased().size()]);
          sendRevokeBias(revocation.biased(), Collections.singleton(cmd.getKey()), cmd.getTopologyId(), cmd.getCommandInvocationId())
                .whenComplete(revocation);
          // When the revocation does not succeed this node does not care; originator will get timeout
          // expecting BackupAckCommand from the node that had the bias revoked
-         return new BiasRevocationResponse(returnValue, waitFor);
+         return new BiasRevocationResponse(returnValue, revocation.biased());
       } else {
          // We'll send the response & revocations later but the command
          // will be already completed on this node
@@ -191,19 +190,17 @@ public class BiasedScatteredDistributionInterceptor extends ScatteredDistributio
             List<Address> waitForFinal = waitFor;
             CompletableFuture<List<Address>>[] cfs = futures.toArray(CompletableFutures.EMPTY_ARRAY);
             return asyncValue(CompletableFuture.allOf(cfs).thenApply(nil -> {
-               Address[] waitForAddresses = null;
                if (waitForFinal != null) {
                   Stream.of(cfs).map(CompletableFuture::join).filter(Objects::nonNull).forEach(waitForFinal::addAll);
-                  waitForAddresses = waitForFinal.toArray(Address.EMPTY_ARRAY);
                }
-               return new BiasRevocationResponse(returnValue, waitForAddresses);
+               return new BiasRevocationResponse(returnValue, waitForFinal);
             }));
          }
       }
       if (waitFor == null) {
          return returnValue;
       } else {
-         return new BiasRevocationResponse(returnValue, waitFor.toArray(Address.EMPTY_ARRAY));
+         return new BiasRevocationResponse(returnValue, waitFor);
       }
    }
 

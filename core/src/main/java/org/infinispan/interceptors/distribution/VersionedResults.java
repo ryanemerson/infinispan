@@ -2,7 +2,7 @@ package org.infinispan.interceptors.distribution;
 
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.container.versioning.EntryVersion;
-import org.infinispan.marshall.protostream.impl.MarshallableCollection;
+import org.infinispan.marshall.protostream.impl.MarshallableArray;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
@@ -18,21 +18,21 @@ public class VersionedResults {
    }
 
    @ProtoFactory
-   VersionedResults(MarshallableCollection<Object> values, MarshallableCollection<EntryVersion> versions) {
-      this.values = MarshallableCollection.unwrapAsArray(values, Object[]::new);
-      this.versions = MarshallableCollection.unwrapAsArray(versions, EntryVersion[]::new);
+   VersionedResults(MarshallableArray<Object> values, MarshallableArray<EntryVersion> versions) {
+      this.values = MarshallableArray.unwrap(values, new Object[0]);
+      this.versions = MarshallableArray.unwrap(versions, new EntryVersion[0]);
    }
 
    @ProtoField(number = 1)
-   MarshallableCollection<Object> getValues() {
-      return MarshallableCollection.create(values);
+   MarshallableArray<Object> getValues() {
+      return MarshallableArray.create(values);
    }
 
-   // We have to marshall as MarshallableCollection, instead of two fields for SimpleClusteredVersion and NumericVersion
+   // We have to marshall as MarshallableArray, instead of two fields for SimpleClusteredVersion and NumericVersion
    // as index of version corresponds to values collection.
    @ProtoField(number = 2)
-   MarshallableCollection<EntryVersion> getVersions() {
-      return MarshallableCollection.create(versions);
+   MarshallableArray<EntryVersion> getVersions() {
+      return MarshallableArray.create(versions);
    }
 
    @Override

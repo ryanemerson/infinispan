@@ -13,7 +13,7 @@ import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.commons.util.Util;
 import org.infinispan.context.InvocationContext;
 import org.infinispan.context.impl.FlagBitSets;
-import org.infinispan.marshall.protostream.impl.MarshallableCollection;
+import org.infinispan.marshall.protostream.impl.MarshallableArray;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
@@ -44,15 +44,15 @@ public class InvalidateCommand extends AbstractTopologyAffectedCommand implement
 
    @ProtoFactory
    InvalidateCommand(long flagsWithoutRemote, int topologyId, CommandInvocationId commandInvocationId,
-                     MarshallableCollection<Object> wrappedKeys) {
+                     MarshallableArray<Object> wrappedKeys) {
       super(flagsWithoutRemote, topologyId);
-      this.keys = MarshallableCollection.unwrapAsArray(wrappedKeys, Object[]::new);
+      this.keys = MarshallableArray.unwrap(wrappedKeys, new Object[0]);
       this.commandInvocationId = commandInvocationId;
    }
 
    @ProtoField(number = 3, name = "keys")
-   protected MarshallableCollection<Object> getWrappedKeys() {
-      return MarshallableCollection.create(keys);
+   protected MarshallableArray<Object> getWrappedKeys() {
+      return MarshallableArray.create(keys);
    }
 
    @Override

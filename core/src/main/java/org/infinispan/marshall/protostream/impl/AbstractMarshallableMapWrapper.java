@@ -29,6 +29,7 @@ import org.infinispan.util.KeyValuePair;
  * @author Ryan Emerson
  * @since 11.0
  */
+// TODO merge with MarshallableMap
 abstract class AbstractMarshallableMapWrapper<K, V> {
 
    final Map<K, V> map;

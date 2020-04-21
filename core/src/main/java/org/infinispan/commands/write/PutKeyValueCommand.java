@@ -40,10 +40,10 @@ public class PutKeyValueCommand extends AbstractDataWriteCommand implements Meta
    public PutKeyValueCommand(Object key, Object value, boolean putIfAbsent, Metadata metadata, int segment,
                              long flagsBitSet, CommandInvocationId commandInvocationId) {
       super(key, segment, flagsBitSet, commandInvocationId);
-      setValue(value);
-      setMetadata(metadata);
+      this.value = value;
       this.putIfAbsent = putIfAbsent;
       this.valueMatcher = putIfAbsent ? ValueMatcher.MATCH_EXPECTED : ValueMatcher.MATCH_ALWAYS;
+      this.metadata = metadata;
    }
 
    @ProtoFactory

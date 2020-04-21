@@ -342,9 +342,8 @@ public class ScatteredDistributionInterceptor extends ClusteringInterceptor {
          }
       }
 
-      Object responseValue = ((SuccessfulResponse) response).getResponseValue();
       try {
-         return command.acceptVisitor(ctx, new PrimaryResponseHandler(responseValue));
+         return command.acceptVisitor(ctx, new PrimaryResponseHandler((SuccessfulResponse) response));
       } catch (Throwable throwable) {
          throw CompletableFutures.asCompletionException(throwable);
       }
@@ -799,23 +798,22 @@ public class ScatteredDistributionInterceptor extends ClusteringInterceptor {
       if (response == null) {
          return;
       }
-      Object responseValue = response.getResponseValue();
-      if (!(responseValue instanceof Collection)) {
-         allFuture.completeExceptionally(new IllegalStateException("Unexpected response value: " + responseValue));
+      InternalCacheValue<?>[] values = response.getResponseValueArray(new InternalCacheValue[0]);
+      if (values == null) {
+         allFuture.completeExceptionally(new IllegalStateException("Unexpected response: " + response));
          return;
       }
-      List<InternalCacheValue<?>> values = (List<InternalCacheValue<?>>) responseValue;
-      if (keys.size() != values.size()) {
-         allFuture.completeExceptionally(new CacheException("Request and response lengths differ: keys=" + keys + ", response=" + values));
+      if (keys.size() != values.length) {
+         allFuture.completeExceptionally(new CacheException("Request and response lengths differ: keys=" + keys + ", response=" + Arrays.toString(values)));
          return;
       }
       synchronized (allFuture) {
          if (allFuture.isDone()) {
             return;
          }
-         for (int i = 0; i < values.size(); ++i) {
+         for (int i = 0; i < values.length; ++i) {
             Object key = keys.get(i);
-            InternalCacheValue<?> value = values.get(i);
+            InternalCacheValue<?> value = values[i];
             CacheEntry<?, ?> entry = value == null ? NullCacheEntry.getInstance() : value.toInternalCacheEntry(key);
             entryFactory.wrapExternalEntry(ctx, key, entry, true, false);
          }
@@ -1089,26 +1087,27 @@ public class ScatteredDistributionInterceptor extends ClusteringInterceptor {
                allFuture.completeExceptionally(t);
                return;
             }
-            Object responseValue = response.getResponseValue();
+
+            InternalCacheValue<?>[] values;
             // Note: we could use PrimaryResponseHandler, but we would have to add the reference to allFuture, offset...
-            InternalCacheValue[] values;
             try {
+               Object responseValue = response.getResponseValue();
                if (command.loadType() == DONT_LOAD) {
-                  if (!(responseValue instanceof InternalCacheValue[])) {
+                  values = ((SuccessfulResponse)response).getResponseValueArray(new InternalCacheValue[0]);
+                  if (values == null) {
                      allFuture.completeExceptionally(new CacheException("Response from " + owner + ": expected InternalCacheValue[] but it is " + responseValue));
                      return;
                   }
-                  values = (InternalCacheValue[]) responseValue;
                } else {
-                  // TODO needs to be updated to use custom response object
-                  if (!(responseValue instanceof Object[]) || (((Object[]) responseValue).length != 2)) {
+                  Object[] responseArray = ((SuccessfulResponse)response).getResponseValueArray(new Object[0]);
+                  if (responseArray == null || responseArray.length != 2) {
                      allFuture.completeExceptionally(new CacheException("Response from " + owner + ": expected Object[2] but it is " + responseValue));
                      return;
                   }
                   // We use Object[] { InternalCacheValue[], Object[] } structure to get benefit of same-type array marshalling
                   // TODO optimize returning entry itself
                   // Note: some interceptors relying on the return value *could* have a problem interpreting this
-                  values = (InternalCacheValue[]) ((Object[]) responseValue)[0];
+                  values = (InternalCacheValue<?>[]) responseArray[0];
                   MergingCompletableFuture.moveListItemsToFuture(((Object[]) responseValue)[1], allFuture, myOffset);
                }
                AggregateCompletionStage<Void> aggregateCompletionStage = CompletionStages.aggregateCompletionStage();
@@ -1164,7 +1163,6 @@ public class ScatteredDistributionInterceptor extends ClusteringInterceptor {
       }
       CompletionStage<Void> aggregatedStage = aggregateCompletionStage.freeze();
       Object returnValue;
-      // TODO change to a class implementation for Scattered responses?
       if (cmd.loadType() == DONT_LOAD) {
          // Disable ignoring return value in response
          cmd.setFlagsBitSet(cmd.getFlagsBitSet() & ~FlagBitSets.IGNORE_RETURN_VALUES);
@@ -1324,26 +1322,27 @@ public class ScatteredDistributionInterceptor extends ClusteringInterceptor {
    }
 
    protected class PrimaryResponseHandler extends AbstractVisitor implements InvocationSuccessFunction {
-      private final Object responseValue;
+      private final SuccessfulResponse responseValue;
       private Object returnValue;
       private EntryVersion version;
 
-      public PrimaryResponseHandler(Object responseValue) {
+      public PrimaryResponseHandler(SuccessfulResponse responseValue) {
          this.responseValue = responseValue;
       }
 
       private Object handleDataWriteCommand(InvocationContext ctx, DataWriteCommand command) {
          if (command.isReturnValueExpected()) {
-            if (!(responseValue instanceof Object[])) {
-               throw new CacheException("Expected Object[] { return-value, version } as response but it is " + responseValue);
+            Object[] array = responseValue.getResponseValueArray(new Object[0]);
+            if (array == null) {
+               throw new CacheException("Expected Object[] { value, metadata, return-value } but it is " + responseValue.getResponseValue());
             }
-            Object[] array = (Object[]) this.responseValue;
             if (array.length != 2) {
                throw new CacheException("Expected Object[] { return-value, version } but it is " + Arrays.toString(array));
             }
             version = (EntryVersion) array[1];
             returnValue = array[0];
          } else {
+            Object responseValue = this.responseValue.getResponseValue();
             if (!(responseValue instanceof EntryVersion)) {
                throw new CacheException("Expected EntryVersion as response but it is " + responseValue);
             }
@@ -1357,6 +1356,7 @@ public class ScatteredDistributionInterceptor extends ClusteringInterceptor {
       }
 
       private Object handleValueResponseCommand(InvocationContext ctx, DataWriteCommand command) throws Throwable {
+         Object responseValue = this.responseValue.getResponseValue();
          if (!(responseValue instanceof MetadataImmortalCacheValue)) {
             throw new CacheException("Expected MetadataImmortalCacheValue as response but it is " + responseValue);
          }
@@ -1370,10 +1370,10 @@ public class ScatteredDistributionInterceptor extends ClusteringInterceptor {
       }
 
       private Object handleFunctionalCommand(InvocationContext ctx, DataWriteCommand command) throws Throwable {
-         if (!(responseValue instanceof Object[])) {
-            throw new CacheException("Expected Object[] { value, metadata, return-value } but it is " + responseValue);
+         Object[] array = responseValue.getResponseValueArray(new Object[0]);
+         if (array == null) {
+            throw new CacheException("Expected Object[] { value, metadata, return-value } but it is " + responseValue.getResponseValue());
          }
-         Object[] array = (Object[]) responseValue;
          if (array.length != 3) {
             throw new CacheException("Expected Object[] { value, metadata, return-value } but it is " + Arrays.toString(array));
          }

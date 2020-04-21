@@ -5,7 +5,7 @@ import java.util.function.ObjIntConsumer;
 
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.commons.util.IntSet;
-import org.infinispan.marshall.protostream.impl.MarshallableCollection;
+import org.infinispan.marshall.protostream.impl.MarshallableArray;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
@@ -22,31 +22,41 @@ import org.infinispan.protostream.annotations.ProtoTypeId;
  */
 @ProtoTypeId(ProtoStreamTypeIds.KEY_PUBLISHER_RESPONSE)
 public class KeyPublisherResponse extends PublisherResponse {
-   @ProtoField(number = 6)
-   final MarshallableCollection<Object> extraObjects;
-
-   @ProtoField(number = 7)
-   final MarshallableCollection<Object> keys;
-
-   @ProtoField(number = 8, defaultValue = "-1")
+   final Object[] extraObjects;
+   final Object[] keys;
    final int keySize;
 
-   @ProtoFactory
-   KeyPublisherResponse(MarshallableCollection<Object> results, Set<Integer> completedSegmentsWorkaround,
-                        Set<Integer> lostSegmentsWorkaround, boolean complete, int segmentOffset,
-                        MarshallableCollection<Object> extraObjects, MarshallableCollection<Object> keys, int keySize) {
-      super(results, completedSegmentsWorkaround, lostSegmentsWorkaround, complete, segmentOffset);
+   public KeyPublisherResponse(Object[] results, IntSet completedSegments, IntSet lostSegments, int size,
+                               boolean complete, Object[] extraObjects, int extraSize, Object[] keys, int keySize) {
+      super(results, completedSegments, lostSegments, size, complete, extraSize);
       this.extraObjects = extraObjects;
       this.keys = keys;
       this.keySize = keySize;
    }
 
-   public KeyPublisherResponse(Object[] results, IntSet completedSegments, IntSet lostSegments, int size,
-                               boolean complete, Object[] extraObjects, int extraSize, Object[] keys, int keySize) {
-      super(results, completedSegments, lostSegments, size, complete, extraSize);
-      this.extraObjects = MarshallableCollection.create(extraObjects);
-      this.keys = MarshallableCollection.create(keys);
+   @ProtoFactory
+   KeyPublisherResponse(MarshallableArray<Object> wrappedResults, Set<Integer> completedSegmentsWorkaround,
+                        Set<Integer> lostSegmentsWorkaround, boolean complete, int segmentOffset,
+                        MarshallableArray<Object> wrappedExtraObjects, MarshallableArray<Object> keys, int keySize) {
+      super(wrappedResults, completedSegmentsWorkaround, lostSegmentsWorkaround, complete, segmentOffset);
+      this.extraObjects = MarshallableArray.unwrap(wrappedExtraObjects, new Object[0]);
+      this.keys = MarshallableArray.unwrap(keys, new Object[0]);
       this.keySize = keySize;
+   }
+
+   @ProtoField(number = 6, name = "extraObjects")
+   MarshallableArray<Object> getWrappedExtraObjects() {
+      return MarshallableArray.create(extraObjects);
+   }
+
+   @ProtoField(number = 7)
+   MarshallableArray<Object> getKeys() {
+      return MarshallableArray.create(keys);
+   }
+
+   @ProtoField(number = 8, defaultValue = "-1")
+   int getKeySize() {
+      return keySize;
    }
 
    // NOTE: extraSize is stored in the segmentOffset field since it isn't valid when using key tracking.
@@ -57,13 +67,14 @@ public class KeyPublisherResponse extends PublisherResponse {
    }
 
    public Object[] getExtraObjects() {
-      return MarshallableCollection.unwrapAsArray(extraObjects, Object[]::new);
+      return extraObjects;
    }
 
    @Override
    public void forEachSegmentValue(ObjIntConsumer consumer, int segment) {
-      for (Object key : MarshallableCollection.unwrap(keys))
-         consumer.accept(key, segment);
+      for (int i = 0; i < keySize; ++i) {
+         consumer.accept(keys[i], segment);
+      }
    }
 
    @Override

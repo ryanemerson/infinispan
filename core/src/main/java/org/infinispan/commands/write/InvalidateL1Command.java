@@ -7,7 +7,7 @@ import org.infinispan.commands.CommandInvocationId;
 import org.infinispan.commands.Visitor;
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.context.InvocationContext;
-import org.infinispan.marshall.protostream.impl.MarshallableCollection;
+import org.infinispan.marshall.protostream.impl.MarshallableArray;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
@@ -30,7 +30,7 @@ public class InvalidateL1Command extends InvalidateCommand {
 
    @ProtoFactory
    InvalidateL1Command(long flagsWithoutRemote, int topologyId, CommandInvocationId commandInvocationId,
-                       MarshallableCollection<Object> wrappedKeys, JGroupsAddress writeOrigin) {
+                       MarshallableArray<Object> wrappedKeys, JGroupsAddress writeOrigin) {
       super(flagsWithoutRemote, topologyId, commandInvocationId, wrappedKeys);
       this.writeOrigin = writeOrigin;
    }

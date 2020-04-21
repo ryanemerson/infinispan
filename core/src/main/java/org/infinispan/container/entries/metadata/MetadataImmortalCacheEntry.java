@@ -35,7 +35,7 @@ public class MetadataImmortalCacheEntry extends ImmortalCacheEntry implements Me
    @ProtoFactory
    MetadataImmortalCacheEntry(MarshallableObject<?> wrappedKey, MarshallableObject<?> wrappedValue,
                               MetaParamsInternalMetadata internalMetadata, MarshallableObject<Metadata> wrappedMetadata) {
-      super(wrappedKey, wrappedValue, internalMetadata);
+      super(MarshallableObject.unwrap(wrappedKey), MarshallableObject.unwrap(wrappedValue), internalMetadata);
       this.metadata = MarshallableObject.unwrap(wrappedMetadata);
    }
 

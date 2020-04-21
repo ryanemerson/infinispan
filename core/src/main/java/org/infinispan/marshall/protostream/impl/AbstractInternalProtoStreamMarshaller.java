@@ -88,7 +88,7 @@ public abstract class AbstractInternalProtoStreamMarshaller implements Marshalle
    }
 
    protected ByteBuffer objectToBuffer(Object o, int estimatedSize) {
-      System.err.println("Marshall: " + o.getClass().getName());
+//      System.err.println("Marshall: " + o.getClass().getName());
       try {
          if (requiresWrapping(o))
             o = new MarshallableUserObject<>(o);

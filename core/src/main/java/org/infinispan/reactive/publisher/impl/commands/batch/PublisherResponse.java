@@ -8,7 +8,7 @@ import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.commons.util.IntSet;
 import org.infinispan.commons.util.IntSets;
 import org.infinispan.commons.util.Util;
-import org.infinispan.marshall.protostream.impl.MarshallableCollection;
+import org.infinispan.marshall.protostream.impl.MarshallableArray;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
@@ -22,9 +22,7 @@ import org.infinispan.protostream.annotations.ProtoTypeId;
 @ProtoTypeId(ProtoStreamTypeIds.PUBLISHER_RESPONSE)
 public class PublisherResponse {
 
-   @ProtoField(number = 1)
-   final MarshallableCollection<Object> results;
-
+   final Object[] results;
    // The completed segments after this request - This may be null
    final IntSet completedSegments;
 
@@ -50,22 +48,9 @@ public class PublisherResponse {
    // are in the array
    transient final int size;
 
-   @ProtoFactory
-   PublisherResponse(MarshallableCollection<Object> results, Set<Integer> completedSegmentsWorkaround,
-                     Set<Integer> lostSegmentsWorkaround, boolean complete, int segmentOffset) {
-      this.results = results;
-      this.completedSegments = completedSegmentsWorkaround == null ? null : IntSets.from(completedSegmentsWorkaround);
-      this.completedSegmentsWorkaround = completedSegmentsWorkaround;
-      this.lostSegments = lostSegmentsWorkaround == null ? null : IntSets.from(lostSegmentsWorkaround);
-      this.lostSegmentsWorkaround = lostSegmentsWorkaround;
-      this.complete = complete;
-      this.segmentOffset = segmentOffset;
-      this.size = results.get().size();
-   }
-
    public PublisherResponse(Object[] results, IntSet completedSegments, IntSet lostSegments, int size, boolean complete,
                             int segmentOffset) {
-      this.results = MarshallableCollection.create(results);
+      this.results = results;
       this.completedSegments = completedSegments;
       this.completedSegmentsWorkaround = completedSegments;
       this.lostSegments = lostSegments;
@@ -75,12 +60,31 @@ public class PublisherResponse {
       this.segmentOffset = segmentOffset;
    }
 
+   @ProtoFactory
+   PublisherResponse(MarshallableArray<Object> wrappedResults, Set<Integer> completedSegmentsWorkaround,
+                     Set<Integer> lostSegmentsWorkaround, boolean complete, int segmentOffset) {
+      this.results = MarshallableArray.unwrap(wrappedResults, new Object[0]);
+      this.completedSegments = completedSegmentsWorkaround == null ? null : IntSets.from(completedSegmentsWorkaround);
+      this.completedSegmentsWorkaround = completedSegmentsWorkaround;
+      this.lostSegments = lostSegmentsWorkaround == null ? null : IntSets.from(lostSegmentsWorkaround);
+      this.lostSegmentsWorkaround = lostSegmentsWorkaround;
+      this.complete = complete;
+      this.segmentOffset = segmentOffset;
+      this.size = results.length;
+   }
+
+
+   @ProtoField(number = 1, name = "results")
+   MarshallableArray<Object> getWrappedResults() {
+      return MarshallableArray.create(results);
+   }
+
    public static PublisherResponse emptyResponse(IntSet completedSegments, IntSet lostSegments) {
       return new PublisherResponse(Util.EMPTY_OBJECT_ARRAY, completedSegments, lostSegments, 0, true, 0);
    }
 
    public Object[] getResults() {
-      return MarshallableCollection.unwrapAsArray(results, Object[]::new);
+      return results;
    }
 
    public IntSet getCompletedSegments() {
@@ -100,7 +104,6 @@ public class PublisherResponse {
    }
 
    public void forEachSegmentValue(ObjIntConsumer consumer, int segment) {
-      Object[] results = getResults();
       for (int i = segmentOffset; i < results.length; ++i) {
          consumer.accept(results[i], segment);
       }

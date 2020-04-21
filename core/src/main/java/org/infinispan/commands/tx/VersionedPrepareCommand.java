@@ -7,7 +7,7 @@ import java.util.Map;
 import org.infinispan.commands.write.WriteCommand;
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.container.versioning.IncrementableEntryVersion;
-import org.infinispan.marshall.protostream.impl.MarshallableCollection;
+import org.infinispan.marshall.protostream.impl.MarshallableArray;
 import org.infinispan.marshall.protostream.impl.MarshallableMap;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
@@ -25,28 +25,31 @@ import org.infinispan.util.ByteString;
 @ProtoTypeId(ProtoStreamTypeIds.VERSIONED_PREPARE_COMMAND)
 public class VersionedPrepareCommand extends PrepareCommand {
    public static final byte COMMAND_ID = 26;
-
-   @ProtoField(number = 6)
-   MarshallableMap<Object, IncrementableEntryVersion> versionsSeen;
-
-   @ProtoFactory
-   VersionedPrepareCommand(ByteString cacheName, GlobalTransaction globalTransaction, MarshallableCollection<WriteCommand> modifications,
-                           boolean onePhaseCommit, boolean retriedCommand,MarshallableMap<Object, IncrementableEntryVersion> versionsSeen) {
-      super(cacheName, globalTransaction, modifications, onePhaseCommit, retriedCommand);
-      this.versionsSeen = versionsSeen;
-   }
+   private Map<Object, IncrementableEntryVersion> versionsSeen = null;
 
    public VersionedPrepareCommand(ByteString cacheName, GlobalTransaction gtx, List<WriteCommand> modifications, boolean onePhase) {
       // VersionedPrepareCommands are *always* 2-phase, except when retrying a prepare.
       super(cacheName, gtx, modifications, onePhase);
    }
 
+   @ProtoField(number = 6, name = "versionsSeen")
+   MarshallableMap<Object, IncrementableEntryVersion> getWrappedVersionsSeen() {
+      return MarshallableMap.create(versionsSeen);
+   }
+
+   @ProtoFactory
+   VersionedPrepareCommand(ByteString cacheName, GlobalTransaction globalTransaction, MarshallableArray<WriteCommand> wrappedModifications,
+                           boolean onePhaseCommit, boolean retriedCommand, MarshallableMap<Object, IncrementableEntryVersion> wrappedVersionsSeen) {
+      super(cacheName, globalTransaction, wrappedModifications, onePhaseCommit, retriedCommand);
+      this.versionsSeen = MarshallableMap.unwrap(wrappedVersionsSeen);
+   }
+
    public Map<Object, IncrementableEntryVersion> getVersionsSeen() {
-      return MarshallableMap.unwrap(versionsSeen);
+      return versionsSeen;
    }
 
    public void setVersionsSeen(Map<Object, IncrementableEntryVersion> versionsSeen) {
-      this.versionsSeen = MarshallableMap.create(versionsSeen);
+      this.versionsSeen = versionsSeen;
    }
 
    @Override

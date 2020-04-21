@@ -880,11 +880,14 @@ public abstract class BaseDistributionInterceptor extends ClusteringInterceptor 
          }
 
          SuccessfulResponse successfulResponse = (SuccessfulResponse) response;
+         InternalCacheValue<?>[] values = successfulResponse.getResponseValueArray(new InternalCacheValue[0]);
+         if (values == null)
+            throw CompletableFutures.asCompletionException(new IllegalStateException("null response value"));
+
          List<Object> senderKeys = requestedKeys.get(sender);
-         List<InternalCacheValue<?>> values = (List<InternalCacheValue<?>>) successfulResponse.getResponseValue();
          for (int i = 0; i < senderKeys.size(); ++i) {
             Object key = senderKeys.get(i);
-            InternalCacheValue<?> value = values.get(i);
+            InternalCacheValue<?> value = values[i];
             CacheEntry<?, ?> entry = value == null ? NullCacheEntry.getInstance() : value.toInternalCacheEntry(key);
             wrapRemoteEntry(ctx, key, entry, false);
          }
