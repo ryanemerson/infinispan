@@ -61,10 +61,7 @@ public class PessimisticStateTransferLocksTest extends MultipleCacheManagersTest
    @Override
    protected void createCacheManagers() throws Throwable {
       ConfigurationBuilder c = getConfigurationBuilder();
-
-      addClusterEnabledCacheManager(c);
-      addClusterEnabledCacheManager(c);
-      addClusterEnabledCacheManager(c);
+      createCluster(ControlledConsistentHashFactory.SCI.INSTANCE, c, 3);
       waitForClusterToForm();
    }
 

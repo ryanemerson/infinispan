@@ -798,7 +798,7 @@ public class ScatteredDistributionInterceptor extends ClusteringInterceptor {
       if (response == null) {
          return;
       }
-      InternalCacheValue<?>[] values = response.getResponseValueArray(new InternalCacheValue[0]);
+      InternalCacheValue<?>[] values = response.getResponseArray(new InternalCacheValue[0]);
       if (values == null) {
          allFuture.completeExceptionally(new IllegalStateException("Unexpected response: " + response));
          return;
@@ -1093,13 +1093,13 @@ public class ScatteredDistributionInterceptor extends ClusteringInterceptor {
             try {
                Object responseValue = response.getResponseValue();
                if (command.loadType() == DONT_LOAD) {
-                  values = ((SuccessfulResponse)response).getResponseValueArray(new InternalCacheValue[0]);
+                  values = ((SuccessfulResponse)response).getResponseArray(new InternalCacheValue[0]);
                   if (values == null) {
                      allFuture.completeExceptionally(new CacheException("Response from " + owner + ": expected InternalCacheValue[] but it is " + responseValue));
                      return;
                   }
                } else {
-                  Object[] responseArray = ((SuccessfulResponse)response).getResponseValueArray(new Object[0]);
+                  Object[] responseArray = ((SuccessfulResponse)response).getResponseArray(new Object[0]);
                   if (responseArray == null || responseArray.length != 2) {
                      allFuture.completeExceptionally(new CacheException("Response from " + owner + ": expected Object[2] but it is " + responseValue));
                      return;
@@ -1332,7 +1332,7 @@ public class ScatteredDistributionInterceptor extends ClusteringInterceptor {
 
       private Object handleDataWriteCommand(InvocationContext ctx, DataWriteCommand command) {
          if (command.isReturnValueExpected()) {
-            Object[] array = responseValue.getResponseValueArray(new Object[0]);
+            Object[] array = responseValue.getResponseArray(new Object[0]);
             if (array == null) {
                throw new CacheException("Expected Object[] { value, metadata, return-value } but it is " + responseValue.getResponseValue());
             }
@@ -1370,7 +1370,7 @@ public class ScatteredDistributionInterceptor extends ClusteringInterceptor {
       }
 
       private Object handleFunctionalCommand(InvocationContext ctx, DataWriteCommand command) throws Throwable {
-         Object[] array = responseValue.getResponseValueArray(new Object[0]);
+         Object[] array = responseValue.getResponseArray(new Object[0]);
          if (array == null) {
             throw new CacheException("Expected Object[] { value, metadata, return-value } but it is " + responseValue.getResponseValue());
          }

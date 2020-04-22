@@ -490,7 +490,7 @@ public class ScatteredStateConsumerImpl extends StateConsumerImpl {
       } else if (!response.isSuccessful()) {
          throw new CacheException("Response from " + address + " is unsuccessful: " + response);
       }
-      InternalCacheValue<?>[] values = ((SuccessfulResponse) response).getResponseValueArray(new InternalCacheValue[0]);
+      InternalCacheValue<?>[] values = ((SuccessfulResponse) response).getResponseArray(new InternalCacheValue[0]);
       if (values == null) {
          // TODO: The other node got higher topology
          throw new IllegalStateException();

@@ -880,7 +880,7 @@ public abstract class BaseDistributionInterceptor extends ClusteringInterceptor 
          }
 
          SuccessfulResponse successfulResponse = (SuccessfulResponse) response;
-         InternalCacheValue<?>[] values = successfulResponse.getResponseValueArray(new InternalCacheValue[0]);
+         InternalCacheValue<?>[] values = successfulResponse.getResponseArray(new InternalCacheValue[0]);
          if (values == null)
             throw CompletableFutures.asCompletionException(new IllegalStateException("null response value"));
 

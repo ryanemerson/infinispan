@@ -43,7 +43,6 @@ import org.infinispan.notifications.cachelistener.annotation.TopologyChanged;
 import org.infinispan.notifications.cachelistener.event.TopologyChangedEvent;
 import org.infinispan.remoting.rpc.RpcManager;
 import org.infinispan.test.MultipleCacheManagersTest;
-import org.infinispan.test.TestDataSCI;
 import org.infinispan.test.TestingUtil;
 import org.infinispan.test.fwk.CleanupAfterMethod;
 import org.infinispan.test.fwk.TransportFlags;
@@ -96,7 +95,7 @@ public class EntryWrappingInterceptorDoesNotBlockTest extends MultipleCacheManag
       cb = new ConfigurationBuilder();
       cb.clustering().cacheMode(CacheMode.DIST_SYNC).hash().consistentHashFactory(chFactory).numSegments(2);
       cb.transaction().transactionMode(TransactionMode.TRANSACTIONAL);
-      createCluster(TestDataSCI.INSTANCE, cb, 3);
+      createCluster(ControlledConsistentHashFactory.SCI.INSTANCE, cb, 3);
    }
 
    @Test(dataProvider = "operations")

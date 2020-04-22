@@ -12,9 +12,9 @@ import javax.transaction.Status;
 import javax.transaction.xa.XAException;
 
 import org.infinispan.commands.tx.VersionedPrepareCommand;
+import org.infinispan.commons.test.Exceptions;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
-import org.infinispan.commons.test.Exceptions;
 import org.infinispan.test.MultipleCacheManagersTest;
 import org.infinispan.test.concurrent.StateSequencer;
 import org.infinispan.test.fwk.CleanupAfterMethod;
@@ -80,7 +80,7 @@ public class OptimisticPrimaryOwnerCrashDuringPrepareTest extends MultipleCacheM
             .consistentHashFactory(new ControlledConsistentHashFactory.Default(1, 0));
       config.transaction().transactionManagerLookup(new EmbeddedTransactionManagerLookup())
             .cacheStopTimeout(1, SECONDS);
-      createCluster(config, 2);
+      createCluster(ControlledConsistentHashFactory.SCI.INSTANCE, config, 2);
       waitForClusterToForm();
    }
 }
