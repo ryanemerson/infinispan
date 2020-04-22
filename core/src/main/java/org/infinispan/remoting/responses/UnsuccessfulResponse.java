@@ -1,12 +1,11 @@
 package org.infinispan.remoting.responses;
 
-import java.util.Objects;
-
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
-import org.infinispan.commons.util.Util;
+import org.infinispan.marshall.protostream.impl.MarshallableArray;
+import org.infinispan.marshall.protostream.impl.MarshallableCollection;
+import org.infinispan.marshall.protostream.impl.MarshallableMap;
 import org.infinispan.marshall.protostream.impl.MarshallableObject;
 import org.infinispan.protostream.annotations.ProtoFactory;
-import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
 
 /**
@@ -17,44 +16,21 @@ import org.infinispan.protostream.annotations.ProtoTypeId;
  */
 @ProtoTypeId(ProtoStreamTypeIds.UNSUCCESSFUL_RESPONSE)
 public class UnsuccessfulResponse extends ValidResponse {
-   public static final UnsuccessfulResponse EMPTY = new UnsuccessfulResponse(null);
-
-   @ProtoField(number = 1)
-   final MarshallableObject<?> responseValue;
+   public static final UnsuccessfulResponse EMPTY = new UnsuccessfulResponse(null, null, null, null);
 
    @ProtoFactory
-   UnsuccessfulResponse(MarshallableObject<?> responseValue) {
-      this.responseValue = responseValue;
+   UnsuccessfulResponse(MarshallableObject<?> object, MarshallableCollection<?> collection,
+                        MarshallableMap<?, ?> map, MarshallableArray<?> array) {
+      super(object, collection, map, array);
    }
 
+   // TODO do we need to handle collection, maps and arrays?
    public static UnsuccessfulResponse create(Object value) {
-      return value == null ? EMPTY : new UnsuccessfulResponse(new MarshallableObject<>(value));
+      return value == null ? EMPTY : new UnsuccessfulResponse(new MarshallableObject<>(value), null, null, null);
    }
 
    @Override
    public boolean isSuccessful() {
       return false;
-   }
-
-   public Object getResponseValue() {
-      return MarshallableObject.unwrap(responseValue);
-   }
-
-   @Override
-   public boolean equals(Object o) {
-      if (this == o) return true;
-      if (o == null || getClass() != o.getClass()) return false;
-      UnsuccessfulResponse that = (UnsuccessfulResponse) o;
-      return Objects.equals(responseValue, that.responseValue);
-   }
-
-   @Override
-   public int hashCode() {
-      return Objects.hash(responseValue);
-   }
-
-   @Override
-   public String toString() {
-      return "UnsuccessfulResponse{responseValue=" + Util.toStr(getResponseValue()) + "} ";
    }
 }

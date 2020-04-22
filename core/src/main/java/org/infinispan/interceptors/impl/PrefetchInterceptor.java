@@ -247,13 +247,13 @@ public class PrefetchInterceptor<K, V> extends DDAsyncInterceptor {
    private Object handleRemotelyPrefetchedEntry(InvocationContext ctx, VisitableCommand command, Object rv) {
       Map<Address, Response> responseMap = (Map<Address, Response>) rv;
       EntryVersion maxVersion = null;
-      InternalCacheValue maxValue = null;
+      InternalCacheValue<?> maxValue = null;
       for (Response response : responseMap.values()) {
          if (!response.isSuccessful()) {
             throw OutdatedTopologyException.RETRY_NEXT_TOPOLOGY;
          }
          SuccessfulResponse successfulResponse = (SuccessfulResponse) response;
-         InternalCacheValue icv = (InternalCacheValue) successfulResponse.getResponseValue();
+         InternalCacheValue<?> icv = successfulResponse.getResponseObject();
          if (icv == null) {
             continue;
          }
@@ -304,9 +304,9 @@ public class PrefetchInterceptor<K, V> extends DDAsyncInterceptor {
             if (!response.isSuccessful()) {
                throw OutdatedTopologyException.RETRY_NEXT_TOPOLOGY;
             }
-            InternalCacheValue[] values = (InternalCacheValue[]) ((SuccessfulResponse) response).getResponseValue();
+            InternalCacheValue<?>[] values = ((SuccessfulResponse) response).getResponseArray(new InternalCacheValue[0]);
             int i = 0;
-            for (InternalCacheValue icv : values) {
+            for (InternalCacheValue<?> icv : values) {
                if (icv != null) {
                   Metadata metadata = icv.getMetadata();
                   if (metadata instanceof RemoteMetadata) {

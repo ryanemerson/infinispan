@@ -118,9 +118,8 @@ public abstract class BaseDistributionInterceptor extends ClusteringInterceptor 
                                                                        rpcManager.getSyncRpcOptions());
       return asyncInvokeNext(ctx, command, future.thenAccept(response -> {
          if (response instanceof SuccessfulResponse) {
-            //noinspection unchecked
-            List<CacheEntry> cacheEntries = (List<CacheEntry>) response.getResponseValue();
-            for (CacheEntry entry : cacheEntries) {
+            Collection<CacheEntry<?, ?>> cacheEntries = response.getResponseCollection();
+            for (CacheEntry<?, ?> entry : cacheEntries) {
                wrapRemoteEntry(ctx, entry.getKey(), entry, false);
             }
          }
@@ -182,7 +181,7 @@ public abstract class BaseDistributionInterceptor extends ClusteringInterceptor 
       return rpcManager.invokeCommandStaggered(info.readOwners(), getCommand, new RemoteGetSingleKeyCollector(),
                                                rpcManager.getSyncRpcOptions())
                        .thenAccept(response -> {
-                          Object responseValue = response.getResponseValue();
+                          InternalCacheValue<?> responseValue = response.getResponseObject();
                           if (responseValue == null) {
                              if (rvrl != null) {
                                 rvrl.remoteValueNotFound(key);
@@ -190,7 +189,7 @@ public abstract class BaseDistributionInterceptor extends ClusteringInterceptor 
                              wrapRemoteEntry(ctx, key, NullCacheEntry.getInstance(), isWrite);
                              return;
                           }
-                          InternalCacheEntry ice = ((InternalCacheValue) responseValue).toInternalCacheEntry(key);
+                          InternalCacheEntry<?, ?> ice = responseValue.toInternalCacheEntry(key);
                           if (rvrl != null) {
                              rvrl.remoteValueFound(ice);
                           }
@@ -499,13 +498,12 @@ public abstract class BaseDistributionInterceptor extends ClusteringInterceptor 
             return;
          }
          try {
-            Object responseValue = response.getResponseValue();
-            Object[] values = unwrapFunctionalManyResultOnOrigin(ctx, keys, responseValue);
+            Object[] values = unwrapFunctionalManyResultOnOrigin(ctx, keys, response.getResponseArray(new Object[0]));
             if (values != null) {
                System.arraycopy(values, 0, allFuture.results, destinationIndex, values.length);
                allFuture.countDown();
             } else {
-               allFuture.completeExceptionally(new IllegalStateException("Unexpected response value " + responseValue));
+               allFuture.completeExceptionally(new IllegalStateException("Unexpected response " + response));
             }
          } catch (Throwable t) {
             allFuture.completeExceptionally(t);
@@ -695,10 +693,8 @@ public abstract class BaseDistributionInterceptor extends ClusteringInterceptor 
          CompletionStage<SuccessfulResponse> rpc =
             rpcManager.invokeCommandStaggered(owners, remoteCommand, new RemoteGetSingleKeyCollector(),
                                               rpcManager.getSyncRpcOptions());
-         return asyncValue(rpc).thenApply(ctx, command, (rCtx, rCommand, response) -> {
-            Object responseValue = ((SuccessfulResponse) response).getResponseValue();
-            return unwrapFunctionalResultOnOrigin(rCtx, rCommand.getKey(), responseValue);
-         });
+         return asyncValue(rpc).thenApply(ctx, command, (rCtx, rCommand, response) ->
+               unwrapFunctionalResultOnOrigin(rCtx, rCommand.getKey(), ((SuccessfulResponse) response).getResponseObject()));
       } else {
          // This has LOCAL flags, just wrap NullCacheEntry and let the command run
          entryFactory.wrapExternalEntry(ctx, key, NullCacheEntry.getInstance(), true, false);
@@ -746,7 +742,7 @@ public abstract class BaseDistributionInterceptor extends ClusteringInterceptor 
             throw unexpected(primaryOwner, response);
          }
          // We expect only successful/unsuccessful responses, not unsure
-         return ((ValidResponse) response).getResponseValue();
+         return ((ValidResponse) response).getResponseObject();
       });
    }
 

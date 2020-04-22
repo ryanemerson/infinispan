@@ -648,9 +648,9 @@ public class ScatteredDistributionInterceptor extends ClusteringInterceptor {
          Object key = clusteredGetCommand.getKey();
          return asyncInvokeNext(ctx, command, rpcFuture.thenAccept(response -> {
             if (response.isSuccessful()) {
-               InternalCacheValue value = (InternalCacheValue) ((SuccessfulResponse) response).getResponseValue();
+               InternalCacheValue<?> value = ((SuccessfulResponse) response).getResponseObject();
                if (value != null) {
-                  InternalCacheEntry cacheEntry = value.toInternalCacheEntry(key);
+                  InternalCacheEntry<?, ?> cacheEntry = value.toInternalCacheEntry(key);
                   entryFactory.wrapExternalEntry(ctx, key, cacheEntry, true, false);
                } else {
                   entryFactory.wrapExternalEntry(ctx, key, NullCacheEntry.getInstance(), false, false);
@@ -977,12 +977,12 @@ public class ScatteredDistributionInterceptor extends ClusteringInterceptor {
                      return;
                   }
                   try {
-                     Object[] values = (Object[]) response.getResponseValue();
+                     Object[] values = response.getResponseArray(new Object[0]);
                      if (values != null) {
                         System.arraycopy(values, 0, allFuture.results, myOffset, values.length);
                         allFuture.countDown();
                      } else {
-                        allFuture.completeExceptionally(new IllegalStateException("Unexpected response value " + response.getResponseValue()));
+                        allFuture.completeExceptionally(new IllegalStateException("Unexpected response " + response));
                      }
                   } catch (Throwable t) {
                      allFuture.completeExceptionally(t);
@@ -1093,13 +1093,13 @@ public class ScatteredDistributionInterceptor extends ClusteringInterceptor {
             try {
                Object responseValue = response.getResponseValue();
                if (command.loadType() == DONT_LOAD) {
-                  values = ((SuccessfulResponse)response).getResponseArray(new InternalCacheValue[0]);
+                  values = response.getResponseArray(new InternalCacheValue[0]);
                   if (values == null) {
                      allFuture.completeExceptionally(new CacheException("Response from " + owner + ": expected InternalCacheValue[] but it is " + responseValue));
                      return;
                   }
                } else {
-                  Object[] responseArray = ((SuccessfulResponse)response).getResponseArray(new Object[0]);
+                  Object[] responseArray = response.getResponseArray(new Object[0]);
                   if (responseArray == null || responseArray.length != 2) {
                      allFuture.completeExceptionally(new CacheException("Response from " + owner + ": expected Object[2] but it is " + responseValue));
                      return;
@@ -1213,10 +1213,8 @@ public class ScatteredDistributionInterceptor extends ClusteringInterceptor {
                                      rpcManager.getSyncRpcOptions())
                   .thenAccept(response -> {
                      if (response instanceof SuccessfulResponse) {
-                        //noinspection unchecked
-                        List<CacheEntry> cacheEntries =
-                              (List<CacheEntry>) response.getResponseValue();
-                        for (CacheEntry entry : cacheEntries) {
+                        Collection<CacheEntry<?, ?>> cacheEntries = response.getResponseCollection();
+                        for (CacheEntry<?, ?> entry : cacheEntries) {
                            entryFactory.wrapExternalEntry(ctx, entry.getKey(), entry, true, false);
                         }
                      }
@@ -1322,19 +1320,19 @@ public class ScatteredDistributionInterceptor extends ClusteringInterceptor {
    }
 
    protected class PrimaryResponseHandler extends AbstractVisitor implements InvocationSuccessFunction {
-      private final SuccessfulResponse responseValue;
+      private final SuccessfulResponse response;
       private Object returnValue;
       private EntryVersion version;
 
-      public PrimaryResponseHandler(SuccessfulResponse responseValue) {
-         this.responseValue = responseValue;
+      public PrimaryResponseHandler(SuccessfulResponse response) {
+         this.response = response;
       }
 
       private Object handleDataWriteCommand(InvocationContext ctx, DataWriteCommand command) {
          if (command.isReturnValueExpected()) {
-            Object[] array = responseValue.getResponseArray(new Object[0]);
+            Object[] array = response.getResponseArray(new Object[0]);
             if (array == null) {
-               throw new CacheException("Expected Object[] { value, metadata, return-value } but it is " + responseValue.getResponseValue());
+               throw new CacheException("Expected Object[] { value, metadata, return-value } but it is " + response);
             }
             if (array.length != 2) {
                throw new CacheException("Expected Object[] { return-value, version } but it is " + Arrays.toString(array));
@@ -1342,7 +1340,7 @@ public class ScatteredDistributionInterceptor extends ClusteringInterceptor {
             version = (EntryVersion) array[1];
             returnValue = array[0];
          } else {
-            Object responseValue = this.responseValue.getResponseValue();
+            Object responseValue = this.response.getResponseObject();
             if (!(responseValue instanceof EntryVersion)) {
                throw new CacheException("Expected EntryVersion as response but it is " + responseValue);
             }
@@ -1356,7 +1354,7 @@ public class ScatteredDistributionInterceptor extends ClusteringInterceptor {
       }
 
       private Object handleValueResponseCommand(InvocationContext ctx, DataWriteCommand command) throws Throwable {
-         Object responseValue = this.responseValue.getResponseValue();
+         Object responseValue = this.response.getResponseObject();
          if (!(responseValue instanceof MetadataImmortalCacheValue)) {
             throw new CacheException("Expected MetadataImmortalCacheValue as response but it is " + responseValue);
          }
@@ -1370,9 +1368,9 @@ public class ScatteredDistributionInterceptor extends ClusteringInterceptor {
       }
 
       private Object handleFunctionalCommand(InvocationContext ctx, DataWriteCommand command) throws Throwable {
-         Object[] array = responseValue.getResponseArray(new Object[0]);
+         Object[] array = response.getResponseArray(new Object[0]);
          if (array == null) {
-            throw new CacheException("Expected Object[] { value, metadata, return-value } but it is " + responseValue.getResponseValue());
+            throw new CacheException("Expected Object[] { value, metadata, return-value } but it is " + response.getResponseValue());
          }
          if (array.length != 3) {
             throw new CacheException("Expected Object[] { value, metadata, return-value } but it is " + Arrays.toString(array));

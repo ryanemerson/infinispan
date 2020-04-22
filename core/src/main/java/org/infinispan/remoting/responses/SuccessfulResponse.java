@@ -10,7 +10,6 @@ import org.infinispan.marshall.protostream.impl.MarshallableCollection;
 import org.infinispan.marshall.protostream.impl.MarshallableMap;
 import org.infinispan.marshall.protostream.impl.MarshallableObject;
 import org.infinispan.protostream.annotations.ProtoFactory;
-import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
 
 /**
@@ -19,22 +18,12 @@ import org.infinispan.protostream.annotations.ProtoTypeId;
  * @author Manik Surtani
  * @since 4.0
  */
+// TODO expose methods to get Marshallable wrappers so that we don't have to rely on casting
+// getResponseObject, getResponseCollection, getResponseMap, getResponseArray
 @ProtoTypeId(ProtoStreamTypeIds.SUCCESSFUL_RESPONSE)
 public class SuccessfulResponse extends ValidResponse {
    public static final SuccessfulResponse SUCCESSFUL_EMPTY_RESPONSE = new SuccessfulResponse((Object) null);
 
-   @ProtoField(number = 1)
-   final MarshallableObject<?> object;
-
-   @ProtoField(number = 2)
-   final MarshallableCollection<?> collection;
-
-   // TODO do we need MarshallableMap for this to handle internal types?
-   @ProtoField(number = 3)
-   final MarshallableMap<?, ?> map;
-
-   @ProtoField(number = 4)
-   final MarshallableArray<?> array;
 
    @ProtoFactory
    static SuccessfulResponse protoFactory(MarshallableObject<?> object, MarshallableCollection<?> collection,
@@ -57,10 +46,7 @@ public class SuccessfulResponse extends ValidResponse {
 
    protected SuccessfulResponse(MarshallableObject<?> object, MarshallableCollection<?> collection, MarshallableMap<?, ?> map,
                               MarshallableArray<?> array) {
-      this.object = object;
-      this.collection = collection;
-      this.map = map;
-      this.array = array;
+      super(object, collection, map, array);
    }
 
    protected SuccessfulResponse(Object responseValue) {
@@ -70,24 +56,6 @@ public class SuccessfulResponse extends ValidResponse {
    @Override
    public boolean isSuccessful() {
       return true;
-   }
-
-   public Object getResponseValue() {
-      if (object != null)
-         return object.get();
-
-      if (collection != null)
-         return collection.get();
-
-      if (map != null)
-         return map.get();
-
-      return array == null ? null : array.get();
-   }
-
-   @SuppressWarnings("unchecked")
-   public <T> T[] getResponseValueArray(T[] a) {
-      return MarshallableArray.unwrap((MarshallableArray<T>) array, a);
    }
 
    @Override

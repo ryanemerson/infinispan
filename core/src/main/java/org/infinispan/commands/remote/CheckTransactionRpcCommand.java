@@ -108,8 +108,7 @@ public class CheckTransactionRpcCommand implements CacheRpcCommand {
       @Override
       protected Collection<GlobalTransaction> withValidResponse(Address sender, ValidResponse response) {
          if (response instanceof SuccessfulResponse) {
-            //noinspection unchecked
-            return (Collection<GlobalTransaction>) response.getResponseValue();
+            return ((SuccessfulResponse) response).getResponseCollection();
          } else {
             return Collections.emptyList();
          }

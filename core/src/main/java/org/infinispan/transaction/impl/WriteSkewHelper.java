@@ -30,11 +30,9 @@ import org.infinispan.util.concurrent.CompletionStages;
  */
 public class WriteSkewHelper {
 
-   @SuppressWarnings("unchecked")
    public static void readVersionsFromResponse(Response r, CacheTransaction ct) {
       if (r != null && r.isSuccessful()) {
-         SuccessfulResponse sr = (SuccessfulResponse) r;
-         Map<Object, IncrementableEntryVersion> entryVersions = (Map<Object, IncrementableEntryVersion>) sr.getResponseValue();
+         Map<Object, IncrementableEntryVersion> entryVersions = ((SuccessfulResponse) r).getResponseMap();
          if (entryVersions != null)
             ct.setUpdatedEntryVersions(mergeEntryVersions(entryVersions, ct.getUpdatedEntryVersions()));
       }

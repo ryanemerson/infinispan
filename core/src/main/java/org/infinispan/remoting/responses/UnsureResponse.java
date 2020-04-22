@@ -26,7 +26,7 @@ public class UnsureResponse extends ValidResponse {
    }
 
    @Override
-   public Object getResponseValue() {
-      throw new UnsupportedOperationException();
+   protected boolean isReturnValueDisabled() {
+      return true;
    }
 }

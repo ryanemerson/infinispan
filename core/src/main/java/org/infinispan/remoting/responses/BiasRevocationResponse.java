@@ -21,16 +21,10 @@ public class BiasRevocationResponse extends SuccessfulResponse {
    @ProtoFactory
    BiasRevocationResponse(MarshallableObject<?> object, MarshallableCollection<?> collection,
                           MarshallableMap<?, ?> map, MarshallableArray<?> array) {
-      super(object, collection, null, null);
+      super(object, collection, map, array);
    }
 
-   @SuppressWarnings("unchecked")
    public Collection<Address> getWaitList() {
-      return (Collection<Address>) MarshallableCollection.unwrap(collection);
-   }
-
-   @Override
-   public Object getResponseValue() {
-      return MarshallableObject.unwrap(object);
+      return getResponseCollection();
    }
 }

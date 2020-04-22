@@ -509,7 +509,7 @@ public class ClusterPublisherManagerImpl<K, V> implements ClusterPublisherManage
 
       @Override
       protected PublisherResult<R> addValidResponse(Address sender, ValidResponse response) {
-         PublisherResult<R> results = (PublisherResult<R>) response.getResponseValue();
+         PublisherResult<R> results = response.getResponseObject();
          if (trace) {
             log.tracef("Result result was: %s for keys %s from %s", results.getResult(), keys, sender);
          }
@@ -551,7 +551,7 @@ public class ClusterPublisherManagerImpl<K, V> implements ClusterPublisherManage
 
       @Override
       protected PublisherResult<R> addValidResponse(Address sender, ValidResponse response) {
-         PublisherResult<R> results = (PublisherResult<R>) response.getResponseValue();
+         PublisherResult<R> results = response.getResponseObject();
          if (trace) {
             log.tracef("Result result was: %s for segments %s from %s with %s suspected segments", results.getResult(),
                   targetSegments, sender, results.getSuspectedSegments());
@@ -812,7 +812,7 @@ public class ClusterPublisherManagerImpl<K, V> implements ClusterPublisherManage
 
    private final static Function<ValidResponse, PublisherResponse> responseHandler = vr -> {
       if (vr instanceof SuccessfulResponse) {
-         return (PublisherResponse) vr.getResponseValue();
+         return vr.getResponseObject();
       } else {
          throw new IllegalArgumentException("Unsupported response received: " + vr);
       }

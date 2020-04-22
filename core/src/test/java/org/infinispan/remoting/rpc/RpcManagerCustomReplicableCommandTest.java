@@ -23,6 +23,7 @@ import org.testng.annotations.Test;
  * @author anistor@redhat.com
  * @since 5.3
  */
+// TODO how to handle this custom command? Is it still valid?
 @Test(testName = "remoting.rpc.RpcManagerCustomReplicableCommandTest", groups = "functional")
 public class RpcManagerCustomReplicableCommandTest extends MultipleCacheManagersTest {
 

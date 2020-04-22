@@ -1,7 +1,7 @@
 package org.infinispan.transaction.xa.recovery;
 
+import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 
 import javax.transaction.xa.Xid;
 
@@ -27,7 +27,7 @@ public class PreparedTxIterator implements RecoveryManager.RecoveryIterator {
       return result;
    }
 
-   public void add(List<Xid> xids) {
+   public void add(Collection<Xid> xids) {
       this.xids.addAll(xids);
    }
 

@@ -325,7 +325,7 @@ public class ClusterTopologyManagerImpl implements ClusterTopologyManager {
       @Override
       protected CacheStatusResponseCollector addValidResponse(Address sender, ValidResponse response) {
          if (response.isSuccessful()) {
-            ManagerStatusResponse nodeStatus = (ManagerStatusResponse) response.getResponseValue();
+            ManagerStatusResponse nodeStatus = response.getResponseObject();
             rebalancingEnabled &= nodeStatus.isRebalancingEnabled();
 
             for (Entry<String, CacheStatusResponse> entry : nodeStatus.getCaches().entrySet()) {
