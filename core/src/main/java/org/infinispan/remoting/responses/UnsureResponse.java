@@ -1,6 +1,10 @@
 package org.infinispan.remoting.responses;
 
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
+import org.infinispan.marshall.protostream.impl.MarshallableArray;
+import org.infinispan.marshall.protostream.impl.MarshallableCollection;
+import org.infinispan.marshall.protostream.impl.MarshallableMap;
+import org.infinispan.marshall.protostream.impl.MarshallableObject;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoTypeId;
 
@@ -16,7 +20,8 @@ public class UnsureResponse extends ValidResponse {
    public static final UnsureResponse INSTANCE = new UnsureResponse();
 
    @ProtoFactory
-   static UnsureResponse protoFactory() {
+   static UnsureResponse protoFactory(MarshallableObject<?> object, MarshallableCollection<?> collection,
+                                      MarshallableMap<?, ?> map, MarshallableArray<?> array) {
       return INSTANCE;
    }
 
