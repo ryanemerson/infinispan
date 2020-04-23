@@ -48,7 +48,7 @@ public class OrphanTransactionsCleanupTest extends MultipleCacheManagersTest {
       ltm0.setRebalancingEnabled(false);
 
       // Add a new node
-      addClusterEnabledCacheManager(configurationBuilder);
+      addClusterEnabledCacheManager(ReplicatedControlledConsistentHashFactory.SCI.INSTANCE, configurationBuilder);
       Cache<Object, Object> c2 = manager(2).getCache();
 
       // Start a transaction from c2, but don't commit yet

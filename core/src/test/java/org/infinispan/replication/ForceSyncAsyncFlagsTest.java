@@ -65,7 +65,7 @@ public class ForceSyncAsyncFlagsTest extends MultipleCacheManagersTest {
    public void testForceSyncFlagUsage() throws Exception {
       ConfigurationBuilder builder = getDefaultClusteredCacheConfig(CacheMode.REPL_ASYNC, false);
       builder.clustering().hash().numSegments(1).consistentHashFactory(new ReplicatedControlledConsistentHashFactory(0));
-      createClusteredCaches(2, "replAsync", builder);
+      createClusteredCaches(2, ReplicatedControlledConsistentHashFactory.SCI.INSTANCE, "replAsync", builder);
 
       AdvancedCache<String, String> cache1 = this.<String, String>cache(0, "replAsync").getAdvancedCache();
       cache(1, "replAsync").getAdvancedCache();
