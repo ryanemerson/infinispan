@@ -1,10 +1,14 @@
 package org.infinispan.marshall.persistence.impl;
 
+import java.io.IOException;
+
 import org.infinispan.commons.io.ByteBuffer;
 import org.infinispan.commons.marshall.Marshaller;
+import org.infinispan.commons.marshall.MarshallingException;
 import org.infinispan.factories.KnownComponentNames;
 import org.infinispan.factories.annotations.ComponentName;
 import org.infinispan.factories.annotations.Inject;
+import org.infinispan.factories.annotations.Start;
 import org.infinispan.factories.scopes.Scope;
 import org.infinispan.factories.scopes.Scopes;
 import org.infinispan.metadata.Metadata;
@@ -23,13 +27,33 @@ public class MarshalledEntryFactoryImpl implements MarshallableEntryFactory {
    private static final MarshallableEntry EMPTY = new MarshallableEntryImpl();
 
    @Inject @ComponentName(KnownComponentNames.PERSISTENCE_MARSHALLER)
-   Marshaller marshaller;
+   PersistenceMarshallerImpl persistenceMarshaller;
+
+   private Marshaller marshaller;
 
    public MarshalledEntryFactoryImpl() {
    }
 
+   // For mocked tests only
    public MarshalledEntryFactoryImpl(Marshaller marshaller) {
       this.marshaller = marshaller;
+   }
+
+   @Start
+   void start() {
+      this.marshaller = persistenceMarshaller;
+   }
+
+   @Override
+   public MarshallableEntry from10xEntry(ByteBuffer keyBytes, ByteBuffer valueBytes, ByteBuffer metadataBytes,
+                                         ByteBuffer internalMetadataByte, long created, long lastUsed) {
+      try {
+         Object key = persistenceMarshaller.readLegacyBytes10_1(keyBytes);
+         Object value = persistenceMarshaller.readLegacyBytes10_1(valueBytes);
+         return new MarshallableEntryImpl<>(key, value, metadataBytes, internalMetadataByte, created, lastUsed, marshaller);
+      } catch (ClassNotFoundException | IOException e) {
+         throw new MarshallingException(e);
+      }
    }
 
    @Override

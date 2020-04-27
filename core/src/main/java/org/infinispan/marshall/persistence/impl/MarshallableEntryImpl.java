@@ -46,8 +46,20 @@ public class MarshallableEntryImpl<K, V> implements MarshallableEntry<K, V> {
       this.marshaller = marshaller;
    }
 
-   MarshallableEntryImpl(ByteBuffer key, ByteBuffer valueBytes, ByteBuffer metadataBytes, ByteBuffer internalMetadataBytes, long created, long lastUsed, Marshaller marshaller) {
-      this.keyBytes = key;
+   MarshallableEntryImpl(K key, V value, ByteBuffer metadataBytes, ByteBuffer internalMetadataBytes, long created, long lastUsed, Marshaller marshaller) {
+      this.key = key;
+      this.value = value;
+      this.keyBytes = marshall(key, marshaller);
+      this.valueBytes = marshall(value, marshaller);
+      this.metadataBytes = metadataBytes;
+      this.internalMetadataBytes = internalMetadataBytes;
+      this.created = created;
+      this.lastUsed = lastUsed;
+      this.marshaller = marshaller;
+   }
+
+   MarshallableEntryImpl(ByteBuffer keyBytes, ByteBuffer valueBytes, ByteBuffer metadataBytes, ByteBuffer internalMetadataBytes, long created, long lastUsed, Marshaller marshaller) {
+      this.keyBytes = keyBytes;
       this.valueBytes = valueBytes;
       this.metadataBytes = metadataBytes;
       this.internalMetadataBytes = internalMetadataBytes;
@@ -225,6 +237,9 @@ public class MarshallableEntryImpl<K, V> implements MarshallableEntry<K, V> {
    static ByteBuffer marshall(Object obj, Marshaller marshaller) {
       if (obj == null)
          return null;
+
+      if (obj instanceof ByteBuffer)
+         return (ByteBuffer) obj;
 
       try {
          return marshaller.objectToBuffer(obj);

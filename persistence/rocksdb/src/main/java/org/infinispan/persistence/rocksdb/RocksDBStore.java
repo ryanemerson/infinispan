@@ -34,7 +34,9 @@ import org.infinispan.commons.util.AbstractIterator;
 import org.infinispan.commons.util.IntSet;
 import org.infinispan.commons.util.IntSets;
 import org.infinispan.commons.util.Util;
+import org.infinispan.commons.util.Version;
 import org.infinispan.distribution.ch.KeyPartitioner;
+import org.infinispan.marshall.persistence.PersistenceMarshaller;
 import org.infinispan.marshall.persistence.impl.MarshallableEntryImpl;
 import org.infinispan.metadata.Metadata;
 import org.infinispan.persistence.internal.PersistenceUtil;
@@ -364,6 +366,7 @@ public class RocksDBStore<K,V> implements SegmentedAdvancedLoadWriteStore<K,V> {
                     }
 
                     for (Long time : times) {
+                        // TODO must load with added MarshallableUserObject here
                         expiredDb.delete(marshall(time));
                     }
 
@@ -417,6 +420,26 @@ public class RocksDBStore<K,V> implements SegmentedAdvancedLoadWriteStore<K,V> {
     @Override
     public void removeSegments(IntSet segments) {
         handler.removeSegments(segments);
+    }
+
+    /**
+     * Marshalling method required to ensure compatibility with 10.1.x stores where key/values were not wrapped
+     * with a {@link org.infinispan.marshall.protostream.impl.MarshallableUserObject} if the ProtoStream marshaller
+     * was used.
+     */
+    private byte[] marshallKeyValueForLoad(Object entry) throws IOException, InterruptedException {
+        // If legacy Extract MarshallableUserObject bytes;
+        Marshaller userMarshaller = ((PersistenceMarshaller) marshaller).getUserMarshaller();
+        return userMarshaller.objectToByteBuffer(entry);
+//        return marshaller.objectToByteBuffer(entry);
+    }
+
+    private Object unmarshallKeyValueOnLoad(byte[] bytes) throws IOException, ClassNotFoundException {
+        if (bytes == null)
+            return null;
+
+        // check if MarshallableUserObject type, if not wrap
+        return marshaller.objectFromByteBuffer(bytes);
     }
 
     private byte[] marshall(Object entry) throws IOException, InterruptedException {
@@ -613,7 +636,8 @@ public class RocksDBStore<K,V> implements SegmentedAdvancedLoadWriteStore<K,V> {
                         throw new PersistenceException("RocksDB is stopped");
                     }
 
-                    entryBytes = db.get(handle, marshall(key));
+                    // TODO must load with added MarshallableUserObject here
+                    entryBytes = db.get(handle, marshallKeyValueForLoad(key));
                 } finally {
                     semaphore.release();
                 }
@@ -656,6 +680,7 @@ public class RocksDBStore<K,V> implements SegmentedAdvancedLoadWriteStore<K,V> {
 
         boolean delete(int segment, Object key) {
             try {
+                // TODO must load with added MarshallableUserObject here
                 byte[] keyBytes = marshall(key);
                 semaphore.acquire();
                 try {
@@ -705,6 +730,7 @@ public class RocksDBStore<K,V> implements SegmentedAdvancedLoadWriteStore<K,V> {
                 int batchSize = 0;
                 WriteBatch batch = new WriteBatch();
                 for (Object key : keys) {
+                    // TODO must load with added MarshallableUserObject here
                     batch.remove(getHandle(calculateSegment(key)), marshall(key));
                     batchSize++;
 

@@ -25,9 +25,11 @@ import org.infinispan.factories.scopes.Scopes;
 public class DelegatingUserMarshaller implements Marshaller {
 
    final Marshaller marshaller;
+   final boolean defaultUserMarshaller;
 
-   public DelegatingUserMarshaller(Marshaller marshaller) {
+   public DelegatingUserMarshaller(Marshaller marshaller, boolean defaultUserMarshaller) {
       this.marshaller = marshaller;
+      this.defaultUserMarshaller = defaultUserMarshaller;
    }
 
    @Start
@@ -90,5 +92,9 @@ public class DelegatingUserMarshaller implements Marshaller {
 
    public Marshaller getDelegate() {
       return marshaller;
+   }
+
+   public boolean isDefaultUserMarshaller() {
+      return defaultUserMarshaller;
    }
 }

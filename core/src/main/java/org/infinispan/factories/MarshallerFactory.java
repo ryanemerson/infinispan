@@ -73,13 +73,12 @@ public class MarshallerFactory extends AbstractComponentFactory implements AutoI
             Method method = ReflectionUtil.findMethod(clazz, "initialize", GlobalComponentRegistry.class);
             ReflectionUtil.invokeAccessibly(userMarshaller, method, globalComponentRegistry);
             CONFIG.jbossMarshallingDetected();
-            return new DelegatingUserMarshaller(userMarshaller);
+         } else {
+            userMarshaller.initialize(globalComponentRegistry.getCacheManager().getClassWhiteList());
          }
-      } else {
-         userMarshaller = new ImmutableProtoStreamMarshaller(contextRegistry.wired().getUserCtx());
+         return new DelegatingUserMarshaller(userMarshaller, false);
       }
-
-      userMarshaller.initialize(globalComponentRegistry.getCacheManager().getClassWhiteList());
-      return new DelegatingUserMarshaller(userMarshaller);
+      userMarshaller = new ImmutableProtoStreamMarshaller(contextRegistry.wired().getUserCtx());
+      return new DelegatingUserMarshaller(userMarshaller, true);
    }
 }

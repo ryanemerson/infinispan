@@ -502,14 +502,14 @@ public class SoftIndexFileStore implements AdvancedLoadWriteStore<Object, Object
       }
    }
 
-   private MarshallableEntry<Object, Object> readEntry(FileProvider.Handle handle, EntryHeader header, int offset, Object key, boolean nonNull)
+   private MarshallableEntry<Object, Object> readEntry(FileProvider.Handle handle, EntryHeader header, int offset, Object key, boolean migrationInProgress)
          throws IOException {
       if (header.expiryTime() > 0 && header.expiryTime() <= timeService.wallClockTime()) {
          if (trace) {
             log.tracef("Entry for key=%s found in temporary table on %d:%d but it is expired", key, handle.getFileId(), offset);
          }
-         return nonNull ?
-               marshallableEntryFactory.create(readAndCheckKey(handle, header, offset), (ByteBuffer) null) :
+         return migrationInProgress ?
+               marshallableEntryFactory.from10xEntry(readAndCheckKey(handle, header, offset), null, null, null, -1, -1) :
                null;
       }
       ByteBuffer serializedKey = readAndCheckKey(handle, header, offset);
@@ -517,7 +517,7 @@ public class SoftIndexFileStore implements AdvancedLoadWriteStore<Object, Object
          if (trace) {
             log.tracef("Entry for key=%s found in temporary table on %d:%d but it is a tombstone in log", key, handle.getFileId(), offset);
          }
-         return nonNull ? marshallableEntryFactory.create(serializedKey, (ByteBuffer) null) : null;
+         return migrationInProgress ? marshallableEntryFactory.from10xEntry(serializedKey, null, null, null, -1, -1) : null;
       }
 
       if (trace) {
@@ -543,7 +543,9 @@ public class SoftIndexFileStore implements AdvancedLoadWriteStore<Object, Object
             toBuffer(EntryRecord.readInternalMetadata(handle, header, offset)) :
             null;
 
-      return marshallableEntryFactory.create(serializedKey, value, serializedMetadata, internalMetadata, created, lastUsed);
+      return migrationInProgress ?
+            marshallableEntryFactory.from10xEntry(serializedKey, value, serializedMetadata, internalMetadata, created, lastUsed) :
+            marshallableEntryFactory.create(serializedKey, value, serializedMetadata, internalMetadata, created, lastUsed);
    }
 
    private ByteBuffer readAndCheckKey(FileProvider.Handle handle, EntryHeader header, int offset) throws IOException {

@@ -14,6 +14,9 @@ import org.infinispan.metadata.impl.PrivateMetadata;
  */
 public interface MarshallableEntryFactory<K,V> {
 
+   MarshallableEntry<K, V> from10xEntry(ByteBuffer keyBytes, ByteBuffer valueBytes, ByteBuffer metadataBytes,
+                                        ByteBuffer internalMetadataByte, long created, long lastUsed);
+
    /**
     * {@code metadataBytes} defaults to null
     * {@code created} defaults to -1

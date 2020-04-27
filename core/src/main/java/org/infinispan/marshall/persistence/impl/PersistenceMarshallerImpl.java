@@ -2,8 +2,12 @@ package org.infinispan.marshall.persistence.impl;
 
 import static org.infinispan.util.logging.Log.PERSISTENCE;
 
+import java.io.IOException;
+
+import org.infinispan.commons.io.ByteBuffer;
 import org.infinispan.factories.scopes.Scope;
 import org.infinispan.factories.scopes.Scopes;
+import org.infinispan.marshall.core.impl.DelegatingUserMarshaller;
 import org.infinispan.marshall.persistence.PersistenceMarshaller;
 import org.infinispan.marshall.protostream.impl.AbstractInternalProtoStreamMarshaller;
 import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
@@ -40,5 +44,16 @@ public class PersistenceMarshallerImpl extends AbstractInternalProtoStreamMarsha
    @Override
    public void register(SerializationContextInitializer initializer) {
       ctxRegistry.addContextInitializer(MarshallerType.PERSISTENCE, initializer);
+   }
+
+   Object readLegacyBytes10_1(ByteBuffer buffer) throws IOException, ClassNotFoundException {
+      if (buffer == null)
+         return null;
+      // If the default protostream marshaller is configured, then we must read the bytes directly from the user
+      // protostream marshaller as key/value bytes in 10.1.x were not wrapped with MarshallableUserObject
+      if (((DelegatingUserMarshaller) userMarshaller).isDefaultUserMarshaller()) {
+         return userMarshaller.objectFromByteBuffer(buffer.getBuf());
+      }
+      return objectFromByteBuffer(buffer.getBuf());
    }
 }
