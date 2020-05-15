@@ -12,6 +12,7 @@ import java.util.stream.StreamSupport;
 import org.infinispan.client.rest.RestClient;
 import org.infinispan.client.rest.RestResponse;
 import org.infinispan.commons.dataconversion.MediaType;
+import org.infinispan.server.test.core.ContainerInfinispanServerDriver;
 import org.infinispan.server.test.junit4.InfinispanServerRule;
 import org.infinispan.server.test.junit4.InfinispanServerTestMethodRule;
 import org.junit.ClassRule;
@@ -46,7 +47,9 @@ public class RestServerResource {
       JsonNode interfaces = server.get("interfaces");
       JsonNode security = server.get("security");
       JsonNode endpoints = server.get("endpoints");
-      assertEquals("127.0.0.1", interfaces.get("interface").get("inet-address").get("value").asText());
+
+      String inetAddress = SERVERS.getServerDriver() instanceof ContainerInfinispanServerDriver ? "SITE_LOCAL" : "127.0.0.1";
+      assertEquals(inetAddress, interfaces.get("interface").get("inet-address").get("value").asText());
       assertEquals("default", security.get("security-realms").get("security-realm").get("name").asText());
       assertEquals("hotrod", endpoints.get("hotrod-connector").get("name").asText());
       assertEquals("rest", endpoints.get("rest-connector").get("name").asText());
