@@ -46,10 +46,12 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 public class NettyRestResponse implements RestResponse {
    private final HttpResponse response;
    private final Object entity;
+   private final boolean removeEntity;
 
-   private NettyRestResponse(HttpResponse response, Object entity) {
+   private NettyRestResponse(HttpResponse response, Object entity, boolean removeEntity) {
       this.response = response;
       this.entity = entity;
+      this.removeEntity = removeEntity;
    }
 
    public HttpResponse getResponse() {
@@ -66,10 +68,15 @@ public class NettyRestResponse implements RestResponse {
       return entity;
    }
 
+   public boolean removeEntityOnCompletion() {
+      return removeEntity;
+   }
+
    public static class Builder implements RestResponseBuilder<Builder> {
       private Map<String, List<String>> headers = new HashMap<>();
       private Object entity;
       private HttpResponseStatus httpStatus = OK;
+      private boolean removeEntity = false;
 
       @Override
       public NettyRestResponse build() {
@@ -81,7 +88,7 @@ public class NettyRestResponse implements RestResponse {
          }
          response.setStatus(httpStatus);
          headers.forEach((name, values) -> response.headers().set(name, values));
-         return new NettyRestResponse(response, entity);
+         return new NettyRestResponse(response, entity, removeEntity);
       }
 
       @Override
@@ -104,6 +111,11 @@ public class NettyRestResponse implements RestResponse {
       @Override
       public Builder entity(Object entity) {
          this.entity = entity;
+         return this;
+      }
+
+      public Builder removeEntity(boolean removeEntity) {
+         this.removeEntity = removeEntity;
          return this;
       }
 

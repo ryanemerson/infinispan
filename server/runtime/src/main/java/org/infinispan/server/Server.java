@@ -57,9 +57,11 @@ import org.infinispan.server.configuration.ServerConfiguration;
 import org.infinispan.server.configuration.ServerConfigurationBuilder;
 import org.infinispan.server.configuration.security.TokenRealmConfiguration;
 import org.infinispan.server.context.ServerInitialContextFactoryBuilder;
+import org.infinispan.server.core.BackupManager;
 import org.infinispan.server.core.CacheIgnoreManager;
 import org.infinispan.server.core.ProtocolServer;
 import org.infinispan.server.core.ServerManagement;
+import org.infinispan.server.core.backup.BackupManagerImpl;
 import org.infinispan.server.core.configuration.ProtocolServerConfiguration;
 import org.infinispan.server.datasource.DataSourceFactory;
 import org.infinispan.server.hotrod.HotRodServer;
@@ -170,6 +172,7 @@ public class Server implements ServerManagement, AutoCloseable {
    private TaskManager taskManager;
    private ServerInitialContextFactoryBuilder initialContextFactoryBuilder;
    private BlockingManager blockingManager;
+   private BackupManager backupManager;
 
    /**
     * Initializes a server with the default server root, the default configuration file and system properties
@@ -334,6 +337,11 @@ public class Server implements ServerManagement, AutoCloseable {
          BasicComponentRegistry bcr = SecurityActions.getGlobalComponentRegistry(cm).getComponent(BasicComponentRegistry.class.getName());
          blockingManager = bcr.getComponent(BlockingManager.class).running();
          cacheIgnoreManager = bcr.getComponent(CacheIgnoreManager.class).running();
+
+         // BlockingManager of single container used for writing the global manifest, but this will need to change
+         // when multiple containers are supported by the server
+         Path dataRoot = serverRoot.toPath().resolve(properties.getProperty(INFINISPAN_SERVER_DATA_PATH));
+         backupManager = new BackupManagerImpl(blockingManager, cacheManagers, dataRoot);
 
          // Register the task manager
          taskManager = bcr.getComponent(TaskManager.class).running();
@@ -576,5 +584,10 @@ public class Server implements ServerManagement, AutoCloseable {
             throw new RuntimeException(e);
          }
       }, "report");
+   }
+
+   @Override
+   public BackupManager getBackupManager() {
+      return backupManager;
    }
 }
