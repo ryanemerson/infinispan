@@ -1,5 +1,6 @@
 package org.infinispan.client.rest;
 
+import java.io.File;
 import java.util.List;
 import java.util.concurrent.CompletionStage;
 
@@ -17,4 +18,17 @@ public interface RestClusterClient {
     * Shuts down the specified servers
     */
    CompletionStage<RestResponse> stop(List<String> server);
+
+   /**
+    * Creates a backup file containing the content of all containers in the cluster.
+    */
+   CompletionStage<RestResponse> backup();
+
+   /**
+    * Restores all content from a backup file, by uploading the file to the server endpoint for processing, returning
+    * once the restoration has completed.
+    *
+    * @param backup the backup {@link File} containing the data to be restored.
+    */
+   CompletionStage<RestResponse> restore(File backup);
 }

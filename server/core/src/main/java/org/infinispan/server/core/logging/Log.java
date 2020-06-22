@@ -5,12 +5,14 @@ import static org.jboss.logging.Logger.Level.INFO;
 import static org.jboss.logging.Logger.Level.WARN;
 
 import java.net.SocketAddress;
+import java.util.Set;
 
 import org.infinispan.commons.CacheConfigurationException;
 import org.infinispan.commons.CacheException;
 import org.infinispan.commons.dataconversion.MediaType;
 import org.infinispan.server.core.dataconversion.TranscodingException;
 import org.jboss.logging.BasicLogger;
+import org.jboss.logging.annotations.Cause;
 import org.jboss.logging.annotations.LogMessage;
 import org.jboss.logging.annotations.Message;
 import org.jboss.logging.annotations.MessageLogger;
@@ -110,4 +112,38 @@ public interface Log extends BasicLogger {
 
    @Message(value = "Illegal type for parameter '%s': %s", id = 5038)
    IllegalArgumentException illegalParameterType(String parameter, Class<?> type);
+
+   @Message(value = "Unable to create cluster backup", id = 5039)
+   CacheException errorCreatingBackup(@Cause Throwable cause);
+
+   @Message(value = "Unable to restore cluster backup", id = 5040)
+   CacheException errorRestoringBackup(@Cause Throwable cause);
+
+   @Message(value = "Unable to perform backup, backup currently in progress", id = 5041)
+   CacheException backupInProgress();
+
+   @Message(value = "Unable to restore content, restore currently in progress", id = 5042)
+   CacheException restoreInProgress();
+
+   @LogMessage(level = INFO)
+   @Message(value = "Starting cluster backup", id = 5043)
+   void initiatingClusterBackup();
+
+   @LogMessage(level = INFO)
+   @Message(value = "Backup file created '%s'", id = 5044)
+   void backupComplete(String backupName);
+
+   @LogMessage(level = INFO)
+   @Message(value = "Restoring content from backup file", id = 5045)
+   void initiatingClusterRestore();
+
+   @LogMessage(level = INFO)
+   @Message(value = "Backup restore complete", id = 5046)
+   void restoreComplete();
+
+   @Message(value = "%s '%s' not found in the backup archive", id = 5047)
+   CacheException unableToFindBackupResource(String resource, Set<String> resourceNames);
+
+   @Message(value = "%s '%s' does not exist", id = 5048)
+   CacheException unableToFindResource(String resource, String resourceName);
 }

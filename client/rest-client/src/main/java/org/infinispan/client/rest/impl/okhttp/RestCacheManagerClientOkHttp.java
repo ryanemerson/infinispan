@@ -3,10 +3,14 @@ package org.infinispan.client.rest.impl.okhttp;
 import static org.infinispan.client.rest.impl.okhttp.RestClientOkHttp.EMPTY_BODY;
 import static org.infinispan.client.rest.impl.okhttp.RestClientOkHttp.sanitize;
 
+import java.io.File;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletionStage;
 
 import org.infinispan.client.rest.RestCacheManagerClient;
 import org.infinispan.client.rest.RestResponse;
+import org.infinispan.commons.dataconversion.MediaType;
 
 import okhttp3.Request;
 
@@ -120,5 +124,37 @@ public class RestCacheManagerClientOkHttp implements RestCacheManagerClient {
    @Override
    public CompletionStage<RestResponse> caches() {
       return client.execute(baseCacheManagerUrl, "caches");
+   }
+
+   @Override
+   public CompletionStage<RestResponse> backup() {
+      return backup(null);
+   }
+
+   @Override
+   public CompletionStage<RestResponse> backup(Map<String, List<String>> resources) {
+      Request.Builder builder = new Request.Builder().url(resourcesUrl("backup", resources));
+      return client.execute(builder);
+   }
+
+   @Override
+   public CompletionStage<RestResponse> restore(File backup) {
+      return restore(backup, null);
+   }
+
+   @Override
+   public CompletionStage<RestResponse> restore(File backup, Map<String, List<String>> resources) {
+      Request.Builder builder = new Request.Builder()
+            .url(resourcesUrl("restore", resources))
+            .post(new FileRestEntityOkHttp(MediaType.APPLICATION_ZIP, backup).toRequestBody());
+      return client.execute(builder);
+   }
+
+   private String resourcesUrl(String action, Map<String, List<String>> resources) {
+      StringBuilder sb = new StringBuilder(baseCacheManagerUrl);
+      sb.append("?action=").append(action);
+      if (resources != null)
+         resources.forEach((key, value) -> sb.append("&").append(key).append("=").append(String.join(",", value)));
+      return sb.toString();
    }
 }
