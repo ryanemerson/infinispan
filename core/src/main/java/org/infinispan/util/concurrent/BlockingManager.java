@@ -107,6 +107,21 @@ public interface BlockingManager {
          BiFunction<? super I, Throwable, ? extends O> function, Object traceId);
 
    /**
+    * Replacement for {@code CompletionStage.thenAcceptAsync()} that invokes the {@code Consumer} in a blocking thread
+    * (if the current thread is non-blocking) or in the current thread (if the current thread is blocking).
+    * The returned stage, if not complete, resumes any chained stage on the non-blocking executor.
+    * <p>
+    * Note that if the current thread is blocking, the task is invoked in the current thread meaning the stage is
+    * always completed when returned, so any chained stage is also invoked on the current thread.
+    * @param stage stage, that may or may not be complete, to apply.
+    * @param action the action to perform before completing the returned CompletionStage.
+    * @param traceId an identifier that can be used to tell in a trace when an operation moves between threads.
+    * @param <I> input value type to the function.
+    * @return a stage that is completed after the action is done or throws an exception.
+    */
+   <I> CompletionStage<Void> thenAcceptBlocking(CompletionStage<? extends I> stage, Consumer<I> action, Object traceId);
+
+   /**
     * Replacement for {@code CompletionStage.thenApplyAsync()} that invokes the {@code Function} in a blocking thread
     * (if the current thread is non-blocking) or in the current thread (if the current thread is blocking).
     * The returned stage, if not complete, resumes any chained stage on the non-blocking executor.
