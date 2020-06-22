@@ -2,12 +2,14 @@ package org.infinispan.client.rest.impl.okhttp;
 
 import static org.infinispan.client.rest.impl.okhttp.RestClientOkHttp.EMPTY_BODY;
 
+import java.io.File;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletionStage;
 
 import org.infinispan.client.rest.RestClusterClient;
 import org.infinispan.client.rest.RestResponse;
+import org.infinispan.commons.dataconversion.MediaType;
 
 import okhttp3.Request;
 
@@ -39,6 +41,20 @@ public class RestClusterClientOkHttp implements RestClusterClient {
          sb.append(server);
       }
       builder.post(EMPTY_BODY).url(sb.toString());
+      return client.execute(builder);
+   }
+
+   @Override
+   public CompletionStage<RestResponse> backup() {
+      Request.Builder builder = new Request.Builder().url(baseClusterURL + "?action=backup");
+      return client.execute(builder);
+   }
+
+   @Override
+   public CompletionStage<RestResponse> restore(File backup) {
+      Request.Builder builder = new Request.Builder()
+            .url(baseClusterURL + "?action=restore")
+            .post(new FileRestEntityOkHttp(MediaType.APPLICATION_ZIP, backup).toRequestBody());
       return client.execute(builder);
    }
 }
