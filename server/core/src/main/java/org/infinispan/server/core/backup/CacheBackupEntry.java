@@ -11,9 +11,6 @@ import org.infinispan.protostream.annotations.ProtoField;
  */
 public class CacheBackupEntry {
 
-   CacheBackupEntry() {
-   }
-
    @ProtoField(number = 1)
    byte[] key;
    @ProtoField(number = 2)

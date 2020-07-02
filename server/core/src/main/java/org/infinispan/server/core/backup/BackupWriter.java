@@ -14,6 +14,7 @@ import static org.infinispan.server.core.backup.BackupUtil.PROTO_CACHE_NAME;
 import static org.infinispan.server.core.backup.BackupUtil.PROTO_SCHEMA_PROPERTY;
 import static org.infinispan.server.core.backup.BackupUtil.VERSION;
 import static org.infinispan.server.core.backup.BackupUtil.cacheDataFile;
+import static org.infinispan.server.core.backup.BackupUtil.writeMessageStream;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -57,7 +58,6 @@ import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.marshall.persistence.PersistenceMarshaller;
 import org.infinispan.marshall.protostream.impl.SerializationContextRegistry;
 import org.infinispan.protostream.ImmutableSerializationContext;
-import org.infinispan.protostream.ProtobufUtil;
 import org.infinispan.reactive.publisher.PublisherTransformers;
 import org.infinispan.reactive.publisher.impl.ClusterPublisherManager;
 import org.infinispan.reactive.publisher.impl.DeliveryGuarantee;
@@ -247,7 +247,7 @@ class BackupWriter {
                                  CompletionStages.join(counterManager.getStrongCounter(counter).getValue());
                            return e;
                         })
-                        .doOnNext(e -> ProtobufUtil.writeTo(serCtx, output, e))
+                        .doOnNext(e -> writeMessageStream(e, serCtx, output))
                         .doOnError(t -> {
                            throw new CacheException("Unable to create counter backup", t);
                         }),
@@ -300,7 +300,7 @@ class BackupWriter {
                         .buffer(BUFFER_SIZE)
                         .flatMap(Flowable::fromIterable)
                         .map(createBackupEntry)
-                        .doOnNext(e -> ProtobufUtil.writeTo(serCtx, output, e))
+                        .doOnNext(e -> writeMessageStream(e, serCtx, output))
                         .doOnError(t -> {
                            throw new CacheException("Unable to create cache backup", t);
                         }),
@@ -322,7 +322,6 @@ class BackupWriter {
          // TODO properly handle WrappedByteArray?
          be.key = keyMarshalling ? marshall(e.getKey(), userMarshaller) : ((WrappedByteArray) e.getKey()).getBytes();
          be.value = valueMarshalling ? marshall(e.getValue(), userMarshaller) : ((WrappedByteArray) e.getValue()).getBytes();
-         // TODO need to add CacheBackupEntry and CounterBackupEntry to server PersistenceContextInitializer
          be.metadata = marshall(e.getMetadata(), persistenceMarshaller);
          be.internalMetadata = e.getInternalMetadata();
          be.created = e.getCreated();

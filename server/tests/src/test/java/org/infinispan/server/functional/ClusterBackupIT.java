@@ -26,6 +26,7 @@ import org.junit.Test;
 public class ClusterBackupIT extends AbstractMultiClusterIT {
 
    static final File WORKING_DIR = new File(CommonsTestingUtil.tmpDirectory(ClusterBackupIT.class));
+   static final int NUM_ENTRIES = 10;
 
    public ClusterBackupIT() {
       super("configuration/ClusteredServerTest.xml");
@@ -58,14 +59,15 @@ public class ClusterBackupIT extends AbstractMultiClusterIT {
       }
       response = await(restClientTarget.cluster().restore(backupZip));
       assertEquals(response.getBody(), 201, response.getStatus());
+      String s = await(restClientTarget.cache(cacheName).keys()).getBody();
+      assertEquals(Integer.toString(NUM_ENTRIES), await(restClientTarget.cache(cacheName).size()).getBody());
    }
 
    private void populateSourceCluster(String cacheName, RestClient client) {
       RestCacheClient cache = client.cache(cacheName);
-      int entries = 100;
-      for (int i = 0; i < entries; i++) {
+      for (int i = 0; i < NUM_ENTRIES; i++) {
          join(cache.put(String.valueOf(i), String.valueOf(i)));
       }
-      assertEquals(entries, getCacheSize(cacheName, client));
+      assertEquals(NUM_ENTRIES, getCacheSize(cacheName, client));
    }
 }

@@ -1,5 +1,12 @@
 package org.infinispan.server.core.backup;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+
+import org.infinispan.protostream.ImmutableSerializationContext;
+import org.infinispan.protostream.ProtobufUtil;
+
 /**
  * @author Ryan Emerson
  * @since 11.0
@@ -28,5 +35,20 @@ class BackupUtil {
 
    static String cacheConfigFile(String cache) {
       return String.format("%s.xml", cache);
+   }
+
+   static void writeMessageStream(Object o, ImmutableSerializationContext serCtx, OutputStream output) throws IOException {
+      // It's necessary to first write the length of each message stream as the Protocol Buffer wire format is not self-delimiting
+      // https://developers.google.com/protocol-buffers/docs/techniques#streaming
+      byte[] b = ProtobufUtil.toByteArray(serCtx, o);
+      output.write(b.length);
+      output.write(b);
+   }
+
+   static <T> T readMessageStream(ImmutableSerializationContext ctx, Class<T> clazz, InputStream is) throws IOException {
+      int length = is.read();
+      byte[] b = new byte[length];
+      is.read(b);
+      return ProtobufUtil.fromByteArray(ctx, b, clazz);
    }
 }

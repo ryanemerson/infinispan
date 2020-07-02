@@ -13,6 +13,7 @@ import static org.infinispan.server.core.backup.BackupUtil.MANIFEST_PROPERTIES_F
 import static org.infinispan.server.core.backup.BackupUtil.RESTORE_LOCAL_ZIP;
 import static org.infinispan.server.core.backup.BackupUtil.cacheConfigFile;
 import static org.infinispan.server.core.backup.BackupUtil.cacheDataFile;
+import static org.infinispan.server.core.backup.BackupUtil.readMessageStream;
 
 import java.io.File;
 import java.io.IOException;
@@ -45,7 +46,6 @@ import org.infinispan.metadata.Metadata;
 import org.infinispan.metadata.impl.InternalMetadataImpl;
 import org.infinispan.metadata.impl.PrivateMetadata;
 import org.infinispan.protostream.ImmutableSerializationContext;
-import org.infinispan.protostream.ProtobufUtil;
 import org.infinispan.util.concurrent.BlockingManager;
 
 /**
@@ -146,15 +146,18 @@ class BackupReader {
       SerializationContextRegistry ctxRegistry = cm.getGlobalComponentRegistry().getComponent(SerializationContextRegistry.class);
       ImmutableSerializationContext serCtx = ctxRegistry.getPersistenceCtx();
       try (InputStream is = zip.getInputStream(zipEntry)) {
-         CacheBackupEntry entry = ProtobufUtil.readFrom(serCtx, is, CacheBackupEntry.class);
-         Object key = entry.key;
-         Object value = entry.value;
+         CacheBackupEntry entry;
+         while (is.available() > 0) {
+            entry = readMessageStream(serCtx, CacheBackupEntry.class, is);
+            Object key = entry.key;
+            Object value = entry.value;
 //         Metadata metadata = entry.metadata;
-         // TODO How to restore PrivateMetadata?
-         // Send put raw put command: https://github.com/infinispan/infinispan/blob/master/core/src/main/java/org/infinispan/xsite/ClusteredCacheBackupReceiver.java#L226
-         PrivateMetadata internalMetadata = entry.internalMetadata;
-         Metadata internalMetadataImpl = new InternalMetadataImpl(null, entry.created, entry.lastUsed);
-         cache.put(key, value, internalMetadataImpl);
+            // TODO How to restore PrivateMetadata?
+            // Send put raw put command: https://github.com/infinispan/infinispan/blob/master/core/src/main/java/org/infinispan/xsite/ClusteredCacheBackupReceiver.java#L226
+            PrivateMetadata internalMetadata = entry.internalMetadata;
+            Metadata internalMetadataImpl = new InternalMetadataImpl(null, entry.created, entry.lastUsed);
+            cache.put(key, value, internalMetadataImpl);
+         }
       }
    }
 
@@ -169,7 +172,7 @@ class BackupReader {
       SerializationContextRegistry ctxRegistry = cm.getGlobalComponentRegistry().getComponent(SerializationContextRegistry.class);
       ImmutableSerializationContext serCtx = ctxRegistry.getPersistenceCtx();
       try (InputStream is = zip.getInputStream(zipEntry)) {
-         CounterBackupEntry entry = ProtobufUtil.readFrom(serCtx, is, CounterBackupEntry.class);
+         CounterBackupEntry entry = readMessageStream(serCtx, CounterBackupEntry.class, is);
          CounterConfiguration config = entry.configuration;
          counterManager.defineCounter(entry.name, config);
          if (config.type() == CounterType.WEAK) {
