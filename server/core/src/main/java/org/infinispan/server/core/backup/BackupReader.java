@@ -28,23 +28,33 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import org.infinispan.AdvancedCache;
+import org.infinispan.cache.impl.InvocationHelper;
+import org.infinispan.commands.CommandsFactory;
+import org.infinispan.commands.write.PutKeyValueCommand;
 import org.infinispan.commons.CacheException;
+import org.infinispan.commons.dataconversion.MediaType;
+import org.infinispan.commons.marshall.Marshaller;
+import org.infinispan.commons.marshall.MarshallingException;
 import org.infinispan.commons.util.Util;
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.configuration.parsing.ConfigurationBuilderHolder;
 import org.infinispan.configuration.parsing.ParserRegistry;
+import org.infinispan.context.impl.FlagBitSets;
 import org.infinispan.counter.api.CounterConfiguration;
 import org.infinispan.counter.api.CounterManager;
 import org.infinispan.counter.api.CounterType;
 import org.infinispan.counter.api.StrongCounter;
 import org.infinispan.counter.api.WeakCounter;
+import org.infinispan.distribution.ch.KeyPartitioner;
+import org.infinispan.encoding.impl.StorageConfigurationManager;
+import org.infinispan.factories.ComponentRegistry;
 import org.infinispan.factories.GlobalComponentRegistry;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
+import org.infinispan.marshall.persistence.PersistenceMarshaller;
 import org.infinispan.marshall.protostream.impl.SerializationContextRegistry;
 import org.infinispan.metadata.Metadata;
 import org.infinispan.metadata.impl.InternalMetadataImpl;
-import org.infinispan.metadata.impl.PrivateMetadata;
 import org.infinispan.protostream.ImmutableSerializationContext;
 import org.infinispan.util.concurrent.BlockingManager;
 
@@ -115,8 +125,8 @@ class BackupReader {
       }
    }
 
-   private void processCacheXml(String configName, Path configPath, EmbeddedCacheManager cm, ZipFile zip) throws
-         IOException {
+   private Configuration processCacheXml(String configName, Path configPath, EmbeddedCacheManager cm, ZipFile zip)
+         throws IOException {
       String configFile = cacheConfigFile(configName);
       String zipPath = configPath.resolve(configFile).toString();
       try (InputStream is = zip.getInputStream(zip.getEntry(zipPath))) {
@@ -127,6 +137,8 @@ class BackupReader {
          // templates e.g. org.infinispan.DIST_SYNC when upgrading a cluster
          if (cm.getCacheConfiguration(configName) == null)
             cm.defineConfiguration(configName, cfg);
+
+         return cfg;
       }
    }
 
@@ -143,20 +155,32 @@ class BackupReader {
       if (zipEntry == null)
          return;
 
+
+      ComponentRegistry cr = cache.getComponentRegistry();
+      CommandsFactory commandsFactory = cr.getCommandsFactory();
+      KeyPartitioner keyPartitioner = cr.getComponent(KeyPartitioner.class);
+      InvocationHelper invocationHelper = cr.getComponent(InvocationHelper.class);
+      StorageConfigurationManager scm = cr.getComponent(StorageConfigurationManager.class);
+      PersistenceMarshaller persistenceMarshaller = cr.getPersistenceMarshaller();
+      Marshaller userMarshaller = persistenceMarshaller.getUserMarshaller();
+
+      boolean keyMarshalling = MediaType.APPLICATION_OBJECT.equals(scm.getValueStorageMediaType());
+      boolean valueMarshalling = MediaType.APPLICATION_OBJECT.equals(scm.getValueStorageMediaType());
+
       SerializationContextRegistry ctxRegistry = cm.getGlobalComponentRegistry().getComponent(SerializationContextRegistry.class);
       ImmutableSerializationContext serCtx = ctxRegistry.getPersistenceCtx();
       try (InputStream is = zip.getInputStream(zipEntry)) {
-         CacheBackupEntry entry;
          while (is.available() > 0) {
-            entry = readMessageStream(serCtx, CacheBackupEntry.class, is);
-            Object key = entry.key;
-            Object value = entry.value;
-//         Metadata metadata = entry.metadata;
-            // TODO How to restore PrivateMetadata?
-            // Send put raw put command: https://github.com/infinispan/infinispan/blob/master/core/src/main/java/org/infinispan/xsite/ClusteredCacheBackupReceiver.java#L226
-            PrivateMetadata internalMetadata = entry.internalMetadata;
-            Metadata internalMetadataImpl = new InternalMetadataImpl(null, entry.created, entry.lastUsed);
-            cache.put(key, value, internalMetadataImpl);
+            CacheBackupEntry entry = readMessageStream(serCtx, CacheBackupEntry.class, is);
+            Object key = keyMarshalling ? unmarshall(entry.key, userMarshaller) : scm.getKeyWrapper().wrap(entry.key);
+            Object value = valueMarshalling ? unmarshall(entry.value, userMarshaller) : scm.getKeyWrapper().wrap(entry.value);
+            Metadata metadata = unmarshall(entry.metadata, persistenceMarshaller);
+            Metadata internalMetadataImpl = new InternalMetadataImpl(metadata, entry.created, entry.lastUsed);
+
+            PutKeyValueCommand cmd = commandsFactory.buildPutKeyValueCommand(key, value, keyPartitioner.getSegment(key),
+                  internalMetadataImpl, FlagBitSets.IGNORE_RETURN_VALUES);
+            cmd.setInternalMetadata(entry.internalMetadata);
+            invocationHelper.invoke(cmd, 1);
          }
       }
    }
@@ -208,5 +232,14 @@ class BackupReader {
       if (prop == null || prop.isEmpty())
          return Util.EMPTY_STRING_ARRAY;
       return prop.split(",");
+   }
+
+   @SuppressWarnings("unchecked")
+   private static <T> T unmarshall(byte[] bytes, Marshaller marshaller) {
+      try {
+         return (T) marshaller.objectFromByteBuffer(bytes);
+      } catch (ClassNotFoundException | IOException e) {
+         throw new MarshallingException(e);
+      }
    }
 }

@@ -41,16 +41,15 @@ import org.infinispan.commons.CacheException;
 import org.infinispan.commons.dataconversion.MediaType;
 import org.infinispan.commons.marshall.Marshaller;
 import org.infinispan.commons.marshall.MarshallingException;
-import org.infinispan.commons.marshall.WrappedByteArray;
 import org.infinispan.commons.util.Version;
 import org.infinispan.configuration.cache.Configuration;
-import org.infinispan.configuration.cache.EncodingConfiguration;
 import org.infinispan.configuration.global.GlobalConfiguration;
 import org.infinispan.configuration.parsing.ParserRegistry;
 import org.infinispan.container.entries.CacheEntry;
 import org.infinispan.counter.api.CounterConfiguration;
 import org.infinispan.counter.api.CounterManager;
 import org.infinispan.counter.api.CounterType;
+import org.infinispan.encoding.impl.StorageConfigurationManager;
 import org.infinispan.factories.ComponentRegistry;
 import org.infinispan.factories.GlobalComponentRegistry;
 import org.infinispan.manager.DefaultCacheManager;
@@ -61,13 +60,11 @@ import org.infinispan.protostream.ImmutableSerializationContext;
 import org.infinispan.reactive.publisher.PublisherTransformers;
 import org.infinispan.reactive.publisher.impl.ClusterPublisherManager;
 import org.infinispan.reactive.publisher.impl.DeliveryGuarantee;
-import org.infinispan.server.core.CacheIgnoreManager;
 import org.infinispan.util.concurrent.BlockingManager;
 import org.infinispan.util.concurrent.CompletionStages;
 import org.reactivestreams.Publisher;
 
 import io.reactivex.rxjava3.core.Flowable;
-import io.reactivex.rxjava3.functions.Function;
 
 /**
  * // TODO: Document this
@@ -82,15 +79,12 @@ class BackupWriter {
    private final BlockingManager blockingManager;
    private final Map<String, DefaultCacheManager> cacheManagers;
 
-   // TODO it might not be necessary to interact with this directly, just update the underlying cache and the listener will handle it
-   private final CacheIgnoreManager cacheIgnoreManager;
    private final Path rootDir;
    private final ParserRegistry parserRegistry;
 
-   BackupWriter(BlockingManager blockingManager, Map<String, DefaultCacheManager> cacheManagers, CacheIgnoreManager cacheIgnoreManager, Path rootDir) {
+   BackupWriter(BlockingManager blockingManager, Map<String, DefaultCacheManager> cacheManagers, Path rootDir) {
       this.blockingManager = blockingManager;
       this.cacheManagers = cacheManagers;
-      this.cacheIgnoreManager = cacheIgnoreManager;
       this.rootDir = rootDir;
       this.parserRegistry = new ParserRegistry();
    }
@@ -287,47 +281,38 @@ class BackupWriter {
       ImmutableSerializationContext serCtx = ctxRegistry.getPersistenceCtx();
 
       Path datFile = cacheRoot.resolve(cacheDataFile(cacheName));
-      Function<CacheEntry<?, ?>, CacheBackupEntry> createBackupEntry = createBackupFunction(cr.getConfiguration().encoding(), cr);
 
       Publisher<CacheEntry<?, ?>> p = s -> clusterPublisherManager.entryPublisher(null, null, null, false,
             DeliveryGuarantee.EXACTLY_ONCE, BUFFER_SIZE, PublisherTransformers.identity())
             .subscribe(s);
 
+      StorageConfigurationManager scm = cr.getComponent(StorageConfigurationManager.class);
+      boolean keyMarshalling = MediaType.APPLICATION_OBJECT.equals(scm.getKeyStorageMediaType());
+      boolean valueMarshalling = MediaType.APPLICATION_OBJECT.equals(scm.getValueStorageMediaType());
+      PersistenceMarshaller persistenceMarshaller = cr.getPersistenceMarshaller();
+      Marshaller userMarshaller = persistenceMarshaller.getUserMarshaller();
       Flowable.using(
             () -> Files.newOutputStream(datFile),
             output ->
                   Flowable.fromPublisher(p)
                         .buffer(BUFFER_SIZE)
                         .flatMap(Flowable::fromIterable)
-                        .map(createBackupEntry)
+                        .map(e -> {
+                           CacheBackupEntry be = new CacheBackupEntry();
+                           be.key = keyMarshalling ? marshall(e.getKey(), userMarshaller) : (byte[]) scm.getKeyWrapper().unwrap(e.getKey());
+                           be.value = valueMarshalling ? marshall(e.getValue(), userMarshaller) : (byte[]) scm.getValueWrapper().unwrap(e.getKey());
+                           be.metadata = marshall(e.getMetadata(), persistenceMarshaller);
+                           be.internalMetadata = e.getInternalMetadata();
+                           be.created = e.getCreated();
+                           be.lastUsed = e.getLastUsed();
+                           return be;
+                        })
                         .doOnNext(e -> writeMessageStream(e, serCtx, output))
                         .doOnError(t -> {
                            throw new CacheException("Unable to create cache backup", t);
                         }),
             OutputStream::close
       ).subscribe();
-   }
-
-   private Function<CacheEntry<?, ?>, CacheBackupEntry> createBackupFunction(EncodingConfiguration encoding, ComponentRegistry componentRegistry) {
-      PersistenceMarshaller persistenceMarshaller = componentRegistry.getPersistenceMarshaller();
-      Marshaller userMarshaller = persistenceMarshaller.getUserMarshaller();
-
-      MediaType keyType = encoding.keyDataType().mediaType();
-      MediaType valueType = encoding.valueDataType().mediaType();
-      boolean keyMarshalling = MediaType.APPLICATION_JBOSS_MARSHALLING.equals(keyType);
-      boolean valueMarshalling = MediaType.APPLICATION_JBOSS_MARSHALLING.equals(valueType);
-
-      return e -> {
-         CacheBackupEntry be = new CacheBackupEntry();
-         // TODO properly handle WrappedByteArray?
-         be.key = keyMarshalling ? marshall(e.getKey(), userMarshaller) : ((WrappedByteArray) e.getKey()).getBytes();
-         be.value = valueMarshalling ? marshall(e.getValue(), userMarshaller) : ((WrappedByteArray) e.getValue()).getBytes();
-         be.metadata = marshall(e.getMetadata(), persistenceMarshaller);
-         be.internalMetadata = e.getInternalMetadata();
-         be.created = e.getCreated();
-         be.lastUsed = e.getLastUsed();
-         return be;
-      };
    }
 
    private Path createZip(String backupName) {

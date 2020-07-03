@@ -69,7 +69,7 @@ public class BackupManagerImplTest extends AbstractInfinispanTest {
          Path nonExistingDir = new File(CommonsTestingUtil.tmpDirectory(BackupManagerImplTest.class.getSimpleName() + "blah")).toPath();
 
          BlockingManager blockingManager = cacheManagers.get("container1").getGlobalComponentRegistry().getComponent(BlockingManager.class);
-         new BackupManagerImpl(blockingManager, cacheManagers, null, nonExistingDir)
+         new BackupManagerImpl(blockingManager, cacheManagers, nonExistingDir)
                .create()
                .toCompletableFuture()
                .get(MAX_WAIT_SECS, TimeUnit.SECONDS);
@@ -90,7 +90,7 @@ public class BackupManagerImplTest extends AbstractInfinispanTest {
       Map<String, DefaultCacheManager> readerManagers = createManagerMap(false);
       try {
          BlockingManager blockingManager = writerManagers.get("container1").getGlobalComponentRegistry().getComponent(BlockingManager.class);
-         BackupWriter writer = new BackupWriter(blockingManager, writerManagers, null, workingDir.toPath());
+         BackupWriter writer = new BackupWriter(blockingManager, writerManagers, workingDir.toPath());
          Path backupZip = await(writer.create());
          assertNotNull(backupZip);
 

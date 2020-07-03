@@ -342,7 +342,7 @@ public class Server implements ServerManagement, AutoCloseable {
 
          // BlockingManager of single container used for writing the global manifest, but this will need to change
          // when multiple containers are supported by the server
-         backupManager = new BackupManagerImpl(blockingManager, cacheManagers, cacheIgnoreManager, dataRoot);
+         backupManager = new BackupManagerImpl(blockingManager, cacheManagers, dataRoot);
 
          // Register the task manager
          taskManager = bcr.getComponent(TaskManager.class).running();

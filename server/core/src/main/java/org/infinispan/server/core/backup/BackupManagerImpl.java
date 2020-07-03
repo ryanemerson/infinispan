@@ -12,7 +12,6 @@ import org.infinispan.factories.scopes.Scope;
 import org.infinispan.factories.scopes.Scopes;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.server.core.BackupManager;
-import org.infinispan.server.core.CacheIgnoreManager;
 import org.infinispan.util.concurrent.BlockingManager;
 import org.infinispan.util.concurrent.CompletableFutures;
 
@@ -32,11 +31,11 @@ public class BackupManagerImpl implements BackupManager {
    final BlockingManager blockingManager;
 
    public BackupManagerImpl(BlockingManager blockingManager, Map<String, DefaultCacheManager> cacheManagers,
-                            CacheIgnoreManager cacheIgnoreManager, Path dataRoot) {
+                            Path dataRoot) {
       this.blockingManager = blockingManager;
       this.rootDir = dataRoot.resolve(BACKUP_WORKING_DIR);
       this.reader = new BackupReader(blockingManager, cacheManagers, rootDir);
-      this.writer = new BackupWriter(blockingManager, cacheManagers, cacheIgnoreManager, rootDir);
+      this.writer = new BackupWriter(blockingManager, cacheManagers, rootDir);
       rootDir.toFile().mkdir();
    }
 
@@ -71,7 +70,8 @@ public class BackupManagerImpl implements BackupManager {
    public CompletionStage<Void> restore(byte[] backup) {
       if (!importInProgress.compareAndSet(false, true))
          return failedImportLockFuture();
-      return reader.restore(backup);
+      return reader.restore(backup)
+            .whenComplete(this::releaseImportLock);
    }
 
    @Override
@@ -89,18 +89,17 @@ public class BackupManagerImpl implements BackupManager {
    }
 
    private void releaseWriterLock(Path path, Throwable t) {
-      assert backupInProgress.compareAndSet(true, false);
+      backupInProgress.compareAndSet(true, false);
       handleExceptions(t);
    }
 
-   private void releaseImportLock(Path path, Throwable t) {
-      assert importInProgress.compareAndSet(true, false);
+   private void releaseImportLock(Void ignore, Throwable t) {
+      importInProgress.compareAndSet(true, false);
       handleExceptions(t);
    }
 
    private void handleExceptions(Throwable t) {
       if (t != null) {
-         // TODO remove failed backup files?
          if (t instanceof CacheException) {
             throw (CacheException) t;
          } else if (t.getCause() instanceof CacheException) {
