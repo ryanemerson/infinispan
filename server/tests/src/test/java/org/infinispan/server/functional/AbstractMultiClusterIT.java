@@ -4,7 +4,6 @@ import static org.infinispan.query.remote.client.ProtobufMetadataManagerConstant
 import static org.infinispan.server.test.core.TestSystemPropertyNames.INFINISPAN_TEST_SERVER_DRIVER;
 import static org.infinispan.util.concurrent.CompletionStages.join;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotSame;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -24,9 +23,7 @@ import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.server.test.core.AbstractInfinispanServerDriver;
 import org.infinispan.server.test.core.InfinispanServerTestConfiguration;
 import org.infinispan.server.test.core.ServerRunMode;
-import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -47,25 +44,14 @@ class AbstractMultiClusterIT {
       this.config = config;
    }
 
-   @Before
-   public void before() {
-      String config = "configuration/ClusteredServerTest.xml";
-      // Start two embedded clusters with 2-node each
+   protected void startSourceCluster() {
       source = new Cluster(new ClusterConfiguration(config, 2, 0));
-      target = new Cluster(new ClusterConfiguration(config, 2, 1000));
       source.start("source");
-      target.start("target");
-
-      // Assert clusters are isolated and have 2 members each
-      assertEquals(2, source.getMembers().size());
-      assertEquals(2, target.getMembers().size());
-      assertNotSame(source.getMembers(), target.getMembers());
    }
 
-   @After
-   public void after() throws Exception {
-      source.stop("source");
-      target.stop("target");
+   protected void startTargetCluster() {
+      target = new Cluster(new ClusterConfiguration(config, 2, 1000));
+      target.start("target");
    }
 
    protected int getCacheSize(String cacheName, RestClient restClient) {

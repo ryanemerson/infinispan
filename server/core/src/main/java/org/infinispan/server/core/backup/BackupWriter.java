@@ -132,6 +132,7 @@ class BackupWriter {
 
    private CompletionStage<Void> createBackup(String containerName, EmbeddedCacheManager cm, Set<String> cacheList) {
       Path containerRoot = rootDir.resolve(CONTAINER_DIR).resolve(containerName);
+      containerRoot.toFile().mkdirs();
       BlockingManager blockingManager = cm.getGlobalComponentRegistry().getComponent(BlockingManager.class);
       boolean containerBackup = cacheList != null;
 

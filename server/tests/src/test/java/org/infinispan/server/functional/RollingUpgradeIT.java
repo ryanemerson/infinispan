@@ -2,6 +2,7 @@ package org.infinispan.server.functional;
 
 import static org.infinispan.util.concurrent.CompletionStages.join;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotSame;
 
 import java.io.IOException;
 
@@ -12,6 +13,8 @@ import org.infinispan.client.rest.RestResponse;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.persistence.remote.configuration.RemoteStoreConfigurationBuilder;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 /**
@@ -23,6 +26,24 @@ public class RollingUpgradeIT extends AbstractMultiClusterIT {
 
    public RollingUpgradeIT() {
       super("configuration/ClusteredServerTest.xml");
+   }
+
+   @Before
+   public void before() {
+      // Start two embedded clusters with 2-node each
+      startSourceCluster();
+      startTargetCluster();
+
+      // Assert clusters are isolated and have 2 members each
+      assertEquals(2, source.getMembers().size());
+      assertEquals(2, target.getMembers().size());
+      assertNotSame(source.getMembers(), target.getMembers());
+   }
+
+   @After
+   public void after() throws Exception {
+      source.stop("source");
+      target.stop("target");
    }
 
    @Test

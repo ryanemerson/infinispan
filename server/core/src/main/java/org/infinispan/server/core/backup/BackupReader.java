@@ -10,24 +10,30 @@ import static org.infinispan.server.core.backup.BackupUtil.CONTAINER_DIR;
 import static org.infinispan.server.core.backup.BackupUtil.COUNTERS_DIR;
 import static org.infinispan.server.core.backup.BackupUtil.COUNTERS_FILE;
 import static org.infinispan.server.core.backup.BackupUtil.MANIFEST_PROPERTIES_FILE;
+import static org.infinispan.server.core.backup.BackupUtil.PROTO_CACHE_NAME;
+import static org.infinispan.server.core.backup.BackupUtil.PROTO_SCHEMA_PROPERTY;
 import static org.infinispan.server.core.backup.BackupUtil.RESTORE_LOCAL_ZIP;
 import static org.infinispan.server.core.backup.BackupUtil.cacheConfigFile;
 import static org.infinispan.server.core.backup.BackupUtil.cacheDataFile;
 import static org.infinispan.server.core.backup.BackupUtil.readMessageStream;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.CompletionStage;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import org.infinispan.AdvancedCache;
+import org.infinispan.Cache;
 import org.infinispan.cache.impl.InvocationHelper;
 import org.infinispan.commands.CommandsFactory;
 import org.infinispan.commands.write.PutKeyValueCommand;
@@ -119,6 +125,12 @@ class BackupReader {
             Path cacheRoot = containerPath.resolve(CACHES_DIR).resolve(cache);
             processCache(cache, cacheRoot, cm, zip);
          }
+
+         Cache<String, String> protoCache = cm.getCache(PROTO_CACHE_NAME);
+         for (String schema : csvProperty(containerProperties, PROTO_SCHEMA_PROPERTY)) {
+            processProtoSchema(schema, containerPath, protoCache, zip);
+         }
+
          processCounters(containerPath.resolve(COUNTERS_DIR), cm, zip);
       } catch (IOException e) {
          throw new CacheException("Unable to restore container", e);
@@ -206,6 +218,15 @@ class BackupReader {
             StrongCounter counter = counterManager.getStrongCounter(entry.name);
             counter.compareAndSet(config.initialValue(), entry.value);
          }
+      }
+   }
+
+   private void processProtoSchema(String schema, Path containerRoot, Cache<String, String> cache, ZipFile zip) throws IOException {
+      String zipPath = containerRoot.resolve(schema).toString();
+      try (InputStream is = zip.getInputStream(zip.getEntry(zipPath));
+           BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
+         String content = reader.lines().collect(Collectors.joining("\n"));
+         cache.put(schema, content);
       }
    }
 
