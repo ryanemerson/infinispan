@@ -22,6 +22,7 @@ class BackupUtil {
    static final String CONTAINERS_PROPERTY = "containers";
    static final String COUNTERS_DIR = "counters";
    static final String COUNTERS_FILE = "counters.dat";
+   static final String COUNTERS_PROPERTY = "counters";
    static final String GLOBAL_CONFIG_FILE = "global.xml";
    static final String MANIFEST_PROPERTIES_FILE = "manifest.properties";
    static final String PROTO_CACHE_NAME = "___protobuf_metadata";

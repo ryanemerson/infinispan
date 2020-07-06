@@ -20,6 +20,7 @@ import org.infinispan.commons.test.CommonsTestingUtil;
 import org.infinispan.commons.util.Util;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.counter.api.Storage;
+import org.infinispan.counter.configuration.Element;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -87,17 +88,17 @@ public class ClusterBackupIT extends AbstractMultiClusterIT {
    private void populateContainer(RestClient client) throws Exception {
       String cacheName = "cache1";
       createCache(cacheName, new ConfigurationBuilder(), client);
-      // Populate the container
+
       RestCacheClient cache = client.cache(cacheName);
       for (int i = 0; i < NUM_ENTRIES; i++) {
          join(cache.put(String.valueOf(i), String.valueOf(i)));
       }
       assertEquals(NUM_ENTRIES, getCacheSize(cacheName, client));
 
-      createCounter("weak-volatile", "weak-counter", Storage.VOLATILE, client);
-      createCounter("weak-persistent", "weak-counter", Storage.PERSISTENT, client);
-      createCounter("strong-volatile", "strong-counter", Storage.VOLATILE, client);
-      createCounter("strong-persistent", "strong-counter", Storage.PERSISTENT, client);
+      createCounter("weak-volatile", Element.WEAK_COUNTER, Storage.VOLATILE, client, 0);
+      createCounter("weak-persistent", Element.WEAK_COUNTER, Storage.PERSISTENT, client, -100);
+      createCounter("strong-volatile", Element.STRONG_COUNTER, Storage.VOLATILE, client, 50);
+      createCounter("strong-persistent", Element.STRONG_COUNTER, Storage.PERSISTENT, client, 0);
 
       addSchema(client);
 
@@ -112,9 +113,10 @@ public class ClusterBackupIT extends AbstractMultiClusterIT {
       String cacheName = "cache1";
       assertEquals(Integer.toString(NUM_ENTRIES), await(client.cache(cacheName).size()).getBody());
 
-      // TODO finish validating counters
-      RestResponse counterConfig = await(client.counter("weak-volatile").configuration());
-      JsonNode jsonNode = MAPPER.readTree(counterConfig.getBody());
+      assertCounter(client, "weak-volatile", Element.WEAK_COUNTER, Storage.VOLATILE, 0);
+      assertCounter(client, "weak-persistent", Element.WEAK_COUNTER, Storage.PERSISTENT, -100);
+      assertCounter(client, "strong-volatile", Element.STRONG_COUNTER, Storage.VOLATILE, 50);
+      assertCounter(client, "strong-persistent", Element.STRONG_COUNTER, Storage.PERSISTENT, 0);
 
       RestResponse rsp = await(client.schemas().get("schema.proto"));
       assertEquals(200, rsp.getStatus());
@@ -127,13 +129,33 @@ public class ClusterBackupIT extends AbstractMultiClusterIT {
       assertEquals("test.js", json.get(0).get("name").asText());
    }
 
-   private void createCounter(String name, String type, Storage storage, RestClient client) {
+   private void createCounter(String name, Element type, Storage storage, RestClient client, long delta) {
       String config = String.format("{\n" +
             "    \"%s\":{\n" +
             "        \"initial-value\":0,\n" +
             "        \"storage\":\"%s\"\n" +
             "    }\n" +
             "}", type, storage.toString());
-      await(client.counter(name).create(RestEntity.create(MediaType.APPLICATION_JSON, config)));
+      RestResponse rsp = await(client.counter(name).create(RestEntity.create(MediaType.APPLICATION_JSON, config)));
+      assertEquals(200, rsp.getStatus());
+
+      if (delta != 0) {
+         rsp = await(client.counter(name).add(delta));
+         assertEquals(200, rsp.getStatus());
+      }
+   }
+
+   private void assertCounter(RestClient client, String name, Element type, Storage storage, long expectedValue) throws Exception {
+      RestResponse rsp = await(client.counter(name).configuration());
+      assertEquals(200, rsp.getStatus());
+      String content = rsp.getBody();
+      JsonNode config = MAPPER.readTree(content).get(type.toString());
+      assertEquals(name, config.get("name").asText());
+      assertEquals(storage.toString(), config.get("storage").asText());
+      assertEquals(0, config.get("initial-value").asInt());
+
+      rsp = await(client.counter(name).get());
+      assertEquals(200, rsp.getStatus());
+      assertEquals(expectedValue, Long.parseLong(rsp.getBody()));
    }
 }

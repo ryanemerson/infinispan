@@ -216,15 +216,17 @@ class BackupReader {
       SerializationContextRegistry ctxRegistry = cm.getGlobalComponentRegistry().getComponent(SerializationContextRegistry.class);
       ImmutableSerializationContext serCtx = ctxRegistry.getPersistenceCtx();
       try (InputStream is = zip.getInputStream(zipEntry)) {
-         CounterBackupEntry entry = readMessageStream(serCtx, CounterBackupEntry.class, is);
-         CounterConfiguration config = entry.configuration;
-         counterManager.defineCounter(entry.name, config);
-         if (config.type() == CounterType.WEAK) {
-            WeakCounter counter = counterManager.getWeakCounter(entry.name);
-            counter.add(entry.value - config.initialValue());
-         } else {
-            StrongCounter counter = counterManager.getStrongCounter(entry.name);
-            counter.compareAndSet(config.initialValue(), entry.value);
+         while (is.available() > 0) {
+            CounterBackupEntry entry = readMessageStream(serCtx, CounterBackupEntry.class, is);
+            CounterConfiguration config = entry.configuration;
+            counterManager.defineCounter(entry.name, config);
+            if (config.type() == CounterType.WEAK) {
+               WeakCounter counter = counterManager.getWeakCounter(entry.name);
+               counter.add(entry.value - config.initialValue());
+            } else {
+               StrongCounter counter = counterManager.getStrongCounter(entry.name);
+               counter.compareAndSet(config.initialValue(), entry.value);
+            }
          }
       }
    }

@@ -7,7 +7,9 @@ import static org.infinispan.server.core.backup.BackupUtil.CACHE_CONFIG_DIR;
 import static org.infinispan.server.core.backup.BackupUtil.CONTAINERS_PROPERTIES_FILE;
 import static org.infinispan.server.core.backup.BackupUtil.CONTAINERS_PROPERTY;
 import static org.infinispan.server.core.backup.BackupUtil.CONTAINER_DIR;
+import static org.infinispan.server.core.backup.BackupUtil.COUNTERS_DIR;
 import static org.infinispan.server.core.backup.BackupUtil.COUNTERS_FILE;
+import static org.infinispan.server.core.backup.BackupUtil.COUNTERS_PROPERTY;
 import static org.infinispan.server.core.backup.BackupUtil.GLOBAL_CONFIG_FILE;
 import static org.infinispan.server.core.backup.BackupUtil.MANIFEST_PROPERTIES_FILE;
 import static org.infinispan.server.core.backup.BackupUtil.PROTO_CACHE_NAME;
@@ -148,18 +150,19 @@ class BackupWriter {
       // however, the base templates that it was originally created from will not be included in the backup
       Set<String> cacheNames = ConcurrentHashMap.newKeySet();
       Set<String> configNames = ConcurrentHashMap.newKeySet();
+      Set<String> counterNames = ConcurrentHashMap.newKeySet();
       Set<String> protoFiles = ConcurrentHashMap.newKeySet();
       Set<String> scriptFiles = ConcurrentHashMap.newKeySet();
       Path configRoot = containerRoot.resolve(CACHE_CONFIG_DIR);
+      configRoot.toFile().mkdir();
       List<CompletionStage<?>> stages = cm.getCacheConfigurationNames().stream()
             .filter(cache -> cacheList == null || cacheList.contains(cache))
             .filter(cache -> !internalCacheRegistry.isInternalCache(cache))
             .map(name -> blockingManager.runBlocking(() -> {
                Configuration config = cm.getCacheConfiguration(name);
                if (config.isTemplate()) {
-                  configRoot.toFile().mkdir();
                   configNames.add(name);
-                  writeCacheConfig(name, config, containerRoot.resolve(CACHE_CONFIG_DIR));
+                  writeCacheConfig(name, config, configRoot);
                } else {
                   cacheNames.add(name);
                   createCacheBackup(name, cm, containerRoot);
@@ -175,7 +178,7 @@ class BackupWriter {
 
       stages.add(
             // Write the counters.dat file
-            blockingManager.runBlocking(() -> writeCounters(cm, containerRoot), "write-counters")
+            blockingManager.runBlocking(() -> writeCounters(counterNames, cm, containerRoot), "write-counters")
       );
 
 
@@ -196,6 +199,7 @@ class BackupWriter {
                      Properties manifest = new Properties();
                      manifest.put(CACHES_CONFIG_PROPERTY, String.join(",", configNames));
                      manifest.put(CACHES_PROPERTY, String.join(",", cacheNames));
+                     manifest.put(COUNTERS_PROPERTY, String.join(",", counterNames));
                      manifest.put(PROTO_SCHEMA_PROPERTY, String.join(",", protoFiles));
                      manifest.put(SCRIPT_PROPERTY, String.join(",", scriptFiles));
                      storeProperties(manifest, "Container Properties", containerRoot.resolve(CONTAINERS_PROPERTIES_FILE));
@@ -234,7 +238,7 @@ class BackupWriter {
       }
    }
 
-   private void writeCounters(EmbeddedCacheManager cm, Path containerRoot) {
+   private void writeCounters(Set<String> counterNames, EmbeddedCacheManager cm, Path containerRoot) {
       GlobalComponentRegistry gcr = cm.getGlobalComponentRegistry();
       CounterManager counterManager = gcr.getComponent(CounterManager.class);
       if (counterManager == null)
@@ -247,11 +251,14 @@ class BackupWriter {
       SerializationContextRegistry ctxRegistry = gcr.getComponent(SerializationContextRegistry.class);
       ImmutableSerializationContext serCtx = ctxRegistry.getPersistenceCtx();
 
+      Path countersRoot = containerRoot.resolve(COUNTERS_DIR);
+      countersRoot.toFile().mkdir();
       Flowable.using(
-            () -> Files.newOutputStream(containerRoot.resolve(COUNTERS_FILE)),
+            () -> Files.newOutputStream(countersRoot.resolve(COUNTERS_FILE)),
             output ->
                   Flowable.fromIterable(counters)
                         .map(counter -> {
+                           counterNames.add(counter);
                            CounterConfiguration config = counterManager.getConfiguration(counter);
                            CounterBackupEntry e = new CounterBackupEntry();
                            e.name = counter;
