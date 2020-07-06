@@ -61,6 +61,7 @@ import org.infinispan.protostream.ImmutableSerializationContext;
 import org.infinispan.reactive.publisher.PublisherTransformers;
 import org.infinispan.reactive.publisher.impl.ClusterPublisherManager;
 import org.infinispan.reactive.publisher.impl.DeliveryGuarantee;
+import org.infinispan.registry.InternalCacheRegistry;
 import org.infinispan.util.concurrent.BlockingManager;
 import org.infinispan.util.concurrent.CompletionStages;
 import org.reactivestreams.Publisher;
@@ -134,7 +135,9 @@ class BackupWriter {
    private CompletionStage<Void> createBackup(String containerName, EmbeddedCacheManager cm, Set<String> cacheList) {
       Path containerRoot = rootDir.resolve(CONTAINER_DIR).resolve(containerName);
       containerRoot.toFile().mkdirs();
-      BlockingManager blockingManager = cm.getGlobalComponentRegistry().getComponent(BlockingManager.class);
+      GlobalComponentRegistry gcr = cm.getGlobalComponentRegistry();
+      BlockingManager blockingManager = gcr.getComponent(BlockingManager.class);
+      InternalCacheRegistry internalCacheRegistry = gcr.getComponent(InternalCacheRegistry.class);
       boolean containerBackup = cacheList == null;
 
       // Templates and cache configurations are the same except isTemplate == true
@@ -146,6 +149,7 @@ class BackupWriter {
       Set<String> configNames = ConcurrentHashMap.newKeySet();
       Path configRoot = containerRoot.resolve(CACHE_CONFIG_DIR);
       List<CompletionStage<?>> stages = caches.stream()
+            .filter(cache -> !internalCacheRegistry.isInternalCache(cache))
             .map(name -> blockingManager.runBlocking(() -> {
                Configuration config = cm.getCacheConfiguration(name);
                if (config.isTemplate()) {

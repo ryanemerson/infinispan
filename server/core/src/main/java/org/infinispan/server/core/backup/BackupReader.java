@@ -168,7 +168,6 @@ class BackupReader {
       if (zipEntry == null)
          return;
 
-
       ComponentRegistry cr = cache.getComponentRegistry();
       CommandsFactory commandsFactory = cr.getCommandsFactory();
       KeyPartitioner keyPartitioner = cr.getComponent(KeyPartitioner.class);
