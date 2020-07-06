@@ -14,6 +14,7 @@ import org.infinispan.client.rest.RestCacheClient;
 import org.infinispan.client.rest.RestClient;
 import org.infinispan.client.rest.RestEntity;
 import org.infinispan.client.rest.RestResponse;
+import org.infinispan.client.rest.RestTaskClient;
 import org.infinispan.commons.dataconversion.MediaType;
 import org.infinispan.commons.test.CommonsTestingUtil;
 import org.infinispan.commons.util.Util;
@@ -24,6 +25,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 
 /**
  * @author Ryan Emerson
@@ -82,7 +84,7 @@ public class ClusterBackupIT extends AbstractMultiClusterIT {
       assertContainerContent(client);
    }
 
-   private void populateContainer(RestClient client) {
+   private void populateContainer(RestClient client) throws Exception {
       String cacheName = "cache1";
       createCache(cacheName, new ConfigurationBuilder(), client);
       // Populate the container
@@ -98,6 +100,12 @@ public class ClusterBackupIT extends AbstractMultiClusterIT {
       createCounter("strong-persistent", "strong-counter", Storage.PERSISTENT, client);
 
       addSchema(client);
+
+      try (InputStream is = ClusterBackupIT.class.getResourceAsStream("/scripts/test.js")) {
+         String script = CommonsTestingUtil.loadFileAsString(is);
+         RestResponse rsp = await(client.tasks().uploadScript("test.js", RestEntity.create(MediaType.APPLICATION_JAVASCRIPT, script)));
+         assertEquals(200, rsp.getStatus());
+      }
    }
 
    private void assertContainerContent(RestClient client) throws Exception {
@@ -111,6 +119,12 @@ public class ClusterBackupIT extends AbstractMultiClusterIT {
       RestResponse rsp = await(client.schemas().get("schema.proto"));
       assertEquals(200, rsp.getStatus());
       assertTrue(rsp.getBody().contains("message Person"));
+
+      rsp = await(client.tasks().list(RestTaskClient.ResultType.USER));
+      assertEquals(200, rsp.getStatus());
+      ArrayNode json = (ArrayNode) MAPPER.readTree(rsp.getBody());
+      assertEquals(1, json.size());
+      assertEquals("test.js", json.get(0).get("name").asText());
    }
 
    private void createCounter(String name, String type, Storage storage, RestClient client) {

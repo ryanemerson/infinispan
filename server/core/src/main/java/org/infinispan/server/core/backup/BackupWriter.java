@@ -13,6 +13,9 @@ import static org.infinispan.server.core.backup.BackupUtil.MANIFEST_PROPERTIES_F
 import static org.infinispan.server.core.backup.BackupUtil.PROTO_CACHE_NAME;
 import static org.infinispan.server.core.backup.BackupUtil.PROTO_SCHEMA_DIR;
 import static org.infinispan.server.core.backup.BackupUtil.PROTO_SCHEMA_PROPERTY;
+import static org.infinispan.server.core.backup.BackupUtil.SCRIPT_CACHE_NAME;
+import static org.infinispan.server.core.backup.BackupUtil.SCRIPT_DIR;
+import static org.infinispan.server.core.backup.BackupUtil.SCRIPT_PROPERTY;
 import static org.infinispan.server.core.backup.BackupUtil.VERSION;
 import static org.infinispan.server.core.backup.BackupUtil.cacheDataFile;
 import static org.infinispan.server.core.backup.BackupUtil.writeMessageStream;
@@ -24,7 +27,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -143,12 +145,14 @@ class BackupWriter {
       // Templates and cache configurations are the same except isTemplate == true
       // Parser simply resolves configuration="example" config and uses that as the basis for the cache.
       // When backing up individual caches, it should be ok just to write it's configuration,
-      // however, the base templates that it was originally created from will not be included in the backu
-      Set<String> caches = containerBackup ? cm.getCacheConfigurationNames() : cacheList;
+      // however, the base templates that it was originally created from will not be included in the backup
       Set<String> cacheNames = ConcurrentHashMap.newKeySet();
       Set<String> configNames = ConcurrentHashMap.newKeySet();
+      Set<String> protoFiles = ConcurrentHashMap.newKeySet();
+      Set<String> scriptFiles = ConcurrentHashMap.newKeySet();
       Path configRoot = containerRoot.resolve(CACHE_CONFIG_DIR);
-      List<CompletionStage<?>> stages = caches.stream()
+      List<CompletionStage<?>> stages = cm.getCacheConfigurationNames().stream()
+            .filter(cache -> cacheList == null || cacheList.contains(cache))
             .filter(cache -> !internalCacheRegistry.isInternalCache(cache))
             .map(name -> blockingManager.runBlocking(() -> {
                Configuration config = cm.getCacheConfiguration(name);
@@ -171,28 +175,32 @@ class BackupWriter {
 
       stages.add(
             // Write the counters.dat file
-            blockingManager.runBlocking(() -> writeCounters(cm, containerRoot), "create-counters")
+            blockingManager.runBlocking(() -> writeCounters(cm, containerRoot), "write-counters")
       );
 
-      CompletionStage<Set<String>> protoStage = blockingManager.thenApplyBlocking(
-            CompletionStages.allOf(stages),
-            Void -> containerBackup ? writeProtoFiles(cm, containerRoot) : Collections.emptySet()
-            , "proto-files"
-      );
+
+      if (containerBackup) {
+         stages.add(
+               blockingManager.runBlocking(() -> writeProtoFiles(protoFiles, cm, containerRoot), "write-proto")
+         );
+
+         stages.add(
+               blockingManager.runBlocking(() -> writeScriptFiles(scriptFiles, cm, containerRoot), "write-scripts")
+         );
+      }
 
       return blockingManager
-            .thenAcceptBlocking(protoStage,
-                  protoFiles -> writeContainerProperties(configNames, cacheNames, protoFiles, containerRoot),
+            // TODO change to thenRun?
+            .thenAcceptBlocking(CompletionStages.allOf(stages),
+                  Void -> {
+                     Properties manifest = new Properties();
+                     manifest.put(CACHES_CONFIG_PROPERTY, String.join(",", configNames));
+                     manifest.put(CACHES_PROPERTY, String.join(",", cacheNames));
+                     manifest.put(PROTO_SCHEMA_PROPERTY, String.join(",", protoFiles));
+                     manifest.put(SCRIPT_PROPERTY, String.join(",", scriptFiles));
+                     storeProperties(manifest, "Container Properties", containerRoot.resolve(CONTAINERS_PROPERTIES_FILE));
+                  },
                   "create-manifest");
-   }
-
-   private void writeContainerProperties(Set<String> configs, Set<String> caches, Set<String> protoFiles,
-                                         Path containerRoot) {
-      Properties manifest = new Properties();
-      manifest.put(CACHES_CONFIG_PROPERTY, String.join(",", configs));
-      manifest.put(CACHES_PROPERTY, String.join(",", caches));
-      manifest.put(PROTO_SCHEMA_PROPERTY, String.join(",", protoFiles));
-      storeProperties(manifest, "Container Properties", containerRoot.resolve(CONTAINERS_PROPERTIES_FILE));
    }
 
    private void writeGlobalConfig(GlobalConfiguration configuration, Path root) {
@@ -204,22 +212,26 @@ class BackupWriter {
       }
    }
 
-   private Set<String> writeProtoFiles(EmbeddedCacheManager cm, Path containerRoot) {
-      Set<String> schemaNames = new HashSet<>();
-      Map<String, String> protoCache = cm.getCache(PROTO_CACHE_NAME);
-      Path protoRoot = containerRoot.resolve(PROTO_SCHEMA_DIR);
-      protoRoot.toFile().mkdir();
-      for (Map.Entry<String, String> entry : protoCache.entrySet()) {
-         String schemaName = entry.getKey();
-         schemaNames.add(schemaName);
-         Path protoFile = protoRoot.resolve(schemaName);
+   private void writeProtoFiles(Set<String> schemaNames, EmbeddedCacheManager cm, Path containerRoot) {
+      writeInternalCacheAsFiles(schemaNames, cm.getCache(PROTO_CACHE_NAME), containerRoot.resolve(PROTO_SCHEMA_DIR));
+   }
+
+   private void writeScriptFiles(Set<String> scriptNames, EmbeddedCacheManager cm, Path containerRoot) {
+      writeInternalCacheAsFiles(scriptNames, cm.getCache(SCRIPT_CACHE_NAME), containerRoot.resolve(SCRIPT_DIR));
+   }
+
+   private void writeInternalCacheAsFiles(Set<String> fileNames, Map<String, String> cache, Path root) {
+      root.toFile().mkdir();
+      for (Map.Entry<String, String> entry : cache.entrySet()) {
+         String fileName = entry.getKey();
+         fileNames.add(fileName);
+         Path file = root.resolve(fileName);
          try {
-            Files.write(protoFile, entry.getValue().getBytes(StandardCharsets.UTF_8));
+            Files.write(file, entry.getValue().getBytes(StandardCharsets.UTF_8));
          } catch (IOException e) {
-            throw new CacheException(String.format("Unable to create %s", protoFile), e);
+            throw new CacheException(String.format("Unable to create %s", file), e);
          }
       }
-      return schemaNames;
    }
 
    private void writeCounters(EmbeddedCacheManager cm, Path containerRoot) {
