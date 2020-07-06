@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import org.infinispan.objectfilter.impl.predicateindex.Predicate;
 import org.infinispan.protostream.ImmutableSerializationContext;
 import org.infinispan.protostream.ProtobufUtil;
 
@@ -24,6 +25,7 @@ class BackupUtil {
    static final String COUNTERS_FILE = "counters.dat";
    static final String GLOBAL_CONFIG_FILE = "global.xml";
    static final String PROTO_CACHE_NAME = "___protobuf_metadata";
+   static final String PROTO_SCHEMA_DIR = "proto-schemas";
    static final String PROTO_SCHEMA_PROPERTY = "proto-schemas";
    static final String MANIFEST_PROPERTIES_FILE = "manifest.properties";
    static final String RESTORE_LOCAL_ZIP = "restore.zip";

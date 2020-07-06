@@ -11,6 +11,7 @@ import static org.infinispan.server.core.backup.BackupUtil.COUNTERS_DIR;
 import static org.infinispan.server.core.backup.BackupUtil.COUNTERS_FILE;
 import static org.infinispan.server.core.backup.BackupUtil.MANIFEST_PROPERTIES_FILE;
 import static org.infinispan.server.core.backup.BackupUtil.PROTO_CACHE_NAME;
+import static org.infinispan.server.core.backup.BackupUtil.PROTO_SCHEMA_DIR;
 import static org.infinispan.server.core.backup.BackupUtil.PROTO_SCHEMA_PROPERTY;
 import static org.infinispan.server.core.backup.BackupUtil.RESTORE_LOCAL_ZIP;
 import static org.infinispan.server.core.backup.BackupUtil.cacheConfigFile;
@@ -128,7 +129,7 @@ class BackupReader {
 
          Cache<String, String> protoCache = cm.getCache(PROTO_CACHE_NAME);
          for (String schema : csvProperty(containerProperties, PROTO_SCHEMA_PROPERTY)) {
-            processProtoSchema(schema, containerPath, protoCache, zip);
+            processProtoSchema(schema, containerPath.resolve(PROTO_SCHEMA_DIR), protoCache, zip);
          }
 
          processCounters(containerPath.resolve(COUNTERS_DIR), cm, zip);
@@ -221,8 +222,8 @@ class BackupReader {
       }
    }
 
-   private void processProtoSchema(String schema, Path containerRoot, Cache<String, String> cache, ZipFile zip) throws IOException {
-      String zipPath = containerRoot.resolve(schema).toString();
+   private void processProtoSchema(String schema, Path protoRoot, Cache<String, String> cache, ZipFile zip) throws IOException {
+      String zipPath = protoRoot.resolve(schema).toString();
       try (InputStream is = zip.getInputStream(zip.getEntry(zipPath));
            BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
          String content = reader.lines().collect(Collectors.joining("\n"));

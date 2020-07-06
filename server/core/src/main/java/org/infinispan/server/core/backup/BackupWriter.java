@@ -11,6 +11,7 @@ import static org.infinispan.server.core.backup.BackupUtil.COUNTERS_FILE;
 import static org.infinispan.server.core.backup.BackupUtil.GLOBAL_CONFIG_FILE;
 import static org.infinispan.server.core.backup.BackupUtil.MANIFEST_PROPERTIES_FILE;
 import static org.infinispan.server.core.backup.BackupUtil.PROTO_CACHE_NAME;
+import static org.infinispan.server.core.backup.BackupUtil.PROTO_SCHEMA_DIR;
 import static org.infinispan.server.core.backup.BackupUtil.PROTO_SCHEMA_PROPERTY;
 import static org.infinispan.server.core.backup.BackupUtil.VERSION;
 import static org.infinispan.server.core.backup.BackupUtil.cacheDataFile;
@@ -134,13 +135,13 @@ class BackupWriter {
       Path containerRoot = rootDir.resolve(CONTAINER_DIR).resolve(containerName);
       containerRoot.toFile().mkdirs();
       BlockingManager blockingManager = cm.getGlobalComponentRegistry().getComponent(BlockingManager.class);
-      boolean containerBackup = cacheList != null;
+      boolean containerBackup = cacheList == null;
 
       // Templates and cache configurations are the same except isTemplate == true
       // Parser simply resolves configuration="example" config and uses that as the basis for the cache.
       // When backing up individual caches, it should be ok just to write it's configuration,
       // however, the base templates that it was originally created from will not be included in the backu
-      Set<String> caches = containerBackup ? cacheList : cm.getCacheConfigurationNames();
+      Set<String> caches = containerBackup ? cm.getCacheConfigurationNames() : cacheList;
       Set<String> cacheNames = ConcurrentHashMap.newKeySet();
       Set<String> configNames = ConcurrentHashMap.newKeySet();
       Path configRoot = containerRoot.resolve(CACHE_CONFIG_DIR);
@@ -202,10 +203,12 @@ class BackupWriter {
    private Set<String> writeProtoFiles(EmbeddedCacheManager cm, Path containerRoot) {
       Set<String> schemaNames = new HashSet<>();
       Map<String, String> protoCache = cm.getCache(PROTO_CACHE_NAME);
+      Path protoRoot = containerRoot.resolve(PROTO_SCHEMA_DIR);
+      protoRoot.toFile().mkdir();
       for (Map.Entry<String, String> entry : protoCache.entrySet()) {
          String schemaName = entry.getKey();
          schemaNames.add(schemaName);
-         Path protoFile = containerRoot.resolve(schemaName);
+         Path protoFile = protoRoot.resolve(schemaName);
          try {
             Files.write(protoFile, entry.getValue().getBytes(StandardCharsets.UTF_8));
          } catch (IOException e) {
