@@ -18,7 +18,7 @@ import static org.infinispan.server.core.backup.BackupUtil.PROTO_SCHEMA_PROPERTY
 import static org.infinispan.server.core.backup.BackupUtil.SCRIPT_CACHE_NAME;
 import static org.infinispan.server.core.backup.BackupUtil.SCRIPT_DIR;
 import static org.infinispan.server.core.backup.BackupUtil.SCRIPT_PROPERTY;
-import static org.infinispan.server.core.backup.BackupUtil.VERSION;
+import static org.infinispan.server.core.backup.BackupUtil.VERSION_PROPERTY;
 import static org.infinispan.server.core.backup.BackupUtil.cacheDataFile;
 import static org.infinispan.server.core.backup.BackupUtil.writeMessageStream;
 
@@ -27,6 +27,8 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -73,7 +75,7 @@ import org.reactivestreams.Publisher;
 import io.reactivex.rxjava3.core.Flowable;
 
 /**
- * // TODO: Document this
+ * Responsible for creating backup files that can be used to restore a container/cache on a new cluster.
  *
  * @author Ryan Emerson
  * @since 11.0
@@ -121,17 +123,14 @@ class BackupWriter {
    }
 
    private CompletionStage<Path> processAndPackage(CompletionStage<?> stage) {
-      return blockingManager.thenApplyBlocking(
-            stage,
-            Void -> createZip("backup.zip"),
-            "create");
+      return blockingManager.thenApplyBlocking(stage, Void -> createZip(), "create");
    }
 
    private CompletionStage<Void> writeManifest(Set<String> containers) {
       return blockingManager.runBlocking(() -> {
          Properties manifest = new Properties();
          manifest.put(CONTAINERS_PROPERTY, String.join(",", containers));
-         manifest.put(VERSION, Version.getVersion());
+         manifest.put(VERSION_PROPERTY, Version.getVersion());
          storeProperties(manifest, "Backup Manifest", rootDir.resolve(MANIFEST_PROPERTIES_FILE));
       }, "write-manifest");
    }
@@ -342,8 +341,10 @@ class BackupWriter {
       ).subscribe();
    }
 
-   private Path createZip(String backupName) {
-      // TODO timestamped name?
+   private Path createZip() {
+      LocalDateTime now = LocalDateTime.now();
+      // Name the backup in the format 'infinispan-[year][month][day][hour][minute].zip'
+      String backupName = String.format("%s-%s%s%s%s%s.zip", Version.getBrandName(), now.getYear(), now.getMonth(), now.getDayOfMonth(), now.getHour(), now.getMinute());
       Path zipFile = rootDir.resolve(backupName);
       try (ZipOutputStream zs = new ZipOutputStream(Files.newOutputStream(Files.createFile(zipFile)))) {
          Files.walk(rootDir)

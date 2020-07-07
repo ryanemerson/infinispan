@@ -32,7 +32,7 @@ class BackupUtil {
    static final String SCRIPT_CACHE_NAME = "___script_cache";
    static final String SCRIPT_DIR = "scripts";
    static final String SCRIPT_PROPERTY = "scripts";
-   static final String VERSION = "version";
+   static final String VERSION_PROPERTY = "version";
 
    static String cacheDataFile(String cache) {
       return String.format("%s.dat", cache);
