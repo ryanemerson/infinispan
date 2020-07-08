@@ -51,6 +51,7 @@ import org.wildfly.security.provider.util.ProviderUtil;
       description = "",
       groupCommands = {
             Add.class,
+            Backup.class,
             Cache.class,
             Cas.class,
             Cd.class,
@@ -73,6 +74,7 @@ import org.wildfly.security.provider.util.ProviderUtil;
             Remove.class,
             Replace.class,
             Reset.class,
+            Restore.class,
             Run.class,
             Schema.class,
             Shutdown.class,

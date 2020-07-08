@@ -72,7 +72,7 @@ public class ClusterBackupIT extends AbstractMultiClusterIT {
       assertNoBackupFilesExist(source);
 
       // Shutdown the source cluster
-      source.stop("source");
+      stopSourceCluster();
 
       // Start the target cluster
       startTargetCluster();

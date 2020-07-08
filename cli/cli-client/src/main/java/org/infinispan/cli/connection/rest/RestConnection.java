@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 
 import org.infinispan.cli.commands.Abort;
 import org.infinispan.cli.commands.Add;
+import org.infinispan.cli.commands.Backup;
 import org.infinispan.cli.commands.Begin;
 import org.infinispan.cli.commands.Cache;
 import org.infinispan.cli.commands.Cas;
@@ -49,6 +50,7 @@ import org.infinispan.cli.commands.Put;
 import org.infinispan.cli.commands.Query;
 import org.infinispan.cli.commands.Remove;
 import org.infinispan.cli.commands.Reset;
+import org.infinispan.cli.commands.Restore;
 import org.infinispan.cli.commands.Revoke;
 import org.infinispan.cli.commands.Rollback;
 import org.infinispan.cli.commands.Schema;
@@ -243,6 +245,11 @@ public class RestConnection implements Connection, Closeable {
                }
                break;
             }
+            case Backup.CMD: {
+               responseMode = ResponseMode.FILE;
+               response = client.cluster().backup();
+               break;
+            }
             case Cache.CMD:
                activeResource = activeResource
                      .findAncestor(ContainerResource.class)
@@ -409,6 +416,11 @@ public class RestConnection implements Connection, Closeable {
                   counter = client.counter(activeResource.findAncestor(CounterResource.class).getName());
                }
                response = counter.reset();
+               break;
+            }
+            case Restore.CMD: {
+               File archive = new File(command.arg(CliCommand.FILE));
+               response = client.cluster().restore(archive);
                break;
             }
             case Schema.CMD: {
@@ -596,7 +608,7 @@ public class RestConnection implements Connection, Closeable {
                      while ((bytesRead = is.read(buffer)) != -1) {
                         os.write(buffer, 0, bytesRead);
                      }
-                     sb.append(MSG.downloadedReport(filename));
+                     sb.append(MSG.downloadedFile(filename));
                   }
                case QUIET:
                   break;
