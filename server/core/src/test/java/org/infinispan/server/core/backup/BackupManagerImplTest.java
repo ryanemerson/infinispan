@@ -5,9 +5,10 @@ import static org.infinispan.commons.dataconversion.MediaType.APPLICATION_PROTOS
 import static org.infinispan.commons.dataconversion.MediaType.APPLICATION_UNKNOWN_TYPE;
 import static org.infinispan.functional.FunctionalTestUtils.MAX_WAIT_SECS;
 import static org.infinispan.functional.FunctionalTestUtils.await;
-import static org.infinispan.server.core.backup.BackupUtil.CACHES_DIR;
+import static org.infinispan.server.core.BackupManager.Resource.CACHES;
+import static org.infinispan.server.core.BackupManager.Resource.CACHE_CONFIGURATIONS;
 import static org.infinispan.server.core.backup.BackupUtil.CONTAINERS_PROPERTIES_FILE;
-import static org.infinispan.server.core.backup.BackupUtil.CONTAINER_DIR;
+import static org.infinispan.server.core.backup.BackupUtil.CONTAINER_KEY;
 import static org.infinispan.server.core.backup.BackupUtil.GLOBAL_CONFIG_FILE;
 import static org.infinispan.server.core.backup.BackupUtil.MANIFEST_PROPERTIES_FILE;
 import static org.testng.AssertJUnit.assertEquals;
@@ -22,7 +23,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
@@ -34,7 +37,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import org.infinispan.Cache;
-import org.infinispan.commons.CacheException;
+import org.infinispan.commons.CacheConfigurationException;
 import org.infinispan.commons.test.CommonsTestingUtil;
 import org.infinispan.commons.util.Util;
 import org.infinispan.configuration.cache.Configuration;
@@ -42,6 +45,7 @@ import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.configuration.cache.EncodingConfigurationBuilder;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
+import org.infinispan.server.core.BackupManager;
 import org.infinispan.test.AbstractInfinispanTest;
 import org.infinispan.util.concurrent.BlockingManager;
 import org.testng.annotations.AfterClass;
@@ -70,18 +74,20 @@ public class BackupManagerImplTest extends AbstractInfinispanTest {
    }
 
    public void testExceptionsPropagated() throws Exception {
-      Map<String, DefaultCacheManager> cacheManagers = createManagerMap("container1");
+      String containerName = "container1";
+      Map<String, DefaultCacheManager> cacheManagers = createManagerMap(containerName);
       try (DefaultCacheManager cm = cacheManagers.values().iterator().next()) {
          Path nonExistingDir = new File(CommonsTestingUtil.tmpDirectory(BackupManagerImplTest.class.getSimpleName() + "blah")).toPath();
 
          BlockingManager blockingManager = cm.getGlobalComponentRegistry().getComponent(BlockingManager.class);
+         BackupManager.BackupParameters params = new BackupParametersImpl.Builder().addCaches("doesn't exist").build();
          new BackupManagerImpl(blockingManager, cacheManagers, nonExistingDir)
-               .create()
+               .create(Collections.singletonMap(containerName, params))
                .toCompletableFuture()
                .get(MAX_WAIT_SECS, TimeUnit.SECONDS);
          fail();
       } catch (ExecutionException e) {
-         assertTrue(e.getCause() instanceof CacheException);
+         assertTrue(e.getCause() instanceof CacheConfigurationException);
       }
    }
 
@@ -95,6 +101,7 @@ public class BackupManagerImplTest extends AbstractInfinispanTest {
          DefaultCacheManager sourceManager1 = writerManagers.get(container1);
          DefaultCacheManager sourceManager2 = writerManagers.get(container2);
 
+         sourceManager1.defineConfiguration("example-template", config(APPLICATION_OBJECT_TYPE));
          sourceManager1.defineConfiguration("object-cache", config(APPLICATION_OBJECT_TYPE));
          sourceManager1.defineConfiguration("protostream-cache", config(APPLICATION_PROTOSTREAM_TYPE));
          sourceManager1.defineConfiguration("empty-cache", config());
@@ -105,7 +112,22 @@ public class BackupManagerImplTest extends AbstractInfinispanTest {
 
          BlockingManager blockingManager = writerManagers.values().iterator().next().getGlobalComponentRegistry().getComponent(BlockingManager.class);
          BackupWriter writer = new BackupWriter(blockingManager, writerManagers, workingDir.toPath());
-         Path backupZip = await(writer.create());
+
+         Map<String, BackupManager.BackupParameters> paramMap = new HashMap<>(2);
+         paramMap.put(container1,
+               new BackupParametersImpl.Builder()
+                     .addCaches("object-cache", "protostream-cache", "empty-cache")
+                     .addCacheConfigurations("example-template")
+                     .build()
+         );
+
+         paramMap.put(container2,
+               new BackupParametersImpl.Builder()
+                     .addCaches("container2-cache")
+                     .build()
+         );
+
+         Path backupZip = await(writer.create(paramMap));
          assertNotNull(backupZip);
 
          Path extractedRoot = workingDir.toPath().resolve("extracted");
@@ -115,27 +137,28 @@ public class BackupManagerImplTest extends AbstractInfinispanTest {
 
          assertFileExists(extractedRoot, MANIFEST_PROPERTIES_FILE);
 
-         Path containerPath = path(extractedRoot, CONTAINER_DIR, container1);
+         Path containerPath = path(extractedRoot, CONTAINER_KEY, container1);
          assertFileExists(containerPath, CONTAINERS_PROPERTIES_FILE);
          assertFileExists(containerPath, GLOBAL_CONFIG_FILE);
-         assertFileExists(containerPath, CACHES_DIR, "object-cache", "object-cache.xml");
-         assertFileExists(containerPath, CACHES_DIR, "object-cache", "object-cache.dat");
-         assertFileExists(containerPath, CACHES_DIR, "protostream-cache", "protostream-cache.xml");
-         assertFileExists(containerPath, CACHES_DIR, "protostream-cache", "protostream-cache.dat");
-         assertFileExists(containerPath, CACHES_DIR, "empty-cache", "empty-cache.xml");
-         assertFileDoesNotExist(containerPath, CACHES_DIR, "empty-cache", "empty-cache.dat");
+         assertFileExists(containerPath, CACHE_CONFIGURATIONS.toString(), "example-template.xml");
+         assertFileExists(containerPath, CACHES.toString(), "object-cache", "object-cache.xml");
+         assertFileExists(containerPath, CACHES.toString(), "object-cache", "object-cache.dat");
+         assertFileExists(containerPath, CACHES.toString(), "protostream-cache", "protostream-cache.xml");
+         assertFileExists(containerPath, CACHES.toString(), "protostream-cache", "protostream-cache.dat");
+         assertFileExists(containerPath, CACHES.toString(), "empty-cache", "empty-cache.xml");
+         assertFileDoesNotExist(containerPath, CACHES.toString(), "empty-cache", "empty-cache.dat");
 
-         containerPath = path(extractedRoot, CONTAINER_DIR, container2);
+         containerPath = path(extractedRoot, CONTAINER_KEY, container2);
          assertFileExists(containerPath, GLOBAL_CONFIG_FILE);
          assertFileExists(containerPath, CONTAINERS_PROPERTIES_FILE);
-         assertFileExists(containerPath, CACHES_DIR, "container2-cache", "container2-cache.xml");
-         assertFileDoesNotExist(containerPath, CACHES_DIR, "object-cache");
-         assertFileDoesNotExist(containerPath, CACHES_DIR, "protostream-cache");
+         assertFileExists(containerPath, CACHES.toString(), "container2-cache", "container2-cache.xml");
+         assertFileDoesNotExist(containerPath, CACHES.toString(), "object-cache");
+         assertFileDoesNotExist(containerPath, CACHES.toString(), "protostream-cache");
 
 
          byte[] zipBytes = Files.readAllBytes(backupZip);
          BackupReader reader = new BackupReader(blockingManager, readerManagers, workingDir.toPath());
-         CompletionStage<Void> restoreStage = reader.restore(zipBytes);
+         CompletionStage<Void> restoreStage = reader.restore(zipBytes, paramMap);
          await(restoreStage);
 
          DefaultCacheManager targetManager1 = readerManagers.get(container1);

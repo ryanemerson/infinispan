@@ -5,10 +5,12 @@ import static org.jboss.logging.Logger.Level.INFO;
 import static org.jboss.logging.Logger.Level.WARN;
 
 import java.net.SocketAddress;
+import java.util.Set;
 
 import org.infinispan.commons.CacheConfigurationException;
 import org.infinispan.commons.CacheException;
 import org.infinispan.commons.dataconversion.MediaType;
+import org.infinispan.server.core.BackupManager;
 import org.infinispan.server.core.dataconversion.TranscodingException;
 import org.jboss.logging.BasicLogger;
 import org.jboss.logging.annotations.Cause;
@@ -139,4 +141,10 @@ public interface Log extends BasicLogger {
    @LogMessage(level = INFO)
    @Message(value = "Backup restore complete", id = 5046)
    void restoreComplete();
+
+   @Message(value = "Unable to process resource '%s' as the required modules are not on the server's classpath'", id = 5047)
+   CacheException missingBackupResourceModule(BackupManager.Resource resource);
+
+   @Message(value = "%s '%s' not found in the backup archive", id = 5048)
+   CacheException unableToFindBackupResource(BackupManager.Resource resource, Set<String> resourceNames);
 }

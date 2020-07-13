@@ -6,6 +6,7 @@ import java.nio.file.Path;
 import java.util.Map;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 import org.infinispan.commons.CacheException;
 import org.infinispan.manager.DefaultCacheManager;
@@ -30,11 +31,13 @@ public class BackupManagerImpl implements BackupManager {
    final BackupReader reader;
    final BackupWriter writer;
    final BlockingManager blockingManager;
+   final Map<String, DefaultCacheManager> cacheManagers;
 
    public BackupManagerImpl(BlockingManager blockingManager, Map<String, DefaultCacheManager> cacheManagers,
                             Path dataRoot) {
       this.blockingManager = blockingManager;
       this.rootDir = dataRoot.resolve(BACKUP_WORKING_DIR);
+      this.cacheManagers = cacheManagers;
       this.reader = new BackupReader(blockingManager, cacheManagers, rootDir);
       this.writer = new BackupWriter(blockingManager, cacheManagers, rootDir);
       rootDir.toFile().mkdir();
@@ -42,21 +45,42 @@ public class BackupManagerImpl implements BackupManager {
 
    @Override
    public CompletionStage<Path> create() {
+      return create(
+            cacheManagers.entrySet().stream()
+                  .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        p -> new BackupParametersImpl.Builder().importAll().build()))
+      );
+   }
+
+   @Override
+   public CompletionStage<Path> create(Map<String, BackupParameters> params) {
       if (!backupInProgress.compareAndSet(false, true))
          return failedBackupLockFuture();
 
       log.initiatingClusterBackup();
-      return writer.create()
+      return writer.create(params)
             .whenComplete(this::releaseWriterLock);
    }
 
    @Override
    public CompletionStage<Void> restore(byte[] backup) {
+      return restore(
+            backup,
+            cacheManagers.entrySet().stream()
+                  .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        p -> new BackupParametersImpl.Builder().importAll().build()))
+      );
+   }
+
+   @Override
+   public CompletionStage<Void> restore(byte[] backup, Map<String, BackupParameters> params) {
       if (!restoreInProgress.compareAndSet(false, true))
          return failedRestoreInProgress();
 
       log.initiatingClusterRestore();
-      return reader.restore(backup)
+      return reader.restore(backup, params)
             .whenComplete(this::releaseImportLock);
    }
 

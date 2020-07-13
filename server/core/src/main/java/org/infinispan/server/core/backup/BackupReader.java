@@ -1,26 +1,23 @@
 package org.infinispan.server.core.backup;
 
-import static org.infinispan.server.core.backup.BackupUtil.CACHES_CONFIG_PROPERTY;
-import static org.infinispan.server.core.backup.BackupUtil.CACHES_DIR;
-import static org.infinispan.server.core.backup.BackupUtil.CACHES_PROPERTY;
-import static org.infinispan.server.core.backup.BackupUtil.CACHE_CONFIG_DIR;
+import static org.infinispan.server.core.BackupManager.Resource.CACHES;
+import static org.infinispan.server.core.BackupManager.Resource.CACHE_CONFIGURATIONS;
+import static org.infinispan.server.core.BackupManager.Resource.COUNTERS;
+import static org.infinispan.server.core.BackupManager.Resource.PROTO_SCHEMAS;
+import static org.infinispan.server.core.BackupManager.Resource.SCRIPTS;
 import static org.infinispan.server.core.backup.BackupUtil.CONTAINERS_PROPERTIES_FILE;
-import static org.infinispan.server.core.backup.BackupUtil.CONTAINERS_PROPERTY;
-import static org.infinispan.server.core.backup.BackupUtil.CONTAINER_DIR;
-import static org.infinispan.server.core.backup.BackupUtil.COUNTERS_DIR;
+import static org.infinispan.server.core.backup.BackupUtil.CONTAINER_KEY;
 import static org.infinispan.server.core.backup.BackupUtil.COUNTERS_FILE;
+import static org.infinispan.server.core.backup.BackupUtil.IOConsumer;
 import static org.infinispan.server.core.backup.BackupUtil.MANIFEST_PROPERTIES_FILE;
 import static org.infinispan.server.core.backup.BackupUtil.PROTO_CACHE_NAME;
-import static org.infinispan.server.core.backup.BackupUtil.PROTO_SCHEMA_DIR;
-import static org.infinispan.server.core.backup.BackupUtil.PROTO_SCHEMA_PROPERTY;
 import static org.infinispan.server.core.backup.BackupUtil.SCRIPT_CACHE_NAME;
-import static org.infinispan.server.core.backup.BackupUtil.SCRIPT_DIR;
-import static org.infinispan.server.core.backup.BackupUtil.SCRIPT_PROPERTY;
 import static org.infinispan.server.core.backup.BackupUtil.STAGING_ZIP;
-import static org.infinispan.server.core.backup.BackupUtil.VERSION_PROPERTY;
+import static org.infinispan.server.core.backup.BackupUtil.VERSION_KEY;
 import static org.infinispan.server.core.backup.BackupUtil.cacheConfigFile;
 import static org.infinispan.server.core.backup.BackupUtil.cacheDataFile;
 import static org.infinispan.server.core.backup.BackupUtil.readMessageStream;
+import static org.infinispan.server.core.backup.BackupUtil.resolve;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -29,8 +26,12 @@ import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.CompletionStage;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
@@ -46,7 +47,6 @@ import org.infinispan.commons.dataconversion.MediaType;
 import org.infinispan.commons.logging.LogFactory;
 import org.infinispan.commons.marshall.Marshaller;
 import org.infinispan.commons.marshall.MarshallingException;
-import org.infinispan.commons.util.Util;
 import org.infinispan.commons.util.Version;
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.configuration.parsing.ConfigurationBuilderHolder;
@@ -68,6 +68,7 @@ import org.infinispan.marshall.protostream.impl.SerializationContextRegistry;
 import org.infinispan.metadata.Metadata;
 import org.infinispan.metadata.impl.InternalMetadataImpl;
 import org.infinispan.protostream.ImmutableSerializationContext;
+import org.infinispan.server.core.BackupManager;
 import org.infinispan.server.core.logging.Log;
 import org.infinispan.util.concurrent.BlockingManager;
 
@@ -93,16 +94,19 @@ class BackupReader {
       this.parserRegistry = new ParserRegistry();
    }
 
-   CompletionStage<Void> restore(byte[] backup) {
+   CompletionStage<Void> restore(byte[] backup, Map<String, BackupManager.BackupParameters> params) {
       // TODO split into more fine-grained blocking manager executions?
       return blockingManager.runBlocking(() -> {
          Path stagingFile = rootDir.resolve(STAGING_ZIP);
-         try (ZipFile zip = createLocalZip(stagingFile, backup)) {
-            Properties manifest = readManifestAndValidate(zip);
-            // Restore all containers specified in the manifest
-            String[] containers = manifest.getProperty(CONTAINERS_PROPERTY).split(",");
-            for (String container : containers) {
-               restoreContainer(container, zip);
+         try {
+            Files.write(stagingFile, backup);
+            try (ZipFile zip = new ZipFile(stagingFile.toFile())) {
+               Properties manifest = readManifestAndValidate(zip);
+               // Restore all containers specified in the manifest
+               String[] containers = manifest.getProperty(CONTAINER_KEY).split(",");
+               for (String container : containers) {
+                  restoreContainer(container, params.get(container), zip);
+               }
             }
          } catch (IOException e) {
             throw new CacheException("Unable to restore container", e);
@@ -111,46 +115,32 @@ class BackupReader {
          try {
             Files.delete(stagingFile);
          } catch (IOException e) {
-            log.error(String.format("Unable to remove '%s'", stagingFile), e);
+            log.errorf("Unable to remove '%s'", stagingFile, e);
          }
       }, "restore-backup");
    }
 
-   private ZipFile createLocalZip(Path localFile, byte[] bytes) {
-      try {
-         Files.write(localFile, bytes);
-         return new ZipFile(localFile.toFile());
-      } catch (IOException e) {
-         throw new CacheException("Unable to copy backup bytes to local filesystem");
-      }
-   }
-
-   private void restoreContainer(String containerName, ZipFile zip) throws IOException {
+   private void restoreContainer(String containerName, BackupManager.BackupParameters params, ZipFile zip) throws IOException {
       // TODO validate container config
       EmbeddedCacheManager cm = cacheManagers.get(containerName);
-      Path containerPath = Paths.get(CONTAINER_DIR, containerName);
+      Path containerPath = Paths.get(CONTAINER_KEY, containerName);
 
-      Properties containerProperties = readProperties(containerPath.resolve(CONTAINERS_PROPERTIES_FILE), zip);
-      for (String config : csvProperty(containerProperties, CACHES_CONFIG_PROPERTY)) {
-         processCacheXml(config, containerPath.resolve(CACHE_CONFIG_DIR), cm, zip);
-      }
+      Properties properties = readProperties(containerPath.resolve(CONTAINERS_PROPERTIES_FILE), zip);
 
-      for (String cache : csvProperty(containerProperties, CACHES_PROPERTY)) {
-         Path cacheRoot = containerPath.resolve(CACHES_DIR).resolve(cache);
+      processIndividualResources(CACHE_CONFIGURATIONS, params, properties,
+            config -> processCacheXml(config, resolve(containerPath, CACHE_CONFIGURATIONS), cm, zip)
+      );
+
+      processIndividualResources(CACHES, params, properties, cache -> {
+         Path cacheRoot = resolve(containerPath, CACHES, cache);
          processCache(cache, cacheRoot, cm, zip);
-      }
+      });
 
-      Cache<String, String> protoCache = cm.getCache(PROTO_CACHE_NAME);
-      for (String schema : csvProperty(containerProperties, PROTO_SCHEMA_PROPERTY)) {
-         processFilesForInternalCache(schema, containerPath.resolve(PROTO_SCHEMA_DIR), protoCache, zip);
-      }
+      processAllResources(COUNTERS, params, properties, counters -> processCounters(containerPath, counters, cm, zip));
 
-      Cache<String, String> scriptsCache = cm.getCache(SCRIPT_CACHE_NAME);
-      for (String schema : csvProperty(containerProperties, SCRIPT_PROPERTY)) {
-         processFilesForInternalCache(schema, containerPath.resolve(SCRIPT_DIR), scriptsCache, zip);
-      }
+      processAllResources(PROTO_SCHEMAS, params, properties, schemas -> processProtoSchemas(containerPath, schemas, cm, zip));
 
-      processCounters(containerPath.resolve(COUNTERS_DIR), cm, zip);
+      processAllResources(SCRIPTS, params, properties, scripts -> processScripts(containerPath, scripts, cm, zip));
    }
 
    private void processCacheXml(String configName, Path configPath, EmbeddedCacheManager cm, ZipFile zip)
@@ -210,19 +200,32 @@ class BackupReader {
       }
    }
 
-   private void processCounters(Path containerPath, EmbeddedCacheManager cm, ZipFile zip) throws IOException {
-      String countersFile = containerPath.resolve(COUNTERS_FILE).toString();
+   private void processCounters(Path containerPath, Set<String> countersToRestore, EmbeddedCacheManager cm, ZipFile zip) throws IOException {
       GlobalComponentRegistry gcr = cm.getGlobalComponentRegistry();
       CounterManager counterManager = gcr.getComponent(CounterManager.class);
-      ZipEntry zipEntry = zip.getEntry(countersFile);
-      if (counterManager == null || zipEntry == null)
+      if (counterManager == null) {
+         if (!countersToRestore.isEmpty())
+            throw log.missingBackupResourceModule(COUNTERS);
          return;
+      }
 
-      SerializationContextRegistry ctxRegistry = cm.getGlobalComponentRegistry().getComponent(SerializationContextRegistry.class);
+      String countersFile = resolve(containerPath, COUNTERS, COUNTERS_FILE).toString();
+      ZipEntry zipEntry = zip.getEntry(countersFile);
+      if (zipEntry == null) {
+         if (!countersToRestore.isEmpty())
+            throw log.unableToFindBackupResource(COUNTERS, countersToRestore);
+         return;
+      }
+
+      SerializationContextRegistry ctxRegistry = gcr.getComponent(SerializationContextRegistry.class);
       ImmutableSerializationContext serCtx = ctxRegistry.getPersistenceCtx();
       try (InputStream is = zip.getInputStream(zipEntry)) {
          while (is.available() > 0) {
             CounterBackupEntry entry = readMessageStream(serCtx, CounterBackupEntry.class, is);
+            if (!countersToRestore.isEmpty() && !countersToRestore.contains(entry.name)) {
+               log.debugf("Ignoring '%s' counter", entry.name);
+               continue;
+            }
             CounterConfiguration config = entry.configuration;
             counterManager.defineCounter(entry.name, config);
             if (config.type() == CounterType.WEAK) {
@@ -236,21 +239,81 @@ class BackupReader {
       }
    }
 
-   private void processFilesForInternalCache(String fileName, Path root, Cache<String, String> cache, ZipFile zip) throws IOException {
-      String zipPath = root.resolve(fileName).toString();
-      try (InputStream is = zip.getInputStream(zip.getEntry(zipPath));
-           BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
-         String content = reader.lines().collect(Collectors.joining("\n"));
-         cache.put(fileName, content);
+   private void processProtoSchemas(Path containerPath, Set<String> schemasToRestore, EmbeddedCacheManager cm, ZipFile zip) throws IOException {
+      Path scriptPath = resolve(containerPath, PROTO_SCHEMAS);
+      processInternalCache(scriptPath, schemasToRestore, PROTO_CACHE_NAME, cm, zip);
+   }
+
+   private void processScripts(Path containerPath, Set<String> scriptsToRestore, EmbeddedCacheManager cm, ZipFile zip) throws IOException {
+      Path scriptPath = resolve(containerPath, SCRIPTS);
+      processInternalCache(scriptPath, scriptsToRestore, SCRIPT_CACHE_NAME, cm, zip);
+   }
+
+   private void processInternalCache(Path root, Set<String> files, String cacheName, EmbeddedCacheManager cm, ZipFile zip) throws IOException {
+      if (cm.getCacheConfiguration(cacheName) != null) {
+         Cache<String, String> cache = cm.getCache(cacheName);
+         for (String file : files) {
+            String zipPath = root.resolve(file).toString();
+            try (InputStream is = zip.getInputStream(zip.getEntry(zipPath));
+                 BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
+               String content = reader.lines().collect(Collectors.joining("\n"));
+               cache.put(file, content);
+            }
+         }
       }
+   }
+
+   private void processAllResources(BackupManager.Resource resource, BackupManager.BackupParameters parameters, Properties properties, IOConsumer<Set<String>> consumer) {
+      Set<String> resourcesToProcess = getResourceNames(resource, parameters, properties);
+      if (resourcesToProcess != null) {
+         try {
+            consumer.accept(resourcesToProcess);
+         } catch (IOException e) {
+            throw new CacheException(e);
+         }
+      }
+   }
+
+   private void processIndividualResources(BackupManager.Resource resource, BackupManager.BackupParameters parameters, Properties properties, IOConsumer<String> consumer) {
+      Set<String> resourcesToProcess = getResourceNames(resource, parameters, properties);
+      if (resourcesToProcess != null) {
+         resourcesToProcess.forEach(r -> {
+            try {
+               consumer.accept(r);
+            } catch (IOException e) {
+               throw new CacheException(e);
+            }
+         });
+      }
+   }
+
+   private Set<String> getResourceNames(BackupManager.Resource resource, BackupManager.BackupParameters parameters, Properties properties) {
+      Set<String> requestedResources = parameters.get(resource);
+      if (requestedResources == null) {
+         log.debugf("Ignoring %s resources", resource);
+         return null;
+      }
+
+      // Only process specific resources if specified
+      Set<String> backupContents = asSet(properties, resource);
+      Set<String> resourcesToProcess = new HashSet<>(backupContents);
+      if (!requestedResources.isEmpty())
+         resourcesToProcess.retainAll(requestedResources);
+
+      // The requested resource(s) cannot be found in the backup properties file, so abort the restore
+      if (resourcesToProcess.isEmpty()) {
+         requestedResources.removeAll(backupContents);
+         throw log.unableToFindBackupResource(resource, requestedResources);
+      }
+      return resourcesToProcess;
    }
 
    private Properties readManifestAndValidate(ZipFile zip) {
       Path manifestPath = Paths.get(MANIFEST_PROPERTIES_FILE);
       Properties properties = readProperties(manifestPath, zip);
-      String version = properties.getProperty(VERSION_PROPERTY);
+      String version = properties.getProperty(VERSION_KEY);
       if (version == null)
-         throw new  IllegalStateException("Missing manifest version");
+         throw new IllegalStateException("Missing manifest version");
 
       int majorVersion = Integer.parseInt(version.split("[\\.\\-]")[0]);
       // TODO replace with check that version difference is in the supported range, i.e. across 3 majors etc
@@ -270,11 +333,11 @@ class BackupReader {
       }
    }
 
-   private String[] csvProperty(Properties properties, String key) {
-      String prop = properties.getProperty(key);
+   private Set<String> asSet(Properties properties, BackupManager.Resource resource) {
+      String prop = properties.getProperty(resource.toString());
       if (prop == null || prop.isEmpty())
-         return Util.EMPTY_STRING_ARRAY;
-      return prop.split(",");
+         return Collections.emptySet();
+      return new HashSet<>(Arrays.asList(prop.split(",")));
    }
 
    @SuppressWarnings("unchecked")
