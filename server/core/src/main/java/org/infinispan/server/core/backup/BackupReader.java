@@ -94,7 +94,7 @@ class BackupReader {
       this.parserRegistry = new ParserRegistry();
    }
 
-   CompletionStage<Void> restore(byte[] backup, Map<String, BackupManager.BackupParameters> params) {
+   CompletionStage<Void> restore(byte[] backup, Map<String, BackupManager.Parameters> params) {
       // TODO split into more fine-grained blocking manager executions?
       return blockingManager.runBlocking(() -> {
          Path stagingFile = rootDir.resolve(STAGING_ZIP);
@@ -120,7 +120,7 @@ class BackupReader {
       }, "restore-backup");
    }
 
-   private void restoreContainer(String containerName, BackupManager.BackupParameters params, ZipFile zip) throws IOException {
+   private void restoreContainer(String containerName, BackupManager.Parameters params, ZipFile zip) throws IOException {
       // TODO validate container config
       EmbeddedCacheManager cm = cacheManagers.get(containerName);
       Path containerPath = Paths.get(CONTAINER_KEY, containerName);
@@ -263,7 +263,7 @@ class BackupReader {
       }
    }
 
-   private void processAllResources(BackupManager.Resource resource, BackupManager.BackupParameters parameters, Properties properties, IOConsumer<Set<String>> consumer) {
+   private void processAllResources(BackupManager.Resource resource, BackupManager.Parameters parameters, Properties properties, IOConsumer<Set<String>> consumer) {
       Set<String> resourcesToProcess = getResourceNames(resource, parameters, properties);
       if (resourcesToProcess != null) {
          try {
@@ -274,7 +274,7 @@ class BackupReader {
       }
    }
 
-   private void processIndividualResources(BackupManager.Resource resource, BackupManager.BackupParameters parameters, Properties properties, IOConsumer<String> consumer) {
+   private void processIndividualResources(BackupManager.Resource resource, BackupManager.Parameters parameters, Properties properties, IOConsumer<String> consumer) {
       Set<String> resourcesToProcess = getResourceNames(resource, parameters, properties);
       if (resourcesToProcess != null) {
          resourcesToProcess.forEach(r -> {
@@ -287,7 +287,7 @@ class BackupReader {
       }
    }
 
-   private Set<String> getResourceNames(BackupManager.Resource resource, BackupManager.BackupParameters parameters, Properties properties) {
+   private Set<String> getResourceNames(BackupManager.Resource resource, BackupManager.Parameters parameters, Properties properties) {
       Set<String> requestedResources = parameters.get(resource);
       if (requestedResources == null) {
          log.debugf("Ignoring %s resources", resource);

@@ -19,7 +19,7 @@ import org.infinispan.server.core.BackupManager;
  * @author Ryan Emerson
  * @since 11.0
  */
-public class BackupParametersImpl implements BackupManager.BackupParameters {
+public class BackupParametersImpl implements BackupManager.Parameters {
 
    final String name;
    final Map<BackupManager.Resource, Set<String>> resources;
@@ -64,6 +64,12 @@ public class BackupParametersImpl implements BackupManager.BackupParameters {
       public Builder importAll(BackupManager.Resource... resources) {
          for (BackupManager.Resource resource : resources)
             addResources(resource);
+         return this;
+      }
+
+      public Builder ignore(BackupManager.Resource... resources) {
+         for (BackupManager.Resource resource : resources)
+            this.resources.remove(resource);
          return this;
       }
 

@@ -80,7 +80,7 @@ public class BackupManagerImplTest extends AbstractInfinispanTest {
          Path nonExistingDir = new File(CommonsTestingUtil.tmpDirectory(BackupManagerImplTest.class.getSimpleName() + "blah")).toPath();
 
          BlockingManager blockingManager = cm.getGlobalComponentRegistry().getComponent(BlockingManager.class);
-         BackupManager.BackupParameters params = new BackupParametersImpl.Builder().addCaches("doesn't exist").build();
+         BackupManager.Parameters params = new BackupParametersImpl.Builder().addCaches("doesn't exist").build();
          new BackupManagerImpl(blockingManager, cacheManagers, nonExistingDir)
                .create(Collections.singletonMap(containerName, params))
                .toCompletableFuture()
@@ -113,7 +113,7 @@ public class BackupManagerImplTest extends AbstractInfinispanTest {
          BlockingManager blockingManager = writerManagers.values().iterator().next().getGlobalComponentRegistry().getComponent(BlockingManager.class);
          BackupWriter writer = new BackupWriter(blockingManager, writerManagers, workingDir.toPath());
 
-         Map<String, BackupManager.BackupParameters> paramMap = new HashMap<>(2);
+         Map<String, BackupManager.Parameters> paramMap = new HashMap<>(2);
          paramMap.put(container1,
                new BackupParametersImpl.Builder()
                      .addCaches("object-cache", "protostream-cache", "empty-cache")

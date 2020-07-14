@@ -100,9 +100,9 @@ class BackupWriter {
       this.parserRegistry = new ParserRegistry();
    }
 
-   CompletionStage<Path> create(Map<String, BackupManager.BackupParameters> params) {
+   CompletionStage<Path> create(Map<String, BackupManager.Parameters> params) {
       List<CompletionStage<?>> stages = new ArrayList<>(params.size() + 1);
-      for (Map.Entry<String, BackupManager.BackupParameters> e : params.entrySet()) {
+      for (Map.Entry<String, BackupManager.Parameters> e : params.entrySet()) {
          String container = e.getKey();
          EmbeddedCacheManager cm = cacheManagers.get(container);
          stages.add(createBackup(container, cm, e.getValue()));
@@ -126,11 +126,11 @@ class BackupWriter {
     *
     * @param containerName the name of container to backup.
     * @param cm            the container to backup.
-    * @param params        the {@link BackupManager.BackupParameters} object that determines what resources are included
+    * @param params        the {@link BackupManager.Parameters} object that determines what resources are included
     *                      in the backup for this container.
     * @return a {@link CompletionStage} that completes once the backup has finished.
     */
-   private CompletionStage<Void> createBackup(String containerName, EmbeddedCacheManager cm, BackupManager.BackupParameters params) {
+   private CompletionStage<Void> createBackup(String containerName, EmbeddedCacheManager cm, BackupManager.Parameters params) {
       Path containerRoot = rootDir.resolve(CONTAINER_KEY).resolve(containerName);
       containerRoot.toFile().mkdirs();
       GlobalComponentRegistry gcr = cm.getGlobalComponentRegistry();
@@ -393,7 +393,7 @@ class BackupWriter {
       return zipFile;
    }
 
-   private void addResourceProperty(BackupManager.BackupParameters params, BackupManager.Resource resource, Properties properties) {
+   private void addResourceProperty(BackupManager.Parameters params, BackupManager.Resource resource, Properties properties) {
       String key = resource.toString();
       Set<String> set = params.get(resource);
       String value = set == null ? "" : String.join(",", set);

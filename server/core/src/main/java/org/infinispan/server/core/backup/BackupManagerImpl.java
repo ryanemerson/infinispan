@@ -54,7 +54,7 @@ public class BackupManagerImpl implements BackupManager {
    }
 
    @Override
-   public CompletionStage<Path> create(Map<String, BackupParameters> params) {
+   public CompletionStage<Path> create(Map<String, Parameters> params) {
       if (!backupInProgress.compareAndSet(false, true))
          return failedBackupLockFuture();
 
@@ -75,7 +75,7 @@ public class BackupManagerImpl implements BackupManager {
    }
 
    @Override
-   public CompletionStage<Void> restore(byte[] backup, Map<String, BackupParameters> params) {
+   public CompletionStage<Void> restore(byte[] backup, Map<String, Parameters> params) {
       if (!restoreInProgress.compareAndSet(false, true))
          return failedRestoreInProgress();
 
