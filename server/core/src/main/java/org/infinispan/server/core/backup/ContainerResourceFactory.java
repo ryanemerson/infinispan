@@ -1,12 +1,18 @@
 package org.infinispan.server.core.backup;
 
+import static org.infinispan.server.core.BackupManager.ResourceType.COUNTERS;
+
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
+import org.infinispan.commons.logging.LogFactory;
 import org.infinispan.configuration.parsing.ParserRegistry;
+import org.infinispan.counter.api.CounterManager;
+import org.infinispan.factories.GlobalComponentRegistry;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.server.core.BackupManager;
+import org.infinispan.server.core.logging.Log;
 import org.infinispan.util.concurrent.BlockingManager;
 
 /**
@@ -16,6 +22,8 @@ import org.infinispan.util.concurrent.BlockingManager;
  * @since 11.0
  */
 class ContainerResourceFactory {
+
+   private static final Log log = LogFactory.getLog(ContainerResourceFactory.class, Log.class);
 
    private final ParserRegistry parserRegistry = new ParserRegistry();
    private final BlockingManager blockingManager;
@@ -35,13 +43,22 @@ class ContainerResourceFactory {
    }
 
    ContainerResource get(BackupManager.ResourceType type, BackupManager.Parameters params) {
+      GlobalComponentRegistry gcr = cm.getGlobalComponentRegistry();
       switch (type) {
          case CACHES:
             return new CacheResource(blockingManager, parserRegistry, cm, params, containerRoot);
          case CACHE_CONFIGURATIONS:
             return new CacheConfigResource(blockingManager, parserRegistry, cm, params, containerRoot);
-         default:
-            throw new IllegalStateException("TODO remove");
+         case COUNTERS:
+            CounterManager counterManager = gcr.getComponent(CounterManager.class);
+            if (counterManager == null) {
+               throw log.missingBackupResourceModule(COUNTERS);
+            }
+            return new CountersResource(blockingManager, cm, params, containerRoot);
+         case PROTO_SCHEMAS:
+         case SCRIPTS:
+            return new InternalCacheResource(type, blockingManager, cm, params, containerRoot);
       }
+      throw new IllegalStateException();
    }
 }

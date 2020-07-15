@@ -37,7 +37,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import org.infinispan.Cache;
-import org.infinispan.commons.CacheConfigurationException;
+import org.infinispan.commons.CacheException;
 import org.infinispan.commons.test.CommonsTestingUtil;
 import org.infinispan.commons.util.Util;
 import org.infinispan.configuration.cache.Configuration;
@@ -86,8 +86,8 @@ public class BackupManagerImplTest extends AbstractInfinispanTest {
                .toCompletableFuture()
                .get(MAX_WAIT_SECS, TimeUnit.SECONDS);
          fail();
-      } catch (ExecutionException e) {
-         assertTrue(e.getCause() instanceof CacheConfigurationException);
+      } catch (CacheException e) {
+         assertTrue(e.getMessage().contains("'doesn't exist' as it does not exist"));
       }
    }
 

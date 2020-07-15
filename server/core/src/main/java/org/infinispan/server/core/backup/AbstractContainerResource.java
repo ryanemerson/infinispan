@@ -24,7 +24,7 @@ import org.infinispan.util.concurrent.BlockingManager;
  */
 abstract class AbstractContainerResource implements ContainerResource {
 
-   private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass(), Log.class);
+   protected static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass(), Log.class);
 
    final BackupManager.ResourceType type;
    final BackupManager.Parameters params;
@@ -34,11 +34,12 @@ abstract class AbstractContainerResource implements ContainerResource {
    final boolean wildcard;
    final Set<String> qualifiedResources;
 
-   AbstractContainerResource(BackupManager.ResourceType type, BackupManager.Parameters params, Path root,
-                             BlockingManager blockingManager, EmbeddedCacheManager cm) {
+   // TODO make order consistent with implementations
+   protected AbstractContainerResource(BackupManager.ResourceType type, BackupManager.Parameters params, Path root,
+                                       BlockingManager blockingManager, EmbeddedCacheManager cm) {
       this.type = type;
       this.params = params;
-      this.root = resolve(root, type); // TODO can resolve method be moved to this class?
+      this.root = resolve(root, type); // TODO move to this class?
       this.blockingManager = blockingManager;
       this.cm = cm;
       Set<String> qualifiedResources = params.getQualifiedResources(type);

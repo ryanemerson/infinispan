@@ -80,12 +80,6 @@ public interface BackupManager {
        */
       String name();
 
-//      /**
-//       * @return a {@link Set} of {@link ResourceType} that require all of their available resources to be included
-//       * in the backup/restore operation.
-//       */
-//      Set<ResourceType> wildcardResources();
-
       Set<ResourceType> includedResourceTypes();
 
       /**
@@ -93,13 +87,5 @@ public interface BackupManager {
        * @return a {@link Set} of resource names to process.
        */
       Set<String> getQualifiedResources(ResourceType type);
-
-      /**
-       * @param type the {@link ResourceType} to query.
-       * @return true if the {@link ResourceType} should be included in the backup/restore operation.
-       */
-      default boolean isResourceRequired(ResourceType type) {
-         return includedResourceTypes().contains(type);
-      }
    }
 }

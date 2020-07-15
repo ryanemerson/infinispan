@@ -37,7 +37,9 @@ class CacheConfigResource extends AbstractContainerResource {
    public CompletionStage<Void> backup() {
       return blockingManager.runBlocking(() -> {
          root.toFile().mkdir();
-         Set<String> configNames = wildcard ? cm.getCacheConfigurationNames() : qualifiedResources;
+         Set<String> configNames = qualifiedResources;
+         if (wildcard)
+            configNames.addAll(cm.getCacheConfigurationNames());
 
          for (String configName : configNames) {
             Configuration config = cm.getCacheConfiguration(configName);

@@ -66,7 +66,7 @@ public class CacheResource extends AbstractContainerResource {
    final ParserRegistry parserRegistry;
 
    public CacheResource(BlockingManager blockingManager, ParserRegistry parserRegistry, EmbeddedCacheManager cm,
-                              BackupManager.Parameters params, Path root) {
+                        BackupManager.Parameters params, Path root) {
       super(CACHES, params, root, blockingManager, cm);
       this.parserRegistry = parserRegistry;
    }
@@ -75,7 +75,10 @@ public class CacheResource extends AbstractContainerResource {
    public CompletionStage<Void> backup() {
       InternalCacheRegistry icr = cm.getGlobalComponentRegistry().getComponent(InternalCacheRegistry.class);
 
-      Set<String> caches = wildcard ? cm.getCacheConfigurationNames() : qualifiedResources;
+      Set<String> caches = qualifiedResources;
+      if (wildcard)
+         caches.addAll(cm.getCacheConfigurationNames());
+
       Collection<CompletionStage<?>> stages = new ArrayList<>(caches.size());
 
       for (String cache : caches) {
@@ -88,8 +91,10 @@ public class CacheResource extends AbstractContainerResource {
                continue;
             }
             qualifiedResources.add(cache);
+         } else if (config == null) {
+            throw new CacheException(String.format("Unable to backup %s resource '%s' as it does not exist", type, cache));
          } else if (config.isTemplate()) {
-            throw new CacheException(String.format("Unable to backup %s '%s' as it is a template not a cache", CACHES, cache));
+            throw new CacheException(String.format("Unable to backup %s '%s' as it is a template not a cache", type, cache));
          }
 
          stages.add(blockingManager.runBlocking(() -> createCacheBackup(cache, config), "backup-cache-" + cache));
