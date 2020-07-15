@@ -30,16 +30,6 @@ class BackupUtil {
    static final String STAGING_ZIP = "staging.zip";
    static final String VERSION_KEY = "version";
 
-   // TODO remove
-   static String cacheDataFile(String cache) {
-      return String.format("%s.dat", cache);
-   }
-
-   // TODO remove
-   static String cacheConfigFile(String cache) {
-      return String.format("%s.xml", cache);
-   }
-
    // TODO remove? Leave in AbstractContainerResource
    static Path resolve(Path root, BackupManager.ResourceType resource, String... subPaths) {
       Path path = root.resolve(resource.toString());

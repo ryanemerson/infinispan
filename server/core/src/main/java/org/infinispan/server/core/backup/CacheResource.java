@@ -1,7 +1,6 @@
 package org.infinispan.server.core.backup;
 
 import static org.infinispan.server.core.BackupManager.ResourceType.CACHES;
-import static org.infinispan.server.core.backup.BackupUtil.cacheConfigFile;
 import static org.infinispan.server.core.backup.BackupUtil.readMessageStream;
 import static org.infinispan.server.core.backup.BackupUtil.writeMessageStream;
 
@@ -10,6 +9,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.CompletionStage;
@@ -46,6 +47,7 @@ import org.infinispan.reactive.publisher.impl.DeliveryGuarantee;
 import org.infinispan.registry.InternalCacheRegistry;
 import org.infinispan.server.core.BackupManager;
 import org.infinispan.util.concurrent.BlockingManager;
+import org.infinispan.util.concurrent.CompletionStages;
 import org.reactivestreams.Publisher;
 
 import io.reactivex.rxjava3.core.Flowable;
@@ -71,40 +73,41 @@ public class CacheResource extends AbstractContainerResource {
 
    @Override
    public CompletionStage<Void> backup() {
-      // TODO add stage per cache
-      return blockingManager.runBlocking(() -> {
-         InternalCacheRegistry icr = cm.getGlobalComponentRegistry().getComponent(InternalCacheRegistry.class);
-         Set<String> caches = wildcard ? cm.getCacheConfigurationNames() : qualifiedResources;
-         for (String cache : caches) {
-            Configuration config = cm.getCacheConfiguration(cache);
-            if (config.isTemplate()) {
-               if (!wildcard)
-                  throw new CacheException(String.format("Unable to backup %s '%s' as it is a template not a cache", CACHES, cache));
-               caches.remove(cache);
-               continue;
-            }
+      InternalCacheRegistry icr = cm.getGlobalComponentRegistry().getComponent(InternalCacheRegistry.class);
 
+      Set<String> caches = wildcard ? cm.getCacheConfigurationNames() : qualifiedResources;
+      Collection<CompletionStage<?>> stages = new ArrayList<>(caches.size());
+
+      for (String cache : caches) {
+         Configuration config = cm.getCacheConfiguration(cache);
+
+         if (wildcard) {
             // For wildcard resources, we ignore internal caches, however explicitly requested internal caches are allowed
-            if (wildcard && icr.isInternalCache(cache)) {
+            if (config.isTemplate() || icr.isInternalCache(cache)) {
                caches.remove(cache);
                continue;
             }
-
-            createCacheBackup(cache, config);
+            qualifiedResources.add(cache);
+         } else if (config.isTemplate()) {
+            throw new CacheException(String.format("Unable to backup %s '%s' as it is a template not a cache", CACHES, cache));
          }
-      }, "backup-caches");
+
+         stages.add(blockingManager.runBlocking(() -> createCacheBackup(cache, config), "backup-cache-" + cache));
+      }
+
+      return CompletionStages.allOf(stages);
    }
 
    @Override
    public CompletionStage<Void> restore(Properties properties, ZipFile zip) {
-      // TODO add stage per cache
-      return blockingManager.runBlocking(() -> {
-         Set<String> cacheNames = resourcesToRestore(properties);
-         for (String cacheName : cacheNames) {
+      Set<String> cacheNames = resourcesToRestore(properties);
+      Collection<CompletionStage<?>> stages = new ArrayList<>(cacheNames.size());
+      for (String cacheName : cacheNames) {
+         stages.add(blockingManager.runBlocking(() -> {
             Path cacheRoot = root.resolve(cacheName);
 
             // Process .xml
-            String configFile = cacheConfigFile(cacheName);
+            String configFile = configFile(cacheName);
             String zipPath = cacheRoot.resolve(configFile).toString();
             try (InputStream is = zip.getInputStream(zip.getEntry(zipPath))) {
                ConfigurationBuilderHolder builderHolder = parserRegistry.parse(is, null);
@@ -119,7 +122,7 @@ public class CacheResource extends AbstractContainerResource {
             String data = cacheRoot.resolve(dataFile).toString();
             ZipEntry zipEntry = zip.getEntry(data);
             if (zipEntry == null)
-               continue;
+               return;
 
             AdvancedCache<Object, Object> cache = cm.getCache(cacheName).getAdvancedCache();
             ComponentRegistry cr = cache.getComponentRegistry();
@@ -151,8 +154,9 @@ public class CacheResource extends AbstractContainerResource {
             } catch (IOException e) {
                throw new CacheException(e);
             }
-         }
-      }, "read-caches");
+         }, "restore-cache-" + cacheName));
+      }
+      return CompletionStages.allOf(stages);
    }
 
    private void createCacheBackup(String cacheName, Configuration configuration) {
@@ -163,27 +167,25 @@ public class CacheResource extends AbstractContainerResource {
       cacheRoot.toFile().mkdirs();
 
       // Write configuration file
-      String fileName = configFile(cacheName);
-      Path xmlPath = cacheRoot.resolve(fileName);
+      String xmlFileName = configFile(cacheName);
+      Path xmlPath = cacheRoot.resolve(xmlFileName);
       try (OutputStream os = Files.newOutputStream(xmlPath)) {
          parserRegistry.serialize(os, cacheName, configuration);
       } catch (XMLStreamException | IOException e) {
-         throw new CacheException(String.format("Unable to create backup file '%s'", fileName), e);
+         throw new CacheException(String.format("Unable to create backup file '%s'", xmlFileName), e);
       }
 
       // Write in-memory cache contents to .dat file if the cache is not empty
-      if (!cache.isEmpty())
-         writeCacheDataFile(cacheName, cache, cacheRoot);
-   }
+      if (cache.isEmpty())
+         return;
 
-   private void writeCacheDataFile(String cacheName, AdvancedCache<?, ?> cache, Path cacheRoot) {
       ComponentRegistry cr = cache.getComponentRegistry();
       ClusterPublisherManager<?, ?> clusterPublisherManager = cr.getClusterPublisherManager().running();
       SerializationContextRegistry ctxRegistry = cr.getGlobalComponentRegistry().getComponent(SerializationContextRegistry.class);
       ImmutableSerializationContext serCtx = ctxRegistry.getPersistenceCtx();
 
-      String fileName = dataFile(cacheName);
-      Path datFile = cacheRoot.resolve(fileName);
+      String dataFileName = dataFile(cacheName);
+      Path datFile = cacheRoot.resolve(dataFileName);
 
       Publisher<CacheEntry<?, ?>> p = s -> clusterPublisherManager.entryPublisher(null, null, null, false,
             DeliveryGuarantee.EXACTLY_ONCE, BUFFER_SIZE, PublisherTransformers.identity())

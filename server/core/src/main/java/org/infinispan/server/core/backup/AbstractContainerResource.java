@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.infinispan.commons.logging.LogFactory;
 import org.infinispan.manager.EmbeddedCacheManager;
@@ -42,7 +43,9 @@ abstract class AbstractContainerResource implements ContainerResource {
       this.cm = cm;
       Set<String> qualifiedResources = params.getQualifiedResources(type);
       this.wildcard = qualifiedResources == null;
-      this.qualifiedResources = wildcard ? new HashSet<>() : qualifiedResources;
+      this.qualifiedResources = ConcurrentHashMap.newKeySet();
+      if (!wildcard)
+         this.qualifiedResources.addAll(qualifiedResources);
    }
 
    @Override

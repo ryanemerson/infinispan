@@ -38,13 +38,17 @@ class CacheConfigResource extends AbstractContainerResource {
       return blockingManager.runBlocking(() -> {
          root.toFile().mkdir();
          Set<String> configNames = wildcard ? cm.getCacheConfigurationNames() : qualifiedResources;
+
          for (String configName : configNames) {
             Configuration config = cm.getCacheConfiguration(configName);
-            if (!config.isTemplate()) {
-               if (wildcard) {
+            if (wildcard) {
+               if (config.isTemplate()) {
+                  qualifiedResources.add(configName);
+               } else {
                   configNames.remove(configName);
                   continue;
                }
+            } else if (!config.isTemplate()){
                throw new CacheException(String.format("Unable to backup %s '%s' as it is not a template", CACHE_CONFIGURATIONS, configName));
             }
 
@@ -55,10 +59,6 @@ class CacheConfigResource extends AbstractContainerResource {
             } catch (XMLStreamException | IOException e) {
                throw new CacheException(String.format("Unable to create backup file '%s'", fileName), e);
             }
-         }
-
-         if (wildcard) {
-            qualifiedResources.addAll(configNames);
          }
       }, "cache-config-write");
    }
