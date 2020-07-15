@@ -1,17 +1,16 @@
 package org.infinispan.server.core.backup;
 
-import static org.infinispan.server.core.BackupManager.Resource.CACHES;
-import static org.infinispan.server.core.BackupManager.Resource.CACHE_CONFIGURATIONS;
-import static org.infinispan.server.core.BackupManager.Resource.COUNTERS;
-import static org.infinispan.server.core.BackupManager.Resource.PROTO_SCHEMAS;
-import static org.infinispan.server.core.BackupManager.Resource.SCRIPTS;
+import static org.infinispan.server.core.BackupManager.ResourceType.CACHES;
+import static org.infinispan.server.core.BackupManager.ResourceType.CACHE_CONFIGURATIONS;
+import static org.infinispan.server.core.BackupManager.ResourceType.COUNTERS;
+import static org.infinispan.server.core.BackupManager.ResourceType.PROTO_SCHEMAS;
+import static org.infinispan.server.core.BackupManager.ResourceType.SCRIPTS;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Supplier;
 
 import org.infinispan.server.core.BackupManager;
 
@@ -22,9 +21,9 @@ import org.infinispan.server.core.BackupManager;
 public class BackupParametersImpl implements BackupManager.Parameters {
 
    final String name;
-   final Map<BackupManager.Resource, Set<String>> resources;
+   final Map<BackupManager.ResourceType, Set<String>> resources;
 
-   public BackupParametersImpl(String name, Map<BackupManager.Resource, Set<String>> resources) {
+   public BackupParametersImpl(String name, Map<BackupManager.ResourceType, Set<String>> resources) {
       this.name = name;
       this.resources = resources;
    }
@@ -35,21 +34,18 @@ public class BackupParametersImpl implements BackupManager.Parameters {
    }
 
    @Override
-   public Set<String> get(BackupManager.Resource resource) {
-      return resources.get(resource);
+   public Set<BackupManager.ResourceType> includedResourceTypes() {
+      return resources.keySet();
    }
 
    @Override
-   public Set<String> computeIfEmpty(BackupManager.Resource resource, Supplier<Set<String>> supplier) {
-      return resources.compute(resource, (k, v) -> {
-         if (v != null && v.isEmpty())
-            return supplier.get();
-         return v;
-      });
+   public Set<String> getQualifiedResources(BackupManager.ResourceType type) {
+      Set<String> qualified = resources.get(type);
+      return qualified.isEmpty() ? null : qualified;
    }
 
    public static class Builder {
-      final Map<BackupManager.Resource, Set<String>> resources = new HashMap<>();
+      final Map<BackupManager.ResourceType, Set<String>> resources = new HashMap<>();
       String name;
 
       public Builder name(String name) {
@@ -58,17 +54,17 @@ public class BackupParametersImpl implements BackupManager.Parameters {
       }
 
       public Builder importAll() {
-         return importAll(BackupManager.Resource.values());
+         return importAll(BackupManager.ResourceType.values());
       }
 
-      public Builder importAll(BackupManager.Resource... resources) {
-         for (BackupManager.Resource resource : resources)
+      public Builder importAll(BackupManager.ResourceType... resources) {
+         for (BackupManager.ResourceType resource : resources)
             addResources(resource);
          return this;
       }
 
-      public Builder ignore(BackupManager.Resource... resources) {
-         for (BackupManager.Resource resource : resources)
+      public Builder ignore(BackupManager.ResourceType... resources) {
+         for (BackupManager.ResourceType resource : resources)
             this.resources.remove(resource);
          return this;
       }
@@ -93,7 +89,7 @@ public class BackupParametersImpl implements BackupManager.Parameters {
          return addResources(SCRIPTS, scripts);
       }
 
-      private Builder addResources(BackupManager.Resource resource, String... resources) {
+      private Builder addResources(BackupManager.ResourceType resource, String... resources) {
          this.resources.compute(resource, (k, v) -> {
             Set<String> set = v == null ? new HashSet<>() : v;
             Collections.addAll(set, resources);

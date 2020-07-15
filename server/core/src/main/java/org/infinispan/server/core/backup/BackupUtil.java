@@ -4,6 +4,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Properties;
+import java.util.Set;
 
 import org.infinispan.protostream.ImmutableSerializationContext;
 import org.infinispan.protostream.ProtobufUtil;
@@ -25,19 +30,29 @@ class BackupUtil {
    static final String STAGING_ZIP = "staging.zip";
    static final String VERSION_KEY = "version";
 
+   // TODO remove
    static String cacheDataFile(String cache) {
       return String.format("%s.dat", cache);
    }
 
+   // TODO remove
    static String cacheConfigFile(String cache) {
       return String.format("%s.xml", cache);
    }
 
-   static Path resolve(Path root, BackupManager.Resource resource, String... subPaths) {
+   // TODO remove? Leave in AbstractContainerResource
+   static Path resolve(Path root, BackupManager.ResourceType resource, String... subPaths) {
       Path path = root.resolve(resource.toString());
       for (String p : subPaths)
          path = path.resolve(p);
       return path;
+   }
+
+   static Set<String> asSet(Properties properties, BackupManager.ResourceType resource) {
+      String prop = properties.getProperty(resource.toString());
+      if (prop == null || prop.isEmpty())
+         return Collections.emptySet();
+      return new HashSet<>(Arrays.asList(prop.split(",")));
    }
 
    static void writeMessageStream(Object o, ImmutableSerializationContext serCtx, OutputStream output) throws IOException {

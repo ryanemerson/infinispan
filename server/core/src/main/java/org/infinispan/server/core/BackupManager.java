@@ -4,7 +4,6 @@ import java.nio.file.Path;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletionStage;
-import java.util.function.Supplier;
 
 import org.infinispan.factories.scopes.Scope;
 import org.infinispan.factories.scopes.Scopes;
@@ -44,7 +43,7 @@ public interface BackupManager {
 
    /**
     * Restore content from the provided backup bytes. The keyset of the provided {@link Map} determines which containers
-    * are restored from the backup file. Similarly, the {@link Parameters} object determines which {@link Resource}s are
+    * are restored from the backup file. Similarly, the {@link Parameters} object determines which {@link ResourceType}s are
     * restored.
     *
     * @param backup the bytes of the uploaded backup file.
@@ -52,7 +51,7 @@ public interface BackupManager {
     */
    CompletionStage<Void> restore(byte[] backup, Map<String, Parameters> params);
 
-   enum Resource {
+   enum ResourceType {
       CACHES("caches"),
       CACHE_CONFIGURATIONS("cache-configs"),
       COUNTERS("counters"),
@@ -60,7 +59,7 @@ public interface BackupManager {
       SCRIPTS("scripts");
 
       final String name;
-      Resource(String name) {
+      ResourceType(String name) {
          this.name = name;
       }
 
@@ -81,29 +80,26 @@ public interface BackupManager {
        */
       String name();
 
-      /**
-       * @return The names of the {@link Resource} to be restored. An empty {@link Set} indicates that all available
-       * resources of that type should be included in a backup or restore operation. Conversely, if a null value is
-       * returned for a resource, this indicates that the resource should be excluded from the backup/restore operation.
-       */
-      Set<String> get(Resource resource);
+//      /**
+//       * @return a {@link Set} of {@link ResourceType} that require all of their available resources to be included
+//       * in the backup/restore operation.
+//       */
+//      Set<ResourceType> wildcardResources();
+
+      Set<ResourceType> includedResourceTypes();
 
       /**
-       * Replaces an empty {@link Set} associated with a {@link Resource}, with that provided by the {@link Supplier}.
-       * This is useful for replacing the wildcard, i.e. an empty set, with the actual resource names available.
-       *
-       * @param resource
-       * @param supplier
-       * @return
+       * @param type the {@link ResourceType} to retrieve the associated resources for.
+       * @return a {@link Set} of resource names to process.
        */
-      Set<String> computeIfEmpty(Resource resource, Supplier<Set<String>> supplier);
+      Set<String> getQualifiedResources(ResourceType type);
 
       /**
-       * @param resource the {@link Resource} to be queried
-       * @return true if the resource is required by the backup/restore operation
+       * @param type the {@link ResourceType} to query.
+       * @return true if the {@link ResourceType} should be included in the backup/restore operation.
        */
-      default boolean include(Resource resource) {
-         return get(resource) != null;
+      default boolean isResourceRequired(ResourceType type) {
+         return includedResourceTypes().contains(type);
       }
    }
 }

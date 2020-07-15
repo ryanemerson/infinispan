@@ -5,8 +5,8 @@ import static org.infinispan.commons.dataconversion.MediaType.APPLICATION_PROTOS
 import static org.infinispan.commons.dataconversion.MediaType.APPLICATION_UNKNOWN_TYPE;
 import static org.infinispan.functional.FunctionalTestUtils.MAX_WAIT_SECS;
 import static org.infinispan.functional.FunctionalTestUtils.await;
-import static org.infinispan.server.core.BackupManager.Resource.CACHES;
-import static org.infinispan.server.core.BackupManager.Resource.CACHE_CONFIGURATIONS;
+import static org.infinispan.server.core.BackupManager.ResourceType.CACHES;
+import static org.infinispan.server.core.BackupManager.ResourceType.CACHE_CONFIGURATIONS;
 import static org.infinispan.server.core.backup.BackupUtil.CONTAINERS_PROPERTIES_FILE;
 import static org.infinispan.server.core.backup.BackupUtil.CONTAINER_KEY;
 import static org.infinispan.server.core.backup.BackupUtil.GLOBAL_CONFIG_FILE;
@@ -101,7 +101,7 @@ public class BackupManagerImplTest extends AbstractInfinispanTest {
          DefaultCacheManager sourceManager1 = writerManagers.get(container1);
          DefaultCacheManager sourceManager2 = writerManagers.get(container2);
 
-         sourceManager1.defineConfiguration("example-template", config(APPLICATION_OBJECT_TYPE));
+         sourceManager1.defineConfiguration("example-template", config(APPLICATION_OBJECT_TYPE, true));
          sourceManager1.defineConfiguration("object-cache", config(APPLICATION_OBJECT_TYPE));
          sourceManager1.defineConfiguration("protostream-cache", config(APPLICATION_PROTOSTREAM_TYPE));
          sourceManager1.defineConfiguration("empty-cache", config());
@@ -164,6 +164,11 @@ public class BackupManagerImplTest extends AbstractInfinispanTest {
          DefaultCacheManager targetManager1 = readerManagers.get(container1);
          DefaultCacheManager targetManager2 = readerManagers.get(container2);
 
+
+         Configuration template = targetManager1.getCacheConfiguration("example-template");
+         assertNotNull(template);
+         assertTrue(template.isTemplate());
+
          Cache<Integer, Integer> objectCache = targetManager1.getCache("object-cache");
          assertFalse(objectCache.isEmpty());
          assertEquals(100, objectCache.size());
@@ -195,14 +200,19 @@ public class BackupManagerImplTest extends AbstractInfinispanTest {
    }
 
    private Configuration config(String type) {
-      return config(type, type);
+      return config(type, false);
    }
 
-   private Configuration config(String keyType, String valueType) {
+   private Configuration config(String type, boolean template) {
+      return config(type, type, template);
+   }
+
+   private Configuration config(String keyType, String valueType, boolean template) {
       ConfigurationBuilder builder = new ConfigurationBuilder();
       EncodingConfigurationBuilder encoding = builder.encoding();
       encoding.key().mediaType(keyType);
       encoding.value().mediaType(valueType);
+      builder.template(template);
       return builder.build();
    }
 
