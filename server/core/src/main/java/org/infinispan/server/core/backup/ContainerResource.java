@@ -1,27 +1,62 @@
 package org.infinispan.server.core.backup;
 
 import java.util.Properties;
-import java.util.Set;
 import java.util.concurrent.CompletionStage;
 import java.util.zip.ZipFile;
 
 /**
- * // TODO: Document this
+ * An interface that defines how a {@link org.infinispan.server.core.BackupManager.ResourceType} is backed up and
+ * restored by the {@link org.infinispan.server.core.BackupManager}.
  *
  * @author Ryan Emerson
- * @since 11.0
+ * @since 12.0
  */
 public interface ContainerResource {
 
-   // TODO add validation stages for backup restore
-   // If executed before restore or backup, fail-fast and no partially restored content due
-   // to invalid params for a single resource
+   /**
+    * A method to ensure that the resources requested in the {@link org.infinispan.server.core.BackupManager.Parameters}
+    * are valid and can be included in a backup. This method is called for all {@link ContainerResource} implementations
+    * before the backup process begins in order to allow a backup to fail-fast before any data is processed.
+    */
+   void prepareAndValidateBackup();
 
-   void writeToManifest(Properties properties);
-
-   Set<String> resourcesToRestore(Properties properties);
-
+   /**
+    * Writes the backup files for the {@link org.infinispan.server.core.BackupManager.ResourceType} to the local
+    * filesystem, where it can then be packaged for distribution.
+    * <p>
+    * Implementations of this method depend on content created by {@link #prepareAndValidateBackup()}.
+    *
+    * @return a {@link CompletionStage} that completes once the backup of this {@link
+    * org.infinispan.server.core.BackupManager.ResourceType} has finished.
+    */
    CompletionStage<Void> backup();
 
-   CompletionStage<Void> restore(Properties properties, ZipFile zip);
+   /**
+    * Writes the name of the individual resources that have been included in this backup. The {@link
+    * org.infinispan.server.core.BackupManager.ResourceType} associated with an implementation is the key, whilst the
+    * value is a csv of resource names.
+    * <p>
+    * Implementations of this method depend on state created by {@link #backup()}.
+    *
+    * @param properties the {@link Properties} instance to add the key/value property.
+    */
+   void writeToManifest(Properties properties);
+
+   /**
+    * A method to ensure that the resources requested in the {@link org.infinispan.server.core.BackupManager.Parameters}
+    * are contained in the backup to be restored. This method is called for all {@link ContainerResource}
+    * implementations before the restore process begins in order to allow a restore to fail-fast before any state is
+    * restored to a container.
+    */
+   void prepareAndValidateRestore(Properties properties);
+
+   /**
+    * Restores the {@link org.infinispan.server.core.BackupManager.ResourceType} content from the provided {@link
+    * ZipFile} to the target container.
+    *
+    * @param zip the {@link ZipFile} to restore content from.
+    * @return a {@link CompletionStage} that completes once the restoration of this {@link
+    * org.infinispan.server.core.BackupManager.ResourceType} has finished.
+    */
+   CompletionStage<Void> restore(ZipFile zip);
 }

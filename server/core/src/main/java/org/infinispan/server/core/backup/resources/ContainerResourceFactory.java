@@ -20,7 +20,7 @@ import org.infinispan.util.concurrent.BlockingManager;
  * Factory for creating the {@link ContainerResource}s required for a backup/restore operation.
  *
  * @author Ryan Emerson
- * @since 11.0
+ * @since 12.0
  */
 public class ContainerResourceFactory {
 
@@ -46,7 +46,7 @@ public class ContainerResourceFactory {
    public Collection<ContainerResource> getResources(BackupManager.Parameters params, BlockingManager blockingManager,
                                                      EmbeddedCacheManager cm, Path containerRoot) {
       GlobalComponentRegistry gcr = cm.getGlobalComponentRegistry();
-      return params.includedResourceTypes().stream()
+      return params.includeTypes().stream()
             .map(type -> {
                switch (type) {
                   case CACHES:

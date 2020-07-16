@@ -7,7 +7,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.CompletionStage;
 import java.util.zip.ZipEntry;
@@ -33,10 +32,11 @@ import org.infinispan.util.concurrent.CompletionStages;
 import io.reactivex.rxjava3.core.Flowable;
 
 /**
- * // TODO: Document this
+ * {@link org.infinispan.server.core.backup.ContainerResource} implementation for {@link
+ * BackupManager.ResourceType#COUNTERS}.
  *
  * @author Ryan Emerson
- * @since 11.0
+ * @since 12.0
  */
 public class CounterResource extends AbstractContainerResource {
 
@@ -54,17 +54,26 @@ public class CounterResource extends AbstractContainerResource {
    }
 
    @Override
+   public void prepareAndValidateBackup() {
+      if (wildcard) {
+         resources.addAll(counterManager.getCounterNames());
+         return;
+      }
+
+      for (String counterName : resources) {
+         if (counterManager.getConfiguration(counterName) == null)
+            throw log.unableToFindResource(type.toString(), counterName);
+      }
+   }
+
+   @Override
    public CompletionStage<Void> backup() {
       return blockingManager.runBlocking(() -> {
-         Set<String> counterNames = qualifiedResources;
-         if (wildcard)
-            counterNames.addAll(counterManager.getCounterNames());
-
          root.toFile().mkdir();
          Flowable.using(
                () -> Files.newOutputStream(root.resolve(COUNTERS_FILE)),
                output ->
-                     Flowable.fromIterable(counterNames)
+                     Flowable.fromIterable(resources)
                            .map(counter -> {
                               CounterConfiguration config = counterManager.getConfiguration(counter);
                               CounterBackupEntry e = new CounterBackupEntry();
@@ -85,9 +94,9 @@ public class CounterResource extends AbstractContainerResource {
    }
 
    @Override
-   public CompletionStage<Void> restore(Properties properties, ZipFile zip) {
+   public CompletionStage<Void> restore(ZipFile zip) {
       return blockingManager.runBlocking(() -> {
-         Set<String> countersToRestore = resourcesToRestore(properties);
+         Set<String> countersToRestore = resources;
          String countersFile = root.resolve(COUNTERS_FILE).toString();
          ZipEntry zipEntry = zip.getEntry(countersFile);
          if (zipEntry == null) {
@@ -99,7 +108,7 @@ public class CounterResource extends AbstractContainerResource {
          try (InputStream is = zip.getInputStream(zipEntry)) {
             while (is.available() > 0) {
                CounterBackupEntry entry = readMessageStream(serCtx, CounterBackupEntry.class, is);
-               if (!countersToRestore.isEmpty() && !countersToRestore.contains(entry.name)) {
+               if (!countersToRestore.contains(entry.name)) {
                   log.debugf("Ignoring '%s' counter", entry.name);
                   continue;
                }

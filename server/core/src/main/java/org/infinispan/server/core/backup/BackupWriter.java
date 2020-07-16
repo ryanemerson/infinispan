@@ -44,7 +44,7 @@ import org.infinispan.util.concurrent.CompletionStages;
  * Responsible for creating backup files that can be used to restore a container/cache on a new cluster.
  *
  * @author Ryan Emerson
- * @since 11.0
+ * @since 12.0
  */
 class BackupWriter {
 
@@ -90,6 +90,9 @@ class BackupWriter {
 
       Collection<ContainerResource> resources = ContainerResourceFactory.getInstance()
             .getResources(params, blockingManager, cm, containerRoot);
+
+      // Prepare and ensure all requested resources are valid before starting the backup process
+      resources.forEach(ContainerResource::prepareAndValidateBackup);
 
       List<CompletionStage<?>> stages = resources.stream()
             .map(ContainerResource::backup)

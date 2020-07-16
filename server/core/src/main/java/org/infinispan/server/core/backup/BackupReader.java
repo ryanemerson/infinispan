@@ -37,7 +37,7 @@ import org.infinispan.util.concurrent.CompletionStages;
  * Responsible for reading backup bytes and restoring the contents to the appropriate cache manager.
  *
  * @author Ryan Emerson
- * @since 11.0
+ * @since 12.0
  */
 class BackupReader {
 
@@ -104,8 +104,10 @@ class BackupReader {
       Collection<ContainerResource> resources = ContainerResourceFactory.getInstance()
             .getResources(params, blockingManager, cm, containerRoot);
 
+      resources.forEach(r -> r.prepareAndValidateRestore(properties));
+
       List<CompletionStage<?>> stages = resources.stream()
-            .map(r -> r.restore(properties, zip))
+            .map(r -> r.restore(zip))
             .collect(Collectors.toList());
 
       return CompletionStages.allOf(stages);

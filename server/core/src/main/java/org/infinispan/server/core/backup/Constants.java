@@ -2,7 +2,7 @@ package org.infinispan.server.core.backup;
 
 /**
  * @author Ryan Emerson
- * @since 11.0
+ * @since 12.0
  */
 class Constants {
    static final String CONTAINER_KEY = "containers";

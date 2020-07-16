@@ -76,11 +76,9 @@ public interface BackupManager {
    interface Parameters {
 
       /**
-       * @return the name of the backup file to be created/restored.
+       * @return the {@link ResourceType} to be included in the backup/restore.
        */
-      String name();
-
-      Set<ResourceType> includedResourceTypes();
+      Set<ResourceType> includeTypes();
 
       /**
        * @param type the {@link ResourceType} to retrieve the associated resources for.

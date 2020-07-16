@@ -7,7 +7,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.CompletionStage;
 import java.util.zip.ZipFile;
@@ -23,6 +22,13 @@ import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.server.core.BackupManager;
 import org.infinispan.util.concurrent.BlockingManager;
 
+/**
+ * {@link org.infinispan.server.core.backup.ContainerResource} implementation for {@link
+ * BackupManager.ResourceType#CACHE_CONFIGURATIONS}.
+ *
+ * @author Ryan Emerson
+ * @since 12.0
+ */
 class CacheConfigResource extends AbstractContainerResource {
 
    private final ParserRegistry parserRegistry;
@@ -34,26 +40,32 @@ class CacheConfigResource extends AbstractContainerResource {
    }
 
    @Override
+   public void prepareAndValidateBackup() {
+      Set<String> configs = wildcard ? cm.getCacheConfigurationNames() : resources;
+      for (String configName : configs) {
+         Configuration config = cm.getCacheConfiguration(configName);
+
+         if (wildcard) {
+            // For wildcard resources, we ignore internal caches, however explicitly requested internal caches are allowed
+            if (!config.isTemplate()) {
+               continue;
+            }
+            resources.add(configName);
+         } else if (config == null) {
+            throw log.unableToFindResource(type.toString(), configName);
+         } else if (!config.isTemplate()) {
+            throw new CacheException(String.format("Unable to backup %s '%s' as it is not a template", type, configName));
+         }
+      }
+   }
+
+   @Override
    public CompletionStage<Void> backup() {
       return blockingManager.runBlocking(() -> {
          root.toFile().mkdir();
-         Set<String> configNames = qualifiedResources;
-         if (wildcard)
-            configNames.addAll(cm.getCacheConfigurationNames());
 
-         for (String configName : configNames) {
+         for (String configName : resources) {
             Configuration config = cm.getCacheConfiguration(configName);
-            if (wildcard) {
-               if (config.isTemplate()) {
-                  qualifiedResources.add(configName);
-               } else {
-                  configNames.remove(configName);
-                  continue;
-               }
-            } else if (!config.isTemplate()) {
-               throw new CacheException(String.format("Unable to backup %s '%s' as it is not a template", CACHE_CONFIGURATIONS, configName));
-            }
-
             String fileName = configFile(configName);
             Path xmlPath = root.resolve(String.format("%s.xml", configName));
             try (OutputStream os = Files.newOutputStream(xmlPath)) {
@@ -66,10 +78,9 @@ class CacheConfigResource extends AbstractContainerResource {
    }
 
    @Override
-   public CompletionStage<Void> restore(Properties properties, ZipFile zip) {
+   public CompletionStage<Void> restore(ZipFile zip) {
       return blockingManager.runBlocking(() -> {
-         Set<String> configNames = resourcesToRestore(properties);
-         for (String configName : configNames) {
+         for (String configName : resources) {
             String configFile = configFile(configName);
             String zipPath = root.resolve(configFile).toString();
             try (InputStream is = zip.getInputStream(zip.getEntry(zipPath))) {

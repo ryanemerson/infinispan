@@ -5,7 +5,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.invoke.MethodHandles;
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Properties;
@@ -21,12 +20,6 @@ import org.infinispan.server.core.backup.ContainerResource;
 import org.infinispan.server.core.logging.Log;
 import org.infinispan.util.concurrent.BlockingManager;
 
-/**
- * // TODO: Document this
- *
- * @author Ryan Emerson
- * @since 11.0
- */
 abstract class AbstractContainerResource implements ContainerResource {
 
    protected static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass(), Log.class);
@@ -37,9 +30,7 @@ abstract class AbstractContainerResource implements ContainerResource {
    protected final BlockingManager blockingManager;
    protected final EmbeddedCacheManager cm;
    protected final boolean wildcard;
-   protected final Set<String> qualifiedResources;
-
-   // TODO make order consistent with implementations
+   protected final Set<String> resources;
 
    protected AbstractContainerResource(BackupManager.ResourceType type, BlockingManager blockingManager,
                                        EmbeddedCacheManager cm, BackupManager.Parameters params, Path root) {
@@ -50,38 +41,41 @@ abstract class AbstractContainerResource implements ContainerResource {
       this.cm = cm;
       Set<String> qualifiedResources = params.getQualifiedResources(type);
       this.wildcard = qualifiedResources == null;
-      this.qualifiedResources = ConcurrentHashMap.newKeySet();
+      this.resources = ConcurrentHashMap.newKeySet();
       if (!wildcard)
-         this.qualifiedResources.addAll(qualifiedResources);
+         this.resources.addAll(qualifiedResources);
    }
 
    @Override
    public void writeToManifest(Properties properties) {
-      properties.put(type.toString(), String.join(",", qualifiedResources));
+      properties.put(type.toString(), String.join(",", resources));
    }
 
    @Override
-   public Set<String> resourcesToRestore(Properties properties) {
+   public void prepareAndValidateRestore(Properties properties) {
       // Only process specific resources if specified
-      Set<String> resourcesToProcess = asSet(properties, type);
+      Set<String> resourcesAvailable = asSet(properties, type);
+      if (wildcard) {
+         resources.addAll(resourcesAvailable);
+      } else {
+         resourcesAvailable.retainAll(resources);
 
-      if (!wildcard) {
-         resourcesToProcess.retainAll(qualifiedResources);
-
-         if (resourcesToProcess.isEmpty()) {
-            Set<String> missingResources = new HashSet<>(qualifiedResources);
-            missingResources.removeAll(resourcesToProcess);
+         if (resourcesAvailable.isEmpty()) {
+            Set<String> missingResources = new HashSet<>(resources);
+            missingResources.removeAll(resourcesAvailable);
             throw log.unableToFindBackupResource(type.toString(), missingResources);
          }
       }
-      return resourcesToProcess;
    }
 
    static Set<String> asSet(Properties properties, BackupManager.ResourceType resource) {
       String prop = properties.getProperty(resource.toString());
       if (prop == null || prop.isEmpty())
          return Collections.emptySet();
-      return new HashSet<>(Arrays.asList(prop.split(",")));
+      String[] resources = prop.split(",");
+      Set<String> set = new HashSet<>(resources.length);
+      Collections.addAll(set, resources);
+      return set;
    }
 
    protected static void writeMessageStream(Object o, ImmutableSerializationContext serCtx, OutputStream output) throws IOException {

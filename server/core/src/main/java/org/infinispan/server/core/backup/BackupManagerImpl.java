@@ -18,7 +18,7 @@ import org.infinispan.util.logging.LogFactory;
 
 /**
  * @author Ryan Emerson
- * @since 11.0
+ * @since 12.0
  */
 public class BackupManagerImpl implements BackupManager {
 
@@ -49,7 +49,7 @@ public class BackupManagerImpl implements BackupManager {
             cacheManagers.entrySet().stream()
                   .collect(Collectors.toMap(
                         Map.Entry::getKey,
-                        p -> new BackupParametersImpl.Builder().importAll().build()))
+                        p -> new BackupParameters.Builder().importAll().build()))
       );
    }
 
@@ -70,7 +70,7 @@ public class BackupManagerImpl implements BackupManager {
             cacheManagers.entrySet().stream()
                   .collect(Collectors.toMap(
                         Map.Entry::getKey,
-                        p -> new BackupParametersImpl.Builder().importAll().build()))
+                        p -> new BackupParameters.Builder().importAll().build()))
       );
    }
 

@@ -79,14 +79,14 @@ public class BackupManagerImplTest extends AbstractInfinispanTest {
          Path nonExistingDir = new File(CommonsTestingUtil.tmpDirectory(BackupManagerImplTest.class.getSimpleName() + "blah")).toPath();
 
          BlockingManager blockingManager = cm.getGlobalComponentRegistry().getComponent(BlockingManager.class);
-         BackupManager.Parameters params = new BackupParametersImpl.Builder().addCaches("doesn't exist").build();
+         BackupManager.Parameters params = new BackupParameters.Builder().addCaches("doesn't exist").build();
          new BackupManagerImpl(blockingManager, cacheManagers, nonExistingDir)
                .create(Collections.singletonMap(containerName, params))
                .toCompletableFuture()
                .get(MAX_WAIT_SECS, TimeUnit.SECONDS);
          fail();
       } catch (CacheException e) {
-         assertTrue(e.getMessage().contains("'doesn't exist' as it does not exist"));
+         assertTrue(e.getMessage().contains("'doesn't exist' does not exist"));
       }
    }
 
@@ -114,14 +114,14 @@ public class BackupManagerImplTest extends AbstractInfinispanTest {
 
          Map<String, BackupManager.Parameters> paramMap = new HashMap<>(2);
          paramMap.put(container1,
-               new BackupParametersImpl.Builder()
+               new BackupParameters.Builder()
                      .addCaches("object-cache", "protostream-cache", "empty-cache")
                      .addCacheConfigurations("example-template")
                      .build()
          );
 
          paramMap.put(container2,
-               new BackupParametersImpl.Builder()
+               new BackupParameters.Builder()
                      .addCaches("container2-cache")
                      .build()
          );

@@ -147,4 +147,7 @@ public interface Log extends BasicLogger {
 
    @Message(value = "%s '%s' not found in the backup archive", id = 5048)
    CacheException unableToFindBackupResource(String resource, Set<String> resourceNames);
+
+   @Message(value = "%s '%s' does not exist", id = 5049)
+   CacheException unableToFindResource(String resource, String resourceName);
 }

@@ -9,9 +9,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.CompletionStage;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -55,10 +55,11 @@ import org.reactivestreams.Publisher;
 import io.reactivex.rxjava3.core.Flowable;
 
 /**
- * // TODO: Document this
+ * {@link org.infinispan.server.core.backup.ContainerResource} implementation for {@link
+ * BackupManager.ResourceType#CACHES}.
  *
  * @author Ryan Emerson
- * @since 11.0
+ * @since 12.0
  */
 public class CacheResource extends AbstractContainerResource {
 
@@ -74,42 +75,40 @@ public class CacheResource extends AbstractContainerResource {
    }
 
    @Override
-   public CompletionStage<Void> backup() {
+   public void prepareAndValidateBackup() {
       InternalCacheRegistry icr = cm.getGlobalComponentRegistry().getComponent(InternalCacheRegistry.class);
 
-      Set<String> caches = qualifiedResources;
-      if (wildcard)
-         caches.addAll(cm.getCacheConfigurationNames());
-
-      Collection<CompletionStage<?>> stages = new ArrayList<>(caches.size());
-
+      Set<String> caches = wildcard ? cm.getCacheConfigurationNames() : resources;
       for (String cache : caches) {
          Configuration config = cm.getCacheConfiguration(cache);
 
          if (wildcard) {
             // For wildcard resources, we ignore internal caches, however explicitly requested internal caches are allowed
             if (config.isTemplate() || icr.isInternalCache(cache)) {
-               caches.remove(cache);
                continue;
             }
-            qualifiedResources.add(cache);
+            resources.add(cache);
          } else if (config == null) {
-            throw new CacheException(String.format("Unable to backup %s resource '%s' as it does not exist", type, cache));
+            throw log.unableToFindResource(type.toString(), cache);
          } else if (config.isTemplate()) {
             throw new CacheException(String.format("Unable to backup %s '%s' as it is a template not a cache", type, cache));
          }
-
-         stages.add(blockingManager.runBlocking(() -> createCacheBackup(cache, config), "backup-cache-" + cache));
       }
-
-      return CompletionStages.allOf(stages);
    }
 
    @Override
-   public CompletionStage<Void> restore(Properties properties, ZipFile zip) {
-      Set<String> cacheNames = resourcesToRestore(properties);
-      Collection<CompletionStage<?>> stages = new ArrayList<>(cacheNames.size());
-      for (String cacheName : cacheNames) {
+   public CompletionStage<Void> backup() {
+      return CompletionStages.allOf(
+            resources.stream()
+                  .map(this::createCacheBackup)
+                  .collect(Collectors.toList())
+      );
+   }
+
+   @Override
+   public CompletionStage<Void> restore(ZipFile zip) {
+      Collection<CompletionStage<?>> stages = new ArrayList<>(resources.size());
+      for (String cacheName : resources) {
          stages.add(blockingManager.runBlocking(() -> {
             Path cacheRoot = root.resolve(cacheName);
 
@@ -166,65 +165,68 @@ public class CacheResource extends AbstractContainerResource {
       return CompletionStages.allOf(stages);
    }
 
-   private void createCacheBackup(String cacheName, Configuration configuration) {
-      AdvancedCache<?, ?> cache = cm.getCache(cacheName).getAdvancedCache();
+   private CompletionStage<Void> createCacheBackup(String cacheName) {
+      return blockingManager.runBlocking(() -> {
+         AdvancedCache<?, ?> cache = cm.getCache(cacheName).getAdvancedCache();
+         Configuration configuration = cm.getCacheConfiguration(cacheName);
 
-      // Create the cache backup dir and parents
-      Path cacheRoot = root.resolve(cacheName);
-      cacheRoot.toFile().mkdirs();
+         // Create the cache backup dir and parents
+         Path cacheRoot = root.resolve(cacheName);
+         cacheRoot.toFile().mkdirs();
 
-      // Write configuration file
-      String xmlFileName = configFile(cacheName);
-      Path xmlPath = cacheRoot.resolve(xmlFileName);
-      try (OutputStream os = Files.newOutputStream(xmlPath)) {
-         parserRegistry.serialize(os, cacheName, configuration);
-      } catch (XMLStreamException | IOException e) {
-         throw new CacheException(String.format("Unable to create backup file '%s'", xmlFileName), e);
-      }
+         // Write configuration file
+         String xmlFileName = configFile(cacheName);
+         Path xmlPath = cacheRoot.resolve(xmlFileName);
+         try (OutputStream os = Files.newOutputStream(xmlPath)) {
+            parserRegistry.serialize(os, cacheName, configuration);
+         } catch (XMLStreamException | IOException e) {
+            throw new CacheException(String.format("Unable to create backup file '%s'", xmlFileName), e);
+         }
 
-      // Write in-memory cache contents to .dat file if the cache is not empty
-      if (cache.isEmpty())
-         return;
+         // Write in-memory cache contents to .dat file if the cache is not empty
+         if (cache.isEmpty())
+            return;
 
-      ComponentRegistry cr = cache.getComponentRegistry();
-      ClusterPublisherManager<?, ?> clusterPublisherManager = cr.getClusterPublisherManager().running();
-      SerializationContextRegistry ctxRegistry = cr.getGlobalComponentRegistry().getComponent(SerializationContextRegistry.class);
-      ImmutableSerializationContext serCtx = ctxRegistry.getPersistenceCtx();
+         ComponentRegistry cr = cache.getComponentRegistry();
+         ClusterPublisherManager<?, ?> clusterPublisherManager = cr.getClusterPublisherManager().running();
+         SerializationContextRegistry ctxRegistry = cr.getGlobalComponentRegistry().getComponent(SerializationContextRegistry.class);
+         ImmutableSerializationContext serCtx = ctxRegistry.getPersistenceCtx();
 
-      String dataFileName = dataFile(cacheName);
-      Path datFile = cacheRoot.resolve(dataFileName);
+         String dataFileName = dataFile(cacheName);
+         Path datFile = cacheRoot.resolve(dataFileName);
 
-      Publisher<CacheEntry<?, ?>> p = s -> clusterPublisherManager.entryPublisher(null, null, null, false,
-            DeliveryGuarantee.EXACTLY_ONCE, BUFFER_SIZE, PublisherTransformers.identity())
-            .subscribe(s);
+         Publisher<CacheEntry<?, ?>> p = s -> clusterPublisherManager.entryPublisher(null, null, null, false,
+               DeliveryGuarantee.EXACTLY_ONCE, BUFFER_SIZE, PublisherTransformers.identity())
+               .subscribe(s);
 
-      StorageConfigurationManager scm = cr.getComponent(StorageConfigurationManager.class);
-      boolean keyMarshalling = MediaType.APPLICATION_OBJECT.equals(scm.getKeyStorageMediaType());
-      boolean valueMarshalling = MediaType.APPLICATION_OBJECT.equals(scm.getValueStorageMediaType());
-      PersistenceMarshaller persistenceMarshaller = cr.getPersistenceMarshaller();
-      Marshaller userMarshaller = persistenceMarshaller.getUserMarshaller();
-      Flowable.using(
-            () -> Files.newOutputStream(datFile),
-            output ->
-                  Flowable.fromPublisher(p)
-                        .buffer(BUFFER_SIZE)
-                        .flatMap(Flowable::fromIterable)
-                        .map(e -> {
-                           CacheBackupEntry be = new CacheBackupEntry();
-                           be.key = keyMarshalling ? marshall(e.getKey(), userMarshaller) : (byte[]) scm.getKeyWrapper().unwrap(e.getKey());
-                           be.value = valueMarshalling ? marshall(e.getValue(), userMarshaller) : (byte[]) scm.getValueWrapper().unwrap(e.getKey());
-                           be.metadata = marshall(e.getMetadata(), persistenceMarshaller);
-                           be.internalMetadata = e.getInternalMetadata();
-                           be.created = e.getCreated();
-                           be.lastUsed = e.getLastUsed();
-                           return be;
-                        })
-                        .doOnNext(e -> writeMessageStream(e, serCtx, output))
-                        .doOnError(t -> {
-                           throw new CacheException("Unable to create cache backup", t);
-                        }),
-            OutputStream::close
-      ).subscribe();
+         StorageConfigurationManager scm = cr.getComponent(StorageConfigurationManager.class);
+         boolean keyMarshalling = MediaType.APPLICATION_OBJECT.equals(scm.getKeyStorageMediaType());
+         boolean valueMarshalling = MediaType.APPLICATION_OBJECT.equals(scm.getValueStorageMediaType());
+         PersistenceMarshaller persistenceMarshaller = cr.getPersistenceMarshaller();
+         Marshaller userMarshaller = persistenceMarshaller.getUserMarshaller();
+         Flowable.using(
+               () -> Files.newOutputStream(datFile),
+               output ->
+                     Flowable.fromPublisher(p)
+                           .buffer(BUFFER_SIZE)
+                           .flatMap(Flowable::fromIterable)
+                           .map(e -> {
+                              CacheBackupEntry be = new CacheBackupEntry();
+                              be.key = keyMarshalling ? marshall(e.getKey(), userMarshaller) : (byte[]) scm.getKeyWrapper().unwrap(e.getKey());
+                              be.value = valueMarshalling ? marshall(e.getValue(), userMarshaller) : (byte[]) scm.getValueWrapper().unwrap(e.getKey());
+                              be.metadata = marshall(e.getMetadata(), persistenceMarshaller);
+                              be.internalMetadata = e.getInternalMetadata();
+                              be.created = e.getCreated();
+                              be.lastUsed = e.getLastUsed();
+                              return be;
+                           })
+                           .doOnNext(e -> writeMessageStream(e, serCtx, output))
+                           .doOnError(t -> {
+                              throw new CacheException("Unable to create cache backup", t);
+                           }),
+               OutputStream::close
+         ).subscribe();
+      }, "backup-cache-" + cacheName);
    }
 
    private String configFile(String cache) {

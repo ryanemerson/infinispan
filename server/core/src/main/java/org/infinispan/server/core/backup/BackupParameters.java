@@ -16,25 +16,18 @@ import org.infinispan.server.core.BackupManager;
 
 /**
  * @author Ryan Emerson
- * @since 11.0
+ * @since 12.0
  */
-public class BackupParametersImpl implements BackupManager.Parameters {
+public class BackupParameters implements BackupManager.Parameters {
 
-   final String name;
    final Map<BackupManager.ResourceType, Set<String>> resources;
 
-   public BackupParametersImpl(String name, Map<BackupManager.ResourceType, Set<String>> resources) {
-      this.name = name;
+   public BackupParameters(Map<BackupManager.ResourceType, Set<String>> resources) {
       this.resources = resources;
    }
 
    @Override
-   public String name() {
-      return name;
-   }
-
-   @Override
-   public Set<BackupManager.ResourceType> includedResourceTypes() {
+   public Set<BackupManager.ResourceType> includeTypes() {
       return resources.keySet();
    }
 
@@ -46,12 +39,6 @@ public class BackupParametersImpl implements BackupManager.Parameters {
 
    public static class Builder {
       final Map<BackupManager.ResourceType, Set<String>> resources = new HashMap<>();
-      String name;
-
-      public Builder name(String name) {
-         this.name = name;
-         return this;
-      }
 
       public Builder importAll() {
          return importAll(BackupManager.ResourceType.values());
@@ -98,8 +85,8 @@ public class BackupParametersImpl implements BackupManager.Parameters {
          return this;
       }
 
-      public BackupParametersImpl build() {
-         return new BackupParametersImpl(name, resources);
+      public BackupParameters build() {
+         return new BackupParameters(resources);
       }
    }
 }
