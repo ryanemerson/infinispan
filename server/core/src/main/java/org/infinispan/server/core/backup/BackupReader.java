@@ -28,6 +28,7 @@ import org.infinispan.commons.util.Version;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.server.core.BackupManager;
+import org.infinispan.server.core.backup.resources.ContainerResourceFactory;
 import org.infinispan.server.core.logging.Log;
 import org.infinispan.util.concurrent.BlockingManager;
 import org.infinispan.util.concurrent.CompletionStages;

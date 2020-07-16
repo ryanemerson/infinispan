@@ -1,4 +1,4 @@
-package org.infinispan.server.core.backup;
+package org.infinispan.server.core.backup.resources;
 
 import static org.infinispan.server.core.BackupManager.ResourceType.PROTO_SCHEMAS;
 import static org.infinispan.server.core.BackupManager.ResourceType.SCRIPTS;
@@ -40,9 +40,9 @@ class InternalCacheResource extends AbstractContainerResource {
       cacheMap.put(SCRIPTS, "___script_cache");
    }
 
-   final AdvancedCache<String, String> cache;
+   private final AdvancedCache<String, String> cache;
 
-   public InternalCacheResource(BackupManager.ResourceType type, BlockingManager blockingManager, EmbeddedCacheManager cm,
+   InternalCacheResource(BackupManager.ResourceType type, BlockingManager blockingManager, EmbeddedCacheManager cm,
                                 BackupManager.Parameters params, Path root) {
       super(type, params, root, blockingManager, cm);
 

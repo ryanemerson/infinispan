@@ -2,8 +2,8 @@ package org.infinispan.server.core;
 
 import org.infinispan.protostream.SerializationContextInitializer;
 import org.infinispan.protostream.annotations.AutoProtoSchemaBuilder;
-import org.infinispan.server.core.backup.CacheBackupEntry;
-import org.infinispan.server.core.backup.CounterBackupEntry;
+import org.infinispan.server.core.backup.resources.CacheResource;
+import org.infinispan.server.core.backup.resources.CounterResource;
 
 @AutoProtoSchemaBuilder(
       dependsOn = {
@@ -11,8 +11,8 @@ import org.infinispan.server.core.backup.CounterBackupEntry;
             org.infinispan.marshall.persistence.impl.PersistenceContextInitializer.class
       },
       includeClasses = {
-            CacheBackupEntry.class,
-            CounterBackupEntry.class,
+            CacheResource.CacheBackupEntry.class,
+            CounterResource.CounterBackupEntry.class,
             CacheIgnoreManager.IgnoredCaches.class
       },
       schemaFileName = "persistence.server.core.proto",

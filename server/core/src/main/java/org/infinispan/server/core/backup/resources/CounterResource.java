@@ -1,4 +1,4 @@
-package org.infinispan.server.core.backup;
+package org.infinispan.server.core.backup.resources;
 
 import static org.infinispan.server.core.BackupManager.ResourceType.COUNTERS;
 
@@ -14,6 +14,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import org.infinispan.commons.CacheException;
+import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.counter.api.CounterConfiguration;
 import org.infinispan.counter.api.CounterManager;
 import org.infinispan.counter.api.CounterType;
@@ -23,6 +24,8 @@ import org.infinispan.factories.GlobalComponentRegistry;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.marshall.protostream.impl.SerializationContextRegistry;
 import org.infinispan.protostream.ImmutableSerializationContext;
+import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.server.core.BackupManager;
 import org.infinispan.util.concurrent.BlockingManager;
 import org.infinispan.util.concurrent.CompletionStages;
@@ -35,15 +38,15 @@ import io.reactivex.rxjava3.core.Flowable;
  * @author Ryan Emerson
  * @since 11.0
  */
-public class CountersResource extends AbstractContainerResource {
+public class CounterResource extends AbstractContainerResource {
 
    private static final String COUNTERS_FILE = "counters.dat";
 
-   final CounterManager counterManager;
-   final ImmutableSerializationContext serCtx;
+   private final CounterManager counterManager;
+   private final ImmutableSerializationContext serCtx;
 
-   public CountersResource(BlockingManager blockingManager, EmbeddedCacheManager cm,
-                           BackupManager.Parameters params, Path root) {
+   CounterResource(BlockingManager blockingManager, EmbeddedCacheManager cm,
+                          BackupManager.Parameters params, Path root) {
       super(COUNTERS, params, root, blockingManager, cm);
       GlobalComponentRegistry gcr = cm.getGlobalComponentRegistry();
       this.counterManager = gcr.getComponent(CounterManager.class);
@@ -114,5 +117,21 @@ public class CountersResource extends AbstractContainerResource {
             throw new CacheException(e);
          }
       }, "restore-counters");
+   }
+
+   /**
+    * ProtoStream entity used to represent counter instances.
+    */
+   @ProtoTypeId(ProtoStreamTypeIds.COUNTER_BACKUP_ENTRY)
+   public static class CounterBackupEntry {
+
+      @ProtoField(number = 1)
+      String name;
+
+      @ProtoField(number = 2)
+      CounterConfiguration configuration;
+
+      @ProtoField(number = 3, defaultValue = "-1")
+      long value;
    }
 }

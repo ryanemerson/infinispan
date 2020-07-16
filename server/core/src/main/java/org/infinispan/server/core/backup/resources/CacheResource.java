@@ -1,4 +1,4 @@
-package org.infinispan.server.core.backup;
+package org.infinispan.server.core.backup.resources;
 
 import static org.infinispan.server.core.BackupManager.ResourceType.CACHES;
 
@@ -25,6 +25,7 @@ import org.infinispan.commons.CacheException;
 import org.infinispan.commons.dataconversion.MediaType;
 import org.infinispan.commons.marshall.Marshaller;
 import org.infinispan.commons.marshall.MarshallingException;
+import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.configuration.parsing.ConfigurationBuilderHolder;
 import org.infinispan.configuration.parsing.ParserRegistry;
@@ -38,7 +39,10 @@ import org.infinispan.marshall.persistence.PersistenceMarshaller;
 import org.infinispan.marshall.protostream.impl.SerializationContextRegistry;
 import org.infinispan.metadata.Metadata;
 import org.infinispan.metadata.impl.InternalMetadataImpl;
+import org.infinispan.metadata.impl.PrivateMetadata;
 import org.infinispan.protostream.ImmutableSerializationContext;
+import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.reactive.publisher.PublisherTransformers;
 import org.infinispan.reactive.publisher.impl.ClusterPublisherManager;
 import org.infinispan.reactive.publisher.impl.DeliveryGuarantee;
@@ -61,9 +65,9 @@ public class CacheResource extends AbstractContainerResource {
    // TODO what size?
    private static final int BUFFER_SIZE = 100;
 
-   final ParserRegistry parserRegistry;
+   private final ParserRegistry parserRegistry;
 
-   public CacheResource(BlockingManager blockingManager, ParserRegistry parserRegistry, EmbeddedCacheManager cm,
+   CacheResource(BlockingManager blockingManager, ParserRegistry parserRegistry, EmbeddedCacheManager cm,
                         BackupManager.Parameters params, Path root) {
       super(CACHES, params, root, blockingManager, cm);
       this.parserRegistry = parserRegistry;
@@ -246,5 +250,30 @@ public class CacheResource extends AbstractContainerResource {
       } catch (ClassNotFoundException | IOException e) {
          throw new MarshallingException(e);
       }
+   }
+
+   /**
+    * ProtoStream entity used to represent individual cache entries.
+    */
+   @ProtoTypeId(ProtoStreamTypeIds.CACHE_BACKUP_ENTRY)
+   public static class CacheBackupEntry {
+
+      @ProtoField(number = 1)
+      byte[] key;
+
+      @ProtoField(number = 2)
+      byte[] value;
+
+      @ProtoField(number = 3)
+      byte[] metadata;
+
+      @ProtoField(number = 4)
+      PrivateMetadata internalMetadata;
+
+      @ProtoField(number = 5, defaultValue = "-1")
+      long created;
+
+      @ProtoField(number = 6, defaultValue = "-1")
+      long lastUsed;
    }
 }

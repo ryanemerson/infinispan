@@ -1,4 +1,4 @@
-package org.infinispan.server.core.backup;
+package org.infinispan.server.core.backup.resources;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -17,6 +17,7 @@ import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.protostream.ImmutableSerializationContext;
 import org.infinispan.protostream.ProtobufUtil;
 import org.infinispan.server.core.BackupManager;
+import org.infinispan.server.core.backup.ContainerResource;
 import org.infinispan.server.core.logging.Log;
 import org.infinispan.util.concurrent.BlockingManager;
 
@@ -30,13 +31,13 @@ abstract class AbstractContainerResource implements ContainerResource {
 
    protected static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass(), Log.class);
 
-   final BackupManager.ResourceType type;
-   final BackupManager.Parameters params;
-   final Path root;
-   final BlockingManager blockingManager;
-   final EmbeddedCacheManager cm;
-   final boolean wildcard;
-   final Set<String> qualifiedResources;
+   protected final BackupManager.ResourceType type;
+   protected final BackupManager.Parameters params;
+   protected final Path root;
+   protected final BlockingManager blockingManager;
+   protected final EmbeddedCacheManager cm;
+   protected final boolean wildcard;
+   protected final Set<String> qualifiedResources;
 
    // TODO make order consistent with implementations
    protected AbstractContainerResource(BackupManager.ResourceType type, BackupManager.Parameters params, Path root,

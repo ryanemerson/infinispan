@@ -1,4 +1,4 @@
-package org.infinispan.server.core.backup;
+package org.infinispan.server.core.backup.resources;
 
 import static org.infinispan.server.core.BackupManager.ResourceType.CACHE_CONFIGURATIONS;
 
@@ -25,9 +25,9 @@ import org.infinispan.util.concurrent.BlockingManager;
 
 class CacheConfigResource extends AbstractContainerResource {
 
-   final ParserRegistry parserRegistry;
+   private final ParserRegistry parserRegistry;
 
-   public CacheConfigResource(BlockingManager blockingManager, ParserRegistry parserRegistry, EmbeddedCacheManager cm,
+   CacheConfigResource(BlockingManager blockingManager, ParserRegistry parserRegistry, EmbeddedCacheManager cm,
                               BackupManager.Parameters params, Path root) {
       super(CACHE_CONFIGURATIONS, params, root, blockingManager, cm);
       this.parserRegistry = parserRegistry;
