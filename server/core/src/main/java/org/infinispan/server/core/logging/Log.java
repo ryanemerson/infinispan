@@ -10,7 +10,6 @@ import java.util.Set;
 import org.infinispan.commons.CacheConfigurationException;
 import org.infinispan.commons.CacheException;
 import org.infinispan.commons.dataconversion.MediaType;
-import org.infinispan.server.core.BackupManager;
 import org.infinispan.server.core.dataconversion.TranscodingException;
 import org.jboss.logging.BasicLogger;
 import org.jboss.logging.annotations.Cause;
