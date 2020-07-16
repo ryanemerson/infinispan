@@ -43,8 +43,8 @@ class InternalCacheResource extends AbstractContainerResource {
    private final AdvancedCache<String, String> cache;
 
    InternalCacheResource(BackupManager.ResourceType type, BlockingManager blockingManager, EmbeddedCacheManager cm,
-                                BackupManager.Parameters params, Path root) {
-      super(type, params, root, blockingManager, cm);
+                         BackupManager.Parameters params, Path root) {
+      super(type, blockingManager, cm, params, root);
 
       Cache<String, String> internalCache = cm.getCache(cacheMap.get(type));
       if (internalCache == null)

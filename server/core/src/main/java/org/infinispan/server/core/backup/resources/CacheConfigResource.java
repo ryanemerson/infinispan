@@ -28,8 +28,8 @@ class CacheConfigResource extends AbstractContainerResource {
    private final ParserRegistry parserRegistry;
 
    CacheConfigResource(BlockingManager blockingManager, ParserRegistry parserRegistry, EmbeddedCacheManager cm,
-                              BackupManager.Parameters params, Path root) {
-      super(CACHE_CONFIGURATIONS, params, root, blockingManager, cm);
+                       BackupManager.Parameters params, Path root) {
+      super(CACHE_CONFIGURATIONS, blockingManager, cm, params, root);
       this.parserRegistry = parserRegistry;
    }
 
@@ -50,7 +50,7 @@ class CacheConfigResource extends AbstractContainerResource {
                   configNames.remove(configName);
                   continue;
                }
-            } else if (!config.isTemplate()){
+            } else if (!config.isTemplate()) {
                throw new CacheException(String.format("Unable to backup %s '%s' as it is not a template", CACHE_CONFIGURATIONS, configName));
             }
 

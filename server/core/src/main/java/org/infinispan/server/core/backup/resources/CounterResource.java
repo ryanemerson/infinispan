@@ -46,8 +46,8 @@ public class CounterResource extends AbstractContainerResource {
    private final ImmutableSerializationContext serCtx;
 
    CounterResource(BlockingManager blockingManager, EmbeddedCacheManager cm,
-                          BackupManager.Parameters params, Path root) {
-      super(COUNTERS, params, root, blockingManager, cm);
+                   BackupManager.Parameters params, Path root) {
+      super(COUNTERS, blockingManager, cm, params, root);
       GlobalComponentRegistry gcr = cm.getGlobalComponentRegistry();
       this.counterManager = gcr.getComponent(CounterManager.class);
       this.serCtx = gcr.getComponent(SerializationContextRegistry.class).getPersistenceCtx();

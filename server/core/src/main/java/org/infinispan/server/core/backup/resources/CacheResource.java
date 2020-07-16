@@ -68,8 +68,8 @@ public class CacheResource extends AbstractContainerResource {
    private final ParserRegistry parserRegistry;
 
    CacheResource(BlockingManager blockingManager, ParserRegistry parserRegistry, EmbeddedCacheManager cm,
-                        BackupManager.Parameters params, Path root) {
-      super(CACHES, params, root, blockingManager, cm);
+                 BackupManager.Parameters params, Path root) {
+      super(CACHES, blockingManager, cm, params, root);
       this.parserRegistry = parserRegistry;
    }
 

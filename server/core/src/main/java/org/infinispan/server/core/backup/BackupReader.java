@@ -101,8 +101,9 @@ class BackupReader {
 
       Properties properties = readProperties(containerRoot.resolve(CONTAINERS_PROPERTIES_FILE), zip);
 
-      ContainerResourceFactory factory = new ContainerResourceFactory(blockingManager, cm, containerRoot);
-      Collection<ContainerResource> resources = factory.getResources(params);
+      Collection<ContainerResource> resources = ContainerResourceFactory.getInstance()
+            .getResources(params, blockingManager, cm, containerRoot);
+
       List<CompletionStage<?>> stages = resources.stream()
             .map(r -> r.restore(properties, zip))
             .collect(Collectors.toList());

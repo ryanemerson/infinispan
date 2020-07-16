@@ -40,8 +40,9 @@ abstract class AbstractContainerResource implements ContainerResource {
    protected final Set<String> qualifiedResources;
 
    // TODO make order consistent with implementations
-   protected AbstractContainerResource(BackupManager.ResourceType type, BackupManager.Parameters params, Path root,
-                                       BlockingManager blockingManager, EmbeddedCacheManager cm) {
+
+   protected AbstractContainerResource(BackupManager.ResourceType type, BlockingManager blockingManager,
+                                       EmbeddedCacheManager cm, BackupManager.Parameters params, Path root) {
       this.type = type;
       this.params = params;
       this.root = root.resolve(type.toString());
