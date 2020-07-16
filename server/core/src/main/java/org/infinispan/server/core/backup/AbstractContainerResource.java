@@ -1,10 +1,12 @@
 package org.infinispan.server.core.backup;
 
-import static org.infinispan.server.core.backup.BackupUtil.asSet;
-import static org.infinispan.server.core.backup.BackupUtil.resolve;
-
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.lang.invoke.MethodHandles;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
@@ -12,6 +14,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.infinispan.commons.logging.LogFactory;
 import org.infinispan.manager.EmbeddedCacheManager;
+import org.infinispan.protostream.ImmutableSerializationContext;
+import org.infinispan.protostream.ProtobufUtil;
 import org.infinispan.server.core.BackupManager;
 import org.infinispan.server.core.logging.Log;
 import org.infinispan.util.concurrent.BlockingManager;
@@ -39,7 +43,7 @@ abstract class AbstractContainerResource implements ContainerResource {
                                        BlockingManager blockingManager, EmbeddedCacheManager cm) {
       this.type = type;
       this.params = params;
-      this.root = resolve(root, type); // TODO move to this class?
+      this.root = root.resolve(type.toString());
       this.blockingManager = blockingManager;
       this.cm = cm;
       Set<String> qualifiedResources = params.getQualifiedResources(type);
@@ -65,9 +69,31 @@ abstract class AbstractContainerResource implements ContainerResource {
          if (resourcesToProcess.isEmpty()) {
             Set<String> missingResources = new HashSet<>(qualifiedResources);
             missingResources.removeAll(resourcesToProcess);
-            throw log.unableToFindBackupResource(type, missingResources);
+            throw log.unableToFindBackupResource(type.toString(), missingResources);
          }
       }
       return resourcesToProcess;
+   }
+
+   static Set<String> asSet(Properties properties, BackupManager.ResourceType resource) {
+      String prop = properties.getProperty(resource.toString());
+      if (prop == null || prop.isEmpty())
+         return Collections.emptySet();
+      return new HashSet<>(Arrays.asList(prop.split(",")));
+   }
+
+   protected static void writeMessageStream(Object o, ImmutableSerializationContext serCtx, OutputStream output) throws IOException {
+      // It's necessary to first write the length of each message stream as the Protocol Buffer wire format is not self-delimiting
+      // https://developers.google.com/protocol-buffers/docs/techniques#streaming
+      byte[] b = ProtobufUtil.toByteArray(serCtx, o);
+      output.write(b.length);
+      output.write(b);
+   }
+
+   protected static <T> T readMessageStream(ImmutableSerializationContext ctx, Class<T> clazz, InputStream is) throws IOException {
+      int length = is.read();
+      byte[] b = new byte[length];
+      is.read(b);
+      return ProtobufUtil.fromByteArray(ctx, b, clazz);
    }
 }

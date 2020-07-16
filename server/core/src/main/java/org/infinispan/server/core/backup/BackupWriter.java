@@ -1,10 +1,10 @@
 package org.infinispan.server.core.backup;
 
-import static org.infinispan.server.core.backup.BackupUtil.CONTAINERS_PROPERTIES_FILE;
-import static org.infinispan.server.core.backup.BackupUtil.CONTAINER_KEY;
-import static org.infinispan.server.core.backup.BackupUtil.GLOBAL_CONFIG_FILE;
-import static org.infinispan.server.core.backup.BackupUtil.MANIFEST_PROPERTIES_FILE;
-import static org.infinispan.server.core.backup.BackupUtil.VERSION_KEY;
+import static org.infinispan.server.core.backup.Constants.CONTAINERS_PROPERTIES_FILE;
+import static org.infinispan.server.core.backup.Constants.CONTAINER_KEY;
+import static org.infinispan.server.core.backup.Constants.GLOBAL_CONFIG_FILE;
+import static org.infinispan.server.core.backup.Constants.MANIFEST_PROPERTIES_FILE;
+import static org.infinispan.server.core.backup.Constants.VERSION_KEY;
 
 import java.io.IOException;
 import java.io.OutputStream;

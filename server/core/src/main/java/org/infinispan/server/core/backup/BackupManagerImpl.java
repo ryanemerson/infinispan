@@ -1,6 +1,6 @@
 package org.infinispan.server.core.backup;
 
-import static org.infinispan.server.core.backup.BackupUtil.BACKUP_WORKING_DIR;
+import static org.infinispan.server.core.backup.Constants.WORKING_DIR;
 
 import java.nio.file.Path;
 import java.util.Map;
@@ -36,7 +36,7 @@ public class BackupManagerImpl implements BackupManager {
    public BackupManagerImpl(BlockingManager blockingManager, Map<String, DefaultCacheManager> cacheManagers,
                             Path dataRoot) {
       this.blockingManager = blockingManager;
-      this.rootDir = dataRoot.resolve(BACKUP_WORKING_DIR);
+      this.rootDir = dataRoot.resolve(WORKING_DIR);
       this.cacheManagers = cacheManagers;
       this.reader = new BackupReader(blockingManager, cacheManagers, rootDir);
       this.writer = new BackupWriter(blockingManager, cacheManagers, rootDir);

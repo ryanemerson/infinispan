@@ -1,21 +1,23 @@
 package org.infinispan.server.core.backup;
 
-import static org.infinispan.server.core.backup.BackupUtil.CONTAINERS_PROPERTIES_FILE;
-import static org.infinispan.server.core.backup.BackupUtil.CONTAINER_KEY;
-import static org.infinispan.server.core.backup.BackupUtil.MANIFEST_PROPERTIES_FILE;
-import static org.infinispan.server.core.backup.BackupUtil.STAGING_ZIP;
-import static org.infinispan.server.core.backup.BackupUtil.VERSION_KEY;
+import static org.infinispan.server.core.backup.Constants.CONTAINERS_PROPERTIES_FILE;
+import static org.infinispan.server.core.backup.Constants.CONTAINER_KEY;
+import static org.infinispan.server.core.backup.Constants.MANIFEST_PROPERTIES_FILE;
+import static org.infinispan.server.core.backup.Constants.STAGING_ZIP;
+import static org.infinispan.server.core.backup.Constants.VERSION_KEY;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.CompletionStage;
 import java.util.stream.Collectors;
 import java.util.zip.ZipFile;
@@ -64,19 +66,19 @@ class BackupReader {
       CompletionStage<?> processContainers = blockingManager.thenApplyBlocking(createStagingFile, Void -> {
          try (ZipFile zip = new ZipFile(stagingFile.toFile())) {
             Properties manifest = readManifestAndValidate(zip);
-            String[] containers = manifest.getProperty(CONTAINER_KEY).split(",");
-            List<CompletionStage<?>> stages = new ArrayList<>(containers.length);
-            // TODO throw error if container in params map does not exist
-            for (String container : containers) {
-               BackupManager.Parameters containerParams = params.get(container);
-               if (containerParams == null) {
-                  log.debugf("Ignoring container '%s'");
-                  continue;
-               }
-               CompletionStage<?> containerStage = restoreContainer(container, containerParams, zip);
-               stages.add(containerStage);
+
+            List<String> backupContainers = Arrays.asList(manifest.getProperty(CONTAINER_KEY).split(","));
+            Set<String> requestedContainers = new HashSet<>(params.keySet());
+            requestedContainers.removeAll(backupContainers);
+            if (!requestedContainers.isEmpty()) {
+               throw log.unableToFindBackupResource("Containers", requestedContainers);
             }
-            return CompletionStages.allOf(stages);
+
+            return CompletionStages.allOf(
+                  params.entrySet().stream()
+                        .map(e -> restoreContainer(e.getKey(), e.getValue(), zip))
+                        .collect(Collectors.toList())
+            );
          } catch (IOException e) {
             throw new CacheException(String.format("Unable to read zip file '%s'", stagingFile));
          }

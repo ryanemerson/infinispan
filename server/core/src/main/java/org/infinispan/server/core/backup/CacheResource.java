@@ -1,8 +1,6 @@
 package org.infinispan.server.core.backup;
 
 import static org.infinispan.server.core.BackupManager.ResourceType.CACHES;
-import static org.infinispan.server.core.backup.BackupUtil.readMessageStream;
-import static org.infinispan.server.core.backup.BackupUtil.writeMessageStream;
 
 import java.io.IOException;
 import java.io.InputStream;

@@ -1,9 +1,6 @@
 package org.infinispan.server.core.backup;
 
 import static org.infinispan.server.core.BackupManager.ResourceType.COUNTERS;
-import static org.infinispan.server.core.backup.BackupUtil.COUNTERS_FILE;
-import static org.infinispan.server.core.backup.BackupUtil.readMessageStream;
-import static org.infinispan.server.core.backup.BackupUtil.writeMessageStream;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -39,6 +36,8 @@ import io.reactivex.rxjava3.core.Flowable;
  * @since 11.0
  */
 public class CountersResource extends AbstractContainerResource {
+
+   private static final String COUNTERS_FILE = "counters.dat";
 
    final CounterManager counterManager;
    final ImmutableSerializationContext serCtx;
@@ -90,7 +89,7 @@ public class CountersResource extends AbstractContainerResource {
          ZipEntry zipEntry = zip.getEntry(countersFile);
          if (zipEntry == null) {
             if (!countersToRestore.isEmpty())
-               throw log.unableToFindBackupResource(COUNTERS, countersToRestore);
+               throw log.unableToFindBackupResource(type.toString(), countersToRestore);
             return;
          }
 

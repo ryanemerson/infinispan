@@ -13,6 +13,10 @@ import java.util.zip.ZipFile;
  */
 public interface ContainerResource {
 
+   // TODO add validation stages for backup restore
+   // If executed before restore or backup, fail-fast and no partially restored content due
+   // to invalid params for a single resource
+
    void writeToManifest(Properties properties);
 
    Set<String> resourcesToRestore(Properties properties);

@@ -146,5 +146,5 @@ public interface Log extends BasicLogger {
    CacheException missingBackupResourceModule(BackupManager.ResourceType resource);
 
    @Message(value = "%s '%s' not found in the backup archive", id = 5048)
-   CacheException unableToFindBackupResource(BackupManager.ResourceType resource, Set<String> resourceNames);
+   CacheException unableToFindBackupResource(String resource, Set<String> resourceNames);
 }
