@@ -66,11 +66,13 @@ public class CacheResource extends AbstractContainerResource {
    // TODO what size?
    private static final int BUFFER_SIZE = 100;
 
+   private final EmbeddedCacheManager cm;
    private final ParserRegistry parserRegistry;
 
    CacheResource(BlockingManager blockingManager, ParserRegistry parserRegistry, EmbeddedCacheManager cm,
                  BackupManager.Parameters params, Path root) {
-      super(CACHES, blockingManager, cm, params, root);
+      super(CACHES, params, blockingManager, root);
+      this.cm = cm;
       this.parserRegistry = parserRegistry;
    }
 

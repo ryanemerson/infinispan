@@ -32,10 +32,12 @@ import org.infinispan.util.concurrent.BlockingManager;
 class CacheConfigResource extends AbstractContainerResource {
 
    private final ParserRegistry parserRegistry;
+   private final EmbeddedCacheManager cm;
 
    CacheConfigResource(BlockingManager blockingManager, ParserRegistry parserRegistry, EmbeddedCacheManager cm,
                        BackupManager.Parameters params, Path root) {
-      super(CACHE_CONFIGURATIONS, blockingManager, cm, params, root);
+      super(CACHE_CONFIGURATIONS, params, blockingManager, root);
+      this.cm = cm;
       this.parserRegistry = parserRegistry;
    }
 

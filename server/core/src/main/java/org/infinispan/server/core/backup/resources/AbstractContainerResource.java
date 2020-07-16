@@ -12,7 +12,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.infinispan.commons.logging.LogFactory;
-import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.protostream.ImmutableSerializationContext;
 import org.infinispan.protostream.ProtobufUtil;
 import org.infinispan.server.core.BackupManager;
@@ -28,17 +27,15 @@ abstract class AbstractContainerResource implements ContainerResource {
    protected final BackupManager.Parameters params;
    protected final Path root;
    protected final BlockingManager blockingManager;
-   protected final EmbeddedCacheManager cm;
    protected final boolean wildcard;
    protected final Set<String> resources;
 
-   protected AbstractContainerResource(BackupManager.ResourceType type, BlockingManager blockingManager,
-                                       EmbeddedCacheManager cm, BackupManager.Parameters params, Path root) {
+   protected AbstractContainerResource(BackupManager.ResourceType type, BackupManager.Parameters params,
+                                       BlockingManager blockingManager, Path root) {
       this.type = type;
       this.params = params;
       this.root = root.resolve(type.toString());
       this.blockingManager = blockingManager;
-      this.cm = cm;
       Set<String> qualifiedResources = params.getQualifiedResources(type);
       this.wildcard = qualifiedResources == null;
       this.resources = ConcurrentHashMap.newKeySet();

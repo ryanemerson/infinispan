@@ -1,9 +1,8 @@
 package org.infinispan.server.core.backup.resources;
 
-import static org.infinispan.server.core.BackupManager.ResourceType.COUNTERS;
-
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.infinispan.commons.logging.LogFactory;
@@ -55,17 +54,23 @@ public class ContainerResourceFactory {
                      return new CacheConfigResource(blockingManager, parserRegistry, cm, params, containerRoot);
                   case COUNTERS:
                      CounterManager counterManager = gcr.getComponent(CounterManager.class);
-                     if (counterManager == null) {
-                        throw log.missingBackupResourceModule(COUNTERS);
-                     }
-                     return new CounterResource(blockingManager, cm, params, containerRoot);
+                     return counterManager == null ?
+                           missingResource(type) :
+                           new CounterResource(blockingManager, cm, params, containerRoot);
                   case PROTO_SCHEMAS:
                   case SCRIPTS:
-                     return new InternalCacheResource(type, blockingManager, cm, params, containerRoot);
+                     ContainerResource cr = InternalCacheResource.create(type, blockingManager, cm, params, containerRoot);
+                     return cr == null ? missingResource(type) : cr;
                   default:
                      throw new IllegalStateException();
                }
             })
+            .filter(Objects::nonNull)
             .collect(Collectors.toList());
+   }
+
+   private ContainerResource missingResource(BackupManager.ResourceType type) {
+      log.debugf("Unable to process resource '%s' as the required modules are not on the server's classpath'", type);
+      return null;
    }
 }

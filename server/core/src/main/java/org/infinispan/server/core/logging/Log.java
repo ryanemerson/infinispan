@@ -142,12 +142,9 @@ public interface Log extends BasicLogger {
    @Message(value = "Backup restore complete", id = 5046)
    void restoreComplete();
 
-   @Message(value = "Unable to process resource '%s' as the required modules are not on the server's classpath'", id = 5047)
-   CacheException missingBackupResourceModule(BackupManager.ResourceType resource);
-
-   @Message(value = "%s '%s' not found in the backup archive", id = 5048)
+   @Message(value = "%s '%s' not found in the backup archive", id = 5047)
    CacheException unableToFindBackupResource(String resource, Set<String> resourceNames);
 
-   @Message(value = "%s '%s' does not exist", id = 5049)
+   @Message(value = "%s '%s' does not exist", id = 5048)
    CacheException unableToFindResource(String resource, String resourceName);
 }

@@ -14,6 +14,7 @@ import static org.infinispan.server.core.backup.Constants.MANIFEST_PROPERTIES_FI
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertFalse;
 import static org.testng.AssertJUnit.assertNotNull;
+import static org.testng.AssertJUnit.assertNull;
 import static org.testng.AssertJUnit.assertTrue;
 import static org.testng.AssertJUnit.fail;
 
@@ -29,6 +30,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -38,6 +40,7 @@ import java.util.zip.ZipFile;
 import org.infinispan.Cache;
 import org.infinispan.commons.CacheException;
 import org.infinispan.commons.test.CommonsTestingUtil;
+import org.infinispan.commons.util.ByRef;
 import org.infinispan.commons.util.Util;
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
@@ -72,26 +75,61 @@ public class BackupManagerImplTest extends AbstractInfinispanTest {
       Util.recursiveFileRemove(workingDir);
    }
 
-   public void testExceptionsPropagated() throws Exception {
-      String containerName = "container1";
-      Map<String, DefaultCacheManager> cacheManagers = createManagerMap(containerName);
-      try (DefaultCacheManager cm = cacheManagers.values().iterator().next()) {
-         Path nonExistingDir = new File(CommonsTestingUtil.tmpDirectory(BackupManagerImplTest.class.getSimpleName() + "blah")).toPath();
-
-         BlockingManager blockingManager = cm.getGlobalComponentRegistry().getComponent(BlockingManager.class);
-         BackupManager.Parameters params = new BackupParameters.Builder().addCaches("doesn't exist").build();
-         new BackupManagerImpl(blockingManager, cacheManagers, nonExistingDir)
-               .create(Collections.singletonMap(containerName, params))
-               .toCompletableFuture()
-               .get(MAX_WAIT_SECS, TimeUnit.SECONDS);
-         fail();
-      } catch (CacheException e) {
-         assertTrue(e.getMessage().contains("'doesn't exist' does not exist"));
-      }
+   public void testInvalidCacheResource() throws Exception {
+      invalidWriteTest("'example-cache' does not exist", new BackupParameters.Builder()
+            .addCaches("example-cache")
+            .build()
+      );
    }
 
-   public void testCreateBackupAndRestore() throws Exception {
+   public void testInvalidCacheConfig() throws Exception {
+      invalidWriteTest("'template' does not exist", new BackupParameters.Builder()
+            .addCacheConfigurations("template")
+            .build()
+      );
+   }
+
+   private void invalidWriteTest(String msg, BackupManager.Parameters params) throws Exception {
+      withBackupManager((cm, backupManager) -> {
+         try {
+            backupManager.create(Collections.singletonMap("default", params))
+                  .toCompletableFuture()
+                  .get(MAX_WAIT_SECS, TimeUnit.SECONDS);
+            fail();
+         } catch (Exception e){
+            assertTrue(e instanceof CacheException);
+            assertTrue(e.getMessage().contains(msg));
+         }
+      });
+   }
+
+   public void testBackupAndRestoreWildcardResources() throws Exception {
+      ByRef<Path> zip = new ByRef<>(null);
+      withBackupManager((source, backupManager) -> {
+         source.defineConfiguration("cache-config", new ConfigurationBuilder().build());
+         Cache<String, String> cache = source.createCache("cache", new ConfigurationBuilder().build());
+         cache.put("key", "value");
+         zip.set(await(backupManager.create()));
+      });
+
+      byte[] bytes = Files.readAllBytes(zip.get());
+      assertTrue(bytes.length > 0);
+      withBackupManager((target, backupManager) -> {
+         assertTrue(target.getCacheNames().isEmpty());
+         assertNull(target.getCacheConfiguration("cache-config"));
+         await(backupManager.restore(bytes));
+         assertFalse(target.getCacheNames().isEmpty());
+         assertNotNull(target.getCacheConfiguration("cache-config"));
+
+         Cache<String, String> cache = target.getCache("cache");
+         assertNotNull(cache);
+         assertEquals("value", cache.get("key"));
+      });
+   }
+
+   public void testBackupAndRestoreMultipleContainers() throws Exception {
       int numEntries = 100;
+
       String container1 = "container1";
       String container2 = "container2";
       Map<String, DefaultCacheManager> readerManagers = createManagerMap(container1, container2);
@@ -103,8 +141,8 @@ public class BackupManagerImplTest extends AbstractInfinispanTest {
          sourceManager1.defineConfiguration("example-template", config(APPLICATION_OBJECT_TYPE, true));
          sourceManager1.defineConfiguration("object-cache", config(APPLICATION_OBJECT_TYPE));
          sourceManager1.defineConfiguration("protostream-cache", config(APPLICATION_PROTOSTREAM_TYPE));
-         sourceManager1.defineConfiguration("empty-cache", config());
-         sourceManager2.defineConfiguration("container2-cache", config());
+         sourceManager1.defineConfiguration("empty-cache", config(APPLICATION_UNKNOWN_TYPE));
+         sourceManager2.defineConfiguration("container2-cache", config(APPLICATION_UNKNOWN_TYPE));
 
          IntStream.range(0, numEntries).forEach(i -> sourceManager1.getCache("object-cache").put(i, i));
          IntStream.range(0, numEntries).forEach(i -> sourceManager1.getCache("protostream-cache").put(i, i));
@@ -194,8 +232,14 @@ public class BackupManagerImplTest extends AbstractInfinispanTest {
             .collect(Collectors.toMap(Function.identity(), name -> new DefaultCacheManager()));
    }
 
-   private Configuration config() {
-      return config(APPLICATION_UNKNOWN_TYPE);
+   private void withBackupManager(BiConsumer<DefaultCacheManager, BackupManager> consumer) {
+      try (DefaultCacheManager cm = new DefaultCacheManager()) {
+         BlockingManager blockingManager = cm.getGlobalComponentRegistry().getComponent(BlockingManager.class);
+         BackupManager backupManager = new BackupManagerImpl(blockingManager, Collections.singletonMap("default", cm), workingDir.toPath());
+         consumer.accept(cm, backupManager);
+      } catch (IOException e) {
+         throw new RuntimeException(e);
+      }
    }
 
    private Configuration config(String type) {
@@ -203,14 +247,10 @@ public class BackupManagerImplTest extends AbstractInfinispanTest {
    }
 
    private Configuration config(String type, boolean template) {
-      return config(type, type, template);
-   }
-
-   private Configuration config(String keyType, String valueType, boolean template) {
       ConfigurationBuilder builder = new ConfigurationBuilder();
       EncodingConfigurationBuilder encoding = builder.encoding();
-      encoding.key().mediaType(keyType);
-      encoding.value().mediaType(valueType);
+      encoding.key().mediaType(type);
+      encoding.value().mediaType(type);
       builder.template(template);
       return builder.build();
    }

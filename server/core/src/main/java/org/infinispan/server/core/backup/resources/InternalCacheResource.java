@@ -17,10 +17,10 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipFile;
 
 import org.infinispan.AdvancedCache;
-import org.infinispan.Cache;
 import org.infinispan.commons.CacheException;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.server.core.BackupManager;
+import org.infinispan.server.core.backup.ContainerResource;
 import org.infinispan.util.concurrent.BlockingManager;
 
 /**
@@ -41,14 +41,20 @@ class InternalCacheResource extends AbstractContainerResource {
 
    private final AdvancedCache<String, String> cache;
 
-   InternalCacheResource(BackupManager.ResourceType type, BlockingManager blockingManager, EmbeddedCacheManager cm,
-                         BackupManager.Parameters params, Path root) {
-      super(type, blockingManager, cm, params, root);
+   private InternalCacheResource(BackupManager.ResourceType type, AdvancedCache<String, String> cache,
+                                 BlockingManager blockingManager, BackupManager.Parameters params, Path root) {
+      super(type, params, blockingManager, root);
+      this.cache = cache;
+   }
 
-      Cache<String, String> internalCache = cm.getCache(cacheMap.get(type));
-      if (internalCache == null)
-         throw log.missingBackupResourceModule(type);
-      this.cache = internalCache.getAdvancedCache();
+   static ContainerResource create(BackupManager.ResourceType type, BlockingManager blockingManager, EmbeddedCacheManager cm,
+                                   BackupManager.Parameters params, Path root) {
+      String cacheName = cacheMap.get(type);
+      if (cm.getCacheConfiguration(cacheName) == null)
+         return null;
+
+      AdvancedCache<String, String> cache = cm.<String, String>getCache(cacheName).getAdvancedCache();
+      return new InternalCacheResource(type, cache, blockingManager, params, root);
    }
 
    @Override
