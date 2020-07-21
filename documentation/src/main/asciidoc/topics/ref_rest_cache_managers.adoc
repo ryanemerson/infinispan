@@ -204,3 +204,112 @@ include::json_examples/rest_cache_stats_response.json[]
 * `current_number_of_entries_in_memory` shows the total number of entries currently in all caches, excluding passivated entries.
 * `hit_ratio` provides the total percentage hit/(hit+miss) ratio for all caches.
 * `retrievals` shows the total number of `get()` operations.
+
+[id='rest_v2_backup_manager']
+= Backup {brandname} Cache Manager content
+Download a backup file (application/zip) containing all resources (Caches, Cache configurations, Counters, Proto schemas, Scripts)
+that are currently stored in the cache manager. The contents of the cluster backup file can then be restored
+via the link:#rest_v2_restore_manager[restore] action.
+
+[source,options="nowrap",subs=attributes+]
+----
+GET /rest/v2/cache-managers/{cacheManagerName}?action=backup
+----
+
+If no additional request parameters are provided, then all resources in the Cache Manager are included in the generated backup.
+However, if one or more resource types are specified as parameters then only the specified resources are included. For
+example, the following parameters `?action=backup&caches=cache1,cache2&cache-configs=*` would result in the backup file
+containing all defined cache configurations and the caches `cache1` and `cache2`.
+
+.Request Parameters
+
+|===
+|Parameter |Required or Optional |Value
+
+|`caches`
+|OPTIONAL
+|A csv list of cache names to backup, or "*" for all
+
+|`cache-configs`
+|OPTIONAL
+|A csv list of cache configuration to backup, or "*" for all
+
+|`counters`
+|OPTIONAL
+|A csv list of counter names to backup, or "*" for all
+
+|`proto-schemas`
+|OPTIONAL
+|A csv list of protobuf schema names to backup, or "*" for all
+
+|`scripts`
+|OPTIONAL
+|A csv list of scripts names to backup, or "*" for all
+
+|===
+
+[id='rest_v2_restore_manager']
+= Restore {brandname} Cache Manager content
+Restore the content matching this managers name from a backup file to this Cache Manager.
+
+[source,options="nowrap",subs=attributes+]
+----
+POST /rest/v2/cache-managers/{cacheManagerName}?action=restore
+----
+
+If no additional request parameters are provided, then all of the resources in the uploaded backup file are restored to
+this Cache Manager instance. However, if one or more resource types are specified as parameters then only the specified
+resources are restored. For example, the following parameters `?action=restore&caches=cache1` would result in only the
+cache with name "cache1" being restored to this Cache Manager.
+
+[NOTE]
+The uploaded backup file must contain a container corresponding to `{cacheManagerName}` in order for the containers content
+to be restored.
+
+.Request Parameters
+
+|===
+|Parameter |Required or Optional |Value
+
+|`caches`
+|OPTIONAL
+|A csv list of cache names to backup, or "*" for all
+
+|`cache-configs`
+|OPTIONAL
+|A csv list of cache configuration to backup, or "*" for all
+
+|`counters`
+|OPTIONAL
+|A csv list of counter names to backup, or "*" for all
+
+|`proto-schemas`
+|OPTIONAL
+|A csv list of protobuf schema names to backup, or "*" for all
+
+|`scripts`
+|OPTIONAL
+|A csv list of scripts names to backup, or "*" for all
+
+|===
+
+.Headers
+
+|===
+|Header |Required or Optional |Parameter
+
+|`Content-Type`
+|REQUIRED
+|Currently only `application/zip` is supported.
+
+|`Content-Disposition`
+|REQUIRED
+|`attachment; filename=<file-name>`
+
+|`Content-Length`
+|REQUIRED
+|The size of the entity-body in bytes.
+|===
+
+The body of the request is the zip bytes which are uploaded to the server, copied to the local filesystem
+and then restored to the Cache Manager.

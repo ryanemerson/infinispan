@@ -22,3 +22,48 @@ POST /rest/v2/cluster?action=stop&server={server1_host}&server={server2_host}
 ----
 
 {brandname} responds with `200(OK)`.
+
+[id='rest_v2_backup_cluster']
+= Backup {brandname} cluster content
+Download a backup file (application/zip) containing all resources (Caches, Cache configurations, Counters, Proto schemas, Scripts)
+that are currently stored in the cluster's cache container(s). The contents of the cluster backup file can then be restored
+via the link:#rest_v2_backup_cluster[restore] action.
+
+[source,options="nowrap",subs=attributes+]
+----
+GET /rest/v2/cluster?action=backup
+----
+
+[id='rest_v2_restore_cluster']
+= Restore {brandname} cluster content
+Restore the content of a backup file to this cluster.
+
+[source,options="nowrap",subs=attributes+]
+----
+POST /rest/v2/cluster?action=restore
+----
+
+.Request Parameters
+
+|===
+|Header |Required or Optional |Parameter
+
+|`Content-Type`
+|REQUIRED
+|Currently only `application/zip` is supported.
+
+|`Content-Disposition`
+|REQUIRED
+|`attachment; filename=<file-name>`
+
+|`Content-Length`
+|REQUIRED
+|The size of the entity-body in bytes.
+|===
+
+The body of the request is the zip bytes which are uploaded to the server, copied to the local filesystem
+and then restored to the cluster.
+
+[NOTE]
+The target cluster must utilise the same container name(s) as those contained within the backup zip, otherwise
+it's not possible to map the zip content to the container(s) in the target cluster.
