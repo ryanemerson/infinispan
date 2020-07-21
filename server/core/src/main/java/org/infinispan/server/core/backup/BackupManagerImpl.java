@@ -31,16 +31,18 @@ public class BackupManagerImpl implements BackupManager {
    final Path rootDir;
    final BackupReader reader;
    final BackupWriter writer;
-   final BlockingManager blockingManager;
    final Map<String, DefaultCacheManager> cacheManagers;
 
    public BackupManagerImpl(BlockingManager blockingManager, Map<String, DefaultCacheManager> cacheManagers,
                             Path dataRoot) {
-      this.blockingManager = blockingManager;
       this.rootDir = dataRoot.resolve(WORKING_DIR);
       this.cacheManagers = cacheManagers;
       this.reader = new BackupReader(blockingManager, cacheManagers, rootDir);
       this.writer = new BackupWriter(blockingManager, cacheManagers, rootDir);
+   }
+
+   @Override
+   public void init() {
       rootDir.toFile().mkdir();
    }
 

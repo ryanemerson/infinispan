@@ -19,7 +19,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.CompletionStage;
-import java.util.stream.Collectors;
 import java.util.zip.ZipFile;
 
 import org.infinispan.commons.CacheException;
@@ -30,6 +29,7 @@ import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.server.core.BackupManager;
 import org.infinispan.server.core.backup.resources.ContainerResourceFactory;
 import org.infinispan.server.core.logging.Log;
+import org.infinispan.util.concurrent.AggregateCompletionStage;
 import org.infinispan.util.concurrent.BlockingManager;
 import org.infinispan.util.concurrent.CompletionStages;
 
@@ -56,15 +56,13 @@ class BackupReader {
    CompletionStage<Void> restore(InputStream is, Map<String, BackupManager.ContainerResources> params) {
       final Path stagingFile = rootDir.resolve(STAGING_ZIP);
 
-      CompletionStage<Void> createStagingFile = blockingManager.runBlocking(() -> {
+      CompletionStage<?> processContainers = blockingManager.supplyBlocking(() -> {
          try {
             Files.copy(is, stagingFile);
          } catch (IOException e) {
             throw new CacheException(e);
          }
-      }, "create-staging");
 
-      CompletionStage<?> processContainers = blockingManager.thenApplyBlocking(createStagingFile, Void -> {
          try (ZipFile zip = new ZipFile(stagingFile.toFile())) {
             Properties manifest = readManifestAndValidate(zip);
 
@@ -75,23 +73,23 @@ class BackupReader {
                throw log.unableToFindBackupResource("Containers", requestedContainers);
             }
 
-            return CompletionStages.allOf(
-                  params.entrySet().stream()
-                        .map(e -> restoreContainer(e.getKey(), e.getValue(), zip))
-                        .collect(Collectors.toList())
-            );
+            AggregateCompletionStage<Void> stages = CompletionStages.aggregateCompletionStage();
+            for (Map.Entry<String, BackupManager.ContainerResources> e : params.entrySet()) {
+               stages.dependsOn(restoreContainer(e.getKey(), e.getValue(), zip));
+            }
+            return stages.freeze();
          } catch (IOException e) {
             throw new CacheException(String.format("Unable to read zip file '%s'", stagingFile));
          }
-      }, "read-manifest");
+      }, "process-containers");
 
-      return blockingManager.thenRun(processContainers, () -> {
+      return processContainers.thenRun(() -> {
          try {
             Files.delete(stagingFile);
          } catch (IOException e) {
             log.errorf("Unable to remove '%s'", stagingFile, e);
          }
-      }, "cleanup");
+      });
    }
 
    private CompletionStage<Void> restoreContainer(String containerName, BackupManager.ContainerResources params, ZipFile zip) {
@@ -106,11 +104,10 @@ class BackupReader {
 
       resources.forEach(r -> r.prepareAndValidateRestore(properties));
 
-      List<CompletionStage<?>> stages = resources.stream()
-            .map(r -> r.restore(zip))
-            .collect(Collectors.toList());
-
-      return CompletionStages.allOf(stages);
+      AggregateCompletionStage<Void> stages = CompletionStages.aggregateCompletionStage();
+      for (ContainerResource cr : resources)
+         stages.dependsOn(cr.restore(zip));
+      return stages.freeze();
    }
 
    private Properties readManifestAndValidate(ZipFile zip) {

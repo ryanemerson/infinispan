@@ -4,6 +4,7 @@ import java.util.Properties;
 import java.util.concurrent.CompletionStage;
 import java.util.zip.ZipFile;
 
+import org.infinispan.commons.CacheException;
 import org.infinispan.server.core.BackupManager;
 
 /**
@@ -19,8 +20,10 @@ public interface ContainerResource {
     * A method to ensure that the resources requested in the {@link BackupManager.ContainerResources}
     * are valid and can be included in a backup. This method is called for all {@link ContainerResource} implementations
     * before the backup process begins in order to allow a backup to fail-fast before any data is processed.
+    *
+    * @throws CacheException if an invalid parameter is specified, e.g. a unknown resource name.
     */
-   void prepareAndValidateBackup();
+   void prepareAndValidateBackup() throws CacheException;
 
    /**
     * Writes the backup files for the {@link org.infinispan.server.core.BackupManager.ResourceType} to the local

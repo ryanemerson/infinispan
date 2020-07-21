@@ -342,6 +342,7 @@ public class Server implements ServerManagement, AutoCloseable {
          // when multiple containers are supported by the server
          Path dataRoot = serverRoot.toPath().resolve(properties.getProperty(INFINISPAN_SERVER_DATA_PATH));
          backupManager = new BackupManagerImpl(blockingManager, cacheManagers, dataRoot);
+         backupManager.init();
 
          // Register the task manager
          taskManager = bcr.getComponent(TaskManager.class).running();

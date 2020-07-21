@@ -14,15 +14,12 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.CompletionStage;
-import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -37,6 +34,7 @@ import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.server.core.BackupManager;
 import org.infinispan.server.core.backup.resources.ContainerResourceFactory;
+import org.infinispan.util.concurrent.AggregateCompletionStage;
 import org.infinispan.util.concurrent.BlockingManager;
 import org.infinispan.util.concurrent.CompletionStages;
 
@@ -62,15 +60,15 @@ class BackupWriter {
    }
 
    CompletionStage<Path> create(Map<String, BackupManager.ContainerResources> params) {
-      List<CompletionStage<?>> stages = new ArrayList<>(params.size() + 1);
+      AggregateCompletionStage<Void> stages = CompletionStages.aggregateCompletionStage();
       for (Map.Entry<String, BackupManager.ContainerResources> e : params.entrySet()) {
-         String container = e.getKey();
-         EmbeddedCacheManager cm = cacheManagers.get(container);
-         stages.add(createBackup(container, cm, e.getValue()));
+         String containerName = e.getKey();
+         EmbeddedCacheManager cm = cacheManagers.get(containerName);
+         stages.dependsOn(createBackup(containerName, cm, e.getValue()));
       }
 
-      stages.add(writeManifest(cacheManagers.keySet()));
-      return blockingManager.thenApplyBlocking(CompletionStages.allOf(stages), Void -> createZip(), "create");
+      stages.dependsOn(writeManifest(cacheManagers.keySet()));
+      return blockingManager.thenApplyBlocking(stages.freeze(), Void -> createZip(), "create");
    }
 
    /**
@@ -78,8 +76,8 @@ class BackupWriter {
     *
     * @param containerName the name of container to backup.
     * @param cm            the container to backup.
-    * @param params        the {@link BackupManager.ContainerResources} object that determines what resources are included in
-    *                      the backup for this container.
+    * @param params        the {@link BackupManager.ContainerResources} object that determines what resources are
+    *                      included in the backup for this container.
     * @return a {@link CompletionStage} that completes once the backup has finished.
     */
    private CompletionStage<Void> createBackup(String containerName, EmbeddedCacheManager cm, BackupManager.ContainerResources params) {
@@ -94,24 +92,25 @@ class BackupWriter {
       // Prepare and ensure all requested resources are valid before starting the backup process
       resources.forEach(ContainerResource::prepareAndValidateBackup);
 
-      List<CompletionStage<?>> stages = resources.stream()
-            .map(ContainerResource::backup)
-            .collect(Collectors.toList());
+      AggregateCompletionStage<Void> stages = CompletionStages.aggregateCompletionStage();
+      for (ContainerResource cr : resources)
+         stages.dependsOn(cr.backup());
 
-      stages.add(
+      stages.dependsOn(
             // Write the global configuration xml
             blockingManager.runBlocking(() ->
                   writeGlobalConfig(cm.getCacheManagerConfiguration(), containerRoot), "global-config")
       );
 
-      return blockingManager
-            .thenRun(CompletionStages.allOf(stages),
-                  () -> {
-                     Properties manifest = new Properties();
-                     resources.forEach(r -> r.writeToManifest(manifest));
-                     storeProperties(manifest, "Container Properties", containerRoot.resolve(CONTAINERS_PROPERTIES_FILE));
-                  },
-                  "create-manifest");
+      return blockingManager.thenRun(
+            stages.freeze(),
+            () -> {
+               Properties manifest = new Properties();
+               resources.forEach(r -> r.writeToManifest(manifest));
+               storeProperties(manifest, "Container Properties", containerRoot.resolve(CONTAINERS_PROPERTIES_FILE));
+            },
+            "create-manifest"
+      );
    }
 
    private CompletionStage<Void> writeManifest(Set<String> containers) {

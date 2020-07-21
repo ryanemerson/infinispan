@@ -7,11 +7,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Set;
 import java.util.concurrent.CompletionStage;
-import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -48,6 +45,7 @@ import org.infinispan.reactive.publisher.impl.ClusterPublisherManager;
 import org.infinispan.reactive.publisher.impl.DeliveryGuarantee;
 import org.infinispan.registry.InternalCacheRegistry;
 import org.infinispan.server.core.BackupManager;
+import org.infinispan.util.concurrent.AggregateCompletionStage;
 import org.infinispan.util.concurrent.BlockingManager;
 import org.infinispan.util.concurrent.CompletionStages;
 import org.reactivestreams.Publisher;
@@ -100,18 +98,17 @@ public class CacheResource extends AbstractContainerResource {
 
    @Override
    public CompletionStage<Void> backup() {
-      return CompletionStages.allOf(
-            resources.stream()
-                  .map(this::createCacheBackup)
-                  .collect(Collectors.toList())
-      );
+      AggregateCompletionStage<Void> stages = CompletionStages.aggregateCompletionStage();
+      for (String cache : resources)
+         stages.dependsOn(createCacheBackup(cache));
+      return stages.freeze();
    }
 
    @Override
    public CompletionStage<Void> restore(ZipFile zip) {
-      Collection<CompletionStage<?>> stages = new ArrayList<>(resources.size());
+      AggregateCompletionStage<Void> stages = CompletionStages.aggregateCompletionStage();
       for (String cacheName : resources) {
-         stages.add(blockingManager.runBlocking(() -> {
+         stages.dependsOn(blockingManager.runBlocking(() -> {
             Path cacheRoot = root.resolve(cacheName);
 
             // Process .xml
@@ -164,7 +161,7 @@ public class CacheResource extends AbstractContainerResource {
             }
          }, "restore-cache-" + cacheName));
       }
-      return CompletionStages.allOf(stages);
+      return stages.freeze();
    }
 
    private CompletionStage<Void> createCacheBackup(String cacheName) {

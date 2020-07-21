@@ -199,6 +199,7 @@ public class BackupManagerImplTest extends AbstractInfinispanTest {
       try (DefaultCacheManager cm = new DefaultCacheManager()) {
          BlockingManager blockingManager = cm.getGlobalComponentRegistry().getComponent(BlockingManager.class);
          BackupManager backupManager = new BackupManagerImpl(blockingManager, Collections.singletonMap("default", cm), workingDir.toPath());
+         backupManager.init();
          return await(function.apply(cm, backupManager));
       } catch (IOException e) {
          throw new RuntimeException(e);

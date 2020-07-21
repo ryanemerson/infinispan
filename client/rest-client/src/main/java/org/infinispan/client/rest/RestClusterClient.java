@@ -19,7 +19,16 @@ public interface RestClusterClient {
     */
    CompletionStage<RestResponse> stop(List<String> server);
 
+   /**
+    * Creates a backup file containing all of the current container content (caches, counters etc).
+    */
    CompletionStage<RestResponse> backup();
 
+   /**
+    * Restores all content from a backup file, by uploading the file to the server endpoint for processing, returning
+    * once the restoration has completed.
+    *
+    * @param backup the backup {@link File} containing the data to be restored.
+    */
    CompletionStage<RestResponse> restore(File backup);
 }

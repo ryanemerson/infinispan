@@ -19,6 +19,11 @@ import org.infinispan.factories.scopes.Scopes;
 public interface BackupManager {
 
    /**
+    * Performs initialisation of all resources required by the implementation before backup files can be created or restored.
+    */
+   void init();
+
+   /**
     * Create a backup of all containers configured on the server, including all available resources.
     *
     * @return a {@link CompletionStage} that on completion returns the {@link Path} to the created backup file.

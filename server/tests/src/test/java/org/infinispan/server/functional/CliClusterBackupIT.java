@@ -1,7 +1,7 @@
 package org.infinispan.server.functional;
 
 import java.io.File;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 
 import org.infinispan.cli.commands.CLI;
 import org.infinispan.cli.impl.AeshDelegatingShell;
@@ -17,7 +17,7 @@ import org.junit.Test;
  * @since 11.0
  */
 public class CliClusterBackupIT extends AbstractMultiClusterIT {
-   static final File WORKING_DIR = new File(CommonsTestingUtil.tmpDirectory(ClusterBackupIT.class));
+   static final File WORKING_DIR = new File(CommonsTestingUtil.tmpDirectory(CliClusterBackupIT.class));
 
    public CliClusterBackupIT() {
       super("configuration/ClusteredServerTest.xml");
@@ -36,7 +36,7 @@ public class CliClusterBackupIT extends AbstractMultiClusterIT {
    @Test
    public void testInteractiveBackup() throws Exception {
       startSourceCluster();
-      File backupFile;
+      Path backupFile;
       try (AeshTestConnection t = cli(source)) {
          t.readln("create cache --template=org.infinispan.DIST_SYNC backupCache");
          t.readln("cd caches/backupCache");
@@ -45,10 +45,10 @@ public class CliClusterBackupIT extends AbstractMultiClusterIT {
          t.assertContains("k1");
          t.clear();
          t.readln("backup");
-         Thread.sleep(100);
+         Thread.sleep(1000);
          String output = t.getOutputBuffer();
          String fileName = output.substring((output.indexOf("'") + 1), (output.lastIndexOf("'")));
-         backupFile = Paths.get(System.getProperty("user.dir")).resolve(fileName).toFile();
+         backupFile = WORKING_DIR.toPath().resolve(fileName);
       }
 
       stopSourceCluster();
@@ -63,6 +63,7 @@ public class CliClusterBackupIT extends AbstractMultiClusterIT {
    }
 
    private AeshTestConnection cli(Cluster cluster) {
+      System.setProperty("user.dir", WORKING_DIR.getAbsolutePath());
       AeshTestConnection t = new AeshTestConnection();
       CLI.main(new AeshDelegatingShell(t), new String[]{});
       String host = cluster.driver.getServerAddress(0).getHostAddress();

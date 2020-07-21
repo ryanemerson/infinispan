@@ -1,6 +1,5 @@
 package org.infinispan.util.concurrent;
 
-import java.util.Collection;
 import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
@@ -123,27 +122,6 @@ public class CompletionStages {
          }
       }
 
-      return aggregateCompletionStage != null ? aggregateCompletionStage.freeze() : CompletableFutures.completedNull();
-   }
-
-   /**
-    * Returns a CompletionStage that completes when all of the provided stages complete, either normally or via
-    * exception. If one or more states complete exceptionally the returned CompletionStage will complete with the
-    * exception of one of these. If no CompletionStages are provided, returns a CompletionStage completed with the value
-    * null.
-    * @param stages a {@link Collection} of CompletionStages
-    * @return a CompletionStage that is completed when all of the given CompletionStages complete
-    */
-   public static CompletionStage<Void> allOf(Collection<CompletionStage<?>> stages) {
-      AggregateCompletionStage<Void> aggregateCompletionStage = null;
-      for (CompletionStage<?> stage : stages) {
-         if (!isCompletedSuccessfully(stage)) {
-            if (aggregateCompletionStage == null) {
-               aggregateCompletionStage = CompletionStages.aggregateCompletionStage();
-            }
-            aggregateCompletionStage.dependsOn(stage);
-         }
-      }
       return aggregateCompletionStage != null ? aggregateCompletionStage.freeze() : CompletableFutures.completedNull();
    }
 
