@@ -59,9 +59,9 @@ class BackupWriter {
       this.parserRegistry = new ParserRegistry();
    }
 
-   CompletionStage<Path> create(Map<String, BackupManager.ContainerResources> params) {
+   CompletionStage<Path> create(Map<String, BackupManager.Resources> params) {
       AggregateCompletionStage<Void> stages = CompletionStages.aggregateCompletionStage();
-      for (Map.Entry<String, BackupManager.ContainerResources> e : params.entrySet()) {
+      for (Map.Entry<String, BackupManager.Resources> e : params.entrySet()) {
          String containerName = e.getKey();
          EmbeddedCacheManager cm = cacheManagers.get(containerName);
          stages.dependsOn(createBackup(containerName, cm, e.getValue()));
@@ -76,11 +76,11 @@ class BackupWriter {
     *
     * @param containerName the name of container to backup.
     * @param cm            the container to backup.
-    * @param params        the {@link BackupManager.ContainerResources} object that determines what resources are
+    * @param params        the {@link BackupManager.Resources} object that determines what resources are
     *                      included in the backup for this container.
     * @return a {@link CompletionStage} that completes once the backup has finished.
     */
-   private CompletionStage<Void> createBackup(String containerName, EmbeddedCacheManager cm, BackupManager.ContainerResources params) {
+   private CompletionStage<Void> createBackup(String containerName, EmbeddedCacheManager cm, BackupManager.Resources params) {
       Path containerRoot = rootDir.resolve(CONTAINER_KEY).resolve(containerName);
       containerRoot.toFile().mkdirs();
       GlobalComponentRegistry gcr = cm.getGlobalComponentRegistry();

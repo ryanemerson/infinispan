@@ -1,6 +1,6 @@
 package org.infinispan.server.core.backup.resources;
 
-import static org.infinispan.server.core.BackupManager.ContainerResources.Type.COUNTERS;
+import static org.infinispan.server.core.BackupManager.Resources.Type.COUNTERS;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,7 +33,7 @@ import io.reactivex.rxjava3.core.Flowable;
 
 /**
  * {@link org.infinispan.server.core.backup.ContainerResource} implementation for {@link
- * BackupManager.ContainerResources.Type#COUNTERS}.
+ * BackupManager.Resources.Type#COUNTERS}.
  *
  * @author Ryan Emerson
  * @since 12.0
@@ -46,7 +46,7 @@ public class CounterResource extends AbstractContainerResource {
    private final ImmutableSerializationContext serCtx;
 
    CounterResource(BlockingManager blockingManager, EmbeddedCacheManager cm,
-                   BackupManager.ContainerResources params, Path root) {
+                   BackupManager.Resources params, Path root) {
       super(COUNTERS, params, blockingManager, root);
       GlobalComponentRegistry gcr = cm.getGlobalComponentRegistry();
       this.counterManager = gcr.getComponent(CounterManager.class);

@@ -1,7 +1,7 @@
 package org.infinispan.server.core.backup.resources;
 
-import static org.infinispan.server.core.BackupManager.ContainerResources.Type.PROTO_SCHEMAS;
-import static org.infinispan.server.core.BackupManager.ContainerResources.Type.SCRIPTS;
+import static org.infinispan.server.core.BackupManager.Resources.Type.PROTO_SCHEMAS;
+import static org.infinispan.server.core.BackupManager.Resources.Type.SCRIPTS;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -25,14 +25,14 @@ import org.infinispan.util.concurrent.BlockingManager;
 
 /**
  * {@link org.infinispan.server.core.backup.ContainerResource} implementation for {@link
- * BackupManager.ContainerResources.Type#PROTO_SCHEMAS} and {@link BackupManager.ContainerResources.Type#SCRIPTS}.
+ * BackupManager.Resources.Type#PROTO_SCHEMAS} and {@link BackupManager.Resources.Type#SCRIPTS}.
  *
  * @author Ryan Emerson
  * @since 12.0
  */
 class InternalCacheResource extends AbstractContainerResource {
 
-   private static final Map<BackupManager.ContainerResources.Type, String> cacheMap = new HashMap<>(2);
+   private static final Map<BackupManager.Resources.Type, String> cacheMap = new HashMap<>(2);
 
    static {
       cacheMap.put(PROTO_SCHEMAS, "___protobuf_metadata");
@@ -41,14 +41,14 @@ class InternalCacheResource extends AbstractContainerResource {
 
    private final AdvancedCache<String, String> cache;
 
-   private InternalCacheResource(BackupManager.ContainerResources.Type type, AdvancedCache<String, String> cache,
-                                 BlockingManager blockingManager, BackupManager.ContainerResources params, Path root) {
+   private InternalCacheResource(BackupManager.Resources.Type type, AdvancedCache<String, String> cache,
+                                 BlockingManager blockingManager, BackupManager.Resources params, Path root) {
       super(type, params, blockingManager, root);
       this.cache = cache;
    }
 
-   static ContainerResource create(BackupManager.ContainerResources.Type type, BlockingManager blockingManager, EmbeddedCacheManager cm,
-                                   BackupManager.ContainerResources params, Path root) {
+   static ContainerResource create(BackupManager.Resources.Type type, BlockingManager blockingManager, EmbeddedCacheManager cm,
+                                   BackupManager.Resources params, Path root) {
       String cacheName = cacheMap.get(type);
       if (cm.getCacheConfiguration(cacheName) == null)
          return null;

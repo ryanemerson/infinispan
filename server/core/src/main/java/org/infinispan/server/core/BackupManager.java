@@ -31,13 +31,13 @@ public interface BackupManager {
    CompletionStage<Path> create();
 
    /**
-    * Create a backup of the specified containers, including the resources defined in the provided {@link ContainerResources}
+    * Create a backup of the specified containers, including the resources defined in the provided {@link Resources}
     * object.
     *
-    * @param params a map of container names and an associated {@link ContainerResources} instance.
+    * @param params a map of container names and an associated {@link Resources} instance.
     * @return a {@link CompletionStage} that on completion returns the {@link Path} to the created backup file.
     */
-   CompletionStage<Path> create(Map<String, ContainerResources> params);
+   CompletionStage<Path> create(Map<String, Resources> params);
 
    /**
     * Restore all content from the provided backup bytes.
@@ -49,19 +49,19 @@ public interface BackupManager {
 
    /**
     * Restore content from the provided backup bytes. The keyset of the provided {@link Map} determines which containers
-    * are restored from the backup file. Similarly, the {@link ContainerResources} object determines which {@link ContainerResources.Type}s are
+    * are restored from the backup file. Similarly, the {@link Resources} object determines which {@link Resources.Type}s are
     * restored.
     *
     * @param is a {@link InputStream} containing the bytes of the uploaded backup file.
     * @return a {@link CompletionStage} that completes when all of the entries in the backup have been restored.
     */
-   CompletionStage<Void> restore(InputStream is, Map<String, ContainerResources> params);
+   CompletionStage<Void> restore(InputStream is, Map<String, Resources> params);
 
    /**
     * An interface to encapsulate the various arguments required by the {@link BackupManager} in order to include/exclude
     * resources from a backup/restore operation.
     */
-   interface ContainerResources {
+   interface Resources {
 
       enum Type {
          CACHES("caches"),

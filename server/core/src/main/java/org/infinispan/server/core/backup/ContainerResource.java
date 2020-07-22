@@ -8,7 +8,7 @@ import org.infinispan.commons.CacheException;
 import org.infinispan.server.core.BackupManager;
 
 /**
- * An interface that defines how a {@link BackupManager.ContainerResources.Type} is backed up and
+ * An interface that defines how a container resource is backed up and
  * restored by the {@link org.infinispan.server.core.BackupManager}.
  *
  * @author Ryan Emerson
@@ -17,7 +17,7 @@ import org.infinispan.server.core.BackupManager;
 public interface ContainerResource {
 
    /**
-    * A method to ensure that the resources requested in the {@link BackupManager.ContainerResources}
+    * A method to ensure that the resources requested in the {@link BackupManager.Resources}
     * are valid and can be included in a backup. This method is called for all {@link ContainerResource} implementations
     * before the backup process begins in order to allow a backup to fail-fast before any data is processed.
     *
@@ -26,19 +26,19 @@ public interface ContainerResource {
    void prepareAndValidateBackup() throws CacheException;
 
    /**
-    * Writes the backup files for the {@link BackupManager.ContainerResources.Type} to the local
+    * Writes the backup files for the {@link BackupManager.Resources.Type} to the local
     * filesystem, where it can then be packaged for distribution.
     * <p>
     * Implementations of this method depend on content created by {@link #prepareAndValidateBackup()}.
     *
     * @return a {@link CompletionStage} that completes once the backup of this {@link
-    * BackupManager.ContainerResources.Type} has finished.
+    * BackupManager.Resources.Type} has finished.
     */
    CompletionStage<Void> backup();
 
    /**
     * Writes the name of the individual resources that have been included in this backup. The {@link
-    * BackupManager.ContainerResources.Type} associated with an implementation is the key, whilst the
+    * BackupManager.Resources.Type} associated with an implementation is the key, whilst the
     * value is a csv of resource names.
     * <p>
     * Implementations of this method depend on state created by {@link #backup()}.
@@ -48,7 +48,7 @@ public interface ContainerResource {
    void writeToManifest(Properties properties);
 
    /**
-    * A method to ensure that the resources requested in the {@link BackupManager.ContainerResources}
+    * A method to ensure that the resources requested in the {@link BackupManager.Resources}
     * are contained in the backup to be restored. This method is called for all {@link ContainerResource}
     * implementations before the restore process begins in order to allow a restore to fail-fast before any state is
     * restored to a container.
@@ -56,12 +56,12 @@ public interface ContainerResource {
    void prepareAndValidateRestore(Properties properties);
 
    /**
-    * Restores the {@link BackupManager.ContainerResources.Type} content from the provided {@link
+    * Restores the {@link BackupManager.Resources.Type} content from the provided {@link
     * ZipFile} to the target container.
     *
     * @param zip the {@link ZipFile} to restore content from.
     * @return a {@link CompletionStage} that completes once the restoration of this {@link
-    * BackupManager.ContainerResources.Type} has finished.
+    * BackupManager.Resources.Type} has finished.
     */
    CompletionStage<Void> restore(ZipFile zip);
 }

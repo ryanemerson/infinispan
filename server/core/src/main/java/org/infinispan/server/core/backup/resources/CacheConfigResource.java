@@ -1,6 +1,6 @@
 package org.infinispan.server.core.backup.resources;
 
-import static org.infinispan.server.core.BackupManager.ContainerResources.Type.CACHE_CONFIGURATIONS;
+import static org.infinispan.server.core.BackupManager.Resources.Type.CACHE_CONFIGURATIONS;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -24,7 +24,7 @@ import org.infinispan.util.concurrent.BlockingManager;
 
 /**
  * {@link org.infinispan.server.core.backup.ContainerResource} implementation for {@link
- * BackupManager.ContainerResources.Type#CACHE_CONFIGURATIONS}.
+ * BackupManager.Resources.Type#CACHE_CONFIGURATIONS}.
  *
  * @author Ryan Emerson
  * @since 12.0
@@ -35,7 +35,7 @@ class CacheConfigResource extends AbstractContainerResource {
    private final EmbeddedCacheManager cm;
 
    CacheConfigResource(BlockingManager blockingManager, ParserRegistry parserRegistry, EmbeddedCacheManager cm,
-                       BackupManager.ContainerResources params, Path root) {
+                       BackupManager.Resources params, Path root) {
       super(CACHE_CONFIGURATIONS, params, blockingManager, root);
       this.cm = cm;
       this.parserRegistry = parserRegistry;

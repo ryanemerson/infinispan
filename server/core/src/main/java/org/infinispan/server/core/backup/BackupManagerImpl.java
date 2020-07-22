@@ -58,12 +58,12 @@ public class BackupManagerImpl implements BackupManager {
             cacheManagers.entrySet().stream()
                   .collect(Collectors.toMap(
                         Map.Entry::getKey,
-                        p -> new org.infinispan.server.core.backup.ContainerResources.Builder().importAll().build()))
+                        p -> new BackupManagerResources.Builder().importAll().build()))
       );
    }
 
    @Override
-   public CompletionStage<Path> create(Map<String, ContainerResources> params) {
+   public CompletionStage<Path> create(Map<String, Resources> params) {
       CompletionStage<Path> backupStage = backupLock.lock()
             .thenCompose(lockAcquired -> {
                if (!lockAcquired)
@@ -94,12 +94,12 @@ public class BackupManagerImpl implements BackupManager {
             cacheManagers.entrySet().stream()
                   .collect(Collectors.toMap(
                         Map.Entry::getKey,
-                        p -> new org.infinispan.server.core.backup.ContainerResources.Builder().importAll().build()))
+                        p -> new BackupManagerResources.Builder().importAll().build()))
       );
    }
 
    @Override
-   public CompletionStage<Void> restore(InputStream is, Map<String, ContainerResources> params) {
+   public CompletionStage<Void> restore(InputStream is, Map<String, Resources> params) {
       CompletionStage<Void> restoreStage = restoreLock.lock()
             .thenCompose(lockAcquired -> {
                if (!lockAcquired)

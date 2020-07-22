@@ -1,6 +1,6 @@
 package org.infinispan.server.core.backup.resources;
 
-import static org.infinispan.server.core.BackupManager.ContainerResources.Type.CACHES;
+import static org.infinispan.server.core.BackupManager.Resources.Type.CACHES;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -54,7 +54,7 @@ import io.reactivex.rxjava3.core.Flowable;
 
 /**
  * {@link org.infinispan.server.core.backup.ContainerResource} implementation for {@link
- * BackupManager.ContainerResources.Type#CACHES}.
+ * BackupManager.Resources.Type#CACHES}.
  *
  * @author Ryan Emerson
  * @since 12.0
@@ -68,7 +68,7 @@ public class CacheResource extends AbstractContainerResource {
    private final ParserRegistry parserRegistry;
 
    CacheResource(BlockingManager blockingManager, ParserRegistry parserRegistry, EmbeddedCacheManager cm,
-                 BackupManager.ContainerResources params, Path root) {
+                 BackupManager.Resources params, Path root) {
       super(CACHES, params, blockingManager, root);
       this.cm = cm;
       this.parserRegistry = parserRegistry;

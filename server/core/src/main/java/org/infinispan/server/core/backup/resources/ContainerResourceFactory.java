@@ -42,7 +42,7 @@ public class ContainerResourceFactory {
       this.parserRegistry = new ParserRegistry();
    }
 
-   public Collection<ContainerResource> getResources(BackupManager.ContainerResources params, BlockingManager blockingManager,
+   public Collection<ContainerResource> getResources(BackupManager.Resources params, BlockingManager blockingManager,
                                                      EmbeddedCacheManager cm, Path containerRoot) {
       GlobalComponentRegistry gcr = cm.getGlobalComponentRegistry();
       return params.includeTypes().stream()
@@ -69,7 +69,7 @@ public class ContainerResourceFactory {
             .collect(Collectors.toList());
    }
 
-   private ContainerResource missingResource(BackupManager.ContainerResources.Type type) {
+   private ContainerResource missingResource(BackupManager.Resources.Type type) {
       log.debugf("Unable to process resource '%s' as the required modules are not on the server's classpath'", type);
       return null;
    }

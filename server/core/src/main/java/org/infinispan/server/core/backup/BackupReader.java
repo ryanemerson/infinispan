@@ -53,7 +53,7 @@ class BackupReader {
       this.rootDir = rootDir;
    }
 
-   CompletionStage<Void> restore(InputStream is, Map<String, BackupManager.ContainerResources> params) {
+   CompletionStage<Void> restore(InputStream is, Map<String, BackupManager.Resources> params) {
       final Path stagingFile = rootDir.resolve(STAGING_ZIP);
 
       CompletionStage<?> processContainers = blockingManager.supplyBlocking(() -> {
@@ -74,7 +74,7 @@ class BackupReader {
             }
 
             AggregateCompletionStage<Void> stages = CompletionStages.aggregateCompletionStage();
-            for (Map.Entry<String, BackupManager.ContainerResources> e : params.entrySet()) {
+            for (Map.Entry<String, BackupManager.Resources> e : params.entrySet()) {
                stages.dependsOn(restoreContainer(e.getKey(), e.getValue(), zip));
             }
             return stages.freeze();
@@ -92,7 +92,7 @@ class BackupReader {
       });
    }
 
-   private CompletionStage<Void> restoreContainer(String containerName, BackupManager.ContainerResources params, ZipFile zip) {
+   private CompletionStage<Void> restoreContainer(String containerName, BackupManager.Resources params, ZipFile zip) {
       // TODO validate container config
       EmbeddedCacheManager cm = cacheManagers.get(containerName);
       Path containerRoot = Paths.get(CONTAINER_KEY, containerName);

@@ -5,8 +5,8 @@ import static org.infinispan.commons.dataconversion.MediaType.APPLICATION_PROTOS
 import static org.infinispan.commons.dataconversion.MediaType.APPLICATION_UNKNOWN_TYPE;
 import static org.infinispan.functional.FunctionalTestUtils.MAX_WAIT_SECS;
 import static org.infinispan.functional.FunctionalTestUtils.await;
-import static org.infinispan.server.core.BackupManager.ContainerResources.Type.CACHES;
-import static org.infinispan.server.core.BackupManager.ContainerResources.Type.CACHE_CONFIGURATIONS;
+import static org.infinispan.server.core.BackupManager.Resources.Type.CACHES;
+import static org.infinispan.server.core.BackupManager.Resources.Type.CACHE_CONFIGURATIONS;
 import static org.infinispan.server.core.backup.Constants.CONTAINERS_PROPERTIES_FILE;
 import static org.infinispan.server.core.backup.Constants.CONTAINER_KEY;
 import static org.infinispan.server.core.backup.Constants.GLOBAL_CONFIG_FILE;
@@ -83,20 +83,20 @@ public class BackupManagerImplTest extends AbstractInfinispanTest {
    }
 
    public void testMissingCacheOnBackup() throws Exception {
-      invalidWriteTest("'example-cache' does not exist", new ContainerResources.Builder()
+      invalidWriteTest("'example-cache' does not exist", new BackupManagerResources.Builder()
             .addCaches("example-cache")
             .build()
       );
    }
 
    public void testMissingCacheConfigOnBackup() throws Exception {
-      invalidWriteTest("'template' does not exist", new ContainerResources.Builder()
+      invalidWriteTest("'template' does not exist", new BackupManagerResources.Builder()
             .addCacheConfigurations("template")
             .build()
       );
    }
 
-   private void invalidWriteTest(String msg, BackupManager.ContainerResources params) {
+   private void invalidWriteTest(String msg, BackupManager.Resources params) {
       withBackupManager((cm, backupManager) -> {
          try {
             CompletionStage<Path> stage = backupManager.create(Collections.singletonMap("default", params));
@@ -120,21 +120,21 @@ public class BackupManagerImplTest extends AbstractInfinispanTest {
 
    public void testMissingCacheOnRestore() throws Exception {
       String resource = "example-cache";
-      invalidRestoreTest(resource, new ContainerResources.Builder().addCaches(resource).build());
+      invalidRestoreTest(resource, new BackupManagerResources.Builder().addCaches(resource).build());
    }
 
    public void testMissingCacheConfigOnRestore() throws Exception {
       String resource = "template";
-      invalidRestoreTest(resource, new ContainerResources.Builder().addCacheConfigurations(resource).build());
+      invalidRestoreTest(resource, new BackupManagerResources.Builder().addCacheConfigurations(resource).build());
    }
 
-   private void invalidRestoreTest(String resourceName, BackupManager.ContainerResources params) throws Exception {
+   private void invalidRestoreTest(String resourceName, BackupManager.Resources params) throws Exception {
       createAndRestore(
             (source, backupManager) -> backupManager.create(),
             (target, backupManager, backup) -> {
                assertTrue(target.getCacheNames().isEmpty());
                assertNull(target.getCacheConfiguration("cache-config"));
-               Map<String, BackupManager.ContainerResources> paramMap = Collections.singletonMap("default", params);
+               Map<String, BackupManager.Resources> paramMap = Collections.singletonMap("default", params);
                CompletableFuture<Void> stage = backupManager.restore(backup, paramMap).toCompletableFuture();
 
                try {
@@ -167,8 +167,8 @@ public class BackupManagerImplTest extends AbstractInfinispanTest {
             (target, backupManager, backup) -> {
                assertTrue(target.getCacheNames().isEmpty());
                assertNull(target.getCacheConfiguration("cache-config"));
-               Map<String, BackupManager.ContainerResources> paramMap = Collections.singletonMap("default",
-                     new ContainerResources.Builder()
+               Map<String, BackupManager.Resources> paramMap = Collections.singletonMap("default",
+                     new BackupManagerResources.Builder()
                            .importAll()
                            .ignore(CACHES)
                            .build()
@@ -245,16 +245,16 @@ public class BackupManagerImplTest extends AbstractInfinispanTest {
          BlockingManager blockingManager = writerManagers.values().iterator().next().getGlobalComponentRegistry().getComponent(BlockingManager.class);
          BackupWriter writer = new BackupWriter(blockingManager, writerManagers, workingDir.toPath());
 
-         Map<String, BackupManager.ContainerResources> paramMap = new HashMap<>(2);
+         Map<String, BackupManager.Resources> paramMap = new HashMap<>(2);
          paramMap.put(container1,
-               new ContainerResources.Builder()
+               new BackupManagerResources.Builder()
                      .addCaches("object-cache", "protostream-cache", "empty-cache")
                      .addCacheConfigurations("example-template")
                      .build()
          );
 
          paramMap.put(container2,
-               new ContainerResources.Builder()
+               new BackupManagerResources.Builder()
                      .addCaches("container2-cache")
                      .build()
          );

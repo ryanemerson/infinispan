@@ -1,10 +1,10 @@
 package org.infinispan.server.core.backup;
 
-import static org.infinispan.server.core.BackupManager.ContainerResources.Type.CACHES;
-import static org.infinispan.server.core.BackupManager.ContainerResources.Type.CACHE_CONFIGURATIONS;
-import static org.infinispan.server.core.BackupManager.ContainerResources.Type.COUNTERS;
-import static org.infinispan.server.core.BackupManager.ContainerResources.Type.PROTO_SCHEMAS;
-import static org.infinispan.server.core.BackupManager.ContainerResources.Type.SCRIPTS;
+import static org.infinispan.server.core.BackupManager.Resources.Type.CACHES;
+import static org.infinispan.server.core.BackupManager.Resources.Type.CACHE_CONFIGURATIONS;
+import static org.infinispan.server.core.BackupManager.Resources.Type.COUNTERS;
+import static org.infinispan.server.core.BackupManager.Resources.Type.PROTO_SCHEMAS;
+import static org.infinispan.server.core.BackupManager.Resources.Type.SCRIPTS;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -18,11 +18,11 @@ import org.infinispan.server.core.BackupManager;
  * @author Ryan Emerson
  * @since 12.0
  */
-public class ContainerResources implements BackupManager.ContainerResources {
+public class BackupManagerResources implements BackupManager.Resources {
 
    final Map<Type, Set<String>> resources;
 
-   public ContainerResources(Map<Type, Set<String>> resources) {
+   public BackupManagerResources(Map<Type, Set<String>> resources) {
       this.resources = resources;
    }
 
@@ -41,7 +41,7 @@ public class ContainerResources implements BackupManager.ContainerResources {
       final Map<Type, Set<String>> resources = new HashMap<>();
 
       public Builder importAll() {
-         return importAll(Type.values());
+         return importAll(BackupManager.Resources.Type.values());
       }
 
       public Builder importAll(Type... resources) {
@@ -85,8 +85,8 @@ public class ContainerResources implements BackupManager.ContainerResources {
          return this;
       }
 
-      public ContainerResources build() {
-         return new ContainerResources(resources);
+      public BackupManagerResources build() {
+         return new BackupManagerResources(resources);
       }
    }
 }
