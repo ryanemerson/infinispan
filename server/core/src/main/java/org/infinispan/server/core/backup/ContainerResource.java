@@ -8,7 +8,7 @@ import org.infinispan.commons.CacheException;
 import org.infinispan.server.core.BackupManager;
 
 /**
- * An interface that defines how a {@link org.infinispan.server.core.BackupManager.ResourceType} is backed up and
+ * An interface that defines how a {@link BackupManager.ContainerResources.Type} is backed up and
  * restored by the {@link org.infinispan.server.core.BackupManager}.
  *
  * @author Ryan Emerson
@@ -26,19 +26,19 @@ public interface ContainerResource {
    void prepareAndValidateBackup() throws CacheException;
 
    /**
-    * Writes the backup files for the {@link org.infinispan.server.core.BackupManager.ResourceType} to the local
+    * Writes the backup files for the {@link BackupManager.ContainerResources.Type} to the local
     * filesystem, where it can then be packaged for distribution.
     * <p>
     * Implementations of this method depend on content created by {@link #prepareAndValidateBackup()}.
     *
     * @return a {@link CompletionStage} that completes once the backup of this {@link
-    * org.infinispan.server.core.BackupManager.ResourceType} has finished.
+    * BackupManager.ContainerResources.Type} has finished.
     */
    CompletionStage<Void> backup();
 
    /**
     * Writes the name of the individual resources that have been included in this backup. The {@link
-    * org.infinispan.server.core.BackupManager.ResourceType} associated with an implementation is the key, whilst the
+    * BackupManager.ContainerResources.Type} associated with an implementation is the key, whilst the
     * value is a csv of resource names.
     * <p>
     * Implementations of this method depend on state created by {@link #backup()}.
@@ -56,12 +56,12 @@ public interface ContainerResource {
    void prepareAndValidateRestore(Properties properties);
 
    /**
-    * Restores the {@link org.infinispan.server.core.BackupManager.ResourceType} content from the provided {@link
+    * Restores the {@link BackupManager.ContainerResources.Type} content from the provided {@link
     * ZipFile} to the target container.
     *
     * @param zip the {@link ZipFile} to restore content from.
     * @return a {@link CompletionStage} that completes once the restoration of this {@link
-    * org.infinispan.server.core.BackupManager.ResourceType} has finished.
+    * BackupManager.ContainerResources.Type} has finished.
     */
    CompletionStage<Void> restore(ZipFile zip);
 }

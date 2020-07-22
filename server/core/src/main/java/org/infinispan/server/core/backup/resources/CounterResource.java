@@ -1,6 +1,6 @@
 package org.infinispan.server.core.backup.resources;
 
-import static org.infinispan.server.core.BackupManager.ResourceType.COUNTERS;
+import static org.infinispan.server.core.BackupManager.ContainerResources.Type.COUNTERS;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,7 +33,7 @@ import io.reactivex.rxjava3.core.Flowable;
 
 /**
  * {@link org.infinispan.server.core.backup.ContainerResource} implementation for {@link
- * BackupManager.ResourceType#COUNTERS}.
+ * BackupManager.ContainerResources.Type#COUNTERS}.
  *
  * @author Ryan Emerson
  * @since 12.0

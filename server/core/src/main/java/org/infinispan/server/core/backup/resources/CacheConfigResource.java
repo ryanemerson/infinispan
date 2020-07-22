@@ -1,6 +1,6 @@
 package org.infinispan.server.core.backup.resources;
 
-import static org.infinispan.server.core.BackupManager.ResourceType.CACHE_CONFIGURATIONS;
+import static org.infinispan.server.core.BackupManager.ContainerResources.Type.CACHE_CONFIGURATIONS;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -24,7 +24,7 @@ import org.infinispan.util.concurrent.BlockingManager;
 
 /**
  * {@link org.infinispan.server.core.backup.ContainerResource} implementation for {@link
- * BackupManager.ResourceType#CACHE_CONFIGURATIONS}.
+ * BackupManager.ContainerResources.Type#CACHE_CONFIGURATIONS}.
  *
  * @author Ryan Emerson
  * @since 12.0

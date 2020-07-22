@@ -1,7 +1,7 @@
 package org.infinispan.server.core.backup.resources;
 
-import static org.infinispan.server.core.BackupManager.ResourceType.PROTO_SCHEMAS;
-import static org.infinispan.server.core.BackupManager.ResourceType.SCRIPTS;
+import static org.infinispan.server.core.BackupManager.ContainerResources.Type.PROTO_SCHEMAS;
+import static org.infinispan.server.core.BackupManager.ContainerResources.Type.SCRIPTS;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -25,14 +25,14 @@ import org.infinispan.util.concurrent.BlockingManager;
 
 /**
  * {@link org.infinispan.server.core.backup.ContainerResource} implementation for {@link
- * BackupManager.ResourceType#PROTO_SCHEMAS} and {@link BackupManager.ResourceType#SCRIPTS}.
+ * BackupManager.ContainerResources.Type#PROTO_SCHEMAS} and {@link BackupManager.ContainerResources.Type#SCRIPTS}.
  *
  * @author Ryan Emerson
  * @since 12.0
  */
 class InternalCacheResource extends AbstractContainerResource {
 
-   private static final Map<BackupManager.ResourceType, String> cacheMap = new HashMap<>(2);
+   private static final Map<BackupManager.ContainerResources.Type, String> cacheMap = new HashMap<>(2);
 
    static {
       cacheMap.put(PROTO_SCHEMAS, "___protobuf_metadata");
@@ -41,13 +41,13 @@ class InternalCacheResource extends AbstractContainerResource {
 
    private final AdvancedCache<String, String> cache;
 
-   private InternalCacheResource(BackupManager.ResourceType type, AdvancedCache<String, String> cache,
+   private InternalCacheResource(BackupManager.ContainerResources.Type type, AdvancedCache<String, String> cache,
                                  BlockingManager blockingManager, BackupManager.ContainerResources params, Path root) {
       super(type, params, blockingManager, root);
       this.cache = cache;
    }
 
-   static ContainerResource create(BackupManager.ResourceType type, BlockingManager blockingManager, EmbeddedCacheManager cm,
+   static ContainerResource create(BackupManager.ContainerResources.Type type, BlockingManager blockingManager, EmbeddedCacheManager cm,
                                    BackupManager.ContainerResources params, Path root) {
       String cacheName = cacheMap.get(type);
       if (cm.getCacheConfiguration(cacheName) == null)

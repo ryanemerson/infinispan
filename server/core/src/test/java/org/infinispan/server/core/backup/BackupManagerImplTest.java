@@ -5,8 +5,8 @@ import static org.infinispan.commons.dataconversion.MediaType.APPLICATION_PROTOS
 import static org.infinispan.commons.dataconversion.MediaType.APPLICATION_UNKNOWN_TYPE;
 import static org.infinispan.functional.FunctionalTestUtils.MAX_WAIT_SECS;
 import static org.infinispan.functional.FunctionalTestUtils.await;
-import static org.infinispan.server.core.BackupManager.ResourceType.CACHES;
-import static org.infinispan.server.core.BackupManager.ResourceType.CACHE_CONFIGURATIONS;
+import static org.infinispan.server.core.BackupManager.ContainerResources.Type.CACHES;
+import static org.infinispan.server.core.BackupManager.ContainerResources.Type.CACHE_CONFIGURATIONS;
 import static org.infinispan.server.core.backup.Constants.CONTAINERS_PROPERTIES_FILE;
 import static org.infinispan.server.core.backup.Constants.CONTAINER_KEY;
 import static org.infinispan.server.core.backup.Constants.GLOBAL_CONFIG_FILE;

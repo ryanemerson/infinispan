@@ -49,7 +49,7 @@ public interface BackupManager {
 
    /**
     * Restore content from the provided backup bytes. The keyset of the provided {@link Map} determines which containers
-    * are restored from the backup file. Similarly, the {@link ContainerResources} object determines which {@link ResourceType}s are
+    * are restored from the backup file. Similarly, the {@link ContainerResources} object determines which {@link ContainerResources.Type}s are
     * restored.
     *
     * @param is a {@link InputStream} containing the bytes of the uploaded backup file.
@@ -57,39 +57,39 @@ public interface BackupManager {
     */
    CompletionStage<Void> restore(InputStream is, Map<String, ContainerResources> params);
 
-   enum ResourceType {
-      CACHES("caches"),
-      CACHE_CONFIGURATIONS("cache-configs"),
-      COUNTERS("counters"),
-      PROTO_SCHEMAS("proto-schemas"),
-      SCRIPTS("scripts");
-
-      final String name;
-      ResourceType(String name) {
-         this.name = name;
-      }
-
-      @Override
-      public String toString() {
-         return this.name;
-      }
-   }
-
    /**
     * An interface to encapsulate the various arguments required by the {@link BackupManager} in order to include/exclude
     * resources from a backup/restore operation.
     */
    interface ContainerResources {
 
-      /**
-       * @return the {@link ResourceType} to be included in the backup/restore.
-       */
-      Set<ResourceType> includeTypes();
+      enum Type {
+         CACHES("caches"),
+         CACHE_CONFIGURATIONS("cache-configs"),
+         COUNTERS("counters"),
+         PROTO_SCHEMAS("proto-schemas"),
+         SCRIPTS("scripts");
+
+         final String name;
+         Type(String name) {
+            this.name = name;
+         }
+
+         @Override
+         public String toString() {
+            return this.name;
+         }
+      }
 
       /**
-       * @param type the {@link ResourceType} to retrieve the associated resources for.
+       * @return the {@link Type} to be included in the backup/restore.
+       */
+      Set<Type> includeTypes();
+
+      /**
+       * @param type the {@link Type} to retrieve the associated resources for.
        * @return a {@link Set} of resource names to process.
        */
-      Set<String> getQualifiedResources(ResourceType type);
+      Set<String> getQualifiedResources(Type type);
    }
 }

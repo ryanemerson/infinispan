@@ -1,10 +1,10 @@
 package org.infinispan.server.core.backup;
 
-import static org.infinispan.server.core.BackupManager.ResourceType.CACHES;
-import static org.infinispan.server.core.BackupManager.ResourceType.CACHE_CONFIGURATIONS;
-import static org.infinispan.server.core.BackupManager.ResourceType.COUNTERS;
-import static org.infinispan.server.core.BackupManager.ResourceType.PROTO_SCHEMAS;
-import static org.infinispan.server.core.BackupManager.ResourceType.SCRIPTS;
+import static org.infinispan.server.core.BackupManager.ContainerResources.Type.CACHES;
+import static org.infinispan.server.core.BackupManager.ContainerResources.Type.CACHE_CONFIGURATIONS;
+import static org.infinispan.server.core.BackupManager.ContainerResources.Type.COUNTERS;
+import static org.infinispan.server.core.BackupManager.ContainerResources.Type.PROTO_SCHEMAS;
+import static org.infinispan.server.core.BackupManager.ContainerResources.Type.SCRIPTS;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -20,38 +20,38 @@ import org.infinispan.server.core.BackupManager;
  */
 public class ContainerResources implements BackupManager.ContainerResources {
 
-   final Map<BackupManager.ResourceType, Set<String>> resources;
+   final Map<Type, Set<String>> resources;
 
-   public ContainerResources(Map<BackupManager.ResourceType, Set<String>> resources) {
+   public ContainerResources(Map<Type, Set<String>> resources) {
       this.resources = resources;
    }
 
    @Override
-   public Set<BackupManager.ResourceType> includeTypes() {
+   public Set<Type> includeTypes() {
       return resources.keySet();
    }
 
    @Override
-   public Set<String> getQualifiedResources(BackupManager.ResourceType type) {
+   public Set<String> getQualifiedResources(Type type) {
       Set<String> qualified = resources.get(type);
       return qualified.isEmpty() ? null : qualified;
    }
 
    public static class Builder {
-      final Map<BackupManager.ResourceType, Set<String>> resources = new HashMap<>();
+      final Map<Type, Set<String>> resources = new HashMap<>();
 
       public Builder importAll() {
-         return importAll(BackupManager.ResourceType.values());
+         return importAll(Type.values());
       }
 
-      public Builder importAll(BackupManager.ResourceType... resources) {
-         for (BackupManager.ResourceType resource : resources)
+      public Builder importAll(Type... resources) {
+         for (Type resource : resources)
             addResources(resource);
          return this;
       }
 
-      public Builder ignore(BackupManager.ResourceType... resources) {
-         for (BackupManager.ResourceType resource : resources)
+      public Builder ignore(Type... resources) {
+         for (Type resource : resources)
             this.resources.remove(resource);
          return this;
       }
@@ -76,7 +76,7 @@ public class ContainerResources implements BackupManager.ContainerResources {
          return addResources(SCRIPTS, scripts);
       }
 
-      private Builder addResources(BackupManager.ResourceType resource, String... resources) {
+      private Builder addResources(Type resource, String... resources) {
          this.resources.compute(resource, (k, v) -> {
             Set<String> set = v == null ? new HashSet<>() : v;
             Collections.addAll(set, resources);

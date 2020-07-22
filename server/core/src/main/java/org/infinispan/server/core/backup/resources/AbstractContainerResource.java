@@ -23,14 +23,14 @@ abstract class AbstractContainerResource implements ContainerResource {
 
    protected static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass(), Log.class);
 
-   protected final BackupManager.ResourceType type;
+   protected final BackupManager.ContainerResources.Type type;
    protected final BackupManager.ContainerResources params;
    protected final Path root;
    protected final BlockingManager blockingManager;
    protected final boolean wildcard;
    protected final Set<String> resources;
 
-   protected AbstractContainerResource(BackupManager.ResourceType type, BackupManager.ContainerResources params,
+   protected AbstractContainerResource(BackupManager.ContainerResources.Type type, BackupManager.ContainerResources params,
                                        BlockingManager blockingManager, Path root) {
       this.type = type;
       this.params = params;
@@ -65,7 +65,7 @@ abstract class AbstractContainerResource implements ContainerResource {
       }
    }
 
-   static Set<String> asSet(Properties properties, BackupManager.ResourceType resource) {
+   static Set<String> asSet(Properties properties, BackupManager.ContainerResources.Type resource) {
       String prop = properties.getProperty(resource.toString());
       if (prop == null || prop.isEmpty())
          return Collections.emptySet();

@@ -69,7 +69,7 @@ public class ContainerResourceFactory {
             .collect(Collectors.toList());
    }
 
-   private ContainerResource missingResource(BackupManager.ResourceType type) {
+   private ContainerResource missingResource(BackupManager.ContainerResources.Type type) {
       log.debugf("Unable to process resource '%s' as the required modules are not on the server's classpath'", type);
       return null;
    }

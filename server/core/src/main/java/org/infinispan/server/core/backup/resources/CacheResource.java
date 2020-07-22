@@ -1,6 +1,6 @@
 package org.infinispan.server.core.backup.resources;
 
-import static org.infinispan.server.core.BackupManager.ResourceType.CACHES;
+import static org.infinispan.server.core.BackupManager.ContainerResources.Type.CACHES;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -54,7 +54,7 @@ import io.reactivex.rxjava3.core.Flowable;
 
 /**
  * {@link org.infinispan.server.core.backup.ContainerResource} implementation for {@link
- * BackupManager.ResourceType#CACHES}.
+ * BackupManager.ContainerResources.Type#CACHES}.
  *
  * @author Ryan Emerson
  * @since 12.0
