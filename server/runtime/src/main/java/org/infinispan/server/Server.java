@@ -339,9 +339,10 @@ public class Server implements ServerManagement, AutoCloseable {
          cacheIgnoreManager = bcr.getComponent(CacheIgnoreManager.class).running();
 
          // BlockingManager of single container used for writing the global manifest, but this will need to change
-         // when multiple containers are supported by the server
+         // when multiple containers are supported by the server. Similarly, the default cache manager is used to create
+         // the clustered locks.
          Path dataRoot = serverRoot.toPath().resolve(properties.getProperty(INFINISPAN_SERVER_DATA_PATH));
-         backupManager = new BackupManagerImpl(blockingManager, cacheManagers, dataRoot);
+         backupManager = new BackupManagerImpl(blockingManager, cm, cacheManagers, dataRoot);
          backupManager.init();
 
          // Register the task manager

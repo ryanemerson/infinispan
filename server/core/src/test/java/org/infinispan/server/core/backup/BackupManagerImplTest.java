@@ -31,9 +31,11 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -94,14 +96,23 @@ public class BackupManagerImplTest extends AbstractInfinispanTest {
       );
    }
 
-   private void invalidWriteTest(String msg, BackupManager.ContainerResources params) throws Exception {
+   private void invalidWriteTest(String msg, BackupManager.ContainerResources params) {
       withBackupManager((cm, backupManager) -> {
          try {
-            await(backupManager.create(Collections.singletonMap("default", params)));
+            CompletionStage<Path> stage = backupManager.create(Collections.singletonMap("default", params));
+            stage.toCompletableFuture().get(MAX_WAIT_SECS, TimeUnit.SECONDS);
             fail();
-         } catch (Exception e) {
-            assertTrue(e instanceof CacheException);
-            assertTrue(e.getMessage().contains(msg));
+         } catch (TimeoutException | InterruptedException e) {
+            fail();
+         } catch (ExecutionException e) {
+            Throwable t = e.getCause();
+            assertTrue(t instanceof CacheException);
+            assertTrue(t.getMessage().contains("Unable to create cluster backup"));
+            t = t.getCause();
+            assertTrue(t instanceof CompletionException);
+            t = t.getCause();
+            assertTrue(t instanceof CacheException);
+            assertTrue(t.getMessage().contains(msg));
          }
          return CompletableFutures.completedNull();
       });
@@ -131,6 +142,11 @@ public class BackupManagerImplTest extends AbstractInfinispanTest {
                } catch (ExecutionException e) {
                   assertTrue(stage.isCompletedExceptionally());
                   Throwable t = e.getCause();
+                  assertTrue(t instanceof CacheException);
+                  assertTrue(t.getMessage().contains("Unable to restore cluster backup"));
+                  t = t.getCause();
+                  assertTrue(t instanceof CompletionException);
+                  t = t.getCause();
                   assertTrue(t instanceof CacheException);
                   assertTrue(t.getMessage().contains(String.format("'[%s]' not found in the backup archive", resourceName)));
                } catch (Exception e) {
@@ -198,7 +214,7 @@ public class BackupManagerImplTest extends AbstractInfinispanTest {
    private <T> T withBackupManager(BiFunction<DefaultCacheManager, BackupManager, CompletionStage<T>> function) {
       try (DefaultCacheManager cm = new DefaultCacheManager()) {
          BlockingManager blockingManager = cm.getGlobalComponentRegistry().getComponent(BlockingManager.class);
-         BackupManager backupManager = new BackupManagerImpl(blockingManager, Collections.singletonMap("default", cm), workingDir.toPath());
+         BackupManager backupManager = new BackupManagerImpl(blockingManager, cm, Collections.singletonMap("default", cm), workingDir.toPath());
          backupManager.init();
          return await(function.apply(cm, backupManager));
       } catch (IOException e) {
