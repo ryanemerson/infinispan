@@ -2,14 +2,19 @@ package org.infinispan.server.core.backup;
 
 import static org.infinispan.server.core.backup.Constants.WORKING_DIR;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
+import org.infinispan.commons.CacheException;
+import org.infinispan.configuration.parsing.ParserRegistry;
 import org.infinispan.lock.EmbeddedClusteredLockManagerFactory;
 import org.infinispan.lock.api.ClusteredLock;
 import org.infinispan.lock.api.ClusteredLockManager;
@@ -30,21 +35,25 @@ public class BackupManagerImpl implements BackupManager {
 
    private static final Log log = LogFactory.getLog(BackupManagerImpl.class, Log.class);
 
+   final ParserRegistry parserRegistry;
+   final BlockingManager blockingManager;
    final Path rootDir;
    final BackupReader reader;
-   final BackupWriter writer;
    final Lock backupLock;
    final Lock restoreLock;
    final Map<String, DefaultCacheManager> cacheManagers;
+   final Map<String, CompletableFuture<Path>> backupMap;
 
    public BackupManagerImpl(BlockingManager blockingManager, EmbeddedCacheManager cm,
                             Map<String, DefaultCacheManager> cacheManagers, Path dataRoot) {
+      this.blockingManager = blockingManager;
       this.rootDir = dataRoot.resolve(WORKING_DIR);
       this.cacheManagers = cacheManagers;
-      this.reader = new BackupReader(blockingManager, cacheManagers, rootDir);
-      this.writer = new BackupWriter(blockingManager, cacheManagers, rootDir);
+      this.parserRegistry = new ParserRegistry();
+      this.reader = new BackupReader(blockingManager, cacheManagers, parserRegistry, rootDir);
       this.backupLock = new Lock("backup", cm);
       this.restoreLock = new Lock("restore", cm);
+      this.backupMap = new ConcurrentHashMap<>();
    }
 
    @Override
@@ -53,8 +62,53 @@ public class BackupManagerImpl implements BackupManager {
    }
 
    @Override
-   public CompletionStage<Path> create() {
+   public Status getBackupStatus(String name) {
+      return getBackupStatus(backupMap.get(name));
+   }
+
+   @Override
+   public Path getBackup(String name) {
+      CompletableFuture<Path> future = backupMap.get(name);
+      Status status = getBackupStatus(future);
+      if (status != Status.COMPLETE)
+         throw new IllegalStateException(String.format("Backup '%s' not complete, current Status %s", name, status));
+      return future.join();
+   }
+
+   private Status getBackupStatus(CompletableFuture<Path> future) {
+      if (future == null)
+         return Status.NOT_FOUND;
+
+      if (future.isCompletedExceptionally())
+         return Status.FAILED;
+
+      return future.isDone() ? Status.COMPLETE : Status.IN_PROGRESS;
+   }
+
+   @Override
+   public CompletionStage<Void> removeBackup(String name) {
+      return blockingManager.runBlocking(() -> {
+         CompletableFuture<Path> future = backupMap.remove(name);
+         Status status = getBackupStatus(future);
+         try {
+            switch (status) {
+               case COMPLETE:
+               case FAILED:
+                  Files.delete(future.join());
+                  break;
+               case IN_PROGRESS:
+                  future.cancel(true);
+            }
+         } catch (IOException e) {
+            throw new CacheException(String.format("Unable to delete backup '%s'", name));
+         }
+      }, "remove-backup-file");
+   }
+
+   @Override
+   public CompletionStage<Path> create(String name) {
       return create(
+            name,
             cacheManagers.entrySet().stream()
                   .collect(Collectors.toMap(
                         Map.Entry::getKey,
@@ -63,7 +117,9 @@ public class BackupManagerImpl implements BackupManager {
    }
 
    @Override
-   public CompletionStage<Path> create(Map<String, Resources> params) {
+   public CompletionStage<Path> create(String name, Map<String, Resources> params) {
+      Path backupDir = rootDir.resolve(name);
+      BackupWriter writer = new BackupWriter(blockingManager, cacheManagers, parserRegistry, backupDir);
       CompletionStage<Path> backupStage = backupLock.lock()
             .thenCompose(lockAcquired -> {
                if (!lockAcquired)
@@ -73,7 +129,7 @@ public class BackupManagerImpl implements BackupManager {
                return writer.create(params);
             });
 
-      return CompletionStages.handleAndCompose(backupStage,
+      backupStage = CompletionStages.handleAndCompose(backupStage,
             (path, t) -> {
                CompletionStage<Void> unlock = backupLock.unlock();
                if (t != null) {
@@ -85,6 +141,9 @@ public class BackupManagerImpl implements BackupManager {
                log.backupComplete(path.getFileName().toString());
                return unlock.thenCompose(ignore -> CompletableFuture.completedFuture(path));
             });
+
+      backupMap.put(name, backupStage.toCompletableFuture());
+      return backupStage;
    }
 
    @Override

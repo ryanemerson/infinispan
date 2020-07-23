@@ -13,7 +13,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
@@ -48,15 +47,15 @@ class BackupWriter {
 
    private final BlockingManager blockingManager;
    private final Map<String, DefaultCacheManager> cacheManagers;
-
-   private final Path rootDir;
    private final ParserRegistry parserRegistry;
+   private final Path rootDir;
 
-   BackupWriter(BlockingManager blockingManager, Map<String, DefaultCacheManager> cacheManagers, Path rootDir) {
+   BackupWriter(BlockingManager blockingManager, Map<String, DefaultCacheManager> cacheManagers,
+                ParserRegistry parserRegistry, Path rootDir) {
       this.blockingManager = blockingManager;
       this.cacheManagers = cacheManagers;
+      this.parserRegistry = parserRegistry;
       this.rootDir = rootDir;
-      this.parserRegistry = new ParserRegistry();
    }
 
    CompletionStage<Path> create(Map<String, BackupManager.Resources> params) {
@@ -86,8 +85,8 @@ class BackupWriter {
       GlobalComponentRegistry gcr = cm.getGlobalComponentRegistry();
       BlockingManager blockingManager = gcr.getComponent(BlockingManager.class);
 
-      Collection<ContainerResource> resources = ContainerResourceFactory.getInstance()
-            .getResources(params, blockingManager, cm, containerRoot);
+      Collection<ContainerResource> resources = ContainerResourceFactory
+            .getResources(params, blockingManager, cm, parserRegistry, containerRoot);
 
       // Prepare and ensure all requested resources are valid before starting the backup process
       resources.forEach(ContainerResource::prepareAndValidateBackup);
@@ -132,9 +131,7 @@ class BackupWriter {
    }
 
    private Path createZip() {
-      LocalDateTime now = LocalDateTime.now();
-      // Name the backup in the format 'infinispan-[year][month][day][hour][minute].zip'
-      String backupName = String.format("%s-%d%02d%02d%02d%02d.zip", Version.getBrandName(), now.getYear(), now.getMonthValue(), now.getDayOfMonth(), now.getHour(), now.getMinute());
+      String backupName = rootDir.getFileName().toString() + ".zip";
       Path zipFile = rootDir.resolve(backupName);
       try (ZipOutputStream zs = new ZipOutputStream(Files.newOutputStream(Files.createFile(zipFile)))) {
          Files.walkFileTree(rootDir, new SimpleFileVisitor<Path>() {

@@ -25,25 +25,9 @@ public class ContainerResourceFactory {
 
    private static final Log log = LogFactory.getLog(ContainerResourceFactory.class, Log.class);
 
-   private static volatile ContainerResourceFactory instance;
-
-   public static ContainerResourceFactory getInstance() {
-      if (instance == null) {
-         synchronized (ContainerResourceFactory.class) {
-            instance = new ContainerResourceFactory();
-         }
-      }
-      return instance;
-   }
-
-   private final ParserRegistry parserRegistry;
-
-   private ContainerResourceFactory() {
-      this.parserRegistry = new ParserRegistry();
-   }
-
-   public Collection<ContainerResource> getResources(BackupManager.Resources params, BlockingManager blockingManager,
-                                                     EmbeddedCacheManager cm, Path containerRoot) {
+   public static Collection<ContainerResource> getResources(BackupManager.Resources params, BlockingManager blockingManager,
+                                                            EmbeddedCacheManager cm, ParserRegistry parserRegistry,
+                                                            Path containerRoot) {
       GlobalComponentRegistry gcr = cm.getGlobalComponentRegistry();
       return params.includeTypes().stream()
             .map(type -> {
@@ -69,7 +53,7 @@ public class ContainerResourceFactory {
             .collect(Collectors.toList());
    }
 
-   private ContainerResource missingResource(BackupManager.Resources.Type type) {
+   private static ContainerResource missingResource(BackupManager.Resources.Type type) {
       log.debugf("Unable to process resource '%s' as the required modules are not on the server's classpath'", type);
       return null;
    }

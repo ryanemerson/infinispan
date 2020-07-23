@@ -50,6 +50,7 @@ import org.infinispan.commons.util.Util;
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.configuration.cache.EncodingConfigurationBuilder;
+import org.infinispan.configuration.parsing.ParserRegistry;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.server.core.BackupManager;
@@ -82,14 +83,14 @@ public class BackupManagerImplTest extends AbstractInfinispanTest {
       Util.recursiveFileRemove(workingDir);
    }
 
-   public void testMissingCacheOnBackup() throws Exception {
+   public void testMissingCacheOnBackup() {
       invalidWriteTest("'example-cache' does not exist", new BackupManagerResources.Builder()
             .addCaches("example-cache")
             .build()
       );
    }
 
-   public void testMissingCacheConfigOnBackup() throws Exception {
+   public void testMissingCacheConfigOnBackup() {
       invalidWriteTest("'template' does not exist", new BackupManagerResources.Builder()
             .addCacheConfigurations("template")
             .build()
@@ -99,7 +100,7 @@ public class BackupManagerImplTest extends AbstractInfinispanTest {
    private void invalidWriteTest(String msg, BackupManager.Resources params) {
       withBackupManager((cm, backupManager) -> {
          try {
-            CompletionStage<Path> stage = backupManager.create(Collections.singletonMap("default", params));
+            CompletionStage<Path> stage = backupManager.create("invalidWriteTest", Collections.singletonMap("default", params));
             stage.toCompletableFuture().get(MAX_WAIT_SECS, TimeUnit.SECONDS);
             fail();
          } catch (TimeoutException | InterruptedException e) {
@@ -130,7 +131,7 @@ public class BackupManagerImplTest extends AbstractInfinispanTest {
 
    private void invalidRestoreTest(String resourceName, BackupManager.Resources params) throws Exception {
       createAndRestore(
-            (source, backupManager) -> backupManager.create(),
+            (source, backupManager) -> backupManager.create("invalidRestoreTest"),
             (target, backupManager, backup) -> {
                assertTrue(target.getCacheNames().isEmpty());
                assertNull(target.getCacheConfiguration("cache-config"));
@@ -162,7 +163,7 @@ public class BackupManagerImplTest extends AbstractInfinispanTest {
                source.defineConfiguration("cache-config", config(APPLICATION_OBJECT_TYPE, true));
                Cache<String, String> cache = source.createCache("cache", config(APPLICATION_OBJECT_TYPE));
                cache.put("key", "value");
-               return backupManager.create();
+               return backupManager.create("testBackupAndRestoreIgnoreResources");
             },
             (target, backupManager, backup) -> {
                assertTrue(target.getCacheNames().isEmpty());
@@ -185,7 +186,7 @@ public class BackupManagerImplTest extends AbstractInfinispanTest {
                source.defineConfiguration("cache-config", config(APPLICATION_OBJECT_TYPE, true));
                Cache<String, String> cache = source.createCache("cache", config(APPLICATION_OBJECT_TYPE));
                cache.put("key", "value");
-               return backupManager.create();
+               return backupManager.create("testBackupAndRestoreWildcardResources");
             },
             (target, backupManager, backup) -> {
                assertTrue(target.getCacheNames().isEmpty());
@@ -242,8 +243,10 @@ public class BackupManagerImplTest extends AbstractInfinispanTest {
          IntStream.range(0, numEntries).forEach(i -> sourceManager1.getCache("object-cache").put(i, i));
          IntStream.range(0, numEntries).forEach(i -> sourceManager1.getCache("protostream-cache").put(i, i));
 
+         ParserRegistry parserRegistry = new ParserRegistry();
          BlockingManager blockingManager = writerManagers.values().iterator().next().getGlobalComponentRegistry().getComponent(BlockingManager.class);
-         BackupWriter writer = new BackupWriter(blockingManager, writerManagers, workingDir.toPath());
+         Path path = workingDir.toPath().resolve("testBackupAndRestoreMultipleContainers");
+         BackupWriter writer = new BackupWriter(blockingManager, writerManagers, parserRegistry, path);
 
          Map<String, BackupManager.Resources> paramMap = new HashMap<>(2);
          paramMap.put(container1,
@@ -289,7 +292,7 @@ public class BackupManagerImplTest extends AbstractInfinispanTest {
 
 
          byte[] zipBytes = Files.readAllBytes(backupZip);
-         BackupReader reader = new BackupReader(blockingManager, readerManagers, workingDir.toPath());
+         BackupReader reader = new BackupReader(blockingManager, readerManagers, parserRegistry, workingDir.toPath());
          try (InputStream is = new ByteArrayInputStream(zipBytes)) {
             CompletionStage<Void> restoreStage = reader.restore(is, paramMap);
             await(restoreStage);

@@ -24,6 +24,7 @@ import java.util.zip.ZipFile;
 import org.infinispan.commons.CacheException;
 import org.infinispan.commons.logging.LogFactory;
 import org.infinispan.commons.util.Version;
+import org.infinispan.configuration.parsing.ParserRegistry;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.server.core.BackupManager;
@@ -45,11 +46,14 @@ class BackupReader {
 
    private final BlockingManager blockingManager;
    private final Map<String, DefaultCacheManager> cacheManagers;
+   private final ParserRegistry parserRegistry;
    private final Path rootDir;
 
-   public BackupReader(BlockingManager blockingManager, Map<String, DefaultCacheManager> cacheManagers, Path rootDir) {
+   public BackupReader(BlockingManager blockingManager, Map<String, DefaultCacheManager> cacheManagers,
+                       ParserRegistry parserRegistry, Path rootDir) {
       this.blockingManager = blockingManager;
       this.cacheManagers = cacheManagers;
+      this.parserRegistry = parserRegistry;
       this.rootDir = rootDir;
    }
 
@@ -99,8 +103,8 @@ class BackupReader {
 
       Properties properties = readProperties(containerRoot.resolve(CONTAINERS_PROPERTIES_FILE), zip);
 
-      Collection<ContainerResource> resources = ContainerResourceFactory.getInstance()
-            .getResources(params, blockingManager, cm, containerRoot);
+      Collection<ContainerResource> resources = ContainerResourceFactory
+            .getResources(params, blockingManager, cm, parserRegistry, containerRoot);
 
       resources.forEach(r -> r.prepareAndValidateRestore(properties));
 

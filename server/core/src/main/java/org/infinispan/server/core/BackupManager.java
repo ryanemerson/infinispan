@@ -16,19 +16,33 @@ import org.infinispan.factories.scopes.Scopes;
  * @since 11.0
  */
 @Scope(Scopes.GLOBAL)
+// TODO javadocs
 public interface BackupManager {
+
+   enum Status {
+      COMPLETE,
+      FAILED,
+      IN_PROGRESS,
+      NOT_FOUND
+   }
 
    /**
     * Performs initialisation of all resources required by the implementation before backup files can be created or restored.
     */
    void init();
 
+   Status getBackupStatus(String name);
+
+   Path getBackup(String name);
+
+   CompletionStage<Void> removeBackup(String name);
+
    /**
     * Create a backup of all containers configured on the server, including all available resources.
     *
     * @return a {@link CompletionStage} that on completion returns the {@link Path} to the created backup file.
     */
-   CompletionStage<Path> create();
+   CompletionStage<Path> create(String name);
 
    /**
     * Create a backup of the specified containers, including the resources defined in the provided {@link Resources}
@@ -37,7 +51,7 @@ public interface BackupManager {
     * @param params a map of container names and an associated {@link Resources} instance.
     * @return a {@link CompletionStage} that on completion returns the {@link Path} to the created backup file.
     */
-   CompletionStage<Path> create(Map<String, Resources> params);
+   CompletionStage<Path> create(String name, Map<String, Resources> params);
 
    /**
     * Restore all content from the provided backup bytes.
