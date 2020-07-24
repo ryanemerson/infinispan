@@ -11,8 +11,10 @@ import java.util.concurrent.CompletionStage;
 import org.infinispan.client.rest.RestCacheManagerClient;
 import org.infinispan.client.rest.RestResponse;
 import org.infinispan.commons.dataconversion.MediaType;
+import org.infinispan.commons.dataconversion.internal.Json;
 
 import okhttp3.Request;
+import okhttp3.RequestBody;
 
 /**
  * @author Tristan Tarrant &lt;tristan@infinispan.org&gt;
@@ -127,14 +129,29 @@ public class RestCacheManagerClientOkHttp implements RestCacheManagerClient {
    }
 
    @Override
-   public CompletionStage<RestResponse> backup() {
-      return backup(null);
+   public CompletionStage<RestResponse> createBackup(String name) {
+      return createBackup(name, null);
    }
 
    @Override
-   public CompletionStage<RestResponse> backup(Map<String, List<String>> resources) {
-      Request.Builder builder = new Request.Builder().url(resourcesUrl("backup", resources));
+   public CompletionStage<RestResponse> createBackup(String name, Map<String, List<String>> resources) {
+      Json json = Json.object();
+      if (resources != null) {
+         resources.forEach((k, v) -> json.set(k, v.toArray(new String[0])));
+      }
+      RequestBody body = new StringRestEntityOkHttp(MediaType.APPLICATION_JSON, json.toString()).toRequestBody();
+      Request.Builder builder = backup(name).post(body);
       return client.execute(builder);
+   }
+
+   @Override
+   public CompletionStage<RestResponse> getBackup(String name) {
+      return client.execute(backup(name));
+   }
+
+   @Override
+   public CompletionStage<RestResponse> deleteBackup(String name) {
+      return client.execute(backup(name).delete());
    }
 
    @Override
@@ -144,17 +161,26 @@ public class RestCacheManagerClientOkHttp implements RestCacheManagerClient {
 
    @Override
    public CompletionStage<RestResponse> restore(File backup, Map<String, List<String>> resources) {
+      // TODO process resources and send as multi
+      // Create MultipartFormEntity class
+//      https://square.github.io/okhttp/4.x/okhttp/okhttp3/-multipart-body/
+
+//      Content-Type: multipart/form-data; boundary=AaB03x
+//
+//      --AaB03x
+//      Content-Disposition: form-data; name="submit-name"
+//
+//      Larry
+//            --AaB03x
+//      Content-Disposition: form-data; name="files"; filename="file1.txt"
+//      Content-Type: application/json
       Request.Builder builder = new Request.Builder()
-            .url(resourcesUrl("restore", resources))
+            .url(baseCacheManagerUrl + "/backups/" + name + "?action=restore")
             .post(new FileRestEntityOkHttp(MediaType.APPLICATION_ZIP, backup).toRequestBody());
       return client.execute(builder);
    }
 
-   private String resourcesUrl(String action, Map<String, List<String>> resources) {
-      StringBuilder sb = new StringBuilder(baseCacheManagerUrl);
-      sb.append("?action=").append(action);
-      if (resources != null)
-         resources.forEach((key, value) -> sb.append("&").append(key).append("=").append(String.join(",", value)));
-      return sb.toString();
+   private Request.Builder backup(String name) {
+      return new Request.Builder().url(baseCacheManagerUrl + "/backups/" + name);
    }
 }

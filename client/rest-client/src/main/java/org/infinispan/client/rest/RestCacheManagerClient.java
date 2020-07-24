@@ -53,7 +53,7 @@ public interface RestCacheManagerClient {
    /**
     * Creates a backup file containing all resources in this container.
     */
-   CompletionStage<RestResponse> backup();
+   CompletionStage<RestResponse> createBackup(String name);
 
    /**
     * Creates a backup file containing only the resources specified in the provided {@link Map}.
@@ -61,7 +61,12 @@ public interface RestCacheManagerClient {
     * @param resources a map of BackupManager.Resources.Type with the names of the resources to backup. If the provided
     *                  list only contains "*" then all available resources of that type are backed up.
     */
-   CompletionStage<RestResponse> backup(Map<String, List<String>> resources);
+   CompletionStage<RestResponse> createBackup(String name, Map<String, List<String>> resources);
+
+   // TODO add docs
+   CompletionStage<RestResponse> getBackup(String name);
+
+   CompletionStage<RestResponse> deleteBackup(String name);
 
    /**
     * Restores all content associated with this containers name contained within the provided backup file. The backup

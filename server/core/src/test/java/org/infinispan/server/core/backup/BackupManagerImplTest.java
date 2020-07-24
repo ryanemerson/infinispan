@@ -245,8 +245,8 @@ public class BackupManagerImplTest extends AbstractInfinispanTest {
 
          ParserRegistry parserRegistry = new ParserRegistry();
          BlockingManager blockingManager = writerManagers.values().iterator().next().getGlobalComponentRegistry().getComponent(BlockingManager.class);
-         Path path = workingDir.toPath().resolve("testBackupAndRestoreMultipleContainers");
-         BackupWriter writer = new BackupWriter(blockingManager, writerManagers, parserRegistry, path);
+         String name = "testBackupAndRestoreMultipleContainers";
+         BackupWriter writer = new BackupWriter(name, blockingManager, writerManagers, parserRegistry, workingDir.toPath());
 
          Map<String, BackupManager.Resources> paramMap = new HashMap<>(2);
          paramMap.put(container1,

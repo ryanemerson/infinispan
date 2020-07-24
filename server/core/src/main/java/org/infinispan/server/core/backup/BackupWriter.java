@@ -45,17 +45,23 @@ import org.infinispan.util.concurrent.CompletionStages;
  */
 class BackupWriter {
 
+   private final String name;
    private final BlockingManager blockingManager;
    private final Map<String, DefaultCacheManager> cacheManagers;
    private final ParserRegistry parserRegistry;
    private final Path rootDir;
 
-   BackupWriter(BlockingManager blockingManager, Map<String, DefaultCacheManager> cacheManagers,
+   BackupWriter(String name, BlockingManager blockingManager, Map<String, DefaultCacheManager> cacheManagers,
                 ParserRegistry parserRegistry, Path rootDir) {
+      this.name = name;
       this.blockingManager = blockingManager;
       this.cacheManagers = cacheManagers;
       this.parserRegistry = parserRegistry;
-      this.rootDir = rootDir;
+      this.rootDir = rootDir.resolve(name);
+   }
+
+   Path getZipPath() {
+      return rootDir.resolve(name + ".zip");
    }
 
    CompletionStage<Path> create(Map<String, BackupManager.Resources> params) {
@@ -75,8 +81,8 @@ class BackupWriter {
     *
     * @param containerName the name of container to backup.
     * @param cm            the container to backup.
-    * @param params        the {@link BackupManager.Resources} object that determines what resources are
-    *                      included in the backup for this container.
+    * @param params        the {@link BackupManager.Resources} object that determines what resources are included in the
+    *                      backup for this container.
     * @return a {@link CompletionStage} that completes once the backup has finished.
     */
    private CompletionStage<Void> createBackup(String containerName, EmbeddedCacheManager cm, BackupManager.Resources params) {
@@ -131,8 +137,7 @@ class BackupWriter {
    }
 
    private Path createZip() {
-      String backupName = rootDir.getFileName().toString() + ".zip";
-      Path zipFile = rootDir.resolve(backupName);
+      Path zipFile = getZipPath();
       try (ZipOutputStream zs = new ZipOutputStream(Files.newOutputStream(Files.createFile(zipFile)))) {
          Files.walkFileTree(rootDir, new SimpleFileVisitor<Path>() {
             @Override

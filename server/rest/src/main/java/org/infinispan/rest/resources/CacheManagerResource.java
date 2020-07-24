@@ -8,6 +8,7 @@ import static java.util.concurrent.CompletableFuture.completedFuture;
 import static org.infinispan.commons.dataconversion.MediaType.APPLICATION_JSON;
 import static org.infinispan.commons.dataconversion.MediaType.APPLICATION_XML;
 import static org.infinispan.commons.dataconversion.MediaType.TEXT_PLAIN;
+import static org.infinispan.rest.framework.Method.DELETE;
 import static org.infinispan.rest.framework.Method.GET;
 import static org.infinispan.rest.framework.Method.HEAD;
 import static org.infinispan.rest.framework.Method.POST;
@@ -15,7 +16,6 @@ import static org.infinispan.rest.resources.ResourceUtil.addEntityAsJson;
 import static org.infinispan.rest.resources.ResourceUtil.asJsonResponseFuture;
 
 import java.io.ByteArrayOutputStream;
-import java.nio.file.Path;
 import java.security.PrivilegedAction;
 import java.util.Collections;
 import java.util.Comparator;
@@ -113,8 +113,8 @@ public class CacheManagerResource implements ResourceHandler {
             .invocation().methods(GET).path("/v2/cache-managers/{name}/caches").handleWith(this::getCaches)
 
             // BackupManager
-            .invocation().methods(GET).path("/v2/cache-managers/{name}").withAction("backup").handleWith(this::backup)
-            .invocation().methods(POST).path("/v2/cache-managers/{name}").withAction("restore").handleWith(this::restore)
+            .invocation().methods(DELETE, GET, POST).path("/v2/cache-managers/{name}/backups/{backupName}").handleWith(this::backup)
+            .invocation().methods(POST).path("/v2/cache-managers/{name}/backups/{backupName}").withAction("restore").handleWith(this::restore)
             .create();
    }
 
@@ -289,11 +289,12 @@ public class CacheManagerResource implements ResourceHandler {
    }
 
    private CompletionStage<RestResponse> backup(RestRequest request) {
-      BackupManager.Resources resources = BackupManagerResource.getResources(request);
-      Map<String, BackupManager.Resources> backupParams = Collections.singletonMap(cacheManagerName, resources);
       BackupManager backupManager = invocationHelper.getServer().getBackupManager();
-      CompletionStage<Path> backupStage = backupManager.create(backupParams);
-      return BackupManagerResource.handleBackupResponse(backupStage);
+      return BackupManagerResource.handleBackupRequest(request, backupManager, (name, json) -> {
+         BackupManager.Resources resources = BackupManagerResource.getResources(json);
+         Map<String, BackupManager.Resources> backupParams = Collections.singletonMap(cacheManagerName, resources);
+         backupManager.create(name, backupParams);
+      });
    }
 
    private CompletionStage<RestResponse> restore(RestRequest request) {

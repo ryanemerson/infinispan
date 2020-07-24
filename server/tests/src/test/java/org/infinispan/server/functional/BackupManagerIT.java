@@ -20,8 +20,10 @@ import java.util.concurrent.CompletionStage;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import org.infinispan.client.rest.RestCacheClient;
+import org.infinispan.client.rest.RestCacheManagerClient;
 import org.infinispan.client.rest.RestClient;
 import org.infinispan.client.rest.RestCounterClient;
 import org.infinispan.client.rest.RestEntity;
@@ -30,6 +32,7 @@ import org.infinispan.client.rest.RestTaskClient;
 import org.infinispan.commons.dataconversion.MediaType;
 import org.infinispan.commons.dataconversion.internal.Json;
 import org.infinispan.commons.test.CommonsTestingUtil;
+import org.infinispan.commons.util.Util;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.counter.api.Storage;
 import org.infinispan.counter.configuration.Element;
@@ -57,13 +60,20 @@ public class BackupManagerIT extends AbstractMultiClusterIT {
 
    @AfterClass
    public static void teardown() {
-//      Util.recursiveFileRemove(WORKING_DIR);
+      Util.recursiveFileRemove(WORKING_DIR);
    }
 
    @Test
    public void testManagerBackup() throws Exception {
+      String backupName = "testManagerBackup";
       performTest(
-            client -> client.cacheManager("clustered").backup(),
+            client -> {
+               RestCacheManagerClient cm = client.cacheManager("clustered");
+               RestResponse response = await(cm.createBackup(backupName));
+               assertEquals(202, response.getStatus());
+               return downloadBackup(() -> cm.getBackup(backupName));
+            },
+            client -> await(client.cacheManager("clustered").deleteBackup(backupName)),
             (zip, client) -> client.cacheManager("clustered").restore(zip),
             this::assertWildcardContent
       );
@@ -71,13 +81,19 @@ public class BackupManagerIT extends AbstractMultiClusterIT {
 
    @Test
    public void testManagerBackupParameters() throws Exception {
+      String backupName = "testManagerBackup";
       performTest(
             client -> {
                Map<String, List<String>> params = new HashMap<>();
                params.put("caches", Collections.singletonList("*"));
                params.put("counters", Collections.singletonList("weak-volatile"));
-               return client.cacheManager("clustered").backup(params);
+
+               RestCacheManagerClient cm = client.cacheManager("clustered");
+               RestResponse response = await(cm.createBackup(backupName, params));
+               assertEquals(202, response.getStatus());
+               return downloadBackup(() -> cm.getBackup(backupName));
             },
+            client -> await(client.cacheManager("clustered").deleteBackup(backupName)),
             (zip, client) -> {
                Map<String, List<String>> params = new HashMap<>();
                params.put("caches", Collections.singletonList("cache1"));
@@ -94,16 +110,38 @@ public class BackupManagerIT extends AbstractMultiClusterIT {
       );
    }
 
-   @Test
-   public void testClusterBackup() throws Exception {
-      performTest(
-            client -> client.cluster().backup(),
-            (zip, client) -> client.cluster().restore(zip),
-            this::assertWildcardContent
-      );
+//   @Test
+//   public void testClusterBackup() throws Exception {
+//      performTest(
+//            client -> {
+//               RestResponse response = await(client.cluster().backup());
+//               assertEquals(202, response.getStatus());
+//               response = downloadBackup(client.cluster())
+//            },
+//            (zip, client) -> client.cluster().restore(zip),
+//            this::assertWildcardContent
+//      );
+//   }
+
+   private RestResponse downloadBackup(Supplier<CompletionStage<RestResponse>> download) {
+      RestResponse response = null;
+      int count = 0;
+//      while ((response = await(download.get())).getStatus() == 202 || count++ < 100) {
+//         TestingUtil.sleepThread(10);
+//      }
+
+      while (count < 100) {
+         count++;
+         response = await(download.get());
+         if (response.getStatus() != 202)
+            break;
+      }
+      assertEquals(200, response.getStatus());
+      return response;
    }
 
-   private void performTest(Function<RestClient, CompletionStage<RestResponse>> backup,
+   private void performTest(Function<RestClient, RestResponse> backupAndDownload,
+                            Function<RestClient, RestResponse> delete,
                             BiFunction<File, RestClient, CompletionStage<RestResponse>> restore,
                             Consumer<RestClient> assertTargetContent) throws Exception {
       // Start the source cluster
@@ -113,15 +151,18 @@ public class BackupManagerIT extends AbstractMultiClusterIT {
       // Populate the source container
       populateContainer(client);
 
-      // Perform the backup
-      RestResponse response = await(backup.apply(client));
-      assertEquals(200, response.getStatus());
-      String fileName = response.getHeader("Content-Disposition").split("=")[1];
+      // Perform the backup and download
+      RestResponse getResponse = backupAndDownload.apply(client);
+      String fileName = getResponse.getHeader("Content-Disposition").split("=")[1];
+
+      // Delete the backup from the server
+      RestResponse deleteResponse = delete.apply(client);
+      assertEquals(204, deleteResponse.getStatus());
 
       // Ensure that all of the backup files have been deleted from the source cluster
       // We must wait for a short period time here to ensure that the returned entity has actually been removed from the filesystem
-      Thread.sleep(10);
-      assertNoBackupFilesExist(source);
+      Thread.sleep(50);
+      assertNoServerBackupFilesExist(source);
 
       // Shutdown the source cluster
       source.stop("source");
@@ -132,19 +173,19 @@ public class BackupManagerIT extends AbstractMultiClusterIT {
 
       // Copy the returned zip bytes to the local working dir
       File backupZip = new File(WORKING_DIR, fileName);
-      try (InputStream is = response.getBodyAsStream()) {
+      try (InputStream is = getResponse.getBodyAsStream()) {
          Files.copy(is, backupZip.toPath(), StandardCopyOption.REPLACE_EXISTING);
       }
 
       // Upload the backup to the target cluster
-      response = await(restore.apply(backupZip, client));
-      assertEquals(response.getBody(), 204, response.getStatus());
+      deleteResponse = await(restore.apply(backupZip, client));
+      assertEquals(deleteResponse.getBody(), 204, deleteResponse.getStatus());
 
       // Assert that all content has been restored as expected
       assertTargetContent.accept(client);
 
       // Ensure that the backup files have been deleted from the target cluster
-      assertNoBackupFilesExist(target);
+      assertNoServerBackupFilesExist(target);
       stopTargetCluster();
    }
 
@@ -227,7 +268,7 @@ public class BackupManagerIT extends AbstractMultiClusterIT {
       assertEquals(expectedValue, Long.parseLong(rsp.getBody()));
    }
 
-   private void assertNoBackupFilesExist(Cluster cluster) {
+   private void assertNoServerBackupFilesExist(Cluster cluster) {
       for (int i = 0; i < 2; i++) {
          Path root = cluster.driver.getRootDir().toPath();
          File workingDir = root.resolve(Integer.toString(i)).resolve("data").resolve("backup-manager").toFile();

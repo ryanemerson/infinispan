@@ -33,8 +33,8 @@ public class ClusterResource implements ResourceHandler {
    public Invocations getInvocations() {
       return new Invocations.Builder()
             .invocation().methods(POST).path("/v2/cluster").withAction("stop").handleWith(this::stop)
-            .invocation().methods(GET).path("/v2/cluster").withAction("backup").handleWith(this::backup)
-            .invocation().methods(POST).path("/v2/cluster").withAction("restore").handleWith(this::restore)
+            .invocation().methods(GET).path("/v2/cluster/backup/{backupName}").handleWith(this::backup)
+            .invocation().methods(POST).path("/v2/cluster/backup/{backupName}").withAction("restore").handleWith(this::restore)
             .create();
    }
 
@@ -50,7 +50,7 @@ public class ClusterResource implements ResourceHandler {
    }
 
    private CompletionStage<RestResponse> backup(RestRequest request) {
-      return BackupManagerResource.handleBackupResponse(backupManager.create());
+      return BackupManagerResource.handleBackupRequest(request, backupManager, (name, json) -> backupManager.create(name));
    }
 
    private CompletionStage<RestResponse> restore(RestRequest request) {

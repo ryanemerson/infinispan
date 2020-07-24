@@ -4,6 +4,8 @@ import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static org.infinispan.commons.dataconversion.MediaType.APPLICATION_JSON;
 
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 import org.infinispan.commons.dataconversion.internal.JsonSerialization;
@@ -50,5 +52,4 @@ class ResourceUtil {
       responseBuilder.contentType(APPLICATION_JSON);
       return responseBuilder.entity(o.toJson().toString()).status(OK);
    }
-
 }

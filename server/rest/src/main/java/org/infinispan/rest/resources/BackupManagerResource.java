@@ -1,6 +1,8 @@
 package org.infinispan.rest.resources;
 
+import static io.netty.handler.codec.http.HttpResponseStatus.ACCEPTED;
 import static io.netty.handler.codec.http.HttpResponseStatus.INTERNAL_SERVER_ERROR;
+import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
 import static io.netty.handler.codec.http.HttpResponseStatus.NO_CONTENT;
 import static io.netty.handler.codec.http.HttpResponseStatus.UNSUPPORTED_MEDIA_TYPE;
 import static java.util.concurrent.CompletableFuture.completedFuture;
@@ -9,13 +11,15 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 import org.infinispan.commons.dataconversion.MediaType;
+import org.infinispan.commons.dataconversion.internal.Json;
 import org.infinispan.rest.NettyRestResponse;
 import org.infinispan.rest.framework.RestRequest;
 import org.infinispan.rest.framework.RestResponse;
@@ -34,22 +38,70 @@ class BackupManagerResource {
 
    private final static Log LOG = LogFactory.getLog(BackupManagerResource.class, Log.class);
 
-   static CompletionStage<RestResponse> handleBackupResponse(CompletionStage<Path> backupStage) {
+   static CompletionStage<RestResponse> handleBackupRequest(RestRequest request, BackupManager backupManager,
+                                                            BiConsumer<String, Json> creationConsumer) {
+      String name = request.variables().get("backupName");
+      switch (request.method()) {
+         case DELETE:
+            return handleDeleteBackup(name, backupManager);
+         case GET:
+            return handleGetBackup(name, backupManager);
+         case POST:
+            return handleCreateBackup(name, request, creationConsumer);
+         default:
+            // TODO update
+            throw new IllegalArgumentException("TODO");
+      }
+   }
+
+   private static CompletionStage<RestResponse> handleCreateBackup(String name, RestRequest request,
+                                                                   BiConsumer<String, Json> creationConsumer) {
+      Json json = Json.read(request.contents().asString());
+      creationConsumer.accept(name, json);
+      RestResponse responseBuilder = new NettyRestResponse.Builder().status(ACCEPTED).build();
+      return CompletableFuture.completedFuture(responseBuilder);
+   }
+
+   private static CompletionStage<RestResponse> handleDeleteBackup(String name, BackupManager backupManager) {
       NettyRestResponse.Builder responseBuilder = new NettyRestResponse.Builder();
-      return backupStage.handle((path, t) -> {
+      BackupManager.Status status = backupManager.getBackupStatus(name);
+      if (status == BackupManager.Status.NOT_FOUND)
+         return CompletableFuture.completedFuture(responseBuilder.status(NOT_FOUND).build());
+
+      return backupManager.removeBackup(name).handle((Void, t) -> {
          if (t != null) {
-            return responseBuilder.status(INTERNAL_SERVER_ERROR).entity(t.getMessage()).build();
+            responseBuilder.status(INTERNAL_SERVER_ERROR).entity(t.getMessage());
          } else {
-            File zip = path.toFile();
-            return responseBuilder
+            responseBuilder.status(NO_CONTENT);
+         }
+         return responseBuilder.build();
+      });
+   }
+
+   private static CompletionStage<RestResponse> handleGetBackup(String name, BackupManager backupManager) {
+      NettyRestResponse.Builder responseBuilder = new NettyRestResponse.Builder();
+      BackupManager.Status status = backupManager.getBackupStatus(name);
+      switch (status) {
+         case COMPLETE:
+            File zip = backupManager.getBackup(name).toFile();
+            responseBuilder
                   .contentType(MediaType.APPLICATION_ZIP)
-                  .header("Content-Disposition", String.format("attachment; filename=\"%s\"", zip.getName()))
+                  .header("Content-Disposition", String.format("attachment; filename=%s", zip.getName()))
                   .entity(zip)
-                  .removeEntity(true)
                   .contentLength(zip.length())
                   .build();
-         }
-      });
+            break;
+         case IN_PROGRESS:
+            responseBuilder.status(ACCEPTED);
+            break;
+         case NOT_FOUND:
+            responseBuilder.status(NOT_FOUND);
+            break;
+         default:
+            // TODO add message?
+            responseBuilder.status(INTERNAL_SERVER_ERROR);
+      }
+      return CompletableFuture.completedFuture(responseBuilder.build());
    }
 
    static CompletionStage<RestResponse> handleRestoreRequest(RestRequest request, Function<InputStream, CompletionStage<Void>> function) {
@@ -69,6 +121,23 @@ class BackupManagerResource {
       }
    }
 
+   static BackupManager.Resources getResources(Json json) {
+      BackupManagerResources.Builder builder = new BackupManagerResources.Builder();
+      for (Map.Entry<String, Object> e : json.asMap().entrySet()) {
+         @SuppressWarnings("unchecked")
+         List<String> resources = (List<String>) e.getValue();
+         BackupManager.Resources.Type type = BackupManager.Resources.Type.fromString(e.getKey());
+         if (resources.size() == 1 && resources.get(0).equals("*")) {
+            builder.includeAll(type);
+         } else {
+            builder.addResources(type, resources);
+         }
+      }
+      return builder.build();
+   }
+
+
+   // TODO update to process JSON
    static BackupManager.Resources getResources(RestRequest request) {
       BackupManagerResources.Builder builder = new BackupManagerResources.Builder();
       Map<String, List<String>> params = request.parameters();

@@ -27,7 +27,8 @@ public interface BackupManager {
    }
 
    /**
-    * Performs initialisation of all resources required by the implementation before backup files can be created or restored.
+    * Performs initialisation of all resources required by the implementation before backup files can be created or
+    * restored.
     */
    void init();
 
@@ -40,7 +41,7 @@ public interface BackupManager {
    /**
     * Create a backup of all containers configured on the server, including all available resources.
     *
-    * @return a {@link CompletionStage} that on completion returns the {@link Path} to the created backup file.
+    * @return a {@link CompletionStage} that on completion returns the {@link Path} to the backup file that will be created.
     */
    CompletionStage<Path> create(String name);
 
@@ -49,7 +50,7 @@ public interface BackupManager {
     * object.
     *
     * @param params a map of container names and an associated {@link Resources} instance.
-    * @return a {@link CompletionStage} that on completion returns the {@link Path} to the created backup file.
+    * @return a {@link CompletionStage} that on completion returns the {@link Path} to the backup file that will be created.
     */
    CompletionStage<Path> create(String name, Map<String, Resources> params);
 
@@ -63,8 +64,8 @@ public interface BackupManager {
 
    /**
     * Restore content from the provided backup bytes. The keyset of the provided {@link Map} determines which containers
-    * are restored from the backup file. Similarly, the {@link Resources} object determines which {@link Resources.Type}s are
-    * restored.
+    * are restored from the backup file. Similarly, the {@link Resources} object determines which {@link
+    * Resources.Type}s are restored.
     *
     * @param is a {@link InputStream} containing the bytes of the uploaded backup file.
     * @return a {@link CompletionStage} that completes when all of the entries in the backup have been restored.
@@ -72,8 +73,8 @@ public interface BackupManager {
    CompletionStage<Void> restore(InputStream is, Map<String, Resources> params);
 
    /**
-    * An interface to encapsulate the various arguments required by the {@link BackupManager} in order to include/exclude
-    * resources from a backup/restore operation.
+    * An interface to encapsulate the various arguments required by the {@link BackupManager} in order to
+    * include/exclude resources from a backup/restore operation.
     */
    interface Resources {
 
@@ -85,6 +86,7 @@ public interface BackupManager {
          SCRIPTS("scripts");
 
          final String name;
+
          Type(String name) {
             this.name = name;
          }
@@ -92,6 +94,15 @@ public interface BackupManager {
          @Override
          public String toString() {
             return this.name;
+         }
+
+         public static Type fromString(String s) {
+            for (Type t : Type.values()) {
+               if (t.name.equalsIgnoreCase(s)) {
+                  return t;
+               }
+            }
+            throw new IllegalArgumentException(String.format("Type with name '%s' does not exist", s));
          }
       }
 

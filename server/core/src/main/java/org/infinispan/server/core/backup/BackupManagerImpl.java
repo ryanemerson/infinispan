@@ -87,18 +87,20 @@ public class BackupManagerImpl implements BackupManager {
 
    @Override
    public CompletionStage<Void> removeBackup(String name) {
+      CompletableFuture<Path> future = backupMap.remove(name);
+      Status status = getBackupStatus(future);
+      if (status == Status.NOT_FOUND)
+         return CompletableFutures.completedNull();
+
       return blockingManager.runBlocking(() -> {
-         CompletableFuture<Path> future = backupMap.remove(name);
-         Status status = getBackupStatus(future);
+         if (status == Status.IN_PROGRESS)
+            future.cancel(true);
+
          try {
-            switch (status) {
-               case COMPLETE:
-               case FAILED:
-                  Files.delete(future.join());
-                  break;
-               case IN_PROGRESS:
-                  future.cancel(true);
-            }
+            // Remove the zip file and the working directory
+            Path zip = future.join();
+            Files.delete(zip);
+            Files.delete(zip.getParent());
          } catch (IOException e) {
             throw new CacheException(String.format("Unable to delete backup '%s'", name));
          }
@@ -118,8 +120,7 @@ public class BackupManagerImpl implements BackupManager {
 
    @Override
    public CompletionStage<Path> create(String name, Map<String, Resources> params) {
-      Path backupDir = rootDir.resolve(name);
-      BackupWriter writer = new BackupWriter(blockingManager, cacheManagers, parserRegistry, backupDir);
+      BackupWriter writer = new BackupWriter(name, blockingManager, cacheManagers, parserRegistry, rootDir);
       CompletionStage<Path> backupStage = backupLock.lock()
             .thenCompose(lockAcquired -> {
                if (!lockAcquired)
