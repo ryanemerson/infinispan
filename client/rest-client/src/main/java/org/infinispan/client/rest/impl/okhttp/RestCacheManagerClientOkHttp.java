@@ -175,7 +175,7 @@ public class RestCacheManagerClientOkHttp implements RestCacheManagerClient {
 //      Content-Disposition: form-data; name="files"; filename="file1.txt"
 //      Content-Type: application/json
       Request.Builder builder = new Request.Builder()
-            .url(baseCacheManagerUrl + "/backups/" + name + "?action=restore")
+            .url(baseCacheManagerUrl + "/backups?action=restore")
             .post(new FileRestEntityOkHttp(MediaType.APPLICATION_ZIP, backup).toRequestBody());
       return client.execute(builder);
    }

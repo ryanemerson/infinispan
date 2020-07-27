@@ -123,7 +123,11 @@ class BackupManagerResource {
 
    static BackupManager.Resources getResources(Json json) {
       BackupManagerResources.Builder builder = new BackupManagerResources.Builder();
-      for (Map.Entry<String, Object> e : json.asMap().entrySet()) {
+      Map<String, Object> jsonMap = json.asMap();
+      if (jsonMap.isEmpty())
+         return builder.includeAll().build();
+
+      for (Map.Entry<String, Object> e : jsonMap.entrySet()) {
          @SuppressWarnings("unchecked")
          List<String> resources = (List<String>) e.getValue();
          BackupManager.Resources.Type type = BackupManager.Resources.Type.fromString(e.getKey());

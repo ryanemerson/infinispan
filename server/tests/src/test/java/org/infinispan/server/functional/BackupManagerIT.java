@@ -25,6 +25,7 @@ import java.util.function.Supplier;
 import org.infinispan.client.rest.RestCacheClient;
 import org.infinispan.client.rest.RestCacheManagerClient;
 import org.infinispan.client.rest.RestClient;
+import org.infinispan.client.rest.RestClusterClient;
 import org.infinispan.client.rest.RestCounterClient;
 import org.infinispan.client.rest.RestEntity;
 import org.infinispan.client.rest.RestResponse;
@@ -36,6 +37,7 @@ import org.infinispan.commons.util.Util;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.counter.api.Storage;
 import org.infinispan.counter.configuration.Element;
+import org.infinispan.test.TestingUtil;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -110,31 +112,27 @@ public class BackupManagerIT extends AbstractMultiClusterIT {
       );
    }
 
-//   @Test
-//   public void testClusterBackup() throws Exception {
-//      performTest(
-//            client -> {
-//               RestResponse response = await(client.cluster().backup());
-//               assertEquals(202, response.getStatus());
-//               response = downloadBackup(client.cluster())
-//            },
-//            (zip, client) -> client.cluster().restore(zip),
-//            this::assertWildcardContent
-//      );
-//   }
+   @Test
+   public void testClusterBackup() throws Exception {
+      String backupName = "testClusterBackup";
+      performTest(
+            client -> {
+               RestClusterClient cluster = client.cluster();
+               RestResponse response = await(cluster.createBackup(backupName));
+               assertEquals(202, response.getStatus());
+               return downloadBackup(() -> cluster.getBackup(backupName));
+            },
+            client -> await(client.cacheManager("clustered").deleteBackup(backupName)),
+            (zip, client) -> client.cluster().restore(zip),
+            this::assertWildcardContent
+      );
+   }
 
    private RestResponse downloadBackup(Supplier<CompletionStage<RestResponse>> download) {
-      RestResponse response = null;
       int count = 0;
-//      while ((response = await(download.get())).getStatus() == 202 || count++ < 100) {
-//         TestingUtil.sleepThread(10);
-//      }
-
-      while (count < 100) {
-         count++;
-         response = await(download.get());
-         if (response.getStatus() != 202)
-            break;
+      RestResponse response;
+      while ((response = await(download.get())).getStatus() == 202 || count++ < 100) {
+         TestingUtil.sleepThread(10);
       }
       assertEquals(200, response.getStatus());
       return response;

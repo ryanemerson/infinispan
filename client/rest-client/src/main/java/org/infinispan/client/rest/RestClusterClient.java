@@ -23,7 +23,12 @@ public interface RestClusterClient {
     * Creates a backup file containing the content of all containers in the cluster.
     */
    // TODO update
-   CompletionStage<RestResponse> backup();
+   CompletionStage<RestResponse> createBackup(String name);
+
+   // TODO add docs
+   CompletionStage<RestResponse> getBackup(String name);
+
+   CompletionStage<RestResponse> deleteBackup(String name);
 
    /**
     * Restores all content from a backup file, by uploading the file to the server endpoint for processing, returning

@@ -10,8 +10,10 @@ import java.util.concurrent.CompletionStage;
 import org.infinispan.client.rest.RestClusterClient;
 import org.infinispan.client.rest.RestResponse;
 import org.infinispan.commons.dataconversion.MediaType;
+import org.infinispan.commons.dataconversion.internal.Json;
 
 import okhttp3.Request;
+import okhttp3.RequestBody;
 
 /**
  * @author Tristan Tarrant &lt;tristan@infinispan.org&gt;
@@ -45,16 +47,30 @@ public class RestClusterClientOkHttp implements RestClusterClient {
    }
 
    @Override
-   public CompletionStage<RestResponse> backup() {
-      Request.Builder builder = new Request.Builder().url(baseClusterURL + "?action=backup");
-      return client.execute(builder);
+   public CompletionStage<RestResponse> createBackup(String name) {
+      RequestBody body = new StringRestEntityOkHttp(MediaType.APPLICATION_JSON, Json.object().toString()).toRequestBody();
+      return client.execute(backup(name).post(body));
+   }
+
+   @Override
+   public CompletionStage<RestResponse> getBackup(String name) {
+      return client.execute(backup(name));
+   }
+
+   @Override
+   public CompletionStage<RestResponse> deleteBackup(String name) {
+      return client.execute(backup(name).delete());
    }
 
    @Override
    public CompletionStage<RestResponse> restore(File backup) {
       Request.Builder builder = new Request.Builder()
-            .url(baseClusterURL + "?action=restore")
+            .url(baseClusterURL + "/backups?action=restore")
             .post(new FileRestEntityOkHttp(MediaType.APPLICATION_ZIP, backup).toRequestBody());
       return client.execute(builder);
+   }
+
+   private Request.Builder backup(String name) {
+      return new Request.Builder().url(baseClusterURL + "/backups/" + name);
    }
 }

@@ -1,6 +1,7 @@
 package org.infinispan.rest.resources;
 
 import static io.netty.handler.codec.http.HttpResponseStatus.NO_CONTENT;
+import static org.infinispan.rest.framework.Method.DELETE;
 import static org.infinispan.rest.framework.Method.GET;
 import static org.infinispan.rest.framework.Method.POST;
 
@@ -33,8 +34,9 @@ public class ClusterResource implements ResourceHandler {
    public Invocations getInvocations() {
       return new Invocations.Builder()
             .invocation().methods(POST).path("/v2/cluster").withAction("stop").handleWith(this::stop)
-            .invocation().methods(GET).path("/v2/cluster/backup/{backupName}").handleWith(this::backup)
-            .invocation().methods(POST).path("/v2/cluster/backup/{backupName}").withAction("restore").handleWith(this::restore)
+            // TODO add put?
+            .invocation().methods(DELETE, GET, POST).path("/v2/cluster/backups/{backupName}").handleWith(this::backup)
+            .invocation().methods(POST).path("/v2/cluster/backups").withAction("restore").handleWith(this::restore)
             .create();
    }
 
