@@ -34,7 +34,6 @@ public class ClusterResource implements ResourceHandler {
    public Invocations getInvocations() {
       return new Invocations.Builder()
             .invocation().methods(POST).path("/v2/cluster").withAction("stop").handleWith(this::stop)
-            // TODO add put?
             .invocation().methods(DELETE, GET, POST).path("/v2/cluster/backups/{backupName}").handleWith(this::backup)
             .invocation().methods(POST).path("/v2/cluster/backups").withAction("restore").handleWith(this::restore)
             .create();

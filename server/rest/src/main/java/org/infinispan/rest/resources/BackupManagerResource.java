@@ -1,11 +1,13 @@
 package org.infinispan.rest.resources;
 
 import static io.netty.handler.codec.http.HttpResponseStatus.ACCEPTED;
+import static io.netty.handler.codec.http.HttpResponseStatus.CONFLICT;
 import static io.netty.handler.codec.http.HttpResponseStatus.INTERNAL_SERVER_ERROR;
 import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
 import static io.netty.handler.codec.http.HttpResponseStatus.NO_CONTENT;
 import static io.netty.handler.codec.http.HttpResponseStatus.UNSUPPORTED_MEDIA_TYPE;
 import static java.util.concurrent.CompletableFuture.completedFuture;
+import static org.infinispan.rest.framework.Method.POST;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -28,6 +30,8 @@ import org.infinispan.server.core.BackupManager;
 import org.infinispan.server.core.backup.BackupManagerResources;
 import org.infinispan.util.logging.LogFactory;
 
+import io.netty.handler.codec.http.HttpResponseStatus;
+
 /**
  * A helper class for common functionality related to the {@link BackupManager}.
  *
@@ -47,15 +51,23 @@ class BackupManagerResource {
          case GET:
             return handleGetBackup(name, backupManager);
          case POST:
-            return handleCreateBackup(name, request, creationConsumer);
+            return handleCreateBackup(name, request, backupManager, creationConsumer);
          default:
             // TODO update
             throw new IllegalArgumentException("TODO");
       }
    }
 
-   private static CompletionStage<RestResponse> handleCreateBackup(String name, RestRequest request,
+   private static CompletionStage<RestResponse> handleCreateBackup(String name, RestRequest request, BackupManager backupManager,
                                                                    BiConsumer<String, Json> creationConsumer) {
+      // TODO add test for this
+      if (request.method() == POST) {
+         BackupManager.Status existingStatus = backupManager.getBackupStatus(name);
+         if (existingStatus != BackupManager.Status.NOT_FOUND) {
+            RestResponse response = new NettyRestResponse.Builder().status(CONFLICT).entity(String.format("Backup '%s' already exists with status '%s'", name, existingStatus)).build();
+            return CompletableFuture.completedFuture(response);
+         }
+      }
       Json json = Json.read(request.contents().asString());
       creationConsumer.accept(name, json);
       RestResponse responseBuilder = new NettyRestResponse.Builder().status(ACCEPTED).build();

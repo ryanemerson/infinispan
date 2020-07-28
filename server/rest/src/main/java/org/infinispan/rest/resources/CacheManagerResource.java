@@ -113,7 +113,6 @@ public class CacheManagerResource implements ResourceHandler {
             .invocation().methods(GET).path("/v2/cache-managers/{name}/caches").handleWith(this::getCaches)
 
             // BackupManager
-            // TODO add put?
             .invocation().methods(DELETE, GET, POST).path("/v2/cache-managers/{name}/backups/{backupName}").handleWith(this::backup)
             .invocation().methods(POST).path("/v2/cache-managers/{name}/backups").withAction("restore").handleWith(this::restore)
             .create();
