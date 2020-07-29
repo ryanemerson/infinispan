@@ -1,0 +1,4 @@
+{
+  "caches": ["cache1", "cache2"],
+  "counters": ["*"]
+}
