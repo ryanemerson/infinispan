@@ -21,13 +21,24 @@ public interface RestClusterClient {
 
    /**
     * Creates a backup file containing the content of all containers in the cluster.
+    *
+    * @param name the name of the backup.
     */
-   // TODO update
    CompletionStage<RestResponse> createBackup(String name);
 
-   // TODO add docs
-   CompletionStage<RestResponse> getBackup(String name);
+   /**
+    * Retrieve a backup file with the given name from the server.
+    *
+    * @param name     the name of the backup.
+    * @param skipBody if true, then a HEAD request is issued to the server and only the HTTP headers are returned.
+    */
+   CompletionStage<RestResponse> getBackup(String name, boolean skipBody);
 
+   /**
+    * Delete a backup file from the server.
+    *
+    * @param name the name of the backup.
+    */
    CompletionStage<RestResponse> deleteBackup(String name);
 
    /**

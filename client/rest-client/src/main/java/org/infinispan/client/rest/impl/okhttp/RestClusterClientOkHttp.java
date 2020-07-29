@@ -53,8 +53,12 @@ public class RestClusterClientOkHttp implements RestClusterClient {
    }
 
    @Override
-   public CompletionStage<RestResponse> getBackup(String name) {
-      return client.execute(backup(name));
+   public CompletionStage<RestResponse> getBackup(String name, boolean skipBody) {
+      Request.Builder builder = backup(name);
+      if (skipBody)
+         builder.head();
+
+      return client.execute(builder);
    }
 
    @Override

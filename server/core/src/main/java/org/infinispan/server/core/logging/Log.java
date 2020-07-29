@@ -146,4 +146,8 @@ public interface Log extends BasicLogger {
 
    @Message(value = "%s '%s' does not exist", id = 5048)
    CacheException unableToFindResource(String resource, String resourceName);
+
+
+   @Message(value = "Unable to perform backup, backup already exists with name '%s'", id = 5049)
+   CacheException backupAlreadyExists(String name);
 }

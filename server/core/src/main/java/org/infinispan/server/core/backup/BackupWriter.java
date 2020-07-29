@@ -25,6 +25,7 @@ import java.util.zip.ZipOutputStream;
 import javax.xml.stream.XMLStreamException;
 
 import org.infinispan.commons.CacheException;
+import org.infinispan.commons.util.Util;
 import org.infinispan.commons.util.Version;
 import org.infinispan.configuration.global.GlobalConfiguration;
 import org.infinispan.configuration.parsing.ParserRegistry;
@@ -60,8 +61,8 @@ class BackupWriter {
       this.rootDir = rootDir.resolve(name);
    }
 
-   Path getZipPath() {
-      return rootDir.resolve(name + ".zip");
+   void cleanup() {
+      Util.recursiveFileRemove(rootDir.toFile());
    }
 
    CompletionStage<Path> create(Map<String, BackupManager.Resources> params) {
@@ -137,7 +138,7 @@ class BackupWriter {
    }
 
    private Path createZip() {
-      Path zipFile = getZipPath();
+      Path zipFile = rootDir.resolve(name + ".zip");
       try (ZipOutputStream zs = new ZipOutputStream(Files.newOutputStream(Files.createFile(zipFile)))) {
          Files.walkFileTree(rootDir, new SimpleFileVisitor<Path>() {
             @Override

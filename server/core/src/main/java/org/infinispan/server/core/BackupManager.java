@@ -13,12 +13,14 @@ import org.infinispan.factories.scopes.Scopes;
  * Handles all tasks related to the creation/restoration of server backups.
  *
  * @author Ryan Emerson
- * @since 11.0
+ * @since 12.0
  */
 @Scope(Scopes.GLOBAL)
-// TODO javadocs
 public interface BackupManager {
 
+   /**
+    * An enum representing the current state of a Backup operation.
+    */
    enum Status {
       COMPLETE,
       FAILED,
@@ -32,16 +34,39 @@ public interface BackupManager {
     */
    void init();
 
+   /**
+    * Return the current {@link Status} of a Backup request.
+    *
+    * @param name the name of the backup.
+    * @return the {@link Status} of the backup.
+    */
    Status getBackupStatus(String name);
 
-   Path getBackup(String name);
+   /**
+    * Returns the {@link Path} of a backup file if it is complete.
+    *
+    * @param name the name of the backup.
+    * @return the {@link Path} of the created backup file if {@link Status#COMPLETE}, otherwise null.
+    */
+   Path getBackupLocation(String name);
 
-   CompletionStage<Void> removeBackup(String name);
+   /**
+    * Remove the created backup file from the server. When it's possible to remove a backup file immediately, then a
+    * {@link Status#COMPLETE} is returned. However, if a backup operation is currently in progress, then the removal is
+    * attempted once the backup has completed and {@link Status#IN_PROGRESS} is returned. Finally, {@link
+    * Status#NOT_FOUND} is returned if no backup exists with the specified name.
+    *
+    * @param name the name of the backup.
+    * @return a {@link CompletionStage} that returns a {@link Status} when complete to indicate what course of action
+    * was taken.
+    */
+   CompletionStage<Status> removeBackup(String name);
 
    /**
     * Create a backup of all containers configured on the server, including all available resources.
     *
-    * @return a {@link CompletionStage} that on completion returns the {@link Path} to the backup file that will be created.
+    * @return a {@link CompletionStage} that on completion returns the {@link Path} to the backup file that will be
+    * created.
     */
    CompletionStage<Path> create(String name);
 
@@ -50,7 +75,8 @@ public interface BackupManager {
     * object.
     *
     * @param params a map of container names and an associated {@link Resources} instance.
-    * @return a {@link CompletionStage} that on completion returns the {@link Path} to the backup file that will be created.
+    * @return a {@link CompletionStage} that on completion returns the {@link Path} to the backup file that will be
+    * created.
     */
    CompletionStage<Path> create(String name, Map<String, Resources> params);
 

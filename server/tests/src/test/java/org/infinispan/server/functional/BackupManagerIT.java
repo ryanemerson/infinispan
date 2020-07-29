@@ -73,7 +73,7 @@ public class BackupManagerIT extends AbstractMultiClusterIT {
                RestCacheManagerClient cm = client.cacheManager("clustered");
                RestResponse response = await(cm.createBackup(backupName));
                assertEquals(202, response.getStatus());
-               return downloadBackup(() -> cm.getBackup(backupName));
+               return awaitOk(() -> cm.getBackup(backupName, false));
             },
             client -> await(client.cacheManager("clustered").deleteBackup(backupName)),
             (zip, client) -> client.cacheManager("clustered").restore(zip),
@@ -93,7 +93,7 @@ public class BackupManagerIT extends AbstractMultiClusterIT {
                RestCacheManagerClient cm = client.cacheManager("clustered");
                RestResponse response = await(cm.createBackup(backupName, params));
                assertEquals(202, response.getStatus());
-               return downloadBackup(() -> cm.getBackup(backupName));
+               return awaitOk(() -> cm.getBackup(backupName, false));
             },
             client -> await(client.cacheManager("clustered").deleteBackup(backupName)),
             (zip, client) -> {
@@ -113,6 +113,38 @@ public class BackupManagerIT extends AbstractMultiClusterIT {
    }
 
    @Test
+   public void testCreateDuplicateBackupResources() throws Exception {
+      String backupName = "testCreateDuplicateBackupResources";
+      // Start the source cluster
+      startSourceCluster();
+      RestClient client = source.getClient();
+
+      populateContainer(client);
+
+      RestCacheManagerClient cm = client.cacheManager("clustered");
+      RestResponse response = await(cm.createBackup(backupName));
+      assertEquals(202, response.getStatus());
+
+      response = await(cm.createBackup(backupName));
+      assertEquals(409, response.getStatus());
+
+      response = await(cm.deleteBackup(backupName));
+      // Expect a 202 response as the previous backup will be in progress, so the request is accepted for now
+      assertEquals(202, response.getStatus());
+
+      // Now wait until the backup has actually been deleted so that we successfully create another with the same name
+      awaitStatus(() -> cm.deleteBackup(backupName), 202, 404);
+
+      response = await(cm.createBackup(backupName));
+      assertEquals(202, response.getStatus());
+
+      // Wait for the backup operation to finish
+      awaitOk(() -> cm.getBackup(backupName, false));
+      response = await(cm.deleteBackup(backupName));
+      assertEquals(204, response.getStatus());
+   }
+
+   @Test
    public void testManagerRestoreParameters() throws Exception {
       String backupName = "testManagerRestoreParameters";
       performTest(
@@ -121,7 +153,7 @@ public class BackupManagerIT extends AbstractMultiClusterIT {
                RestCacheManagerClient cm = client.cacheManager("clustered");
                RestResponse response = await(cm.createBackup(backupName));
                assertEquals(202, response.getStatus());
-               return downloadBackup(() -> cm.getBackup(backupName));
+               return awaitOk(() -> cm.getBackup(backupName, false));
             },
             client -> await(client.cacheManager("clustered").deleteBackup(backupName)),
             (zip, client) -> {
@@ -152,7 +184,7 @@ public class BackupManagerIT extends AbstractMultiClusterIT {
                RestClusterClient cluster = client.cluster();
                RestResponse response = await(cluster.createBackup(backupName));
                assertEquals(202, response.getStatus());
-               return downloadBackup(() -> cluster.getBackup(backupName));
+               return awaitOk(() -> cluster.getBackup(backupName, false));
             },
             client -> await(client.cacheManager("clustered").deleteBackup(backupName)),
             (zip, client) -> client.cluster().restore(zip),
@@ -160,13 +192,17 @@ public class BackupManagerIT extends AbstractMultiClusterIT {
       );
    }
 
-   private RestResponse downloadBackup(Supplier<CompletionStage<RestResponse>> download) {
+   private RestResponse awaitOk(Supplier<CompletionStage<RestResponse>> request) {
+      return awaitStatus(request, 202, 200);
+   }
+
+   private RestResponse awaitStatus(Supplier<CompletionStage<RestResponse>> request, int pendingStatus, int completeStatus) {
       int count = 0;
       RestResponse response;
-      while ((response = await(download.get())).getStatus() == 202 || count++ < 100) {
+      while ((response = await(request.get())).getStatus() == pendingStatus || count++ < 100) {
          TestingUtil.sleepThread(10);
       }
-      assertEquals(200, response.getStatus());
+      assertEquals(completeStatus, response.getStatus());
       return response;
    }
 

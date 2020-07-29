@@ -63,9 +63,19 @@ public interface RestCacheManagerClient {
     */
    CompletionStage<RestResponse> createBackup(String name, Map<String, List<String>> resources);
 
-   // TODO add docs
-   CompletionStage<RestResponse> getBackup(String name);
+   /**
+    * Retrieve a backup file with the given name from the server.
+    *
+    * @param name     the name of the backup.
+    * @param skipBody if true, then a HEAD request is issued to the server and only the HTTP headers are returned.
+    */
+   CompletionStage<RestResponse> getBackup(String name, boolean skipBody);
 
+   /**
+    * Delete a backup file from the server.
+    *
+    * @param name the name of the backup.
+    */
    CompletionStage<RestResponse> deleteBackup(String name);
 
    /**
@@ -79,7 +89,7 @@ public interface RestCacheManagerClient {
    /**
     * Restores the specified content from the backup file that's associated with this container's name.
     *
-    * @param backup the backup {@link File} containing the data to be restored.
+    * @param backup    the backup {@link File} containing the data to be restored.
     * @param resources a map of BackupManager.Resources.Type with the names of the resources to backup. If the provided
     *                  list only contains "*" then all available resources of that type are restored.
     */

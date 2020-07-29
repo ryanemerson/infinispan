@@ -7,7 +7,6 @@ import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
 import static io.netty.handler.codec.http.HttpResponseStatus.NO_CONTENT;
 import static io.netty.handler.codec.http.HttpResponseStatus.UNSUPPORTED_MEDIA_TYPE;
 import static java.util.concurrent.CompletableFuture.completedFuture;
-import static org.infinispan.rest.framework.Method.POST;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -24,6 +23,7 @@ import org.infinispan.commons.dataconversion.MediaType;
 import org.infinispan.commons.dataconversion.internal.Json;
 import org.infinispan.rest.MultiPartContentSource;
 import org.infinispan.rest.NettyRestResponse;
+import org.infinispan.rest.framework.Method;
 import org.infinispan.rest.framework.RestRequest;
 import org.infinispan.rest.framework.RestResponse;
 import org.infinispan.rest.logging.Log;
@@ -44,28 +44,26 @@ class BackupManagerResource {
    static CompletionStage<RestResponse> handleBackupRequest(RestRequest request, BackupManager backupManager,
                                                             BiConsumer<String, Json> creationConsumer) {
       String name = request.variables().get("backupName");
-      switch (request.method()) {
+      Method method = request.method();
+      switch (method) {
          case DELETE:
             return handleDeleteBackup(name, backupManager);
          case GET:
-            return handleGetBackup(name, backupManager);
+         case HEAD:
+            return handleGetBackup(name, backupManager, method);
          case POST:
             return handleCreateBackup(name, request, backupManager, creationConsumer);
          default:
-            // TODO update
-            throw new IllegalArgumentException("TODO");
+            throw new IllegalStateException("Unsupported request method " + method);
       }
    }
 
    private static CompletionStage<RestResponse> handleCreateBackup(String name, RestRequest request, BackupManager backupManager,
                                                                    BiConsumer<String, Json> creationConsumer) {
-      // TODO add test for this
-      if (request.method() == POST) {
-         BackupManager.Status existingStatus = backupManager.getBackupStatus(name);
-         if (existingStatus != BackupManager.Status.NOT_FOUND) {
-            RestResponse response = new NettyRestResponse.Builder().status(CONFLICT).entity(String.format("Backup '%s' already exists with status '%s'", name, existingStatus)).build();
-            return CompletableFuture.completedFuture(response);
-         }
+      BackupManager.Status existingStatus = backupManager.getBackupStatus(name);
+      if (existingStatus != BackupManager.Status.NOT_FOUND) {
+         RestResponse response = new NettyRestResponse.Builder().status(CONFLICT).build();
+         return CompletableFuture.completedFuture(response);
       }
       Json json = Json.read(request.contents().asString());
       creationConsumer.accept(name, json);
@@ -75,42 +73,42 @@ class BackupManagerResource {
 
    private static CompletionStage<RestResponse> handleDeleteBackup(String name, BackupManager backupManager) {
       NettyRestResponse.Builder responseBuilder = new NettyRestResponse.Builder();
-      BackupManager.Status status = backupManager.getBackupStatus(name);
-      if (status == BackupManager.Status.NOT_FOUND)
-         return CompletableFuture.completedFuture(responseBuilder.status(NOT_FOUND).build());
+      return backupManager.removeBackup(name).handle((s, t) -> {
+         if (t != null)
+            return responseBuilder.status(INTERNAL_SERVER_ERROR).entity(t.getMessage()).build();
 
-      return backupManager.removeBackup(name).handle((Void, t) -> {
-         if (t != null) {
-            responseBuilder.status(INTERNAL_SERVER_ERROR).entity(t.getMessage());
-         } else {
-            responseBuilder.status(NO_CONTENT);
+         switch (s) {
+            case NOT_FOUND:
+               return responseBuilder.status(NOT_FOUND).build();
+            case IN_PROGRESS:
+               return responseBuilder.status(ACCEPTED).build();
+            case COMPLETE:
+               return responseBuilder.status(NO_CONTENT).build();
+            default:
+               return responseBuilder.status(INTERNAL_SERVER_ERROR).build();
          }
-         return responseBuilder.build();
       });
    }
 
-   private static CompletionStage<RestResponse> handleGetBackup(String name, BackupManager backupManager) {
+   private static CompletionStage<RestResponse> handleGetBackup(String name, BackupManager backupManager, Method method) {
       NettyRestResponse.Builder responseBuilder = new NettyRestResponse.Builder();
       BackupManager.Status status = backupManager.getBackupStatus(name);
-      switch (status) {
-         case COMPLETE:
-            File zip = backupManager.getBackup(name).toFile();
-            responseBuilder
-                  .contentType(MediaType.APPLICATION_ZIP)
-                  .header("Content-Disposition", String.format("attachment; filename=%s", zip.getName()))
-                  .entity(zip)
-                  .contentLength(zip.length())
-                  .build();
-            break;
-         case IN_PROGRESS:
-            responseBuilder.status(ACCEPTED);
-            break;
-         case NOT_FOUND:
-            responseBuilder.status(NOT_FOUND);
-            break;
-         default:
-            // TODO add message?
-            responseBuilder.status(INTERNAL_SERVER_ERROR);
+
+      if (status == BackupManager.Status.FAILED) {
+         responseBuilder.status(INTERNAL_SERVER_ERROR);
+      } else if (status == BackupManager.Status.NOT_FOUND) {
+         responseBuilder.status(NOT_FOUND);
+      } else if (status == BackupManager.Status.IN_PROGRESS) {
+         responseBuilder.status(ACCEPTED);
+      } else {
+         File zip = backupManager.getBackupLocation(name).toFile();
+         responseBuilder
+               .contentType(MediaType.APPLICATION_ZIP)
+               .header("Content-Disposition", String.format("attachment; filename=%s", zip.getName()))
+               .contentLength(zip.length());
+
+         if (method == Method.GET)
+            responseBuilder.entity(zip);
       }
       return CompletableFuture.completedFuture(responseBuilder.build());
    }

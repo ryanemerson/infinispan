@@ -2,9 +2,7 @@ package org.infinispan.server.core.backup;
 
 import static org.infinispan.server.core.backup.Constants.WORKING_DIR;
 
-import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -13,7 +11,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
-import org.infinispan.commons.CacheException;
 import org.infinispan.configuration.parsing.ParserRegistry;
 import org.infinispan.lock.EmbeddedClusteredLockManagerFactory;
 import org.infinispan.lock.api.ClusteredLock;
@@ -42,7 +39,7 @@ public class BackupManagerImpl implements BackupManager {
    final Lock backupLock;
    final Lock restoreLock;
    final Map<String, DefaultCacheManager> cacheManagers;
-   final Map<String, CompletableFuture<Path>> backupMap;
+   final Map<String, BackupRequest> backupMap;
 
    public BackupManagerImpl(BlockingManager blockingManager, EmbeddedCacheManager cm,
                             Map<String, DefaultCacheManager> cacheManagers, Path dataRoot) {
@@ -67,18 +64,19 @@ public class BackupManagerImpl implements BackupManager {
    }
 
    @Override
-   public Path getBackup(String name) {
-      CompletableFuture<Path> future = backupMap.get(name);
-      Status status = getBackupStatus(future);
+   public Path getBackupLocation(String name) {
+      BackupRequest request = backupMap.get(name);
+      Status status = getBackupStatus(request);
       if (status != Status.COMPLETE)
-         throw new IllegalStateException(String.format("Backup '%s' not complete, current Status %s", name, status));
-      return future.join();
+         return null;
+      return request.future.join();
    }
 
-   private Status getBackupStatus(CompletableFuture<Path> future) {
-      if (future == null)
+   private Status getBackupStatus(BackupRequest request) {
+      if (request == null)
          return Status.NOT_FOUND;
 
+      CompletableFuture<Path> future = request.future;
       if (future.isCompletedExceptionally())
          return Status.FAILED;
 
@@ -86,25 +84,28 @@ public class BackupManagerImpl implements BackupManager {
    }
 
    @Override
-   public CompletionStage<Void> removeBackup(String name) {
-      CompletableFuture<Path> future = backupMap.remove(name);
-      Status status = getBackupStatus(future);
-      if (status == Status.NOT_FOUND)
-         return CompletableFutures.completedNull();
-
-      return blockingManager.runBlocking(() -> {
-         if (status == Status.IN_PROGRESS)
-            future.cancel(true);
-
-         try {
-            // Remove the zip file and the working directory
-            Path zip = future.join();
-            Files.delete(zip);
-            Files.delete(zip.getParent());
-         } catch (IOException e) {
-            throw new CacheException(String.format("Unable to delete backup '%s'", name));
-         }
-      }, "remove-backup-file");
+   public CompletionStage<Status> removeBackup(String name) {
+      BackupRequest request = backupMap.remove(name);
+      Status status = getBackupStatus(request);
+      switch (status) {
+         case NOT_FOUND:
+            return CompletableFuture.completedFuture(status);
+         case COMPLETE:
+         case FAILED:
+            return blockingManager.supplyBlocking(() -> {
+               request.writer.cleanup();
+               return Status.COMPLETE;
+            }, "remove-completed-backup");
+         case IN_PROGRESS:
+            // The backup files are removed on exceptional or successful completion.
+            blockingManager.handleBlocking(request.future, (path, t) -> {
+               // Regardless of whether the backup completes exceptionally or successfully, we remove the files
+               request.writer.cleanup();
+               return null;
+            }, "remove-inprogress-backup");
+            return CompletableFuture.completedFuture(Status.IN_PROGRESS);
+      }
+      throw new IllegalStateException();
    }
 
    @Override
@@ -120,6 +121,9 @@ public class BackupManagerImpl implements BackupManager {
 
    @Override
    public CompletionStage<Path> create(String name, Map<String, Resources> params) {
+      if (getBackupStatus(name) != Status.NOT_FOUND)
+         return CompletableFutures.completedExceptionFuture(log.backupAlreadyExists(name));
+
       BackupWriter writer = new BackupWriter(name, blockingManager, cacheManagers, parserRegistry, rootDir);
       CompletionStage<Path> backupStage = backupLock.lock()
             .thenCompose(lockAcquired -> {
@@ -143,7 +147,7 @@ public class BackupManagerImpl implements BackupManager {
                return unlock.thenCompose(ignore -> CompletableFuture.completedFuture(path));
             });
 
-      backupMap.put(name, backupStage.toCompletableFuture());
+      backupMap.put(name, new BackupRequest(writer, backupStage));
       return backupStage;
    }
 
@@ -181,6 +185,16 @@ public class BackupManagerImpl implements BackupManager {
                log.restoreComplete();
                return unlock.thenCompose(ignore -> CompletableFuture.completedFuture(path));
             });
+   }
+
+   static class BackupRequest {
+      final BackupWriter writer;
+      final CompletableFuture<Path> future;
+
+      BackupRequest(BackupWriter writer, CompletionStage<Path> stage) {
+         this.writer = writer;
+         this.future = stage.toCompletableFuture();
+      }
    }
 
    static class Lock {
