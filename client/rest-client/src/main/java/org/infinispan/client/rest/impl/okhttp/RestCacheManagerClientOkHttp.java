@@ -13,6 +13,7 @@ import org.infinispan.client.rest.RestResponse;
 import org.infinispan.commons.dataconversion.MediaType;
 import org.infinispan.commons.dataconversion.internal.Json;
 
+import okhttp3.MultipartBody;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 
@@ -161,22 +162,21 @@ public class RestCacheManagerClientOkHttp implements RestCacheManagerClient {
 
    @Override
    public CompletionStage<RestResponse> restore(File backup, Map<String, List<String>> resources) {
-      // TODO process resources and send as multi
-      // Create MultipartFormEntity class
-//      https://square.github.io/okhttp/4.x/okhttp/okhttp3/-multipart-body/
+      Json json = Json.object();
+      if (resources != null) {
+         resources.forEach((k, v) -> json.set(k, v.toArray(new String[0])));
+      }
+      RequestBody zipBody = new FileRestEntityOkHttp(MediaType.APPLICATION_ZIP, backup).toRequestBody();
 
-//      Content-Type: multipart/form-data; boundary=AaB03x
-//
-//      --AaB03x
-//      Content-Disposition: form-data; name="submit-name"
-//
-//      Larry
-//            --AaB03x
-//      Content-Disposition: form-data; name="files"; filename="file1.txt"
-//      Content-Type: application/json
+      RequestBody multipartBody = new MultipartBody.Builder()
+            .addFormDataPart("resources", json.toString())
+            .addFormDataPart("backup", backup.getName(), zipBody)
+            .setType(MultipartBody.FORM)
+            .build();
+
       Request.Builder builder = new Request.Builder()
             .url(baseCacheManagerUrl + "/backups?action=restore")
-            .post(new FileRestEntityOkHttp(MediaType.APPLICATION_ZIP, backup).toRequestBody());
+            .post(multipartBody);
       return client.execute(builder);
    }
 

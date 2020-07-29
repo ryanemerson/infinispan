@@ -298,10 +298,12 @@ public class CacheManagerResource implements ResourceHandler {
    }
 
    private CompletionStage<RestResponse> restore(RestRequest request) {
-      BackupManager.Resources resources = BackupManagerResource.getResources(request);
-      Map<String, BackupManager.Resources> restoreParams = Collections.singletonMap(cacheManagerName, resources);
-      BackupManager backupManager = invocationHelper.getServer().getBackupManager();
-      return BackupManagerResource.handleRestoreRequest(request, is -> backupManager.restore(is, restoreParams));
+      return BackupManagerResource.handleRestoreRequest(request, (is, json) -> {
+         BackupManager.Resources resources = BackupManagerResource.getResources(json);
+         Map<String, BackupManager.Resources> restoreParams = Collections.singletonMap(cacheManagerName, resources);
+         BackupManager backupManager = invocationHelper.getServer().getBackupManager();
+         return backupManager.restore(is, restoreParams);
+      });
    }
 
    private CompletionStage<RestResponse> convertToJson(RestRequest restRequest) {

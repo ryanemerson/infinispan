@@ -18,10 +18,11 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.function.BiConsumer;
-import java.util.function.Function;
+import java.util.function.BiFunction;
 
 import org.infinispan.commons.dataconversion.MediaType;
 import org.infinispan.commons.dataconversion.internal.Json;
+import org.infinispan.rest.MultiPartContentSource;
 import org.infinispan.rest.NettyRestResponse;
 import org.infinispan.rest.framework.RestRequest;
 import org.infinispan.rest.framework.RestResponse;
@@ -29,8 +30,6 @@ import org.infinispan.rest.logging.Log;
 import org.infinispan.server.core.BackupManager;
 import org.infinispan.server.core.backup.BackupManagerResources;
 import org.infinispan.util.logging.LogFactory;
-
-import io.netty.handler.codec.http.HttpResponseStatus;
 
 /**
  * A helper class for common functionality related to the {@link BackupManager}.
@@ -116,14 +115,24 @@ class BackupManagerResource {
       return CompletableFuture.completedFuture(responseBuilder.build());
    }
 
-   static CompletionStage<RestResponse> handleRestoreRequest(RestRequest request, Function<InputStream, CompletionStage<Void>> function) {
+   static CompletionStage<RestResponse> handleRestoreRequest(RestRequest request, BiFunction<InputStream, Json, CompletionStage<Void>> function) {
       NettyRestResponse.Builder responseBuilder = new NettyRestResponse.Builder();
-      if (!MediaType.APPLICATION_ZIP.equals(request.contentType()))
-         return completedFuture(responseBuilder.status(UNSUPPORTED_MEDIA_TYPE).build());
 
-      byte[] bytes = request.contents().rawContent();
+      byte[] bytes;
+      Json json = null;
+      MediaType contentType = request.contentType();
+      if (MediaType.APPLICATION_ZIP.match(contentType)) {
+         bytes = request.contents().rawContent();
+      } else if (contentType.match(MediaType.MULTIPART_FORM_DATA)) {
+         MultiPartContentSource source = (MultiPartContentSource) request.contents();
+         json = Json.read(source.getPart("resources").asString());
+         bytes = source.getPart("backup").rawContent();
+      } else {
+         return completedFuture(responseBuilder.status(UNSUPPORTED_MEDIA_TYPE).build());
+      }
+
       try (InputStream is = new ByteArrayInputStream(bytes)) {
-         return function.apply(is).handle((Void, t) -> t != null ?
+         return function.apply(is, json).handle((Void, t) -> t != null ?
                responseBuilder.status(INTERNAL_SERVER_ERROR).entity(t.getMessage()).build() :
                responseBuilder.status(NO_CONTENT).build()
          );
@@ -147,29 +156,6 @@ class BackupManagerResource {
             builder.includeAll(type);
          } else {
             builder.addResources(type, resources);
-         }
-      }
-      return builder.build();
-   }
-
-
-   // TODO update to process JSON
-   static BackupManager.Resources getResources(RestRequest request) {
-      BackupManagerResources.Builder builder = new BackupManagerResources.Builder();
-      Map<String, List<String>> params = request.parameters();
-      // No resources have been explicitly defined, so we backup/restore all resources
-      if (params == null || params.isEmpty() || (params.size() == 1 && params.containsKey("action")))
-         return builder.includeAll().build();
-
-      for (BackupManager.Resources.Type type : BackupManager.Resources.Type.values()) {
-         String key = type.toString();
-         List<String> resources = params.get(key);
-         if (resources != null) {
-            if (resources.size() == 1 && resources.get(0).equals("*")) {
-               builder.includeAll(type);
-            } else {
-               builder.addResources(type, resources);
-            }
          }
       }
       return builder.build();

@@ -83,7 +83,7 @@ public class BackupManagerIT extends AbstractMultiClusterIT {
 
    @Test
    public void testManagerBackupParameters() throws Exception {
-      String backupName = "testManagerBackup";
+      String backupName = "testManagerBackupParameters";
       performTest(
             client -> {
                Map<String, List<String>> params = new HashMap<>();
@@ -108,6 +108,38 @@ public class BackupManagerIT extends AbstractMultiClusterIT {
                assertEquals("[\"weak-volatile\"]", await(client.counters()).getBody());
                assertEquals(404, await(client.schemas().get("schema.proto")).getStatus());
                assertEquals("[]", await(client.tasks().list(RestTaskClient.ResultType.USER)).getBody());
+            }
+      );
+   }
+
+   @Test
+   public void testManagerRestoreParameters() throws Exception {
+      String backupName = "testManagerRestoreParameters";
+      performTest(
+            client -> {
+               // Create a backup of all container content
+               RestCacheManagerClient cm = client.cacheManager("clustered");
+               RestResponse response = await(cm.createBackup(backupName));
+               assertEquals(202, response.getStatus());
+               return downloadBackup(() -> cm.getBackup(backupName));
+            },
+            client -> await(client.cacheManager("clustered").deleteBackup(backupName)),
+            (zip, client) -> {
+               // Request that only the 'test.js' script is restored
+               Map<String, List<String>> params = new HashMap<>();
+               params.put("scripts", Collections.singletonList("test.js"));
+               return client.cacheManager("clustered").restore(zip, params);
+            },
+            client -> {
+               // Assert that the test.js script has been restored
+               List<Json> scripts = Json.read(await(client.tasks().list(RestTaskClient.ResultType.USER)).getBody()).asJsonList();
+               assertEquals(1, scripts.size());
+               assertEquals("test.js", scripts.iterator().next().at("name").asString());
+
+               // Assert that no other content has been restored
+               assertEquals("[\"___protobuf_metadata\",\"memcachedCache\",\"___script_cache\"]", await(client.caches()).getBody());
+               assertEquals("[]", await(client.counters()).getBody());
+               assertEquals(404, await(client.schemas().get("schema.proto")).getStatus());
             }
       );
    }

@@ -55,6 +55,6 @@ public class ClusterResource implements ResourceHandler {
    }
 
    private CompletionStage<RestResponse> restore(RestRequest request) {
-      return BackupManagerResource.handleRestoreRequest(request, backupManager::restore);
+      return BackupManagerResource.handleRestoreRequest(request, (is, json) -> backupManager.restore(is));
    }
 }

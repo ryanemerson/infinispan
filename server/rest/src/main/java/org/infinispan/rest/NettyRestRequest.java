@@ -72,7 +72,15 @@ public class NettyRestRequest implements RestRequest {
       if (action != null) {
          this.action = action.iterator().next();
       }
-      this.contentSource = new ByteBufContentSource(request.content());
+      this.contentSource = createContentSource(request);
+   }
+
+   private ContentSource createContentSource(FullHttpRequest request) {
+      MediaType contentType = contentType();
+      if (contentType.withoutParameters().equals(MediaType.MULTIPART_FORM_DATA))
+         return MultiPartContentSource.create(request);
+
+      return new ByteBufContentSource(request.content());
    }
 
    private String getContext(String path) {
