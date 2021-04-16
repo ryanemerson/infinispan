@@ -5,6 +5,7 @@ import static org.infinispan.server.core.BackupManager.Resources.Type.TEMPLATES;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.invoke.MethodHandles;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Set;
@@ -14,12 +15,14 @@ import java.util.zip.ZipFile;
 
 import org.infinispan.commons.CacheException;
 import org.infinispan.commons.dataconversion.MediaType;
+import org.infinispan.commons.logging.LogFactory;
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.configuration.parsing.ConfigurationBuilderHolder;
 import org.infinispan.configuration.parsing.ParserRegistry;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.server.core.BackupManager;
+import org.infinispan.server.core.logging.Log;
 import org.infinispan.util.concurrent.BlockingManager;
 
 /**
@@ -30,6 +33,8 @@ import org.infinispan.util.concurrent.BlockingManager;
  * @since 12.0
  */
 class CacheConfigResource extends AbstractContainerResource {
+
+   private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass(), Log.class);
 
    private final ParserRegistry parserRegistry;
    private final EmbeddedCacheManager cm;
@@ -92,10 +97,10 @@ class CacheConfigResource extends AbstractContainerResource {
                ConfigurationBuilder builder = builderHolder.getNamedConfigurationBuilders().get(configName);
                Configuration cfg = builder.template(true).build();
 
+               log.debugf("Restoring template %s: %s", configName, cfg.toXMLString(configName));
                // Only define configurations that don't already exist so that we don't overwrite newer versions of the default
                // templates e.g. org.infinispan.DIST_SYNC when upgrading a cluster
                SecurityActions.getOrCreateTemplate(cm, configName, cfg);
-               log.debugf("Restoring template %s: %s", configName, cfg.toXMLString(configName));
             } catch (IOException e) {
                throw new CacheException(e);
             }

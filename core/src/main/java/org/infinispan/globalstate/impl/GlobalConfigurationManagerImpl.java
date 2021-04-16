@@ -237,6 +237,7 @@ public class GlobalConfigurationManagerImpl implements GlobalConfigurationManage
    }
 
    CompletableFuture<Configuration> createCache(String cacheName, String template, Configuration configuration, EnumSet<CacheContainerAdmin.AdminFlag> flags) {
+      log.fatalf("Creating cache=%s, config=%s", cacheName, configuration.toXMLString(cacheName));
       localConfigurationManager.validateFlags(flags);
       try {
          CacheState state = new CacheState(template, parserRegistry.serialize(cacheName, configuration), flags);
@@ -253,7 +254,7 @@ public class GlobalConfigurationManagerImpl implements GlobalConfigurationManage
             .toCompletableFuture();
    }
 
-   CompletableFuture<Void> createCacheLocally(String name, CacheState state) {
+   public CompletableFuture<Void> createCacheLocally(String name, CacheState state) {
       log.debugf("Starting cache %s from global state", name);
       CompletionStage<Configuration> configurationStage = buildConfiguration(name, state, false);
       return configurationStage.thenCompose(configuration -> localConfigurationManager.createCache(name, state.getTemplate(), configuration, state.getFlags()))

@@ -12,6 +12,7 @@ package org.infinispan.server.core.backup.resources;
 
 import java.security.AccessController;
 import java.security.PrivilegedAction;
+import java.util.concurrent.CompletionStage;
 
 import org.infinispan.AdvancedCache;
 import org.infinispan.Cache;
@@ -30,6 +31,9 @@ import org.infinispan.security.actions.GetOrCreateCacheAction;
 import org.infinispan.security.actions.GetOrCreateTemplateAction;
 import org.infinispan.security.actions.GetUnwrappedCacheAction;
 import org.infinispan.security.impl.Authorizer;
+import org.infinispan.server.core.security.actions.ExecuteAdminTaskAction;
+import org.infinispan.tasks.TaskContext;
+import org.infinispan.tasks.TaskManager;
 
 final class SecurityActions {
    private static <T> T doPrivileged(PrivilegedAction<T> action) {
@@ -62,6 +66,11 @@ final class SecurityActions {
 
    static <K, V> AdvancedCache<K, V> getUnwrappedCache(Cache<K, V> cache) {
       GetUnwrappedCacheAction<AdvancedCache<K, V>, K, V> action = new GetUnwrappedCacheAction(cache);
+      return doPrivileged(action);
+   }
+
+   static CompletionStage<?> executeTask(String taskName, TaskManager taskManager, TaskContext taskContext) {
+      ExecuteAdminTaskAction action = new ExecuteAdminTaskAction(taskName, taskManager, taskContext);
       return doPrivileged(action);
    }
 

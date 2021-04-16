@@ -39,15 +39,15 @@ public class CacheGetOrCreateTask extends CacheCreateTask {
 
    @Override
    protected Void execute(EmbeddedCacheManager cacheManager, Map<String, List<String>> parameters, EnumSet<CacheContainerAdmin.AdminFlag> flags) {
-      String name = requireParameter(parameters, "name");
-      String template = getParameter(parameters, "template");
-      String configuration = getParameter(parameters, "configuration");
-      if (configuration != null) {
-         Configuration config = getConfiguration(name, configuration);
-         cacheManager.administration().withFlags(flags).getOrCreateCache(name, config);
-      } else {
-         cacheManager.administration().withFlags(flags).getOrCreateCache(name, template);
-      }
+//      String name = requireParameter(parameters, "name");
+//      String template = getParameter(parameters, "template");
+//      String configuration = getParameter(parameters, "configuration");
+//      if (configuration != null) {
+//         Configuration config = getConfiguration(name, configuration);
+//         cacheManager.administration().withFlags(flags).getOrCreateCache(name, config);
+//      } else {
+//         cacheManager.administration().withFlags(flags).getOrCreateCache(name, template);
+//      }
       return null;
    }
 

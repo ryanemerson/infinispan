@@ -7,6 +7,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.invoke.MethodHandles;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -18,9 +19,11 @@ import java.util.zip.ZipFile;
 
 import org.infinispan.AdvancedCache;
 import org.infinispan.commons.CacheException;
+import org.infinispan.commons.logging.LogFactory;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.server.core.BackupManager;
 import org.infinispan.server.core.backup.ContainerResource;
+import org.infinispan.server.core.logging.Log;
 import org.infinispan.util.concurrent.BlockingManager;
 
 /**
@@ -32,6 +35,7 @@ import org.infinispan.util.concurrent.BlockingManager;
  */
 class InternalCacheResource extends AbstractContainerResource {
 
+   private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass(), Log.class);
    private static final Map<BackupManager.Resources.Type, String> cacheMap = new HashMap<>(2);
 
    static {

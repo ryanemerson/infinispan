@@ -4,6 +4,7 @@ import static org.infinispan.globalstate.impl.GlobalConfigurationManagerImpl.CAC
 import static org.infinispan.globalstate.impl.GlobalConfigurationManagerImpl.isKnownScope;
 import static org.infinispan.util.logging.Log.CONTAINER;
 
+import java.lang.invoke.MethodHandles;
 import java.util.concurrent.CompletionStage;
 
 import org.infinispan.globalstate.ScopedState;
@@ -13,6 +14,7 @@ import org.infinispan.notifications.cachelistener.annotation.CacheEntryRemoved;
 import org.infinispan.notifications.cachelistener.event.CacheEntryCreatedEvent;
 import org.infinispan.notifications.cachelistener.event.CacheEntryRemovedEvent;
 import org.infinispan.util.concurrent.CompletableFutures;
+import org.infinispan.util.logging.LogFactory;
 
 /**
  * Listens to events on the global state cache and manages cache configuration creation / removal accordingly
@@ -36,7 +38,8 @@ public class GlobalConfigurationStateListener {
 
       String name = event.getKey().getName();
       CacheState state = event.getValue();
-
+      if (!event.getKey().getName().startsWith("org.infinispan"))
+      LogFactory.getLog(MethodHandles.lookup().lookupClass()).fatalf("Create cache=$s, %s", event.getKey().getName(), event.getValue().getConfiguration());
       return CACHE_SCOPE.equals(scope) ?
             gcm.createCacheLocally(name, state) :
             gcm.createTemplateLocally(name, state);

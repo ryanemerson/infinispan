@@ -54,6 +54,8 @@ import org.infinispan.globalstate.ConfigurationStorage;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.server.core.BackupManager;
+import org.infinispan.server.core.admin.embeddedserver.EmbeddedServerAdminOperationHandler;
+import org.infinispan.tasks.TaskManager;
 import org.infinispan.test.AbstractInfinispanTest;
 import org.infinispan.test.fwk.TestCacheManagerFactory;
 import org.infinispan.util.concurrent.BlockingManager;
@@ -349,7 +351,10 @@ public class BackupManagerImplTest extends AbstractInfinispanTest {
       gcb.globalState().enable()
             .configurationStorage(ConfigurationStorage.OVERLAY)
             .persistentLocation(workingDir.getAbsolutePath());
-      return (DefaultCacheManager) TestCacheManagerFactory.newDefaultCacheManager(true, gcb, null);
+      DefaultCacheManager dcm = (DefaultCacheManager) TestCacheManagerFactory.newDefaultCacheManager(true, gcb, null);
+      TaskManager taskManager = dcm.getGlobalComponentRegistry().getComponent(TaskManager.class);
+      taskManager.registerTaskEngine(new EmbeddedServerAdminOperationHandler());
+      return dcm;
    }
 
    private Configuration config(String type) {

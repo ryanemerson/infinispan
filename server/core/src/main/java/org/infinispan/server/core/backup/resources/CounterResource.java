@@ -5,6 +5,7 @@ import static org.infinispan.server.core.BackupManager.Resources.Type.COUNTERS;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.invoke.MethodHandles;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Set;
@@ -13,6 +14,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import org.infinispan.commons.CacheException;
+import org.infinispan.commons.logging.LogFactory;
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.commons.reactive.RxJavaInterop;
 import org.infinispan.counter.api.CounterConfiguration;
@@ -24,6 +26,7 @@ import org.infinispan.protostream.ImmutableSerializationContext;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.server.core.BackupManager;
+import org.infinispan.server.core.logging.Log;
 import org.infinispan.util.concurrent.BlockingManager;
 import org.infinispan.util.concurrent.CompletionStages;
 
@@ -38,6 +41,7 @@ import io.reactivex.rxjava3.core.Flowable;
  */
 public class CounterResource extends AbstractContainerResource {
 
+   private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass(), Log.class);
    private static final String COUNTERS_FILE = "counters.dat";
 
    private final CounterManager counterManager;

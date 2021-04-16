@@ -16,6 +16,7 @@ import org.infinispan.scripting.utils.ScriptConversions;
 import org.infinispan.security.AuthorizationManager;
 import org.infinispan.security.AuthorizationPermission;
 import org.infinispan.security.impl.Authorizer;
+import org.infinispan.tasks.ServerTask;
 import org.infinispan.tasks.Task;
 import org.infinispan.tasks.TaskContext;
 import org.infinispan.tasks.spi.TaskEngine;
@@ -109,5 +110,9 @@ public class ServerTaskEngine implements TaskEngine {
 
    public <T> ServerTaskWrapper<T> getTask(String taskName) {
       return tasks.get(taskName);
+   }
+
+   public void registerTask(String taskName, ServerTask<?> task) {
+      tasks.put(taskName, new ServerTaskWrapper<>(task));
    }
 }

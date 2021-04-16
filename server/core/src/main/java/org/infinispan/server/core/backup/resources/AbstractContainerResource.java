@@ -23,8 +23,7 @@ import org.infinispan.util.concurrent.BlockingManager;
 
 abstract class AbstractContainerResource implements ContainerResource {
 
-   protected static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass(), Log.class);
-
+   private static final Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass(), Log.class);
    protected final BackupManager.Resources.Type type;
    protected final BackupManager.Resources params;
    protected final Path root;
