@@ -1,4 +1,4 @@
-package org.infinispan.server.tasks;
+package org.infinispan.server.core.tasks;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
-import org.infinispan.Cache;
 import org.infinispan.commons.CacheException;
 import org.infinispan.manager.ClusterExecutor;
 import org.infinispan.remoting.transport.Address;
@@ -23,7 +22,10 @@ public class DistributedServerTaskRunner implements ServerTaskRunner {
 
    @Override
    public <T> CompletableFuture<T> execute(String taskName, TaskContext context) {
-      Cache<?, ?> masterCacheNode = context.getCache().get();
+      String cacheName = null;
+      if (context.getCache().isPresent()) {
+         cacheName = context.getCache().get().getName();
+      }
 
       ClusterExecutor clusterExecutor = SecurityActions.getClusterExecutor(context.getCacheManager());
 
@@ -37,7 +39,7 @@ public class DistributedServerTaskRunner implements ServerTaskRunner {
       List<TaskParameter> taskParams = context.getParameters().orElse(Collections.emptyMap())
             .entrySet().stream().map(e -> new TaskParameter(e.getKey(), e.getValue().toString())).collect(Collectors.toList());
       CompletableFuture<Void> future = clusterExecutor.submitConsumer(
-            new DistributedServerTask<>(taskName, masterCacheNode.getName(), taskParams),
+            new DistributedServerTask<>(taskName, cacheName, taskParams),
             triConsumer
       );
 

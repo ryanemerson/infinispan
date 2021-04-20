@@ -1,4 +1,4 @@
-package org.infinispan.server.tasks;
+package org.infinispan.server.core.tasks;
 
 import java.security.AccessController;
 import java.security.PrivilegedAction;
@@ -32,11 +32,6 @@ final class SecurityActions {
 
    static ClusterExecutor getClusterExecutor(EmbeddedCacheManager embeddedCacheManager) {
       return doPrivileged(embeddedCacheManager::executor);
-   }
-
-   static ComponentRegistry getComponentRegistry(final AdvancedCache<?, ?> cache) {
-      GetCacheComponentRegistryAction action = new GetCacheComponentRegistryAction(cache);
-      return doPrivileged(action);
    }
 
    static GlobalComponentRegistry getGlobalComponentRegistry(final EmbeddedCacheManager cacheManager) {

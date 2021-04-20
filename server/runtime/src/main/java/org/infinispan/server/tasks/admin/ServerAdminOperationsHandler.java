@@ -2,7 +2,6 @@ package org.infinispan.server.tasks.admin;
 
 import org.infinispan.configuration.parsing.ConfigurationBuilderHolder;
 import org.infinispan.server.core.admin.AdminOperationsHandler;
-import org.infinispan.server.core.admin.embeddedserver.BackupCreateCacheTask;
 import org.infinispan.server.core.admin.embeddedserver.CacheNamesTask;
 import org.infinispan.server.core.admin.embeddedserver.CacheReindexTask;
 import org.infinispan.server.core.admin.embeddedserver.CacheRemoveTask;

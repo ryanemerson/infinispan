@@ -14,9 +14,9 @@ import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.notifications.cachelistener.filter.CacheEventConverterFactory;
 import org.infinispan.notifications.cachelistener.filter.CacheEventFilterConverterFactory;
 import org.infinispan.notifications.cachelistener.filter.CacheEventFilterFactory;
+import org.infinispan.server.core.tasks.ServerTaskEngine;
+import org.infinispan.server.core.tasks.ServerTaskWrapper;
 import org.infinispan.server.hotrod.HotRodServer;
-import org.infinispan.server.tasks.ServerTaskEngine;
-import org.infinispan.server.tasks.ServerTaskWrapper;
 import org.infinispan.tasks.ServerTask;
 import org.infinispan.tasks.spi.TaskEngine;
 
@@ -30,7 +30,7 @@ public class Extensions {
    private final Map<String, CacheEventFilterConverterFactory> filterConverterFactories = new HashMap<>();
    private final Map<String, KeyValueFilterConverterFactory> keyValueFilterConverterFactories = new HashMap<>();
    private final Map<String, ParamKeyValueFilterConverterFactory> paramKeyValueFilterConverterFactories = new HashMap<>();
-   private final Map<String, ServerTaskWrapper> serverTasks = new HashMap<>();
+   private final Map<String, ServerTaskWrapper<?>> serverTasks = new HashMap<>();
 
    public Extensions() {
    }

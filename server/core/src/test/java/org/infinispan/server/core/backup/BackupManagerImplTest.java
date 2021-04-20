@@ -28,6 +28,7 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
@@ -54,7 +55,7 @@ import org.infinispan.globalstate.ConfigurationStorage;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.server.core.BackupManager;
-import org.infinispan.server.core.admin.embeddedserver.EmbeddedServerAdminOperationHandler;
+import org.infinispan.server.core.tasks.ServerTaskEngine;
 import org.infinispan.tasks.TaskManager;
 import org.infinispan.test.AbstractInfinispanTest;
 import org.infinispan.test.fwk.TestCacheManagerFactory;
@@ -137,7 +138,7 @@ public class BackupManagerImplTest extends AbstractInfinispanTest {
       createAndRestore(
             (source, backupManager) -> backupManager.create(name, null),
             (target, backupManager, backup) -> {
-               assertTrue(target.getCacheNames().isEmpty());
+               assertNoUserCaches(target);
                assertNull(target.getCacheConfiguration("cache-config"));
                Map<String, BackupManager.Resources> paramMap = Collections.singletonMap("default", params);
                CompletableFuture<Void> stage = backupManager.restore(name, backup, paramMap).toCompletableFuture();
@@ -171,7 +172,7 @@ public class BackupManagerImplTest extends AbstractInfinispanTest {
                return backupManager.create(name, null);
             },
             (target, backupManager, backup) -> {
-               assertTrue(target.getCacheNames().isEmpty());
+               assertNoUserCaches(target);
                assertNull(target.getCacheConfiguration("cache-config"));
                Map<String, BackupManager.Resources> paramMap = Collections.singletonMap("default",
                      new BackupManagerResources.Builder()
@@ -180,7 +181,7 @@ public class BackupManagerImplTest extends AbstractInfinispanTest {
                            .build()
                );
                await(backupManager.restore(name, backup, paramMap));
-               assertTrue(target.getCacheNames().isEmpty());
+               assertNoUserCaches(target);
                assertNotNull(target.getCacheConfiguration("cache-config"));
             });
    }
@@ -195,7 +196,7 @@ public class BackupManagerImplTest extends AbstractInfinispanTest {
                return backupManager.create(name, null);
             },
             (target, backupManager, backup) -> {
-               assertTrue(target.getCacheNames().isEmpty());
+               assertNoUserCaches(target);
                assertNull(target.getCacheConfiguration("cache-config"));
                await(backupManager.restore(name, backup));
                assertFalse(target.getCacheNames().isEmpty());
@@ -207,12 +208,17 @@ public class BackupManagerImplTest extends AbstractInfinispanTest {
             });
    }
 
+
    public void testCustomWorkingDirectory() throws IOException {
       String backupName = "customDir";
       Path customDir = new File(workingDir, "custom-dir").toPath();
       Files.createDirectory(customDir);
       Path zip = withBackupManager((cm, bm) -> bm.create(backupName, customDir));
       assertEquals(customDir.resolve(backupName).resolve(backupName + ".zip"), zip);
+   }
+
+   private void assertNoUserCaches(DefaultCacheManager cm) {
+      assertFalse(cm.getCacheNames().stream().anyMatch(c -> !c.startsWith("___")));
    }
 
    private void createAndRestore(BiFunction<DefaultCacheManager, BackupManager, CompletionStage<Path>> backup,
@@ -353,7 +359,7 @@ public class BackupManagerImplTest extends AbstractInfinispanTest {
             .persistentLocation(workingDir.getAbsolutePath());
       DefaultCacheManager dcm = (DefaultCacheManager) TestCacheManagerFactory.newDefaultCacheManager(true, gcb, null);
       TaskManager taskManager = dcm.getGlobalComponentRegistry().getComponent(TaskManager.class);
-      taskManager.registerTaskEngine(new EmbeddedServerAdminOperationHandler());
+      taskManager.registerTaskEngine(new ServerTaskEngine(dcm, new HashMap<>()));
       return dcm;
    }
 

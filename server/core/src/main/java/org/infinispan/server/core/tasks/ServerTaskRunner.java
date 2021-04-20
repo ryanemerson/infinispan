@@ -1,4 +1,4 @@
-package org.infinispan.server.tasks;
+package org.infinispan.server.core.tasks;
 
 import java.util.concurrent.CompletableFuture;
 

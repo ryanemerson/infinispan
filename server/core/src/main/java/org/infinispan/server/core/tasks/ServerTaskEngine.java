@@ -1,4 +1,4 @@
-package org.infinispan.server.tasks;
+package org.infinispan.server.core.tasks;
 
 import static org.infinispan.commons.dataconversion.MediaType.APPLICATION_OBJECT;
 
@@ -16,6 +16,7 @@ import org.infinispan.scripting.utils.ScriptConversions;
 import org.infinispan.security.AuthorizationManager;
 import org.infinispan.security.AuthorizationPermission;
 import org.infinispan.security.impl.Authorizer;
+import org.infinispan.server.core.backup.resources.BackupCreateCacheTask;
 import org.infinispan.tasks.ServerTask;
 import org.infinispan.tasks.Task;
 import org.infinispan.tasks.TaskContext;
@@ -31,9 +32,9 @@ public class ServerTaskEngine implements TaskEngine {
 
    private final Authorizer globalauthorizer;
    private final ScriptConversions scriptConversions;
-   private final Map<String, ServerTaskWrapper> tasks;
+   private final Map<String, ServerTaskWrapper<?>> tasks;
 
-   public ServerTaskEngine(EmbeddedCacheManager cacheManager, Map<String, ServerTaskWrapper> tasks) {
+   public ServerTaskEngine(EmbeddedCacheManager cacheManager, Map<String, ServerTaskWrapper<?>> tasks) {
       GlobalComponentRegistry registry = SecurityActions.getGlobalComponentRegistry(cacheManager);
       registry.registerComponent(this, ServerTaskEngine.class);
       SerializationContextRegistry serializationContextRegistry = registry.getComponent(SerializationContextRegistry.class);
@@ -44,6 +45,8 @@ public class ServerTaskEngine implements TaskEngine {
       this.tasks = tasks;
       this.localRunner = new LocalServerTaskRunner(this);
       this.distributedRunner = new DistributedServerTaskRunner();
+      // Register internal tasks
+      registerTask(new BackupCreateCacheTask());
    }
 
    @Override
@@ -58,7 +61,7 @@ public class ServerTaskEngine implements TaskEngine {
 
    @Override
    public <T> CompletableFuture<T> runTask(String taskName, TaskContext context, BlockingManager blockingManager) {
-      ServerTaskWrapper<T> task = tasks.get(taskName);
+      ServerTaskWrapper<T> task = getTask(taskName);
       if (task == null) {
          throw new IllegalArgumentException("Task not found: " + taskName);
       }
@@ -108,11 +111,12 @@ public class ServerTaskEngine implements TaskEngine {
       return tasks.containsKey(taskName);
    }
 
+   @SuppressWarnings("unchecked")
    public <T> ServerTaskWrapper<T> getTask(String taskName) {
-      return tasks.get(taskName);
+      return (ServerTaskWrapper<T>) tasks.get(taskName);
    }
 
-   public void registerTask(String taskName, ServerTask<?> task) {
-      tasks.put(taskName, new ServerTaskWrapper<>(task));
+   private void registerTask(ServerTask<?> task) {
+      tasks.put(task.getName(), new ServerTaskWrapper<>(task));
    }
 }

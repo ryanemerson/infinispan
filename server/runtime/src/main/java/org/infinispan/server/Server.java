@@ -70,6 +70,7 @@ import org.infinispan.server.core.ServerStateManager;
 import org.infinispan.server.core.backup.BackupManagerImpl;
 import org.infinispan.server.core.configuration.ProtocolServerConfiguration;
 import org.infinispan.server.core.configuration.ProtocolServerConfigurationBuilder;
+import org.infinispan.server.core.tasks.ServerTaskEngine;
 import org.infinispan.server.datasource.DataSourceFactory;
 import org.infinispan.server.hotrod.HotRodServer;
 import org.infinispan.server.logging.Log;

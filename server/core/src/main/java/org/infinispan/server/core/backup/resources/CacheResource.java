@@ -6,19 +6,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.invoke.MethodHandles;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -42,7 +36,6 @@ import org.infinispan.distribution.ch.KeyPartitioner;
 import org.infinispan.encoding.impl.StorageConfigurationManager;
 import org.infinispan.factories.ComponentRegistry;
 import org.infinispan.factories.impl.BasicComponentRegistry;
-import org.infinispan.manager.ClusterExecutor;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.marshall.persistence.PersistenceMarshaller;
 import org.infinispan.marshall.protostream.impl.SerializationContextRegistry;
@@ -56,17 +49,15 @@ import org.infinispan.reactive.publisher.PublisherTransformers;
 import org.infinispan.reactive.publisher.impl.ClusterPublisherManager;
 import org.infinispan.reactive.publisher.impl.DeliveryGuarantee;
 import org.infinispan.registry.InternalCacheRegistry;
-import org.infinispan.remoting.transport.Address;
 import org.infinispan.server.core.BackupManager;
 import org.infinispan.server.core.logging.Log;
+import org.infinispan.server.core.tasks.ServerTaskEngine;
+import org.infinispan.tasks.ServerTask;
 import org.infinispan.tasks.TaskContext;
 import org.infinispan.tasks.TaskManager;
-import org.infinispan.tasks.spi.TaskEngine;
 import org.infinispan.util.concurrent.AggregateCompletionStage;
 import org.infinispan.util.concurrent.BlockingManager;
 import org.infinispan.util.concurrent.CompletionStages;
-import org.infinispan.util.function.SerializableConsumer;
-import org.infinispan.util.function.TriConsumer;
 import org.reactivestreams.Publisher;
 
 import io.reactivex.rxjava3.core.Flowable;
@@ -135,12 +126,11 @@ public class CacheResource extends AbstractContainerResource {
 
             // GetOrCreate in the event that a default cache is defined. This also allows cache-configurations to be
             // modified prior to a restore if only the backed up data is required
-            String taskName = "@@cache@backupCreateCache";
+            ServerTask<?> backupTask = new BackupCreateCacheTask();
+            String taskName = backupTask.getName();
             BasicComponentRegistry bcr = SecurityActions.getGlobalComponentRegistry(cm).getComponent(BasicComponentRegistry.class);
             TaskManager taskManager = bcr.getComponent(TaskManager.class).running();
             log.fatalf("TaskEngines:=%s", taskManager.getEngines());
-
-            log.debugf("WANCHOP!!!!!!!!");
 
             // Process .xml
             String configFile = configFile(cacheName);
@@ -148,13 +138,15 @@ public class CacheResource extends AbstractContainerResource {
             try (InputStream is = zip.getInputStream(zip.getEntry(zipPath))) {
                ConfigurationBuilderHolder builderHolder = parserRegistry.parse(is, null, MediaType.fromExtension(configFile));
                Configuration config = builderHolder.getNamedConfigurationBuilders().get(cacheName).build();
-               log.debugf("Host=%s, Restoring Cache %s: %s", cm.getTransport().getAddress(), cacheName, config.toXMLString(cacheName));
-               Map<String, byte[]> params = new HashMap<>(2);
-               params.put("name", cacheName.getBytes(StandardCharsets.UTF_8));
-               params.put("configuration", config.toXMLString(cacheName).getBytes(StandardCharsets.UTF_8));
+               log.debugf("Restoring Cache %s: %s", cacheName, config.toXMLString(cacheName));
+               Map<String, String> params = new HashMap<>(2);
+               params.put("name", cacheName);
+               params.put("configuration", config.toXMLString(cacheName));
                TaskContext taskContext = new TaskContext();
+               taskContext.cacheManager(cm);
                taskContext.parameters(params);
-               CompletionStage<?> taskExecution = SecurityActions.executeTask(taskName, taskManager, taskContext);
+
+               CompletionStage<?> taskExecution = taskManager.runTask(taskName, taskContext);
                CompletionStages.join(taskExecution);
 
                // We must define the configuration locally if a zero-capacity node as these are excluded by the task

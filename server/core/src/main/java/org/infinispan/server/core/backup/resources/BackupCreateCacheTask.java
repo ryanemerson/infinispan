@@ -1,4 +1,4 @@
-package org.infinispan.server.core.admin.embeddedserver;
+package org.infinispan.server.core.backup.resources;
 
 import java.lang.invoke.MethodHandles;
 import java.util.EnumSet;
@@ -13,6 +13,8 @@ import org.infinispan.globalstate.GlobalConfigurationManager;
 import org.infinispan.globalstate.impl.CacheState;
 import org.infinispan.globalstate.impl.GlobalConfigurationManagerImpl;
 import org.infinispan.manager.EmbeddedCacheManager;
+import org.infinispan.tasks.ServerTask;
+import org.infinispan.tasks.TaskContext;
 import org.infinispan.tasks.TaskExecutionMode;
 import org.infinispan.util.concurrent.CompletionStages;
 import org.infinispan.util.logging.Log;
@@ -29,7 +31,9 @@ import org.infinispan.util.logging.LogFactory;
  * @author Ryan Emerson
  * @since 12.1
  */
-public class BackupCreateCacheTask extends CacheCreateTask {
+public class BackupCreateCacheTask implements ServerTask<Void> {
+
+   private TaskContext taskContext;
 
    @Override
    public TaskExecutionMode getExecutionMode() {
@@ -37,24 +41,23 @@ public class BackupCreateCacheTask extends CacheCreateTask {
    }
 
    @Override
-   public String getTaskContextName() {
-      return "cache";
+   public void setTaskContext(TaskContext taskContext) {
+      this.taskContext = taskContext;
    }
 
    @Override
-   public String getTaskOperationName() {
-      return "backupCreateCache";
-   }
+   public Void call() throws Exception {
+      EmbeddedCacheManager cacheManager = taskContext.getCacheManager();
+      // TODO handle optional
+      Map<String, ?> parameters = taskContext.getParameters().get();
 
-   @Override
-   protected Void execute(EmbeddedCacheManager cacheManager, Map<String, List<String>> parameters, EnumSet<CacheContainerAdmin.AdminFlag> flags) {
       Log log = LogFactory.getLog(MethodHandles.lookup().lookupClass());
-      log.fatalf("In task. Host=%s", cacheManager.getTransport().getAddress());
+      log.fatalf("In task");
       if (cacheManager.getCacheManagerConfiguration().isZeroCapacityNode()) {
          return null;
       }
-      String name = requireParameter(parameters, "name");
-      String configuration = getParameter(parameters, "configuration");
+      String name = (String) parameters.get("name");
+      String configuration = (String) parameters.get("configuration");
       if (configuration == null)
          throw new IllegalArgumentException("Configuration cannot be null");
 
@@ -75,5 +78,10 @@ public class BackupCreateCacheTask extends CacheCreateTask {
 //      cacheManager.getGlobalComponentRegistry().getComponent(GlobalConfigurationManager.class).getStateCache().getAdvancedCache()
 //            .putIfAbsent(new ScopedState(CACHE_SCOPE, name), state);
       return null;
+   }
+
+   @Override
+   public String getName() {
+      return "@@backup@CreateCache";
    }
 }
