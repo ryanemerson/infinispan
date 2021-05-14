@@ -12,6 +12,10 @@
    <packaging>jar</packaging>
    <name>Infinispan Commons</name>
    <description>Infinispan Commons</description>
+    <properties>
+        <test.report.path>${project.build.testOutputDirectory}</test.report.path>
+        <expression.properties.path>${basedir}/src/test/resources/expression.properties</expression.properties.path>
+    </properties>
 
    <dependencies>
       <dependency>
@@ -91,6 +95,35 @@
          <artifactId>infinispan-commons-test</artifactId>
          <scope>test</scope>
       </dependency>
+      <dependency>
+		<groupId>org.jboss.logging</groupId>
+		<artifactId>jboss-logging-processor</artifactId>
+		<version>2.2.1.Final</version>
+		<scope>provided</scope>
+      </dependency>
+      <dependency>
+            <groupId>org.jboss.logmanager</groupId>
+            <artifactId>jboss-logmanager</artifactId>
+            <version>2.1.14.Final</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.forge.roaster</groupId>
+            <artifactId>roaster-api</artifactId>
+            <version>2.20.8.Final</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.forge.roaster</groupId>
+            <artifactId>roaster-jdt</artifactId>
+            <version>2.20.8.Final</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
    </dependencies>
 
    <build>
@@ -131,6 +164,40 @@
                <fork combine.children="append">true</fork>
                <release>8</release>
             </configuration>
+            <executions>
+                    <!-- Define that asciidoc reports should be generated -->
+                    <execution>
+                        <id>test-compile-adoc</id>
+                        <phase>test-compile</phase>
+                        <goals>
+                            <goal>testCompile</goal>
+                        </goals>
+                        <configuration>
+                            <compilerArgs>
+                                <arg>-Aorg.jboss.logging.tools.report.type=adoc</arg>
+                                <arg>-Aorg.jboss.logging.tools.report.path=${test.report.path}</arg>
+                                <arg>-Aorg.jboss.logging.tools.report.title=Test Title</arg>
+                                <arg>-Aorg.jboss.logging.tools.expressionProperties=${expression.properties.path}</arg>
+                            </compilerArgs>
+                        </configuration>
+                    </execution>
+                    <!-- Define that XML reports should be generated -->
+                    <execution>
+                        <id>test-compile-xml</id>
+                        <phase>test-compile</phase>
+                        <goals>
+                            <goal>testCompile</goal>
+                        </goals>
+                        <configuration>
+                            <compilerArgs>
+                                <arg>-Aorg.jboss.logging.tools.report.type=xml</arg>
+                                <arg>-Aorg.jboss.logging.tools.report.path=${test.report.path}</arg>
+                                <arg>-Aorg.jboss.logging.tools.report.title=Test Title</arg>
+                                <arg>-Aorg.jboss.logging.tools.expressionProperties=${expression.properties.path}</arg>
+                            </compilerArgs>
+                        </configuration>
+                    </execution>
+                </executions>
          </plugin>
          <plugin>
             <groupId>org.apache.maven.plugins</groupId>
@@ -190,6 +257,14 @@
                   <usedefaultlisteners>false</usedefaultlisteners>
                   <listener>${junitListener}</listener>
                </properties>
+                <systemPropertyVariables>
+                        <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
+                        <test.src.path>${project.build.testSourceDirectory}</test.src.path>
+                        <test.generated.src.path>${project.build.directory}/generated-test-sources/test-annotations</test.generated.src.path>
+                        <expressionPropertiesPath>${expression.properties.path}</expressionPropertiesPath>
+                        <test.report.path>${test.report.path}</test.report.path>
+                         <test.skeleton.file.path>${project.build.testOutputDirectory}</test.skeleton.file.path>
+                        </systemPropertyVariables>
             </configuration>
             <dependencies>
                <dependency>
