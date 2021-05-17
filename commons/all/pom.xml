@@ -164,40 +164,7 @@
                <fork combine.children="append">true</fork>
                <release>8</release>
             </configuration>
-            <executions>
-                    <!-- Define that asciidoc reports should be generated -->
-                    <execution>
-                        <id>test-compile-adoc</id>
-                        <phase>test-compile</phase>
-                        <goals>
-                            <goal>testCompile</goal>
-                        </goals>
-                        <configuration>
-                            <compilerArgs>
-                                <arg>-Aorg.jboss.logging.tools.report.type=adoc</arg>
-                                <arg>-Aorg.jboss.logging.tools.report.path=${test.report.path}</arg>
-                                <arg>-Aorg.jboss.logging.tools.report.title=Test Title</arg>
-                                <arg>-Aorg.jboss.logging.tools.expressionProperties=${expression.properties.path}</arg>
-                            </compilerArgs>
-                        </configuration>
-                    </execution>
-                    <!-- Define that XML reports should be generated -->
-                    <execution>
-                        <id>test-compile-xml</id>
-                        <phase>test-compile</phase>
-                        <goals>
-                            <goal>testCompile</goal>
-                        </goals>
-                        <configuration>
-                            <compilerArgs>
-                                <arg>-Aorg.jboss.logging.tools.report.type=xml</arg>
-                                <arg>-Aorg.jboss.logging.tools.report.path=${test.report.path}</arg>
-                                <arg>-Aorg.jboss.logging.tools.report.title=Test Title</arg>
-                                <arg>-Aorg.jboss.logging.tools.expressionProperties=${expression.properties.path}</arg>
-                            </compilerArgs>
-                        </configuration>
-                    </execution>
-                </executions>
+             
          </plugin>
          <plugin>
             <groupId>org.apache.maven.plugins</groupId>
