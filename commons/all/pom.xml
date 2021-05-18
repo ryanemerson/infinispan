@@ -12,12 +12,13 @@
    <packaging>jar</packaging>
    <name>Infinispan Commons</name>
    <description>Infinispan Commons</description>
-    <properties>
-        <test.report.path>${project.build.testOutputDirectory}</test.report.path>
-        <expression.properties.path>${basedir}/src/test/resources/expression.properties</expression.properties.path>
-    </properties>
 
    <dependencies>
+      <dependency>
+         <groupId>org.infinispan</groupId>
+         <artifactId>infinispan-logging-processor</artifactId>
+      </dependency>
+
       <dependency>
          <groupId>org.infinispan.protostream</groupId>
          <artifactId>protostream</artifactId>
@@ -95,35 +96,6 @@
          <artifactId>infinispan-commons-test</artifactId>
          <scope>test</scope>
       </dependency>
-      <dependency>
-		<groupId>org.jboss.logging</groupId>
-		<artifactId>jboss-logging-processor</artifactId>
-		<version>2.2.1.Final</version>
-		<scope>provided</scope>
-      </dependency>
-      <dependency>
-            <groupId>org.jboss.logmanager</groupId>
-            <artifactId>jboss-logmanager</artifactId>
-            <version>2.1.14.Final</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.jboss.forge.roaster</groupId>
-            <artifactId>roaster-api</artifactId>
-            <version>2.20.8.Final</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.jboss.forge.roaster</groupId>
-            <artifactId>roaster-jdt</artifactId>
-            <version>2.20.8.Final</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <scope>test</scope>
-        </dependency>
    </dependencies>
 
    <build>
@@ -164,7 +136,6 @@
                <fork combine.children="append">true</fork>
                <release>8</release>
             </configuration>
-             
          </plugin>
          <plugin>
             <groupId>org.apache.maven.plugins</groupId>
@@ -224,14 +195,6 @@
                   <usedefaultlisteners>false</usedefaultlisteners>
                   <listener>${junitListener}</listener>
                </properties>
-                <systemPropertyVariables>
-                        <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
-                        <test.src.path>${project.build.testSourceDirectory}</test.src.path>
-                        <test.generated.src.path>${project.build.directory}/generated-test-sources/test-annotations</test.generated.src.path>
-                        <expressionPropertiesPath>${expression.properties.path}</expressionPropertiesPath>
-                        <test.report.path>${test.report.path}</test.report.path>
-                         <test.skeleton.file.path>${project.build.testOutputDirectory}</test.skeleton.file.path>
-                        </systemPropertyVariables>
             </configuration>
             <dependencies>
                <dependency>
