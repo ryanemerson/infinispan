@@ -12,6 +12,7 @@ import org.infinispan.commons.dataconversion.EncodingException;
 import org.infinispan.commons.dataconversion.MediaType;
 import org.infinispan.counter.exception.CounterException;
 import org.infinispan.counter.exception.CounterOutOfBoundsException;
+import org.infinispan.logging.annotations.Description;
 import org.jboss.logging.BasicLogger;
 import org.jboss.logging.Logger;
 import org.jboss.logging.annotations.Cause;
@@ -59,6 +60,7 @@ public interface Log extends BasicLogger {
    Log CONTAINER = Logger.getMessageLogger(Log.class, LOG_ROOT + "CONTAINER");
    Log SECURITY = Logger.getMessageLogger(Log.class, LOG_ROOT + "SECURITY");
 
+   @Description("Example Description")
    @LogMessage(level = WARN)
    @Message(value = "Property %s could not be replaced as intended!", id = 901)
    void propertyCouldNotBeReplaced(String line);
