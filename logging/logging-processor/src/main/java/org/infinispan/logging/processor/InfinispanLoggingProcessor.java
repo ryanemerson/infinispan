@@ -22,9 +22,9 @@ import org.jboss.logging.processor.apt.ProcessingException;
 import org.kohsuke.MetaInfServices;
 
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
-@SupportedAnnotationTypes({ InfinispanLoggingProcessor.DESCRIPTION, 
-                            InfinispanLoggingProcessor.MESSAGE,
-                            InfinispanLoggingProcessor.LOGMESSAGE, })
+@SupportedAnnotationTypes({InfinispanLoggingProcessor.DESCRIPTION,
+                           InfinispanLoggingProcessor.MESSAGE,
+                           InfinispanLoggingProcessor.LOGMESSAGE})
 @MetaInfServices(Processor.class)
 public class InfinispanLoggingProcessor extends AbstractProcessor {
    private static final String EXTN_XML = ".xml";
