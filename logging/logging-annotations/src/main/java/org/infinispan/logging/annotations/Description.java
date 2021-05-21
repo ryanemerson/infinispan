@@ -4,6 +4,7 @@ package org.infinispan.logging.annotations;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.CLASS;
 
+import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
@@ -39,17 +40,13 @@ public @interface Description {
     *
     * @return the format type
     */
-   Format format() default Format.PRINTF;
+   Format format() default Format.NO_FORMAT;
 
    /**
     * The possible format types.
     */
    enum Format {
 
-       /**
-        * A {@link java.util.Formatter}-type format string.
-        */
-       PRINTF,
        /**
         * A {@link java.text.MessageFormat}-type format string.
         */
