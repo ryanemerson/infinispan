@@ -2,6 +2,10 @@ package org.infinispan.logging.processor;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -42,6 +46,7 @@ public class InfinispanLoggingProcessor extends AbstractProcessor {
             createReportXml(roundEnv, annotation);
          } catch (Throwable t) {
             uncaughtException(t);
+            t.printStackTrace();
             return false;
          }
       }
@@ -49,42 +54,35 @@ public class InfinispanLoggingProcessor extends AbstractProcessor {
    }
 
    private void createReportXml(RoundEnvironment roundEnv, TypeElement annotation) throws IOException {
-      
-      BufferedWriter bufferedWriter = null;
-      XmlReportWriter reportWriter = null;
       try {
-         if (DESCRIPTION.equals(annotation.toString())) {
-            Set<? extends Element> annotatedElements = roundEnv.getElementsAnnotatedWith(annotation);
-            Element element = annotatedElements.stream().findFirst().get();
-            Element enclosingElement = element.getEnclosingElement();
-            String qualifiedName = enclosingElement.toString();
+         Set<? extends Element> annotatedElements = roundEnv.getElementsAnnotatedWith(annotation);
+         Map<String, List<Element>> mapWithQualifiedName = getMapWithQualifiedName(annotatedElements);
+         for (Map.Entry<String, List<Element>> entry : mapWithQualifiedName.entrySet()) {
+
+            String qualifiedName = entry.getKey();
             final int lastDot = qualifiedName.lastIndexOf(".");
             String packageName = qualifiedName.substring(0, lastDot);
             String simpleName = qualifiedName.substring(lastDot + 1);
-            bufferedWriter = createWriter(packageName, simpleName + ".xml");
-            reportWriter = new XmlReportWriter(bufferedWriter);
+            BufferedWriter bufferedWriter = createWriter(packageName, simpleName + ".xml");
+            XmlReportWriter reportWriter = new XmlReportWriter(bufferedWriter);
             reportWriter.writeHeader(qualifiedName);
-            for (Element interfaceElement : annotatedElements) {
+            List<Element> list = entry.getValue();
+            for (Element element : list) {
                try {
-                  reportWriter.writeDetail(interfaceElement);
+                  reportWriter.writeDetail(element);
                } catch (ProcessingException e) {
                   final AnnotationMirror a = e.getAnnotation();
                   final AnnotationValue value = e.getAnnotationValue();
-                  error(interfaceElement,"Error while processing the report: for annotation" + a.toString() + " for value: "
+                  error(element, "Error while processing the report: for annotation" + a.toString() + " for value: "
                         + value.toString(), e);
                }
             }
             reportWriter.writeFooter();
-         }
-      } catch (Exception e) {
-         error(null,"Error while processing the xml file.",e);
-      } finally {
-         if (reportWriter != null) {
             reportWriter.close();
-         }
-         if (bufferedWriter != null) {
             bufferedWriter.close();
          }
+      } catch (Exception e) {
+         error(null, "Error while processing the xml file.", e);
       }
    }
 
@@ -94,9 +92,8 @@ public class InfinispanLoggingProcessor extends AbstractProcessor {
    }
 
    private void uncaughtException(Throwable t) {
-      String stackTrace = Stream.of(t.getStackTrace())
-                                .map(Object::toString)
-                                .collect(Collectors.joining("\n\tat ", "\tat ", ""));
+      String stackTrace = Stream.of(t.getStackTrace()).map(Object::toString)
+            .collect(Collectors.joining("\n\tat ", "\tat ", ""));
       error(null, "InfinispanLoggingProcessor unexpected error: %s\n%s", t, stackTrace);
    }
 
@@ -111,5 +108,20 @@ public class InfinispanLoggingProcessor extends AbstractProcessor {
       } else {
          processingEnv.getMessager().printMessage(level, formatted);
       }
+   }
+
+   private Map<String, List<Element>> getMapWithQualifiedName(Set<? extends Element> annotatedElements) {
+      Map<String, List<Element>> elementMap = new HashMap<String, List<Element>>();
+      for (Element interfaceElement : annotatedElements) {
+         List<Element> list = elementMap.get(interfaceElement.getEnclosingElement().toString());
+         if (list != null) {
+            list.add(interfaceElement);
+         } else {
+            list = new LinkedList<Element>();
+            list.add(interfaceElement);
+            elementMap.put(interfaceElement.getEnclosingElement().toString(), list);
+         }
+      }
+      return elementMap;
    }
 }
