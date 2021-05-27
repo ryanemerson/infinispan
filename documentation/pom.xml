@@ -298,6 +298,18 @@
                                     </target>
                                 </configuration>
                             </execution>
+                            <execution>
+                                <id>creatreport</id>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                                <phase>package</phase>
+                                <configuration>
+                                    <target>
+                                        <ant antfile="descriptionreport.xml" inheritRefs="true"/>
+                                    </target>
+                                </configuration>
+                            </execution>
                         </executions>
                     </plugin>
                     <plugin>
