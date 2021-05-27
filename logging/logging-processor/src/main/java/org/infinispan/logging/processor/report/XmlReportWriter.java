@@ -33,6 +33,7 @@ public class XmlReportWriter implements AutoCloseable {
          if (title != null) {
             xmlWriter.writeAttribute("class", title);
          }
+         xmlWriter.writeComment("DescriptionDocumentation");
          xmlWriter.writeStartElement("logs");
       } catch (XMLStreamException e) {
          throw new IOException(e);
