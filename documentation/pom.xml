@@ -184,7 +184,24 @@
                     </execution>
                 </executions>
             </plugin>
-
+            <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <executions>
+                         <execution>
+                                <id>create-report</id>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                                <phase>install</phase>
+                                <configuration>
+                                    <target>
+                                        <ant antfile="collect-log-reports.xml" inheritRefs="true"/>
+                                    </target>
+                                </configuration>
+                            </execution>
+                        </executions>
+                        </plugin>
         </plugins>
     </build>
 
@@ -299,14 +316,14 @@
                                 </configuration>
                             </execution>
                             <execution>
-                                <id>creatreport</id>
+                                <id>create-report</id>
                                 <goals>
                                     <goal>run</goal>
                                 </goals>
-                                <phase>package</phase>
+                                <phase>install</phase>
                                 <configuration>
                                     <target>
-                                        <ant antfile="descriptionreport.xml" inheritRefs="true"/>
+                                        <ant antfile="collect-log-reports.xml" inheritRefs="true"/>
                                     </target>
                                 </configuration>
                             </execution>
