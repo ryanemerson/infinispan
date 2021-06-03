@@ -401,7 +401,7 @@ public abstract class AbstractAuthorization {
    }
 
    @Test
-   public void testRestAdminsShoudleBeAbleToAdminServer() {
+   public void testRestAdminsShouldBeAbleToAdminServer() {
       RestClientConfigurationBuilder adminConfig = restBuilders.get(TestUser.ADMIN);
       RestClient client = getServerTest().rest().withClientConfiguration(adminConfig).get();
       assertStatus(NO_CONTENT, client.server().connectorStop("endpoint-alternate-1"));
