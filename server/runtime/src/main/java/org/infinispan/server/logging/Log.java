@@ -8,6 +8,7 @@ import java.util.NoSuchElementException;
 import javax.naming.NamingException;
 
 import org.infinispan.commons.CacheConfigurationException;
+import org.infinispan.commons.CacheException;
 import org.infinispan.commons.util.OS;
 import org.infinispan.server.core.transport.IpSubnetFilterRule;
 import org.jboss.logging.BasicLogger;
@@ -235,4 +236,8 @@ public interface Log extends BasicLogger {
 
    @Message(value = "Cannot add multiple realms of type '%s' to security realm '%s'", id = 80062)
    CacheConfigurationException duplicateRealmType(String type, String realm);
+
+   @LogMessage(level = Logger.Level.ERROR)
+   @Message(value = "Exception encountered when shutting down cache '%s'", id = 80063)
+   void exceptionOnCacheShutdown(String cacheName, @Cause CacheException e);
 }
