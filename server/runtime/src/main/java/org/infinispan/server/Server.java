@@ -10,8 +10,10 @@ import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.PrivilegedActionException;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -56,6 +58,7 @@ import org.infinispan.lifecycle.ComponentStatus;
 import org.infinispan.manager.ClusterExecutor;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
+import org.infinispan.registry.InternalCacheRegistry;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.remoting.transport.jgroups.JGroupsTransport;
 import org.infinispan.remoting.transport.jgroups.NamedSocketFactory;
@@ -533,15 +536,28 @@ public class Server implements ServerManagement, AutoCloseable {
    public void clusterStop() {
       cacheManagers.values().forEach(cm -> {
          SecurityActions.checkPermission(cm.withSubject(Security.getSubject()), AuthorizationPermission.LIFECYCLE);
-         for (String name : cm.getCacheNames()) {
-            try {
-               SecurityActions.shutdownCache(cm, name);
-            } catch (CacheException e) {
-               log.exceptionOnCacheShutdown(name, e);
-            }
-         }
+
+         InternalCacheRegistry icr = cm.getGlobalComponentRegistry().getComponent(InternalCacheRegistry.class);
+         Set<String> cacheNames = cm.getCacheNames();
+         shutdownCaches(cm, cacheNames);
+
+         Set<String> internalCaches = new HashSet<>(icr.getInternalCacheNames());
+         /* The ___script_cache is included in both getCacheNames() and getInternalCacheNames so prevent repeated shutdown calls */
+         internalCaches.removeAll(cacheNames);
+         shutdownCaches(cm, internalCaches);
+
          sendExitStatusToServers(SecurityActions.getClusterExecutor(cm), ExitStatus.CLUSTER_SHUTDOWN);
       });
+   }
+
+   private void shutdownCaches(EmbeddedCacheManager cm, Collection<String> cacheNames) {
+      for (String name : cacheNames) {
+         try {
+            SecurityActions.shutdownCache(cm, name);
+         } catch (CacheException e) {
+            log.exceptionOnCacheShutdown(name, e);
+         }
+      }
    }
 
    private void sendExitStatusToServers(ClusterExecutor clusterExecutor, ExitStatus exitStatus) {
