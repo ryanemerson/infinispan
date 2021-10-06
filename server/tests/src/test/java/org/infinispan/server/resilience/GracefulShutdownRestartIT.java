@@ -7,6 +7,8 @@ import java.util.concurrent.TimeUnit;
 
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.rest.RestClient;
+import org.infinispan.client.rest.configuration.RestClientConfigurationBuilder;
+import org.infinispan.client.rest.configuration.RestClientConfigurationProperties;
 import org.infinispan.commons.test.Eventually;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
@@ -27,15 +29,15 @@ public class GracefulShutdownRestartIT {
    @ClassRule
    public static final InfinispanServerRule SERVER =
          InfinispanServerRuleBuilder.config("configuration/ClusteredServerTest.xml")
-                                    .numServers(2)
-                                    .runMode(ServerRunMode.CONTAINER)
-                                    .build();
+               .numServers(2)
+               .runMode(ServerRunMode.CONTAINER)
+               .build();
 
    @Rule
    public InfinispanServerTestMethodRule SERVER_TEST = new InfinispanServerTestMethodRule(SERVER);
 
    @Test
-   public void testGracefulShutdownRestart() {
+   public void testGracefulShutdownRestart() throws Exception {
       ConfigurationBuilder builder = new ConfigurationBuilder();
       builder.clustering().cacheMode(CacheMode.DIST_SYNC).persistence().addSingleFileStore().segmented(false);
       RemoteCache<Object, Object> hotRod = SERVER_TEST.hotrod().withServerConfiguration(builder).create();
@@ -44,8 +46,16 @@ public class GracefulShutdownRestartIT {
          hotRod.put(String.format("k%03d", i), String.format("v%03d", i));
       }
 
-      RestClient rest = SERVER_TEST.rest().get();
-      sync(rest.cluster().stop());
+      RestClientConfigurationBuilder restClientBuilder = new RestClientConfigurationBuilder()
+            .socketTimeout(RestClientConfigurationProperties.DEFAULT_SO_TIMEOUT * 60)
+            .connectionTimeout(RestClientConfigurationProperties.DEFAULT_CONNECT_TIMEOUT * 60);
+      RestClient rest = SERVER_TEST.rest().withClientConfiguration(restClientBuilder).get();
+      try {
+         sync(rest.cluster().stop());
+      } catch (Exception e) {
+         System.err.println("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++=");
+         Thread.sleep(1000 * 60 * 60);
+      }
       ContainerInfinispanServerDriver serverDriver = (ContainerInfinispanServerDriver) SERVER.getServerDriver();
       Eventually.eventually(
             "Cluster did not shutdown within timeout",

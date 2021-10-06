@@ -77,7 +77,8 @@ public class ContainerInfinispanServerDriver extends AbstractInfinispanServerDri
    private static final Long IMAGE_MEMORY_SWAP = Long.getLong(TestSystemPropertyNames.INFINISPAN_TEST_SERVER_CONTAINER_MEMORY_SWAP, null);
    public static final String INFINISPAN_SERVER_HOME = "/opt/infinispan";
    public static final int JMX_PORT = 9999;
-   public static final String JDK_BASE_IMAGE_NAME = "registry.access.redhat.com/ubi8/openjdk-11-runtime";
+   // openjdk-11 image required for jstack
+   public static final String JDK_BASE_IMAGE_NAME = "registry.access.redhat.com/ubi8/openjdk-11";
    public static final String IMAGE_USER = "200";
    public static final Integer[] EXPOSED_PORTS = {
          11222, // Protocol endpoint
@@ -328,14 +329,14 @@ public class ContainerInfinispanServerDriver extends AbstractInfinispanServerDri
 
    @Override
    protected void stop() {
-      for (int i = 0; i < containers.length; i++) {
-         log.infof("Stopping container %d", i);
-         stop(i);
-         log.infof("Stopped container %d", i);
-      }
-      ResourceReaper.instance().performCleanup();
-      // See https://github.com/testcontainers/testcontainers-java/issues/2276
-      ThreadLeakChecker.ignoreThreadsContaining("docker-java-stream-");
+//      for (int i = 0; i < containers.length; i++) {
+//         log.infof("Stopping container %d", i);
+//         stop(i);
+//         log.infof("Stopped container %d", i);
+//      }
+//      ResourceReaper.instance().performCleanup();
+//      // See https://github.com/testcontainers/testcontainers-java/issues/2276
+//      ThreadLeakChecker.ignoreThreadsContaining("docker-java-stream-");
    }
 
    @Override
