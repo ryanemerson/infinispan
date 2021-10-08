@@ -2,8 +2,10 @@ package org.infinispan.rest;
 
 import java.util.concurrent.Executor;
 
+import org.infinispan.commons.IllegalLifecycleStateException;
 import org.infinispan.configuration.parsing.ParserRegistry;
 import org.infinispan.counter.impl.manager.EmbeddedCounterManager;
+import org.infinispan.lifecycle.ComponentStatus;
 import org.infinispan.marshall.core.EncoderRegistry;
 import org.infinispan.rest.cachemanager.RestCacheManager;
 import org.infinispan.rest.configuration.RestServerConfiguration;
@@ -38,6 +40,7 @@ public class InvocationHelper {
    }
 
    public RestCacheManager<Object> getRestCacheManager() {
+      checkServerStatus();
       return restCacheManager;
    }
 
@@ -54,6 +57,7 @@ public class InvocationHelper {
    }
 
    public EmbeddedCounterManager getCounterManager() {
+      checkServerStatus();
       return counterManager;
    }
 
@@ -67,5 +71,14 @@ public class InvocationHelper {
 
    public EncoderRegistry getEncoderRegistry() {
       return encoderRegistry;
+   }
+
+   private void checkServerStatus() {
+      ComponentStatus status = server.getStatus();
+      switch (status) {
+         case STOPPING:
+         case TERMINATED:
+            throw new IllegalLifecycleStateException("Unable to process REST request when Server is " + status);
+      }
    }
 }

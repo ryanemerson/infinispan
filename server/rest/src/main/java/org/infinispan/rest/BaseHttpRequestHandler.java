@@ -3,8 +3,10 @@ package org.infinispan.rest;
 import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
 import static io.netty.handler.codec.http.HttpResponseStatus.FORBIDDEN;
 import static io.netty.handler.codec.http.HttpResponseStatus.INTERNAL_SERVER_ERROR;
+import static io.netty.handler.codec.http.HttpResponseStatus.SERVICE_UNAVAILABLE;
 
 import org.infinispan.commons.CacheConfigurationException;
+import org.infinispan.commons.IllegalLifecycleStateException;
 import org.infinispan.commons.util.Util;
 import org.infinispan.rest.logging.Log;
 import org.infinispan.rest.logging.RestAccessLoggingHandler;
@@ -36,6 +38,8 @@ public abstract class BaseHttpRequestHandler extends SimpleChannelInboundHandler
          errorResponse = new NettyRestResponse.Builder().status(FORBIDDEN).entity(cause.getMessage()).build();
       } else if (cause instanceof CacheConfigurationException || cause instanceof IllegalArgumentException) {
          errorResponse = new NettyRestResponse.Builder().status(BAD_REQUEST).entity(cause.getMessage()).build();
+      } else if (cause instanceof IllegalLifecycleStateException) {
+         errorResponse = new NettyRestResponse.Builder().status(SERVICE_UNAVAILABLE).entity(cause.getMessage()).build();
       } else {
          Throwable rootCause = Util.getRootCause(throwable);
          errorResponse = new NettyRestResponse.Builder().status(INTERNAL_SERVER_ERROR).entity(rootCause.getMessage()).build();

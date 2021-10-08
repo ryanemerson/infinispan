@@ -526,8 +526,15 @@ public class Server implements ServerManagement, AutoCloseable {
    @Override
    public void clusterStop() {
       SecurityActions.checkPermission(cacheManager.withSubject(Security.getSubject()), AuthorizationPermission.LIFECYCLE);
-      cacheManager.getCacheNames().forEach(name -> SecurityActions.shutdownCache(cacheManager, name));
+      cacheManager.getCacheNames().forEach(name -> SecurityActions.shutdownAllCaches(cacheManager));
       sendExitStatusToServers(SecurityActions.getClusterExecutor(cacheManager), ExitStatus.CLUSTER_SHUTDOWN);
+   }
+
+   @Override
+   public void containerStop() {
+      SecurityActions.checkPermission(cacheManager.withSubject(Security.getSubject()), AuthorizationPermission.LIFECYCLE);
+      this.status = ComponentStatus.STOPPING;
+      SecurityActions.shutdownAllCaches(cacheManager);
    }
 
    private void sendExitStatusToServers(ClusterExecutor clusterExecutor, ExitStatus exitStatus) {
