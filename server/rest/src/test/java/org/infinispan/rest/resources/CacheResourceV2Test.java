@@ -53,6 +53,8 @@ import org.infinispan.client.rest.RestClient;
 import org.infinispan.client.rest.RestEntity;
 import org.infinispan.client.rest.RestRawClient;
 import org.infinispan.client.rest.RestResponse;
+import org.infinispan.client.rest.configuration.RestClientConfiguration;
+import org.infinispan.client.rest.configuration.RestClientConfigurationBuilder;
 import org.infinispan.commons.dataconversion.MediaType;
 import org.infinispan.commons.dataconversion.internal.Json;
 import org.infinispan.commons.marshall.ProtoStreamMarshaller;
@@ -127,9 +129,9 @@ public class CacheResourceV2Test extends AbstractRestResourceTest {
    public Object[] factory() {
       return new Object[]{
             new CacheResourceV2Test().withSecurity(false).protocol(HTTP_11).ssl(false),
-            new CacheResourceV2Test().withSecurity(true).protocol(HTTP_20).ssl(false),
-            new CacheResourceV2Test().withSecurity(true).protocol(HTTP_11).ssl(true),
-            new CacheResourceV2Test().withSecurity(true).protocol(HTTP_20).ssl(true),
+//            new CacheResourceV2Test().withSecurity(true).protocol(HTTP_20).ssl(false),
+//            new CacheResourceV2Test().withSecurity(true).protocol(HTTP_11).ssl(true),
+//            new CacheResourceV2Test().withSecurity(true).protocol(HTTP_20).ssl(true),
       };
    }
 
@@ -196,6 +198,28 @@ public class CacheResourceV2Test extends AbstractRestResourceTest {
       testCreateAndUseCache("áb\\ćé/+-$");
       testCreateAndUseCache("org.infinispan.cache");
       testCreateAndUseCache("a%25bc");
+   }
+
+   @Test
+   public void testEOF() {
+      String cacheName = "someCache";
+      String json = "{\"distributed-cache\":{\"mode\":\"SYNC\", \"encoding\": {\"media-type\": \"application/json\"}, \"persistence\":{\"file-store\":{\"fetch-state\":true}}, \"statistics\":true}}";
+//      json = "{\"distributed-cache\":{\"mode\":\"SYNC\", \"statistics\":\"true\"}}";
+
+      RestClientConfiguration config = new RestClientConfigurationBuilder().addServers("172.18.0.3:31195").build();
+//      RestClient client = RestClient.forConfiguration(config);
+      for (int i = 0; i < 10000; i++) {
+         System.out.printf("Execution %d-------------------------------\n", i);
+         RestEntity jsonEntity = RestEntity.create(APPLICATION_JSON, json);
+
+         RestCacheClient cache = client.cache(cacheName);
+         CompletionStage<RestResponse> response = cache.createWithConfiguration(jsonEntity);
+         assertThat(response).isOk();
+         RestCacheClient cacheClient = client.cache(cacheName);
+
+         response = cacheClient.delete();
+         assertThat(response).isOk();
+      }
    }
 
    @Test
