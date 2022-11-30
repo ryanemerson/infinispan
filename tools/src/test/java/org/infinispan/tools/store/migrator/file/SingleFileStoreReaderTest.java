@@ -25,6 +25,8 @@ public class SingleFileStoreReaderTest extends AbstractReaderTest {
             new SingleFileStoreReaderTest(),
             new SingleFileStoreReaderTest().majorVersion(10),
             new SingleFileStoreReaderTest().majorVersion(10).sourceSegments(4),
+            new SingleFileStoreReaderTest().majorVersion(11),
+            new SingleFileStoreReaderTest().majorVersion(11).sourceSegments(4),
             new SingleFileStoreReaderTest().targetSegments(59),
             new SingleFileStoreReaderTest().majorVersion(9),
             new SingleFileStoreReaderTest().majorVersion(9).targetSegments(59),

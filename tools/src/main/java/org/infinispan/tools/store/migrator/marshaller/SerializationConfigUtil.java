@@ -74,17 +74,9 @@ public class SerializationConfigUtil {
             Map<Integer, AdvancedExternalizer> userExts = getExternalizersFromProps(props);
             return majorVersion == 8 ? new Infinispan8Marshaller(userExts) : new Infinispan9Marshaller(userExts);
          case 10:
+         case 11:
             marshaller = loadMarshallerInstance(props);
             return new Infinispan10Marshaller(marshaller, getSCIClasses(props));
-         case 11:
-            String marshallerClass = props.get(MARSHALLER, CLASS);
-            PersistenceMarshaller pm = createPersistenceMarshaller(props);
-            if (marshallerClass != null) {
-               // If a custom marshaller was specified, then return PersistenceMarshaller as user values are all wrapped
-               return pm;
-            }
-            // Return the user marshaller so that PersistenceMarshaller object wrapping is avoided
-            return pm.getUserMarshaller();
          default:
             return props.isTargetStore() ? null : createPersistenceMarshaller(props);
       }
