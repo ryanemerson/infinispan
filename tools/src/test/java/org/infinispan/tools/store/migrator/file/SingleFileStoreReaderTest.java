@@ -8,6 +8,7 @@ import static org.infinispan.tools.store.migrator.TestUtil.propKey;
 import java.nio.file.Path;
 import java.util.Properties;
 
+import org.infinispan.commons.util.Version;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.configuration.cache.SingleFileStoreConfigurationBuilder;
 import org.infinispan.tools.store.migrator.AbstractReaderTest;
@@ -27,6 +28,8 @@ public class SingleFileStoreReaderTest extends AbstractReaderTest {
             new SingleFileStoreReaderTest().majorVersion(10).sourceSegments(4),
             new SingleFileStoreReaderTest().majorVersion(11),
             new SingleFileStoreReaderTest().majorVersion(11).sourceSegments(4),
+            new SingleFileStoreReaderTest().majorVersion(12),
+            new SingleFileStoreReaderTest().majorVersion(12).sourceSegments(4),
             new SingleFileStoreReaderTest().targetSegments(59),
             new SingleFileStoreReaderTest().majorVersion(9),
             new SingleFileStoreReaderTest().majorVersion(9).targetSegments(59),
