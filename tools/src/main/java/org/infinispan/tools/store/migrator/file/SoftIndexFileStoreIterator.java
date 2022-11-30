@@ -72,7 +72,7 @@ public class SoftIndexFileStoreIterator implements StoreIterator {
 
       @Override
       public boolean hasNext() {
-         return file > -1 || iterator.hasNext();
+            return file > -1 || iterator.hasNext() && fileProvider.getFile(file++).getFileSize() > 0;
       }
 
       @Override

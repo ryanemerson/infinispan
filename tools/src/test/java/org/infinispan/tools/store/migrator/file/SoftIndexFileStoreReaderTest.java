@@ -6,6 +6,7 @@ import static org.infinispan.tools.store.migrator.Element.SOURCE;
 import static org.infinispan.tools.store.migrator.Element.TYPE;
 import static org.infinispan.tools.store.migrator.TestUtil.propKey;
 
+import java.nio.file.Path;
 import java.util.Properties;
 
 import org.infinispan.configuration.cache.ConfigurationBuilder;
@@ -20,7 +21,10 @@ import org.testng.annotations.Test;
 public class SoftIndexFileStoreReaderTest extends AbstractReaderTest {
 
    public String getSrcDirectory() {
-      return String.format("target/test-classes/infinispan%d/softindex/", majorVersion);
+      String root = String.format("target/test-classes/infinispan%d/softindex/", majorVersion);
+      if (sourceSegments == 0)
+         return root;
+      return Path.of(root).resolve("segmented").toString();
    }
 
    public String getTargetDataDirectory() {
@@ -34,8 +38,11 @@ public class SoftIndexFileStoreReaderTest extends AbstractReaderTest {
    @Factory
    public Object[] factory() {
       return new Object[] {
-            new SoftIndexFileStoreReaderTest().targetSegments(59),
-            new SoftIndexFileStoreReaderTest().majorVersion(9).targetSegments(59),
+//            new SoftIndexFileStoreReaderTest().targetSegments(59),
+//            new SoftIndexFileStoreReaderTest().majorVersion(9).targetSegments(59),
+//            new SoftIndexFileStoreReaderTest().majorVersion(10).targetSegments(59),
+            new SoftIndexFileStoreReaderTest().majorVersion(10).sourceSegments(4).targetSegments(59),
+//            new SoftIndexFileStoreReaderTest().majorVersion(12).sourceSegments(4).targetSegments(59),
       };
    }
 

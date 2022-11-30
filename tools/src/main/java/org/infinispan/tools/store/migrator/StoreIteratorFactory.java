@@ -3,8 +3,9 @@ package org.infinispan.tools.store.migrator;
 import static org.infinispan.tools.store.migrator.Element.SOURCE;
 
 import java.util.Properties;
-import java.util.function.Function;
 
+import org.infinispan.tools.store.migrator.file.SegmentedSFSReader;
+import org.infinispan.tools.store.migrator.file.SegmentedSIFSReader;
 import org.infinispan.tools.store.migrator.file.SingleFileStoreReader;
 import org.infinispan.tools.store.migrator.file.SoftIndexFileStoreIterator;
 import org.infinispan.tools.store.migrator.jdbc.JdbcStoreReader;
@@ -14,31 +15,25 @@ class StoreIteratorFactory {
 
    static StoreIterator get(Properties properties) {
       StoreProperties props = new StoreProperties(SOURCE, properties);
-      StoreType type = props.storeType();
-      switch (type) {
+      switch (props.storeType()) {
          case JDBC_BINARY:
          case JDBC_MIXED:
          case JDBC_STRING:
             return new JdbcStoreReader(props);
-      }
-
-      Function<StoreProperties, StoreIterator> factory = fileStoreFactory(props.storeType());
-      if (props.isSegmented())
-         return new SegmentedFileStoreReader(props, factory);
-
-      return factory.apply(props);
-   }
-
-   private static Function<StoreProperties, StoreIterator> fileStoreFactory(StoreType type) {
-      switch (type) {
          case LEVELDB:
          case ROCKSDB:
-            return RocksDBReader::new;
+            return new RocksDBReader(props);
          case SINGLE_FILE_STORE:
-            return SingleFileStoreReader::new;
+            if (props.isSegmented())
+               return new SegmentedSFSReader(props);
+
+            return new SingleFileStoreReader(props);
          case SOFT_INDEX_FILE_STORE:
-            return SoftIndexFileStoreIterator::new;
+            if (props.isSegmented() && props.getMajorVersion() < 12)
+               return new SegmentedSIFSReader(props);
+
+            return new SoftIndexFileStoreIterator(props);
       }
-      throw new IllegalArgumentException();
+      return null;
    }
 }

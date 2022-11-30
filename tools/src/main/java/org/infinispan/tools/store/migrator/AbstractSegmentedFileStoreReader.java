@@ -8,34 +8,31 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.infinispan.persistence.spi.MarshallableEntry;
 
-public class SegmentedFileStoreReader implements StoreIterator {
+public abstract class AbstractSegmentedFileStoreReader implements StoreIterator {
 
    final int numSegments;
-   final Function<StoreProperties, StoreIterator> storeFactory;
-
    final List<StoreIterator> storeIterators;
 
-   public SegmentedFileStoreReader(StoreProperties properties, Function<StoreProperties, StoreIterator> storeFactory) {
+   protected AbstractSegmentedFileStoreReader(StoreProperties properties) {
       properties.required(SEGMENT_COUNT);
 
       this.numSegments = Integer.parseInt(properties.get(SEGMENT_COUNT));
-      this.storeFactory = storeFactory;
 
       Path root = Path.of(properties.get(LOCATION));
       this.storeIterators = new ArrayList<>(numSegments);
       for (int i = 0; i < numSegments; i++) {
          StoreProperties p = new StoreProperties(properties);
-         String segment = root.resolve(Integer.toString(i)).toString();
-         p.put(segment, LOCATION);
-         StoreIterator it = storeFactory.apply(p);
-         storeIterators.add(it);
+         p.put(segmentLocation(p.cacheName(), i, root).toString(), LOCATION);
+         storeIterators.add(newIterator(p));
       }
    }
+
+   abstract public StoreIterator newIterator(StoreProperties properties);
+   abstract public Path segmentLocation(String cache, int segment, Path root);
 
    @Override
    public void close() throws Exception {

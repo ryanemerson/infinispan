@@ -29,10 +29,12 @@ public class RocksDBReaderTest extends AbstractReaderTest {
    @Factory
    public Object[] factory() {
       return new Object[] {
-            new RocksDBReaderTest(),
-            new RocksDBReaderTest().targetSegments(59),
-            new RocksDBReaderTest().majorVersion(9),
-            new RocksDBReaderTest().majorVersion(9).targetSegments(59),
+//            new RocksDBReaderTest(),
+//            new RocksDBReaderTest().targetSegments(59),
+//            new RocksDBReaderTest().majorVersion(9),
+//            new RocksDBReaderTest().majorVersion(9).targetSegments(59),
+            new RocksDBReaderTest().majorVersion(12),
+//            new RocksDBReaderTest().majorVersion(12).sourceSegments(4).targetSegments(59),
       };
    }
 
