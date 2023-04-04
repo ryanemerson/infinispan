@@ -48,6 +48,17 @@
             <artifactId>quarkus-narayana-jta</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>jakarta.enterprise</groupId>
+            <artifactId>jakarta.enterprise.cdi-api</artifactId>
+            <version>${version.jakarta.enterprise.cdi.legacy}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>jakarta.transaction</groupId>
+            <artifactId>jakarta.transaction-api</artifactId>
+            <version>${version.jakarta.transaction.legacy}</version>
+        </dependency>
 
         <!-- test dependencies -->
         <dependency>

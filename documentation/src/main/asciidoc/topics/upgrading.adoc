@@ -1,5 +1,11 @@
 = Upgrading from 14.0 to 15.0
 
+== Jakarta and Java EE
+
+* Infinispan has been updated to use `jakarta.*` packages.
+* If you require the legacy `javax.*` packages, you should utilise jars with a `-javaee` suffix, e.g. `infinispan-core-javaee`.
+* The old `*-jakarta` jars have been removed.
+
 == Removals
 
 * The Kryo and Protostuff marshallers have been removed.
