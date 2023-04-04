@@ -75,8 +75,8 @@ class InfinispanEmbeddedProcessor {
     @BuildStep
     void addInfinispanDependencies(BuildProducer<IndexDependencyBuildItem> indexDependency) {
         indexDependency.produce(new IndexDependencyBuildItem("org.jgroups", "jgroups"));
-        indexDependency.produce(new IndexDependencyBuildItem("org.infinispan", "infinispan-commons"));
-        indexDependency.produce(new IndexDependencyBuildItem("org.infinispan", "infinispan-core"));
+        indexDependency.produce(new IndexDependencyBuildItem("org.infinispan", "infinispan-commons-javaee"));
+        indexDependency.produce(new IndexDependencyBuildItem("org.infinispan", "infinispan-core-javaee"));
     }
 
     @BuildStep

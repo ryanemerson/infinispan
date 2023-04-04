@@ -17,7 +17,7 @@
    <modules>
       <module>spi</module>
       <module>all</module>
-      <module>all-jakarta</module>
+      <module>all-javaee</module>
    </modules>
 
    <profiles>

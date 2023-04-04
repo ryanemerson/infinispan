@@ -15,8 +15,8 @@ import java.security.PrivilegedAction;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.enterprise.inject.spi.Annotated;
-import javax.enterprise.inject.spi.BeanManager;
+import jakarta.enterprise.inject.spi.Annotated;
+import jakarta.enterprise.inject.spi.BeanManager;
 
 /**
  * Utility class for working with JDK Reflection and also CDI's

@@ -9,7 +9,7 @@ Set up CDI beans to inject embedded caches.
 [source,java]
 ----
 ...
-import javax.inject.Qualifier;
+import jakarta.inject.Qualifier;
 
 @Qualifier
 @Target({ElementType.FIELD, ElementType.PARAMETER, ElementType.METHOD})
@@ -82,7 +82,7 @@ method or do not add any qualifier.
 +
 ----
 ...
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 public class GreetingService {
 

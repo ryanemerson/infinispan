@@ -27,7 +27,7 @@
       </dependency>
       <dependency>
          <groupId>org.infinispan</groupId>
-         <artifactId>infinispan-cdi-embedded</artifactId>
+         <artifactId>infinispan-cdi-embedded-javaee</artifactId>
          <scope>test</scope>
       </dependency>
       <dependency>
@@ -114,6 +114,7 @@
             <dependency>
                <groupId>org.jboss.weld</groupId>
                <artifactId>weld-core-impl</artifactId>
+               <version>${versionx.org.jboss.weld.se.weld-se-core.legacy}</version>
                <scope>test</scope>
             </dependency>
             <dependency>
