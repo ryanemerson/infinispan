@@ -37,11 +37,12 @@
         <dependency>
             <groupId>jakarta.enterprise</groupId>
             <artifactId>jakarta.enterprise.cdi-api</artifactId>
+            <version>${version.jakarta.enterprise.cdi.legacy}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.infinispan</groupId>
-            <artifactId>infinispan-cdi-embedded</artifactId>
+            <artifactId>infinispan-cdi-embedded-javaee</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
@@ -58,7 +59,7 @@
         </dependency>
         <dependency>
             <groupId>org.infinispan</groupId>
-            <artifactId>infinispan-core</artifactId>
+            <artifactId>infinispan-core-javaee</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -73,7 +74,7 @@
         </dependency>
         <dependency>
             <groupId>org.infinispan</groupId>
-            <artifactId>infinispan-query</artifactId>
+            <artifactId>infinispan-query-javaee</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -83,7 +84,7 @@
         </dependency>
         <dependency>
             <groupId>org.infinispan</groupId>
-            <artifactId>infinispan-cachestore-jdbc</artifactId>
+            <artifactId>infinispan-cachestore-jdbc-javaee</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

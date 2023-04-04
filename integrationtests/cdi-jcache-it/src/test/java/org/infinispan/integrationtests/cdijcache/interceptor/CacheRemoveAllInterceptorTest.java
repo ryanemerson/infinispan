@@ -7,7 +7,7 @@ import static org.testng.Assert.assertTrue;
 import java.lang.invoke.MethodHandles;
 
 import javax.cache.CacheException;
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.infinispan.Cache;
 import org.infinispan.cdi.embedded.test.DefaultTestEmbeddedCacheManagerProducer;

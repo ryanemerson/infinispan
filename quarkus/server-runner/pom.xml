@@ -41,6 +41,7 @@
         <dependency>
             <groupId>org.jboss.narayana.jta</groupId>
             <artifactId>narayana-jta</artifactId>
+            <version>${version.jboss.narayana.legacy}</version>
         </dependency>
 
         <!-- Test Dependencies -->

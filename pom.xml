@@ -80,32 +80,33 @@
       <module>commons-test</module>
       <module>build/infinispan-defaults-maven-plugin</module>
       <module>core</module>
-      <module>core-jakarta</module>
+      <module>core-javaee</module>
       <module>jboss-marshalling</module>
       <module>counter</module>
       <module>multimap</module>
+      <module>multimap-javaee</module>
       <module>tools</module>
-      <module>tools-jakarta</module>
+      <module>tools-javaee</module>
       <module>query-dsl</module>
       <module>query-core</module>
       <module>query</module>
-      <module>query-jakarta</module>
+      <module>query-javaee</module>
       <module>object-filter</module>
       <module>remote-query/remote-query-client</module>
       <module>remote-query/remote-query-server</module>
       <module>persistence</module>
       <module>persistence/jdbc</module>
-      <module>persistence/jdbc-jakarta</module>
+      <module>persistence/jdbc-javaee</module>
       <module>persistence/jdbc-common</module>
-      <module>persistence/jdbc-common-jakarta</module>
+      <module>persistence/jdbc-common-javaee</module>
       <module>persistence/remote</module>
       <module>persistence/rocksdb</module>
       <module>persistence/sql</module>
+      <module>persistence/sql-javaee</module>
       <module>server</module>
       <module>server/core</module>
       <module>server/memcached</module>
       <module>server/hotrod</module>
-      <module>server/hotrod-jakarta</module>
       <module>server/resp</module>
       <module>server/rest</module>
       <module>server/router</module>
@@ -114,9 +115,8 @@
       <module>server/tests</module>
       <module>client/rest-client</module>
       <module>client/hotrod-client</module>
-      <module>client/hotrod-client-jakarta</module>
+      <module>client/hotrod-client-javaee</module>
       <module>client/hotrod</module>
-      <module>client/hotrod-jakarta</module>
       <module>client/infinispan-key-value-store-hotrod</module>
       <module>archetypes</module>
       <module>all</module>
@@ -131,11 +131,11 @@
       <module>tasks/scripting</module>
       <module>cdi</module>
       <module>cdi/common</module>
-      <module>cdi/common-jakarta</module>
+      <module>cdi/common-javaee</module>
       <module>cdi/embedded</module>
-      <module>cdi/embedded-jakarta</module>
+      <module>cdi/embedded-javaee</module>
       <module>cdi/remote</module>
-      <module>cdi/remote-jakarta</module>
+      <module>cdi/remote-javaee</module>
       <module>lock</module>
       <module>jcache</module>
       <module>quarkus</module>
@@ -339,7 +339,8 @@
       <versionx.org.jboss.byteman.byteman-install>${version.byteman}</versionx.org.jboss.byteman.byteman-install>
       <versionx.org.jboss.byteman.byteman-submit>${version.byteman}</versionx.org.jboss.byteman.byteman-submit>
       <versionx.org.jboss.jboss-common-core>2.2.16.GA</versionx.org.jboss.jboss-common-core>
-      <versionx.org.jboss.jboss-transaction-spi-jakarta>7.6.1.Final</versionx.org.jboss.jboss-transaction-spi-jakarta>
+      <versionx.org.jboss.jboss-transaction-spi.legacy>7.6.1.Final</versionx.org.jboss.jboss-transaction-spi.legacy>
+      <versionx.org.jboss.jboss-transaction-spi>8.0.0.Final</versionx.org.jboss.jboss-transaction-spi>
       <versionx.org.jboss.logging.jboss-logging>${version.jboss.logging}</versionx.org.jboss.logging.jboss-logging>
       <versionx.org.jboss.logging.jboss-logging-processor>2.2.1.Final</versionx.org.jboss.logging.jboss-logging-processor>
       <versionx.org.jboss.marshalling.jboss-marshalling>${version.jboss.marshalling}</versionx.org.jboss.marshalling.jboss-marshalling>
@@ -359,7 +360,8 @@
       <versionx.org.jboss.spec.javax.jms.jboss-jms-api_2.0_spec>2.0.0.Final</versionx.org.jboss.spec.javax.jms.jboss-jms-api_2.0_spec>
       <versionx.org.jboss.spec.jboss-jakartaee-8.0>1.0.1.Final</versionx.org.jboss.spec.jboss-jakartaee-8.0>
       <versionx.org.jboss.threads.jboss-threads>2.3.3.Final</versionx.org.jboss.threads.jboss-threads>
-      <versionx.org.jboss.weld.se.weld-se-core>3.1.2.Final</versionx.org.jboss.weld.se.weld-se-core>
+      <versionx.org.jboss.weld.se.weld-se-core.legacy>3.1.2.Final</versionx.org.jboss.weld.se.weld-se-core.legacy>
+      <versionx.org.jboss.weld.se.weld-se-core>5.1.0.Final</versionx.org.jboss.weld.se.weld-se-core>
       <versionx.org.jboss.weld.weld-core-impl>3.1.2.Final</versionx.org.jboss.weld.weld-core-impl>
       <versionx.org.jboss.weld.weld-api>3.1.SP1</versionx.org.jboss.weld.weld-api>
       <versionx.org.jgroups.aws.jgroups-aws>2.0.1.Final</versionx.org.jgroups.aws.jgroups-aws>
@@ -768,7 +770,7 @@
          <dependency>
             <groupId>jakarta.transaction</groupId>
             <artifactId>jakarta.transaction-api</artifactId>
-            <version>${version.jakarta.transaction.legacy}</version>
+            <version>${version.jakarta.transaction}</version>
          </dependency>
          <dependency>
             <groupId>javax.activation</groupId>
@@ -1367,8 +1369,8 @@
          </dependency>
          <dependency>
             <groupId>org.jboss</groupId>
-            <artifactId>jboss-transaction-spi-jakarta</artifactId>
-            <version>${versionx.org.jboss.jboss-transaction-spi-jakarta}</version>
+            <artifactId>jboss-transaction-spi</artifactId>
+            <version>${versionx.org.jboss.jboss-transaction-spi}</version>
          </dependency>
          <dependency>
             <groupId>org.jboss.arquillian.container</groupId>
@@ -1454,12 +1456,6 @@
          <dependency>
             <groupId>org.jboss.narayana.jta</groupId>
             <artifactId>narayana-jta</artifactId>
-            <version>${version.jboss.narayana}</version>
-            <scope>test</scope>
-         </dependency>
-         <dependency>
-            <groupId>org.jboss.narayana.jta</groupId>
-            <artifactId>narayana-jta-jakarta</artifactId>
             <version>${version.jboss.narayana}</version>
             <scope>test</scope>
          </dependency>
@@ -2003,7 +1999,7 @@
       </dependency>
       <dependency>
          <groupId>org.jboss</groupId>
-         <artifactId>jboss-transaction-spi-jakarta</artifactId>
+         <artifactId>jboss-transaction-spi</artifactId>
          <scope>test</scope>
       </dependency>
       <dependency>
