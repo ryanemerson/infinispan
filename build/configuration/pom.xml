@@ -254,7 +254,6 @@
       <version.org.jboss.galleon>4.2.8.Final</version.org.jboss.galleon>
       <version.org.wildfly.galleon-plugins>5.2.1.Final</version.org.wildfly.galleon-plugins>
       <version.sonatype.nexus-staging-plugin>1.6.13</version.sonatype.nexus-staging-plugin>
-      <version.eclipse.transformer>0.5.0</version.eclipse.transformer>
       <!-- overwrite version in jboss-parent -->
       <version.pmd.plugin>3.16.0</version.pmd.plugin>
       <version.owasp-dependency-check-plugin>7.1.0</version.owasp-dependency-check-plugin>
@@ -326,11 +325,6 @@
                   </execution>
                </executions>
             </plugin>
-            <plugin>
-               <groupId>org.eclipse.transformer</groupId>
-               <artifactId>transformer-maven-plugin</artifactId>
-               <version>${version.eclipse.transformer}</version>
-            </plugin>
          </plugins>
       </pluginManagement>
    </build>
@@ -363,80 +357,6 @@
                      </execution>
                   </executions>
                </plugin>
-               <plugin>
-                  <groupId>org.eclipse.transformer</groupId>
-                  <artifactId>transformer-maven-plugin</artifactId>
-                  <extensions>true</extensions>
-                  <configuration>
-                     <rules>
-                        <jakartaDefaults>true</jakartaDefaults>
-                        <invert>true</invert>
-                     </rules>
-                  </configuration>
-                  <executions>
-                     <execution>
-                        <id>default-jar</id>
-                        <goals>
-                           <goal>jar</goal>
-                        </goals>
-                        <phase>package</phase>
-                        <configuration>
-                           <artifact>
-                              <groupId>${project.groupId}</groupId>
-                              <artifactId>${original.artifactId}</artifactId>
-                              <version>${project.version}</version>
-                           </artifact>
-                        </configuration>
-                     </execution>
-                     <execution>
-                        <id>source-jar</id>
-                        <goals>
-                           <goal>jar</goal>
-                        </goals>
-                        <phase>package</phase>
-                        <configuration>
-                           <artifact>
-                              <groupId>${project.groupId}</groupId>
-                              <artifactId>${original.artifactId}</artifactId>
-                              <version>${project.version}</version>
-                              <classifier>sources</classifier>
-                           </artifact>
-                        </configuration>
-                     </execution>
-                     <execution>
-                        <id>test-jar</id>
-                        <goals>
-                           <goal>jar</goal>
-                        </goals>
-                        <phase>package</phase>
-                        <configuration>
-                           <skip>${transform.tests.skip}</skip>
-                           <artifact>
-                              <groupId>${project.groupId}</groupId>
-                              <artifactId>${original.artifactId}</artifactId>
-                              <version>${project.version}</version>
-                              <classifier>tests</classifier>
-                           </artifact>
-                        </configuration>
-                     </execution>
-                     <execution>
-                        <id>test-source-jar</id>
-                        <goals>
-                           <goal>jar</goal>
-                        </goals>
-                        <phase>package</phase>
-                        <configuration>
-                           <skip>${transform.tests.skip}</skip>
-                           <artifact>
-                              <groupId>${project.groupId}</groupId>
-                              <artifactId>${original.artifactId}</artifactId>
-                              <version>${project.version}</version>
-                              <classifier>test-sources</classifier>
-                           </artifact>
-                        </configuration>
-                     </execution>
-                  </executions>
-               </plugin>
             </plugins>
          </build>
       </profile>
@@ -454,32 +374,6 @@
                      <skip>${maven.javadoc.skip}</skip>
                      <detectOfflineLinks>false</detectOfflineLinks>
                   </configuration>
-               </plugin>
-               <plugin>
-                  <groupId>org.eclipse.transformer</groupId>
-                  <artifactId>transformer-maven-plugin</artifactId>
-                  <configuration>
-                     <rules>
-                        <jakartaDefaults>true</jakartaDefaults>
-                     </rules>
-                  </configuration>
-                  <executions>
-                     <execution>
-                        <id>javadoc-jar</id>
-                        <goals>
-                           <goal>jar</goal>
-                        </goals>
-                        <phase>package</phase>
-                        <configuration>
-                           <artifact>
-                              <groupId>${project.groupId}</groupId>
-                              <artifactId>${original.artifactId}</artifactId>
-                              <version>${project.version}</version>
-                              <classifier>javadoc</classifier>
-                           </artifact>
-                        </configuration>
-                     </execution>
-                  </executions>
                </plugin>
                <plugin>
                   <groupId>org.apache.maven.plugins</groupId>

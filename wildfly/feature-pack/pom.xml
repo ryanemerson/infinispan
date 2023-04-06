@@ -303,28 +303,6 @@
 
         <dependency>
             <groupId>org.infinispan</groupId>
-            <artifactId>infinispan-jcache</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>*</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>org.infinispan</groupId>
-            <artifactId>infinispan-jcache-commons</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>*</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>org.infinispan</groupId>
             <artifactId>infinispan-cdi-common</artifactId>
             <exclusions>
                 <exclusion>

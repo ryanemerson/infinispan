@@ -1,0 +1,70 @@
+[INFO] Scanning for projects...
+[INFO] ------------------------------------------------------------------------
+[INFO] Detecting the operating system and CPU architecture
+[INFO] ------------------------------------------------------------------------
+[INFO] os.detected.name: linux
+[INFO] os.detected.arch: x86_64
+[INFO] os.detected.bitness: 64
+[INFO] os.detected.version: 6.0
+[INFO] os.detected.version.major: 6
+[INFO] os.detected.version.minor: 0
+[INFO] os.detected.release: fedora
+[INFO] os.detected.release.version: 36
+[INFO] os.detected.release.like.fedora: true
+[INFO] os.detected.classifier: linux-x86_64
+[INFO] 
+[INFO] ---------------< org.infinispan:infinispan-server-rest >----------------
+[INFO] Building Infinispan REST Server 15.0.0-SNAPSHOT
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- maven-enforcer-plugin:3.1.0:enforce (enforce-java-version) @ infinispan-server-rest ---
+[INFO] 
+[INFO] --- maven-enforcer-plugin:3.1.0:enforce (enforce-maven-version) @ infinispan-server-rest ---
+[INFO] 
+[INFO] --- build-helper-maven-plugin:3.1.0:timestamp-property (timestamp-property) @ infinispan-server-rest ---
+[INFO] 
+[INFO] --- buildnumber-maven-plugin:1.4:create (default) @ infinispan-server-rest ---
+[INFO] Executing: /bin/sh -c cd '/home/remerson/workspace/RedHat/infinispan/infinispan-alt/server/rest' && 'git' 'rev-parse' '--verify' 'HEAD'
+[INFO] Working directory: /home/remerson/workspace/RedHat/infinispan/infinispan-alt/server/rest
+[INFO] Storing buildNumber: 1764661a6ad84afcac499359467a3555583f62c6 at timestamp: 1674038503941
+[INFO] Storing buildScmBranch: ISPN-14466/config_update_message
+[INFO] 
+[INFO] --- maven-checkstyle-plugin:3.1.1:check (checkstyle) @ infinispan-server-rest ---
+[INFO] 
+[INFO] --- buildnumber-maven-plugin:1.4:create (get-scm-revision) @ infinispan-server-rest ---
+[INFO] 
+[INFO] --- maven-resources-plugin:3.2.0:resources (default-resources) @ infinispan-server-rest ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] Using 'UTF-8' encoding to copy filtered properties files.
+[INFO] skip non existing resourceDirectory /home/remerson/workspace/RedHat/infinispan/infinispan-alt/server/rest/src/main/resources
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.10.1:compile (default-compile) @ infinispan-server-rest ---
+[INFO] Nothing to compile - all classes are up to date
+[INFO] 
+[INFO] --- maven-resources-plugin:3.2.0:testResources (default-testResources) @ infinispan-server-rest ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] Using 'UTF-8' encoding to copy filtered properties files.
+[INFO] Copying 16 resources
+[INFO] 
+[INFO] --- maven-antrun-plugin:3.0.0:run (create-certificates) @ infinispan-server-rest ---
+[INFO] Executing tasks
+[INFO]      [echo] Generate the CA certificate
+[INFO]      [exec] Generating 2,048 bit RSA key pair and self-signed certificate (SHA256withRSA) with a validity of 365 days
+[INFO]      [exec] 	for: CN=HotRod_1, OU=Infinispan, O=JBoss, L=Red Hat, ST=World, C=WW
+[INFO]      [exec] Importing keystore /home/remerson/workspace/RedHat/infinispan/infinispan-alt/server/rest/target/test-classes/server.p12 to /home/remerson/workspace/RedHat/infinispan/infinispan-alt/server/rest/target/test-classes/client.p12...
+[INFO]      [exec] Entry for alias default successfully imported.
+[INFO]      [exec] Import command completed:  1 entries successfully imported, 0 entries failed or cancelled
+[INFO] Executed tasks
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.10.1:testCompile (default-testCompile) @ infinispan-server-rest ---
+[INFO] Nothing to compile - all classes are up to date
+[INFO] 
+[INFO] --- maven-surefire-plugin:3.0.0-M5:test (default-test) @ infinispan-server-rest ---
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[ERROR] OpenJDK 64-Bit Server VM warning: Option AllowRedefinitionToAddDeleteMethods was deprecated in version 13.0 and will likely be removed in a future release.
+[ERROR] OpenJDK 64-Bit Server VM warning: Option AllowRedefinitionToAddDeleteMethods was deprecated in version 13.0 and will likely be removed in a future release.
+[INFO] Running org.infinispan.rest.resources.CacheResourceV2Test
+[ERROR] OpenJDK 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap classpath has been appended

@@ -23,7 +23,6 @@ public class GreetingCacheManagerIT extends AbstractGreetingCacheManagerIT {
       war.addPackage(AbstractGreetingCacheManagerIT.class.getPackage());
       war.addAsWebInfResource("beans.xml");
       GenericDeploymentHelper.addLibrary(war, "org.infinispan:infinispan-cdi-embedded");
-      GenericDeploymentHelper.addLibrary(war, "org.infinispan:infinispan-jcache");
       // The JCache dependency is in the provided scope, so it's not added automatically
       GenericDeploymentHelper.addLibrary(war, "javax.cache:cache-api");
       return war;
