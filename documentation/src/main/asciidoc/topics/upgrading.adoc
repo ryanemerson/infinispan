@@ -1,9 +1,10 @@
 = Upgrading from 14.0 to 15.0
 
-== Jakarta and Java EE
+== Jakarta, Java EE and JCache
 
 * Infinispan has been updated to use `jakarta.*` packages.
-* If you require the legacy `javax.*` packages, you should utilise jars with a `-javaee` suffix, e.g. `infinispan-core-javaee`.
+* If you require the legacy `javax.*` packages, you should utilise Infinispan 14.x.
+* JCache support is no longer provided as the specification will not transition to Jakarta.
 * The old `*-jakarta` jars have been removed.
 
 == Removals

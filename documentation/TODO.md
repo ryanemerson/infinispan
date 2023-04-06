@@ -39,8 +39,6 @@
 * Provide use-case-driven examples ?
 
 ### Cache / CacheManager APIs (Galder)
-* Remove the false claim of supporting the JCache API in our Cache interface
-* Link alternative APIs (JCache, Spring, Functional)
 * We should move the Cluster Executor documentation to the chapter about Distributed Execution and document why we have both (Will)
 
 ### Cache features
@@ -99,10 +97,6 @@
 * Remove the  open tasks
 * Mention Spring Session
 * Eventually will also contain Paul’s Tomcat adapter
-
-### JCache
-* Move under an overarching Integrations chapter
-* Remote JCache configuration, example of properties (at least IP:port)
 
 ### Second level cache guide (Galder)
 * Place under Integrations

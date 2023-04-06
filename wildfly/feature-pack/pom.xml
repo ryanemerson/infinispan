@@ -357,17 +357,6 @@
         </dependency>
 
         <dependency>
-            <groupId>javax.cache</groupId>
-            <artifactId>cache-api</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>*</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
             <groupId>org.hibernate.search</groupId>
             <artifactId>hibernate-search-engine</artifactId>
             <version>${version.hibernate.search}</version>

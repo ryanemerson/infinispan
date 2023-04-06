@@ -29,20 +29,13 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>javax.cache</groupId>
-            <artifactId>cache-api</artifactId>
-            <version>${versionx.javax.cache.cache-api}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
             <groupId>jakarta.enterprise</groupId>
             <artifactId>jakarta.enterprise.cdi-api</artifactId>
-            <version>${version.jakarta.enterprise.cdi.legacy}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.infinispan</groupId>
-            <artifactId>infinispan-cdi-embedded-javaee</artifactId>
+            <artifactId>infinispan-cdi-embedded</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
@@ -59,7 +52,7 @@
         </dependency>
         <dependency>
             <groupId>org.infinispan</groupId>
-            <artifactId>infinispan-core-javaee</artifactId>
+            <artifactId>infinispan-core</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -74,7 +67,7 @@
         </dependency>
         <dependency>
             <groupId>org.infinispan</groupId>
-            <artifactId>infinispan-query-javaee</artifactId>
+            <artifactId>infinispan-query</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -84,7 +77,7 @@
         </dependency>
         <dependency>
             <groupId>org.infinispan</groupId>
-            <artifactId>infinispan-cachestore-jdbc-javaee</artifactId>
+            <artifactId>infinispan-cachestore-jdbc</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

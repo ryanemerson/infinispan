@@ -2,7 +2,7 @@ package org.infinispan.test.integration.cdi;
 
 import static org.junit.Assert.assertNotEquals;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.infinispan.AdvancedCache;
 import org.infinispan.manager.DefaultCacheManager;

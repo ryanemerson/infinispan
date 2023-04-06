@@ -47,9 +47,8 @@ import org.infinispan.util.function.SerializableFunction;
  * in terms of payload size. Alternatively, you can provide an Infinispan
  * {@link org.infinispan.commons.marshall.Externalizer} for it which
  * drastically reduces the payload size. Marshallable lambdas for some of
- * the most popular lambda functions used by {@link ConcurrentMap} and
- * javax.cache.Cache are available via the
- * {@link MarshallableFunctions} helper class.
+ * the most popular lambda functions used by {@link ConcurrentMap} are available
+ * via the {@link MarshallableFunctions} helper class.
  *
  * <p>Being an asynchronous API, all methods that return a single result,
  * return a {@link CompletableFuture} which wraps the result. To avoid
@@ -139,14 +138,11 @@ public interface FunctionalMap<K, V> extends AutoCloseable {
        * persistent store or another clustered node.
        *
        * <p>This method can be used to implement read-only single-key based
-       * operations in {@link ConcurrentMap} and javax.cache.Cache
-       * such as:
+       * operations in {@link ConcurrentMap} such as:
        *
        * <ul>
        *    <li>{@link ConcurrentMap#get(Object)}</li>
        *    <li>{@link ConcurrentMap#containsKey(Object)}</li>
-       *    <li>{@code javax.cache.Cache#get(Object)}</li>
-       *    <li>{@code javax.cache.Cache#containsKey(Object)}</li>
        * </ul>
        *
        * <p>The function must not mutate neither the key returned through

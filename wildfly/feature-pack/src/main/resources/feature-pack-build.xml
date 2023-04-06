@@ -1,6 +1,5 @@
 <build xmlns="urn:wildfly:feature-pack-build:3.1" producer="org.infinispan:infinispan-feature-pack">
    <transitive>
-      <!-- without this, we do not have javax.* modules -->
       <dependency group-id="${appserver.groupId}" artifact-id="wildfly-ee-galleon-pack">
          <name>${appserver.groupId}:wildfly-ee-galleon-pack</name>
          <packages inherit="false">

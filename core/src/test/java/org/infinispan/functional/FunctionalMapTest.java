@@ -71,9 +71,8 @@ import org.testng.annotations.Test;
 /**
  * Test suite for verifying basic functional map functionality,
  * and for testing out functionality that is not available via standard
- * {@link java.util.concurrent.ConcurrentMap} nor JSR-107 JCache
- * APIs, such as atomic conditional metadata-based replace operations, which
- * are required by Hot Rod.
+ * {@link java.util.concurrent.ConcurrentMap} APIs, such as atomic conditional
+ * metadata-based replace operations, which are required by Hot Rod.
  */
 @Test(groups = "functional", testName = "functional.FunctionalMapTest")
 public class FunctionalMapTest extends AbstractFunctionalTest {

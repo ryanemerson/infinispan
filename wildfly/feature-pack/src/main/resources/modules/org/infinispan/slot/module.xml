@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module xmlns="urn:jboss:module:1.5" name="org.infinispan" slot="@infinispan.module.slot@">
    <resources>
-      <artifact name="${javax.cache:cache-api}"/>
-
       <artifact name="${org.infinispan:infinispan-cachestore-jdbc}"/>
       <artifact name="${org.infinispan:infinispan-cachestore-jdbc-common}"/>
       <artifact name="${org.infinispan:infinispan-cachestore-remote}"/>
@@ -15,8 +13,6 @@
       <artifact name="${org.infinispan:infinispan-clustered-lock}"/>
       <artifact name="${org.infinispan:infinispan-commons}"/>
       <artifact name="${org.infinispan:infinispan-core}"/>
-      <artifact name="${org.infinispan:infinispan-jcache}"/>
-      <artifact name="${org.infinispan:infinispan-jcache-commons}"/>
       <artifact name="${org.infinispan:infinispan-multimap}"/>
       <artifact name="${org.infinispan:infinispan-objectfilter}"/>
       <artifact name="${org.infinispan:infinispan-query}"/>

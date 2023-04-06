@@ -39,16 +39,6 @@
 
       <dependency>
          <groupId>org.infinispan</groupId>
-         <artifactId>infinispan-spring5-embedded</artifactId>
-      </dependency>
-
-      <dependency>
-         <groupId>org.infinispan</groupId>
-         <artifactId>infinispan-spring5-remote</artifactId>
-      </dependency>
-
-      <dependency>
-         <groupId>org.infinispan</groupId>
          <artifactId>infinispan-tools</artifactId>
       </dependency>
 
@@ -64,12 +54,6 @@
          <artifactId>infinispan-feature-pack</artifactId>
          <version>${project.version}</version>
          <type>zip</type>
-      </dependency>
-
-      <dependency>
-         <groupId>javax.cache</groupId>
-         <artifactId>cache-api</artifactId>
-         <scope>provided</scope>
       </dependency>
 
       <dependency>
