@@ -90,7 +90,9 @@ public class BeanBuilder<T> {
         this.beanClass = type.getJavaClass();
         InjectionTarget<T> injectionTarget;
         if (!type.getJavaClass().isInterface()) {
-            injectionTarget = beanManager.createInjectionTarget(type);
+            injectionTarget = beanManager
+                    .getInjectionTargetFactory(beanManager.createAnnotatedType(type.getJavaClass()))
+                    .createInjectionTarget(null);
         } else {
             injectionTarget = new DummyInjectionTarget<T>();
         }

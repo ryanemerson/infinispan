@@ -331,9 +331,11 @@
       <versionx.org.hibernate.hibernate-testing>${version.hibernate.core}</versionx.org.hibernate.hibernate-testing>
       <versionx.org.jacoco.org.jacoco.agent>${version.jacoco}</versionx.org.jacoco.org.jacoco.agent>
       <versionx.org.javassist.javassist>3.29.1-GA</versionx.org.javassist.javassist>
-      <versionx.org.jboss.arquillian.container.arquillian-weld-embedded>2.0.1.Final</versionx.org.jboss.arquillian.container.arquillian-weld-embedded>
+      <versionx.org.jboss.arquillian.container.arquillian-weld-embedded>3.0.2.Final</versionx.org.jboss.arquillian.container.arquillian-weld-embedded>
       <versionx.org.jboss.arquillian.junit.arquillian-junit-container>${version.arquillian}</versionx.org.jboss.arquillian.junit.arquillian-junit-container>
       <versionx.org.jboss.arquillian.testng.arquillian-testng-container>${version.arquillian}</versionx.org.jboss.arquillian.testng.arquillian-testng-container>
+      <versionx.org.jboss.arquillian.testenricher.arquillian-testenricher-cdi>${version.arquillian}</versionx.org.jboss.arquillian.testenricher.arquillian-testenricher-cdi>
+      <versionx.org.jboss.arquillian.container.arquillian-container-spi>${version.arquillian}</versionx.org.jboss.arquillian.container.arquillian-container-spi>
       <versionx.org.jboss.byteman.byteman>${version.byteman}</versionx.org.jboss.byteman.byteman>
       <versionx.org.jboss.byteman.byteman-bmunit>${version.byteman}</versionx.org.jboss.byteman.byteman-bmunit>
       <versionx.org.jboss.byteman.byteman-install>${version.byteman}</versionx.org.jboss.byteman.byteman-install>
@@ -362,8 +364,8 @@
       <versionx.org.jboss.threads.jboss-threads>3.5.0.Final</versionx.org.jboss.threads.jboss-threads>
       <versionx.org.jboss.weld.se.weld-se-core.legacy>3.1.2.Final</versionx.org.jboss.weld.se.weld-se-core.legacy>
       <versionx.org.jboss.weld.se.weld-se-core>5.1.0.Final</versionx.org.jboss.weld.se.weld-se-core>
-      <versionx.org.jboss.weld.weld-core-impl>3.1.2.Final</versionx.org.jboss.weld.weld-core-impl>
-      <versionx.org.jboss.weld.weld-api>3.1.SP1</versionx.org.jboss.weld.weld-api>
+      <versionx.org.jboss.weld.weld-core-impl>${versionx.org.jboss.weld.se.weld-se-core}</versionx.org.jboss.weld.weld-core-impl>
+      <versionx.org.jboss.weld.weld-api>5.0.SP3</versionx.org.jboss.weld.weld-api>
       <versionx.org.jgroups.aws.jgroups-aws>2.0.1.Final</versionx.org.jgroups.aws.jgroups-aws>
       <versionx.org.jgroups.azure.jgroups-azure>2.0.2.Final</versionx.org.jgroups.azure.jgroups-azure>
       <versionx.org.jgroups.jgroups>${version.jgroups}</versionx.org.jgroups.jgroups>
@@ -1387,6 +1389,18 @@
             <groupId>org.jboss.arquillian.testng</groupId>
             <artifactId>arquillian-testng-container</artifactId>
             <version>${versionx.org.jboss.arquillian.testng.arquillian-testng-container}</version>
+            <scope>test</scope>
+         </dependency>
+         <dependency>
+            <groupId>org.jboss.arquillian.testenricher</groupId>
+            <artifactId>arquillian-testenricher-cdi-jakarta</artifactId>
+            <version>${versionx.org.jboss.arquillian.testenricher.arquillian-testenricher-cdi}</version>
+            <scope>test</scope>
+         </dependency>
+         <dependency>
+            <groupId>org.jboss.arquillian.container</groupId>
+            <artifactId>arquillian-container-spi</artifactId>
+            <version>${versionx.org.jboss.arquillian.container.arquillian-container-spi}</version>
             <scope>test</scope>
          </dependency>
          <dependency>

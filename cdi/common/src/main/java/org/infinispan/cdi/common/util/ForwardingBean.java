@@ -58,7 +58,7 @@ public abstract class ForwardingBean<T> implements Bean<T> {
     }
 
     public boolean isNullable() {
-        return delegate().isNullable();
+        return false;
     }
 
     public T create(CreationalContext<T> creationalContext) {

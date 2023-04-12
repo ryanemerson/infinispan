@@ -149,7 +149,6 @@ public abstract class AbstractImmutableBean<T> implements Bean<T> {
         return alternative;
     }
 
-    @Override
    public boolean isNullable() {
         return nullable;
     }
