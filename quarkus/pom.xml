@@ -22,7 +22,6 @@
         <native-build-args>-Ob,</native-build-args>
         <quarkus.native.additional-build-args>${native-build-args}</quarkus.native.additional-build-args>
         <exe.suffix/>
-        <version.jakarta.enterprise.cdi>4.0.1</version.jakarta.enterprise.cdi>
     </properties>
 
     <modules>
