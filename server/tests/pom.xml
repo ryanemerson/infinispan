@@ -35,6 +35,12 @@
          <groupId>org.infinispan</groupId>
          <artifactId>infinispan-jcache-remote</artifactId>
          <scope>test</scope>
+         <exclusions>
+            <exclusion>
+               <groupId>org.infinispan</groupId>
+               <artifactId>infinispan-commons-javaee</artifactId>
+            </exclusion>
+         </exclusions>
       </dependency>
       <dependency>
          <groupId>org.infinispan</groupId>
