@@ -85,7 +85,7 @@
         <dependency>
             <groupId>jakarta.transaction</groupId>
             <artifactId>jakarta.transaction-api</artifactId>
-            <version>${version.jakarta.transaction.legacy}</version>
+            <version>${version.jakarta.transaction.javaee}</version>
         </dependency>
 
         <dependency>

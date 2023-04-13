@@ -25,7 +25,7 @@
             <groupId>jakarta.enterprise</groupId>
             <artifactId>jakarta.enterprise.cdi-api</artifactId>
             <scope>provided</scope>
-            <version>${version.jakarta.enterprise.cdi.legacy}</version>
+            <version>${version.jakarta.enterprise.cdi.javaee}</version>
         </dependency>
 
         <dependency>
@@ -43,7 +43,7 @@
         <dependency>
             <groupId>jakarta.transaction</groupId>
             <artifactId>jakarta.transaction-api</artifactId>
-            <version>${version.jakarta.transaction.legacy}</version>
+            <version>${version.jakarta.transaction.javaee}</version>
         </dependency>
     </dependencies>
 </project>

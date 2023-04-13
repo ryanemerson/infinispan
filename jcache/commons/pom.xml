@@ -27,7 +27,7 @@
       <dependency>
          <groupId>jakarta.enterprise</groupId>
          <artifactId>jakarta.enterprise.cdi-api</artifactId>
-         <version>${version.jakarta.enterprise.cdi.legacy}</version>
+         <version>${version.jakarta.enterprise.cdi.javaee}</version>
          <scope>provided</scope>
       </dependency>
 

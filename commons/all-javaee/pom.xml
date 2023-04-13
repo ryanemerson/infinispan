@@ -60,14 +60,14 @@
       <dependency>
          <groupId>jakarta.transaction</groupId>
          <artifactId>jakarta.transaction-api</artifactId>
-         <version>${version.jakarta.transaction.legacy}</version>
+         <version>${version.jakarta.transaction.javaee}</version>
          <scope>provided</scope>
       </dependency>
 
       <dependency>
          <groupId>org.jboss</groupId>
          <artifactId>jboss-transaction-spi</artifactId>
-         <version>${versionx.org.jboss.jboss-transaction-spi.legacy}</version>
+         <version>${versionx.org.jboss.jboss-transaction-spi.javaee}</version>
       </dependency>
 
       <dependency>

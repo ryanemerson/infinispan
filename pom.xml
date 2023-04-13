@@ -331,7 +331,7 @@
       <versionx.org.hibernate.hibernate-testing>${version.hibernate.core}</versionx.org.hibernate.hibernate-testing>
       <versionx.org.jacoco.org.jacoco.agent>${version.jacoco}</versionx.org.jacoco.org.jacoco.agent>
       <versionx.org.javassist.javassist>3.29.1-GA</versionx.org.javassist.javassist>
-      <versionx.org.jboss.arquillian.container.arquillian-weld-embedded.legacy>2.0.1.Final</versionx.org.jboss.arquillian.container.arquillian-weld-embedded.legacy>
+      <versionx.org.jboss.arquillian.container.arquillian-weld-embedded.javaee>2.0.1.Final</versionx.org.jboss.arquillian.container.arquillian-weld-embedded.javaee>
       <versionx.org.jboss.arquillian.container.arquillian-weld-embedded>3.0.2.Final</versionx.org.jboss.arquillian.container.arquillian-weld-embedded>
       <versionx.org.jboss.arquillian.junit.arquillian-junit-container>${version.arquillian}</versionx.org.jboss.arquillian.junit.arquillian-junit-container>
       <versionx.org.jboss.arquillian.testng.arquillian-testng-container>${version.arquillian}</versionx.org.jboss.arquillian.testng.arquillian-testng-container>
@@ -342,7 +342,7 @@
       <versionx.org.jboss.byteman.byteman-install>${version.byteman}</versionx.org.jboss.byteman.byteman-install>
       <versionx.org.jboss.byteman.byteman-submit>${version.byteman}</versionx.org.jboss.byteman.byteman-submit>
       <versionx.org.jboss.jboss-common-core>2.2.16.GA</versionx.org.jboss.jboss-common-core>
-      <versionx.org.jboss.jboss-transaction-spi.legacy>7.6.1.Final</versionx.org.jboss.jboss-transaction-spi.legacy>
+      <versionx.org.jboss.jboss-transaction-spi.javaee>7.6.1.Final</versionx.org.jboss.jboss-transaction-spi.javaee>
       <versionx.org.jboss.jboss-transaction-spi>8.0.0.Final</versionx.org.jboss.jboss-transaction-spi>
       <versionx.org.jboss.logging.jboss-logging>${version.jboss.logging}</versionx.org.jboss.logging.jboss-logging>
       <versionx.org.jboss.logging.jboss-logging-processor>2.2.1.Final</versionx.org.jboss.logging.jboss-logging-processor>
@@ -363,10 +363,10 @@
       <versionx.org.jboss.spec.javax.jms.jboss-jms-api_2.0_spec>2.0.0.Final</versionx.org.jboss.spec.javax.jms.jboss-jms-api_2.0_spec>
       <versionx.org.jboss.spec.jboss-jakartaee-8.0>1.0.1.Final</versionx.org.jboss.spec.jboss-jakartaee-8.0>
       <versionx.org.jboss.threads.jboss-threads>3.5.0.Final</versionx.org.jboss.threads.jboss-threads>
-      <versionx.org.jboss.weld.se.weld-se-core.legacy>3.1.2.Final</versionx.org.jboss.weld.se.weld-se-core.legacy>
+      <versionx.org.jboss.weld.se.weld-se-core.javaee>3.1.2.Final</versionx.org.jboss.weld.se.weld-se-core.javaee>
       <versionx.org.jboss.weld.se.weld-se-core>5.1.0.Final</versionx.org.jboss.weld.se.weld-se-core>
       <versionx.org.jboss.weld.weld-core-impl>${versionx.org.jboss.weld.se.weld-se-core}</versionx.org.jboss.weld.weld-core-impl>
-      <versionx.org.jboss.weld.weld-api.legacy>3.1.SP1</versionx.org.jboss.weld.weld-api.legacy>
+      <versionx.org.jboss.weld.weld-api.javaee>3.1.SP1</versionx.org.jboss.weld.weld-api.javaee>
       <versionx.org.jboss.weld.weld-api>5.0.SP3</versionx.org.jboss.weld.weld-api>
       <versionx.org.jgroups.aws.jgroups-aws>2.0.1.Final</versionx.org.jgroups.aws.jgroups-aws>
       <versionx.org.jgroups.azure.jgroups-azure>2.0.2.Final</versionx.org.jgroups.azure.jgroups-azure>
