@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import javax.cache.Caching;
 import javax.cache.spi.CachingProvider;
 import javax.enterprise.inject.spi.BeanManager;
-import jakarta.inject.Inject;
+import javax.inject.Inject;
 
 import org.infinispan.cdi.embedded.test.DefaultTestEmbeddedCacheManagerProducer;
 import org.infinispan.integrationtests.cdijcache.interceptor.config.Config;

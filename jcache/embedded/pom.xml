@@ -78,6 +78,19 @@
       </dependency>
 
       <dependency>
+         <groupId>org.jboss.weld</groupId>
+         <artifactId>weld-api</artifactId>
+         <version>${versionx.org.jboss.weld.weld-api.legacy}</version>
+         <scope>test</scope>
+      </dependency>
+      <dependency>
+         <groupId>org.jboss.weld</groupId>
+         <artifactId>weld-spi</artifactId>
+         <version>${versionx.org.jboss.weld.weld-api.legacy}</version>
+         <scope>test</scope>
+      </dependency>
+
+      <dependency>
          <groupId>org.kohsuke.metainf-services</groupId>
          <artifactId>metainf-services</artifactId>
       </dependency>
@@ -138,11 +151,31 @@
             <dependency>
                <groupId>org.jboss.arquillian.container</groupId>
                <artifactId>arquillian-weld-embedded</artifactId>
+               <version>${versionx.org.jboss.arquillian.container.arquillian-weld-embedded.legacy}</version>
                <scope>test</scope>
             </dependency>
             <dependency>
                <groupId>org.jboss.weld</groupId>
                <artifactId>weld-core-impl</artifactId>
+               <version>${versionx.org.jboss.weld.se.weld-se-core.legacy}</version>
+               <scope>test</scope>
+            </dependency>
+            <dependency>
+               <groupId>org.jboss.arquillian.testng</groupId>
+               <artifactId>arquillian-testng-container</artifactId>
+               <version>${version.arquillian.legacy}</version>
+               <scope>test</scope>
+            </dependency>
+            <dependency>
+               <groupId>org.jboss.arquillian.testenricher</groupId>
+               <artifactId>arquillian-testenricher-cdi</artifactId>
+               <version>${version.arquillian.legacy}</version>
+               <scope>test</scope>
+            </dependency>
+            <dependency>
+               <groupId>org.jboss.arquillian.container</groupId>
+               <artifactId>arquillian-container-spi</artifactId>
+               <version>${version.arquillian.legacy}</version>
                <scope>test</scope>
             </dependency>
             <dependency>

@@ -331,6 +331,7 @@
       <versionx.org.hibernate.hibernate-testing>${version.hibernate.core}</versionx.org.hibernate.hibernate-testing>
       <versionx.org.jacoco.org.jacoco.agent>${version.jacoco}</versionx.org.jacoco.org.jacoco.agent>
       <versionx.org.javassist.javassist>3.29.1-GA</versionx.org.javassist.javassist>
+      <versionx.org.jboss.arquillian.container.arquillian-weld-embedded.legacy>2.0.1.Final</versionx.org.jboss.arquillian.container.arquillian-weld-embedded.legacy>
       <versionx.org.jboss.arquillian.container.arquillian-weld-embedded>3.0.2.Final</versionx.org.jboss.arquillian.container.arquillian-weld-embedded>
       <versionx.org.jboss.arquillian.junit.arquillian-junit-container>${version.arquillian}</versionx.org.jboss.arquillian.junit.arquillian-junit-container>
       <versionx.org.jboss.arquillian.testng.arquillian-testng-container>${version.arquillian}</versionx.org.jboss.arquillian.testng.arquillian-testng-container>
@@ -365,6 +366,7 @@
       <versionx.org.jboss.weld.se.weld-se-core.legacy>3.1.2.Final</versionx.org.jboss.weld.se.weld-se-core.legacy>
       <versionx.org.jboss.weld.se.weld-se-core>5.1.0.Final</versionx.org.jboss.weld.se.weld-se-core>
       <versionx.org.jboss.weld.weld-core-impl>${versionx.org.jboss.weld.se.weld-se-core}</versionx.org.jboss.weld.weld-core-impl>
+      <versionx.org.jboss.weld.weld-api.legacy>3.1.SP1</versionx.org.jboss.weld.weld-api.legacy>
       <versionx.org.jboss.weld.weld-api>5.0.SP3</versionx.org.jboss.weld.weld-api>
       <versionx.org.jgroups.aws.jgroups-aws>2.0.1.Final</versionx.org.jgroups.aws.jgroups-aws>
       <versionx.org.jgroups.azure.jgroups-azure>2.0.2.Final</versionx.org.jgroups.azure.jgroups-azure>

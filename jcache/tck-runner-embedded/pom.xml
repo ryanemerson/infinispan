@@ -34,7 +34,7 @@
       </dependency>
       <dependency>
          <groupId>org.infinispan</groupId>
-         <artifactId>infinispan-cdi-embedded</artifactId>
+         <artifactId>infinispan-cdi-embedded-javaee</artifactId>
          <scope>test</scope>
       </dependency>
       <dependency>
@@ -87,6 +87,17 @@
                <artifactId>cache-annotations-ri-cdi</artifactId>
             </exclusion>
          </exclusions>
+      </dependency>
+      <dependency>
+         <groupId>jakarta.transaction</groupId>
+         <artifactId>jakarta.transaction-api</artifactId>
+         <version>${version.jakarta.transaction.legacy}</version>
+         <scope>provided</scope>
+      </dependency>
+      <dependency>
+         <groupId>org.jboss</groupId>
+         <artifactId>jboss-transaction-spi</artifactId>
+         <version>${versionx.org.jboss.jboss-transaction-spi.legacy}</version>
       </dependency>
    </dependencies>
 

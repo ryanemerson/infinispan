@@ -39,6 +39,7 @@
       <dependency>
          <groupId>jakarta.enterprise</groupId>
          <artifactId>jakarta.enterprise.cdi-api</artifactId>
+         <version>${version.jakarta.enterprise.cdi.legacy}</version>
          <scope>test</scope>
       </dependency>
       <dependency>

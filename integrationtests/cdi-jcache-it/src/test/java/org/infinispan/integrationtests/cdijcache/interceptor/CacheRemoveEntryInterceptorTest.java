@@ -9,7 +9,7 @@ import java.lang.reflect.Method;
 
 import javax.cache.CacheException;
 import javax.cache.annotation.GeneratedCacheKey;
-import jakarta.inject.Inject;
+import javax.inject.Inject;
 
 import org.infinispan.Cache;
 import org.infinispan.cdi.embedded.test.DefaultTestEmbeddedCacheManagerProducer;
