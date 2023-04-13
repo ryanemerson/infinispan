@@ -25,7 +25,7 @@
         </dependency>
         <dependency>
             <groupId>org.infinispan</groupId>
-            <artifactId>infinispan-commons</artifactId>
+            <artifactId>infinispan-commons-javaee</artifactId>
         </dependency>
         <dependency>
             <groupId>org.infinispan.protostream</groupId>
@@ -38,7 +38,8 @@
         </dependency>
         <dependency>
             <groupId>org.infinispan</groupId>
-            <artifactId>infinispan-core</artifactId>
+            <artifactId>infinispan-core-javaee</artifactId>
+            <version>${project.version}</version>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
