@@ -18,7 +18,6 @@
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <maven.compiler.release>17</maven.compiler.release>
-        <quarkus.version>3.0.0.CR2</quarkus.version>
         <!-- GraalVM "quick build mode for development". Disable on release. Must end with a comma -->
         <native-build-args>-Ob,</native-build-args>
         <quarkus.native.additional-build-args>${native-build-args}</quarkus.native.additional-build-args>
