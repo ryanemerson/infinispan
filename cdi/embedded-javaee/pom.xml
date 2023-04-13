@@ -18,6 +18,7 @@
         <maven.javadoc.skip>true</maven.javadoc.skip>
         <maven.source.skip>true</maven.source.skip>
         <transform.skip>false</transform.skip>
+        <transform.tests.skip>false</transform.tests.skip>
     </properties>
 
     <dependencies>
