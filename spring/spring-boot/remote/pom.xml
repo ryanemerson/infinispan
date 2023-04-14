@@ -50,7 +50,7 @@
 
     <dependency>
       <groupId>org.infinispan</groupId>
-      <artifactId>infinispan-client-hotrod</artifactId>
+      <artifactId>infinispan-client-hotrod-javaee</artifactId>
     </dependency>
 
     <!-- Even if query is an optional feature, query DSL dependency is necessary to @Autowire a RemoteCache by Spring -->
@@ -77,6 +77,23 @@
     <dependency>
       <groupId>org.infinispan</groupId>
       <artifactId>infinispan-server-testdriver-junit5</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>jakarta.transaction</groupId>
+      <artifactId>jakarta.transaction-api</artifactId>
+      <version>${version.jakarta.transaction.javaee}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.narayana.jta</groupId>
+      <artifactId>narayana-jta</artifactId>
+      <version>${version.jboss.narayana.javaee}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss</groupId>
+      <artifactId>jboss-transaction-spi</artifactId>
+      <version>${versionx.org.jboss.jboss-transaction-spi.javaee}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
