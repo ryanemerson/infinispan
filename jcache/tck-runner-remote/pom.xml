@@ -60,7 +60,7 @@
       </dependency>
       <dependency>
          <groupId>org.infinispan</groupId>
-         <artifactId>infinispan-client-hotrod</artifactId>
+         <artifactId>infinispan-client-hotrod-javaee</artifactId>
          <scope>test</scope>
       </dependency>
       <dependency>
@@ -71,6 +71,23 @@
       <dependency>
          <groupId>org.infinispan</groupId>
          <artifactId>infinispan-server-runtime</artifactId>
+         <scope>test</scope>
+      </dependency>
+      <dependency>
+         <groupId>jakarta.transaction</groupId>
+         <artifactId>jakarta.transaction-api</artifactId>
+         <version>${version.jakarta.transaction.javaee}</version>
+      </dependency>
+      <dependency>
+         <groupId>org.jboss.narayana.jta</groupId>
+         <artifactId>narayana-jta</artifactId>
+         <version>${version.jboss.narayana.javaee}</version>
+         <scope>test</scope>
+      </dependency>
+      <dependency>
+         <groupId>org.jboss</groupId>
+         <artifactId>jboss-transaction-spi</artifactId>
+         <version>${versionx.org.jboss.jboss-transaction-spi.javaee}</version>
          <scope>test</scope>
       </dependency>
       <dependency>
