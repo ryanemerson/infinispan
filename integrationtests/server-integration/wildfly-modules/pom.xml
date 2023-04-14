@@ -114,6 +114,12 @@
          <scope>test</scope>
       </dependency>
       <dependency>
+         <groupId>org.jboss.threads</groupId>
+         <artifactId>jboss-threads</artifactId>
+         <version>${versionx.org.jboss.threads.jboss-threads.arquillian}</version>
+         <scope>test</scope>
+      </dependency>
+      <dependency>
          <groupId>jakarta.enterprise</groupId>
          <artifactId>jakarta.enterprise.cdi-api</artifactId>
          <scope>test</scope>
