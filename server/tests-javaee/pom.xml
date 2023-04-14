@@ -9,10 +9,10 @@
       <relativePath>../pom.xml</relativePath>
    </parent>
 
-   <artifactId>infinispan-server-tests</artifactId>
+   <artifactId>infinispan-server-tests-javaee</artifactId>
    <packaging>jar</packaging>
-   <name>Infinispan Server Integration Tests</name>
-   <description>Infinispan Server Integration Tests</description>
+   <name>Infinispan Server Integration Tests JavaEE</name>
+   <description>Infinispan Server Integration Tests JavaEE</description>
 
    <properties>
       <module.skipMavenRemoteResource>true</module.skipMavenRemoteResource>
@@ -27,84 +27,37 @@
 
    <dependencies>
       <dependency>
+         <groupId>javax.cache</groupId>
+         <artifactId>cache-api</artifactId>
+         <scope>test</scope>
+      </dependency>
+      <dependency>
+         <groupId>org.infinispan</groupId>
+         <artifactId>infinispan-jcache-remote</artifactId>
+         <scope>test</scope>
+      </dependency>
+      <dependency>
          <groupId>org.infinispan</groupId>
          <artifactId>infinispan-server-testdriver-junit4</artifactId>
          <scope>test</scope>
       </dependency>
       <dependency>
-         <groupId>org.infinispan.protostream</groupId>
-         <artifactId>sample-domain-definition</artifactId>
+         <groupId>jakarta.transaction</groupId>
+         <artifactId>jakarta.transaction-api</artifactId>
+         <version>${version.jakarta.transaction.javaee}</version>
+      </dependency>
+      <dependency>
+         <groupId>org.jboss.narayana.jta</groupId>
+         <artifactId>narayana-jta</artifactId>
+         <version>${version.jboss.narayana.javaee}</version>
          <scope>test</scope>
       </dependency>
       <dependency>
-         <groupId>org.infinispan.protostream</groupId>
-         <artifactId>sample-domain-implementation</artifactId>
+         <groupId>org.jboss</groupId>
+         <artifactId>jboss-transaction-spi</artifactId>
+         <version>${versionx.org.jboss.jboss-transaction-spi.javaee}</version>
          <scope>test</scope>
       </dependency>
-      <dependency>
-         <groupId>org.infinispan.protostream</groupId>
-         <artifactId>protostream-processor</artifactId>
-         <scope>test</scope>
-      </dependency>
-      <dependency>
-         <groupId>org.infinispan</groupId>
-         <artifactId>infinispan-server-rest</artifactId>
-         <type>test-jar</type>
-         <scope>test</scope>
-      </dependency>
-      <dependency>
-         <groupId>org.apache.directory.server</groupId>
-         <artifactId>apacheds-test-framework</artifactId>
-         <scope>test</scope>
-      </dependency>
-      <dependency>
-         <groupId>org.apache.directory.server</groupId>
-         <artifactId>apacheds-interceptor-kerberos</artifactId>
-         <scope>test</scope>
-      </dependency>
-      <dependency>
-         <groupId>org.antlr</groupId>
-         <artifactId>antlr-runtime</artifactId>
-         <scope>test</scope>
-      </dependency>
-      <dependency>
-         <groupId>io.lettuce</groupId>
-         <artifactId>lettuce-core</artifactId>
-         <scope>test</scope>
-      </dependency>
-
-      <!-- Database test dependencies -->
-      <dependency>
-         <groupId>com.h2database</groupId>
-         <artifactId>h2</artifactId>
-         <scope>test</scope>
-      </dependency>
-      <dependency>
-         <groupId>mysql</groupId>
-         <artifactId>mysql-connector-java</artifactId>
-         <version>${versionx.com.mysqldatabase.mysql}</version>
-         <scope>test</scope>
-      </dependency>
-      <dependency>
-         <groupId>org.postgresql</groupId>
-         <artifactId>postgresql</artifactId>
-         <version>${versionx.com.postgresqldatabase.postgresql}</version>
-         <scope>test</scope>
-      </dependency>
-
-      <!-- OpenTelemetry dependencies -->
-      <dependency>
-         <groupId>io.opentelemetry</groupId>
-         <artifactId>opentelemetry-sdk-testing</artifactId>
-      </dependency>
-
-      <!-- Kafka for CloudEvents testing -->
-      <dependency>
-         <groupId>org.testcontainers</groupId>
-         <artifactId>kafka</artifactId>
-         <version>${versionx.org.testcontainers.testcontainers}</version>
-      </dependency>
-
       <dependency>
          <groupId>org.assertj</groupId>
          <artifactId>assertj-core</artifactId>

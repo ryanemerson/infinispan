@@ -28,7 +28,8 @@ import org.junit.Test;
  **/
 public class JCacheOperations {
    @ClassRule
-   public static InfinispanServerRule SERVERS = ClusteredIT.SERVERS;
+   public static final InfinispanServerRule SERVERS = ClusteredIT.SERVERS;
+
    @Rule
    public InfinispanServerTestMethodRule SERVER_TEST = new InfinispanServerTestMethodRule(SERVERS);
 

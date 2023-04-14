@@ -113,6 +113,7 @@
       <module>server/runtime</module>
       <module>server/testdriver</module>
       <module>server/tests</module>
+      <module>server/tests-javaee</module>
       <module>client/rest-client</module>
       <module>client/hotrod-client</module>
       <module>client/hotrod-client-javaee</module>

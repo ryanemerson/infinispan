@@ -1,0 +1,64 @@
+<infinispan
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="urn:infinispan:config:15.0 https://infinispan.org/schemas/infinispan-config-15.0.xsd
+                            urn:infinispan:server:15.0 https://infinispan.org/schemas/infinispan-server-15.0.xsd"
+        xmlns="urn:infinispan:config:15.0"
+        xmlns:server="urn:infinispan:server:15.0">
+
+    <jgroups xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="urn:infinispan:config:15.0 https://infinispan.org/schemas/infinispan-config-fragment-15.0.xsd"
+             xmlns="urn:infinispan:config:15.0"
+             xmlns:ispn="urn:infinispan:config:15.0">
+        <stack name="test-tcp" extends="tcp">
+            <MERGE3 min_interval="1000" max_interval="5000" ispn:stack.combine="REPLACE"/>
+            <FD_SOCK2 connect_timeout="3000"/>
+            <FD_ALL3 timeout="3000"
+                     interval="1000"/>
+        </stack>
+        <stack name="test-udp" extends="udp">
+            <MERGE3 min_interval="1000" max_interval="5000" ispn:stack.combine="REPLACE"/>
+            <FD_SOCK2 connect_timeout="3000"/>
+            <FD_ALL3 timeout="3000"
+                     interval="1000"/>
+        </stack>
+    </jgroups>
+
+    <cache-container name="default" statistics="true">
+        <transport cluster="${infinispan.cluster.name:cluster}" stack="${infinispan.cluster.stack}"/>
+        <serialization>
+            <allow-list>
+                <regex>.*</regex>
+            </allow-list>
+        </serialization>
+        <metrics gauges="true" histograms="true" accurate-size="true"/>
+    </cache-container>
+
+    <server xmlns="urn:infinispan:server:15.0">
+
+        <interfaces>
+            <interface name="public">
+                <inet-address value="${infinispan.bind.address:127.0.0.1}"/>
+            </interface>
+        </interfaces>
+
+        <socket-bindings default-interface="public" port-offset="${infinispan.socket.binding.port-offset:0}">
+            <socket-binding name="default" port="11222"/>
+        </socket-bindings>
+
+
+        <security>
+            <security-realms>
+                <security-realm name="default">
+                </security-realm>
+            </security-realms>
+        </security>
+
+
+        <endpoints>
+            <endpoint socket-binding="default">
+                <hotrod-connector name="hotrod"/>
+                <rest-connector name="rest"/>
+            </endpoint>
+        </endpoints>
+    </server>
+</infinispan>
