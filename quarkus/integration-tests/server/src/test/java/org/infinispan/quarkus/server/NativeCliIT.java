@@ -13,12 +13,10 @@ import java.util.concurrent.TimeUnit;
 import org.infinispan.client.rest.RestCacheManagerClient;
 import org.infinispan.client.rest.RestClient;
 import org.infinispan.client.rest.RestResponse;
-import org.infinispan.server.test.junit4.InfinispanServerRule;
-import org.infinispan.server.test.junit4.InfinispanServerRuleBuilder;
-import org.infinispan.server.test.junit4.InfinispanServerTestMethodRule;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
+import org.infinispan.server.test.junit5.InfinispanServerExtension;
+import org.infinispan.server.test.junit5.InfinispanServerExtensionBuilder;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 /**
  * Test to ensure that the native quarkus CLI is able to execute.
@@ -27,18 +25,15 @@ import org.junit.Test;
  * @since 12.1
  */
 public class NativeCliIT {
-   @ClassRule
-   public static final InfinispanServerRule SERVERS =
-         InfinispanServerRuleBuilder.config("configuration/ClusteredServerTest.xml")
+   @RegisterExtension
+   public static final InfinispanServerExtension SERVERS =
+         InfinispanServerExtensionBuilder.config("configuration/ClusteredServerTest.xml")
                .numServers(1)
                .build();
 
-   @Rule
-   public InfinispanServerTestMethodRule SERVER_TEST = new InfinispanServerTestMethodRule(SERVERS);
-
    @Test
    public void testCliBatch() throws Exception {
-      RestClient client = SERVER_TEST.rest().create();
+      RestClient client = SERVERS.rest().create();
       RestCacheManagerClient cm = client.cacheManager("default");
       RestResponse restResponse = sync(cm.healthStatus());
       assertEquals(200, restResponse.getStatus());

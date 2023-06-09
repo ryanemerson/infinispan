@@ -2,43 +2,52 @@ package org.infinispan.server.security.authorization;
 
 import org.infinispan.server.functional.ClusteredIT;
 import org.infinispan.server.test.core.ServerRunMode;
-import org.infinispan.server.test.core.category.Security;
-import org.infinispan.server.test.junit4.InfinispanServerRule;
-import org.infinispan.server.test.junit4.InfinispanServerRuleBuilder;
-import org.infinispan.server.test.junit4.InfinispanServerTestMethodRule;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
-import org.junit.runners.Suite;
+import org.infinispan.server.test.junit5.InfinispanServerExtension;
+import org.infinispan.server.test.junit5.InfinispanServerExtensionBuilder;
+import org.infinispan.server.test.junit5.InfinispanSuite;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.platform.suite.api.SelectClasses;
+import org.junit.platform.suite.api.Suite;
 
 /**
  * @author Tristan Tarrant &lt;tristan@infinispan.org&gt;
  * @since 11.0
  **/
+@Suite
+@SelectClasses({AuthorizationPropertiesIT.HotRod.class, AuthorizationPropertiesIT.Resp.class, AuthorizationPropertiesIT.Rest.class})
+public class AuthorizationPropertiesIT extends InfinispanSuite {
 
-@RunWith(AuthorizationSuiteRunner.class)
-@Suite.SuiteClasses({HotRodAuthorizationTest.class, RESPAuthorizationTest.class, RESTAuthorizationTest.class})
-@Category(Security.class)
-public class AuthorizationPropertiesIT extends AbstractAuthorization {
-   @ClassRule
-   public static InfinispanServerRule SERVERS =
-         InfinispanServerRuleBuilder.config("configuration/AuthorizationPropertiesTest.xml")
+   @RegisterExtension
+   public static InfinispanServerExtension SERVERS =
+         InfinispanServerExtensionBuilder.config("configuration/AuthorizationPropertiesTest.xml")
                .runMode(ServerRunMode.CONTAINER)
                .mavenArtifacts(ClusteredIT.mavenArtifacts())
                .artifacts(ClusteredIT.artifacts())
                .build();
 
-   @Rule
-   public InfinispanServerTestMethodRule SERVER_TEST = new InfinispanServerTestMethodRule(SERVERS);
+   static class HotRod extends HotRodAuthorizationTest {
+      @RegisterExtension
+      static InfinispanServerExtension SERVERS = AuthorizationPropertiesIT.SERVERS;
 
-   @Override
-   protected InfinispanServerRule getServers() {
-      return SERVERS;
+      public HotRod() {
+         super(SERVERS);
+      }
    }
 
-   @Override
-   protected InfinispanServerTestMethodRule getServerTest() {
-      return SERVER_TEST;
+   static class Rest extends RESTAuthorizationTest {
+      @RegisterExtension
+      static InfinispanServerExtension SERVERS = AuthorizationPropertiesIT.SERVERS;
+
+      public Rest() {
+         super(SERVERS);
+      }
+   }
+
+   static class Resp extends RESPAuthorizationTest {
+      @RegisterExtension
+      static InfinispanServerExtension SERVERS = AuthorizationPropertiesIT.SERVERS;
+      public Resp() {
+         super(SERVERS);
+      }
    }
 }
