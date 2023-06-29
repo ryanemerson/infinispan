@@ -9,7 +9,6 @@ import org.testng.annotations.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.infinispan.server.resp.test.RespTestingUtil.assertWrongType;
 
 /**
  * RESP List commands testing
@@ -37,7 +36,14 @@ public class RespListCommandsTest extends SingleNodeRespBaseTest {
       assertThat(result).isEqualTo(5);
       assertThat(redis.lrange("people", 0, 4)).containsExactly("tristan", "william", "william", "jose", "pedro");
 
-      assertWrongType(() -> redis.set("leads", "tristan"), () ->  redis.rpush("leads", "william"));
+      // Set a String Command
+      redis.set("leads", "tristan");
+
+      // Push on an existing key that contains a String, not a Collection!
+      assertThatThrownBy(() -> {
+               redis.rpush("leads", "william");
+      }).isInstanceOf(RedisCommandExecutionException.class)
+            .hasMessageContaining("ERRWRONGTYPE");
    }
 
    public void testRPUSHX() {
@@ -50,8 +56,14 @@ public class RespListCommandsTest extends SingleNodeRespBaseTest {
       result = redis.rpushx("existing", "william", "jose");
       assertThat(result).isEqualTo(3);
       assertThat(redis.lrange("existing", 0, 2)).containsExactly("tristan", "william", "jose");
+      // Set a String Command
+      redis.set("leads", "tristan");
 
-      assertWrongType(() -> redis.set("leads", "tristan"), () -> redis.rpushx("leads", "william"));
+      // RPUSHX on an existing key that contains a String, not a Collection!
+      assertThatThrownBy(() -> {
+         redis.rpushx("leads", "william");
+      }).isInstanceOf(RedisCommandExecutionException.class)
+            .hasMessageContaining("ERRWRONGTYPE");
    }
 
    public void testLPUSH() {
@@ -65,7 +77,14 @@ public class RespListCommandsTest extends SingleNodeRespBaseTest {
       assertThat(result).isEqualTo(5);
       assertThat(redis.lrange("people", 0, 4)).containsExactly("pedro", "jose", "william", "william", "tristan");
 
-      assertWrongType(() -> redis.set("leads", "tristan"), () -> redis.lpush("leads", "william"));
+      // Set a String Command
+      redis.set("leads", "tristan");
+
+      // Push on an existing key that contains a String, not a Collection!
+      assertThatThrownBy(() -> {
+         redis.lpush("leads", "william");
+      }).isInstanceOf(RedisCommandExecutionException.class)
+            .hasMessageContaining("ERRWRONGTYPE");
    }
 
    public void testLPUSHX() {
@@ -79,7 +98,14 @@ public class RespListCommandsTest extends SingleNodeRespBaseTest {
       assertThat(result).isEqualTo(3);
       assertThat(redis.lrange("existing", 0, 2)).containsExactly("jose", "william", "tristan");
 
-      assertWrongType(() -> redis.set("leads", "tristan"), () -> redis.lpushx("leads", "william"));
+      // Set a String Command
+      redis.set("leads", "tristan");
+
+      // LPUSHX on an existing key that contains a String, not a Collection!
+      assertThatThrownBy(() -> {
+         redis.lpushx("leads", "william");
+      }).isInstanceOf(RedisCommandExecutionException.class)
+            .hasMessageContaining("ERRWRONGTYPE");
    }
 
    public void testRPOP() {
@@ -97,7 +123,14 @@ public class RespListCommandsTest extends SingleNodeRespBaseTest {
       assertThat(redis.rpop("leads", 1)).containsExactly("tristan");
       assertThat(redis.rpop("leads")).isNull();
 
-      assertWrongType(() -> redis.set("leads", "tristan"), () ->  redis.rpop("leads"));
+      //Set a String Command
+      redis.set("leads", "tristan");
+
+      //RPOP on an existing key that contains a String, not a Collection!
+      assertThatThrownBy(() -> {
+         redis.rpop("leads");
+      }).isInstanceOf(RedisCommandExecutionException.class)
+            .hasMessageContaining("ERRWRONGTYPE");
 
       // RPOP the count argument is negative
       assertThatThrownBy(() -> {
@@ -121,7 +154,14 @@ public class RespListCommandsTest extends SingleNodeRespBaseTest {
       assertThat(redis.lpop("leads", 1)).containsExactly("pedro");
       assertThat(redis.lpop("leads")).isNull();
 
-      assertWrongType(() -> redis.set("leads", "tristan"), () -> redis.lpop("leads"));
+      //Set a String Command
+      redis.set("leads", "tristan");
+
+      //RPOP on an existing key that contains a String, not a Collection!
+      assertThatThrownBy(() -> {
+         redis.lpop("leads");
+      }).isInstanceOf(RedisCommandExecutionException.class)
+            .hasMessageContaining("ERRWRONGTYPE");
 
       // RPOP the count argument is negative
       assertThatThrownBy(() -> {
@@ -149,7 +189,14 @@ public class RespListCommandsTest extends SingleNodeRespBaseTest {
       assertThat(redis.lindex("leads", 6)).isNull();
       assertThat(redis.lindex("leads", -7)).isNull();
 
-      assertWrongType(() -> redis.set("another", "tristan"), () -> redis.lindex("another", 1));
+      // Set a String Command
+      redis.set("another", "tristan");
+
+      // LINDEX on an existing key that contains a String, not a Collection!
+      assertThatThrownBy(() -> {
+         redis.lindex("another", 1);
+      }).isInstanceOf(RedisCommandExecutionException.class)
+            .hasMessageContaining("ERRWRONGTYPE");
    }
 
    public void testLLEN() {
@@ -158,7 +205,14 @@ public class RespListCommandsTest extends SingleNodeRespBaseTest {
       redis.rpush("leads", "william", "jose", "ryan", "pedro", "vittorio");
       assertThat(redis.llen("leads")).isEqualTo(5);
 
-      assertWrongType(() -> redis.set("another", "tristan"), () -> redis.llen("another"));
+      // Set a String Command
+      redis.set("another", "tristan");
+
+      // LLEN on an existing key that contains a String, not a Collection!
+      assertThatThrownBy(() -> {
+         redis.llen("another");
+      }).isInstanceOf(RedisCommandExecutionException.class)
+            .hasMessageContaining("ERRWRONGTYPE");
    }
 
    public void testLRANGE() {
@@ -169,7 +223,14 @@ public class RespListCommandsTest extends SingleNodeRespBaseTest {
       assertThat(redis.lrange("leads", 1, -1)).containsExactly("jose", "ryan", "pedro", "vittorio");
       assertThat(redis.lrange("leads", 3, 3)).containsExactly("pedro");
 
-      assertWrongType(() -> redis.set("another", "tristan"), () -> redis.llen("another"));
+      // Set a String Command
+      redis.set("another", "tristan");
+
+      // LLEN on an existing key that contains a String, not a Collection!
+      assertThatThrownBy(() -> {
+         redis.llen("another");
+      }).isInstanceOf(RedisCommandExecutionException.class)
+            .hasMessageContaining("ERRWRONGTYPE");
    }
 
    public void testLSET() {
@@ -201,7 +262,14 @@ public class RespListCommandsTest extends SingleNodeRespBaseTest {
       }).isInstanceOf(RedisCommandExecutionException.class)
             .hasMessageContaining("ERR no such key");
 
-      assertWrongType(() -> redis.set("another", "tristan"), () -> redis.lset("another", 0, "tristan"));
+      // Set a String Command
+      redis.set("another", "tristan");
+
+      // LSET on an existing key that contains a String, not a Collection!
+      assertThatThrownBy(() -> {
+         redis.lset("another", 0, "tristan");
+      }).isInstanceOf(RedisCommandExecutionException.class)
+            .hasMessageContaining("ERRWRONGTYPE");
    }
 
    public void testLPOS() {
@@ -233,7 +301,14 @@ public class RespListCommandsTest extends SingleNodeRespBaseTest {
       }).isInstanceOf(RedisCommandExecutionException.class)
             .hasMessageContaining("ERR RANK can't be zero");
 
-      assertWrongType(() -> redis.set("another", "tristan"), () -> redis.lpos("another","tristan"));
+      // Set a String Command
+      redis.set("another", "tristan");
+
+      // LPOS on an existing key that contains a String, not a Collection!
+      assertThatThrownBy(() -> {
+         redis.lpos("another","tristan");
+      }).isInstanceOf(RedisCommandExecutionException.class)
+            .hasMessageContaining("ERRWRONGTYPE");
    }
 
    public void testLINSERT() {
@@ -245,7 +320,14 @@ public class RespListCommandsTest extends SingleNodeRespBaseTest {
       assertThat(redis.linsert("leads", false, "jose", "fabio")).isEqualTo(7);
       assertThat(redis.lrange("leads",0, -1)).containsExactly("william", "fabio", "jose", "fabio", "ryan", "pedro", "jose");
 
-      assertWrongType(() -> redis.set("another", "tristan"), () -> redis.linsert("another", true,"tristan", "william"));
+      // Set a String Command
+      redis.set("another", "tristan");
+
+      // LPOS on an existing key that contains a String, not a Collection!
+      assertThatThrownBy(() -> {
+         redis.linsert("another", true,"tristan", "william");
+      }).isInstanceOf(RedisCommandExecutionException.class)
+            .hasMessageContaining("ERRWRONGTYPE");
    }
 
    public void testLREM() {
@@ -265,7 +347,14 @@ public class RespListCommandsTest extends SingleNodeRespBaseTest {
       redis.lrem("leads", 0, "ryan");
       assertThat(redis.exists("leads")).isEqualTo(0);
 
-      assertWrongType(() -> redis.set("another", "tristan"), () -> redis.lrem("another", 0,"tristan"));
+      // Set a String Command
+      redis.set("another", "tristan");
+
+      // LREM on an existing key that contains a String, not a Collection!
+      assertThatThrownBy(() -> {
+         redis.lrem("another", 0,"tristan");
+      }).isInstanceOf(RedisCommandExecutionException.class)
+            .hasMessageContaining("ERRWRONGTYPE");
    }
 
    public void testLTRIM() {
@@ -279,7 +368,14 @@ public class RespListCommandsTest extends SingleNodeRespBaseTest {
       assertThat(redis.ltrim("leads", 1, -1)).isEqualTo("OK");
       assertThat(redis.exists("leads")).isEqualTo(0);
 
-      assertWrongType(() -> redis.set("another", "tristan"), () -> redis.ltrim("another", 0, 2));
+      // Set a String Command
+      redis.set("another", "tristan");
+
+      // LLEN on an existing key that contains a String, not a Collection!
+      assertThatThrownBy(() -> {
+         redis.ltrim("another", 0, 2);
+      }).isInstanceOf(RedisCommandExecutionException.class)
+            .hasMessageContaining("ERRWRONGTYPE");
    }
 
    public void testLMOVE() {
@@ -318,7 +414,14 @@ public class RespListCommandsTest extends SingleNodeRespBaseTest {
       assertThat(redis.lrange("leads", 0, -1)).isEmpty();
       assertThat(redis.lrange("new_leads", 0, -1)).containsExactly("pedro");
 
-      assertWrongType(() -> redis.set("another", "tristan"), () -> redis.lmove("another", "another", LMoveArgs.Builder.leftRight()));
+      // Set a String Command
+      redis.set("another", "tristan");
+
+      // LMOVE on an existing key that contains a String, not a Collection!
+      assertThatThrownBy(() -> {
+         redis.lmove("another", "another", LMoveArgs.Builder.leftRight());
+      }).isInstanceOf(RedisCommandExecutionException.class)
+            .hasMessageContaining("ERRWRONGTYPE");
    }
 
    public void testRPOPLPUSH() {
@@ -341,7 +444,14 @@ public class RespListCommandsTest extends SingleNodeRespBaseTest {
       assertThat(redis.lrange("leads", 0, -1)).containsExactly("ryan", "william", "tristan");
       assertThat(redis.lrange("new_leads", 0, -1)).containsExactly("pedro");
 
-      assertWrongType(() -> redis.set("another", "tristan"), () -> redis.rpoplpush("another", "another"));
+      // Set a String Command
+      redis.set("another", "tristan");
+
+      // LMOVE on an existing key that contains a String, not a Collection!
+      assertThatThrownBy(() -> {
+         redis.rpoplpush("another", "another");
+      }).isInstanceOf(RedisCommandExecutionException.class)
+            .hasMessageContaining("ERRWRONGTYPE");
    }
 
 }

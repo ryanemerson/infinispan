@@ -1,7 +1,9 @@
 package org.infinispan.server.resp.test;
 
-import io.lettuce.core.RedisClient;
-import io.lettuce.core.RedisCommandExecutionException;
+import java.time.Duration;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.infinispan.commons.dataconversion.MediaType;
 import org.infinispan.commons.logging.LogFactory;
 import org.infinispan.commons.test.TestResourceTracker;
@@ -12,11 +14,7 @@ import org.infinispan.server.resp.configuration.RespServerConfiguration;
 import org.infinispan.server.resp.configuration.RespServerConfigurationBuilder;
 import org.infinispan.test.data.Person;
 
-import java.time.Duration;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import io.lettuce.core.RedisClient;
 
 /**
  * Utils for RESP tests.
@@ -116,19 +114,5 @@ public class RespTestingUtil {
       protected Integer initialValue() {
          return uniqueAddr.getAndAdd(100);
       }
-   }
-
-   /**
-    * Common assertion to check the Resp Wrong Type Error.
-    * This occurs when, for example, when setting a key string and then trying to apply a list command to that key.
-    * @param command1, sets a key value with a command
-    * @param command2, runs another command type on the same key of command1
-    */
-   public static void assertWrongType(Runnable command1, Runnable command2) {
-      command1.run();
-      assertThatThrownBy(() -> {
-         command2.run();
-      }).isInstanceOf(RedisCommandExecutionException.class)
-            .hasMessageContaining("ERRWRONGTYPE");
    }
 }

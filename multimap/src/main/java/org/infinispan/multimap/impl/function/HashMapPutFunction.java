@@ -1,4 +1,4 @@
-package org.infinispan.multimap.impl.function.hmap;
+package org.infinispan.multimap.impl.function;
 
 import java.io.IOException;
 import java.io.ObjectInput;

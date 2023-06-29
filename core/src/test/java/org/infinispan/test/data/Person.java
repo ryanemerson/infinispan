@@ -10,7 +10,7 @@ import org.infinispan.commons.util.Util;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 
-public class Person implements Serializable, JsonSerialization, Comparable {
+public class Person implements Serializable, JsonSerialization {
 
    String name;
    Address address;
@@ -218,15 +218,5 @@ public class Person implements Serializable, JsonSerialization, Comparable {
             .set("moneyOwed", moneyOwed)
             .set("decimalField", decimalField)
             .set("realField", realField);
-   }
-
-   @Override
-   public int compareTo(Object o) {
-      if (o instanceof Person) {
-         Person o1 = (Person) o;
-         return name.compareTo(o1.name);
-      }
-
-      throw new IllegalArgumentException("Person can't compate to " + o.getClass());
    }
 }

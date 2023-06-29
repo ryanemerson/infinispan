@@ -1,4 +1,4 @@
-package org.infinispan.multimap.impl.function.set;
+package org.infinispan.multimap.impl.function;
 
 import org.infinispan.functional.EntryView;
 import org.infinispan.multimap.impl.SetBucket;
