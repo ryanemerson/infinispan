@@ -13,9 +13,9 @@ import org.infinispan.reactive.publisher.impl.DeliveryGuarantee;
  * @since 9.0
  */
 public interface IterationManager {
-   IterationState start(AdvancedCache cache, BitSet segments, String filterConverterFactory,
-                        List<byte[]> filterConverterParams, MediaType valueMediaType, int batch, boolean metadata,
-                        DeliveryGuarantee guarantee, IterationInitializationContext ctx);
+   IterationState start(AdvancedCache cache, BitSet segments,
+                        String filterConverterFactory, List<byte[]> filterConverterParams, MediaType valueMediaType,
+                        int batch, boolean metadata, DeliveryGuarantee guarantee);
 
    IterableIterationResult next(String iterationId, int batch);
 
