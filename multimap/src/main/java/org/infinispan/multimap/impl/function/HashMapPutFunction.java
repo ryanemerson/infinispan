@@ -15,6 +15,7 @@ import org.infinispan.commons.marshall.AdvancedExternalizer;
 import org.infinispan.functional.EntryView;
 import org.infinispan.multimap.impl.ExternalizerIds;
 import org.infinispan.multimap.impl.HashMapBucket;
+import org.infinispan.multimap.internal.MultimapDataConverter;
 
 /**
  * Serializable function use by {@link org.infinispan.multimap.impl.EmbeddedMultimapPairCache#set(Object, Map.Entry[])}.
@@ -30,7 +31,8 @@ public class HashMapPutFunction<K, HK, HV> extends HashMapBucketBaseFunction<K, 
 
    private final Collection<Map.Entry<HK, HV>> entries;
 
-   public HashMapPutFunction(Collection<Map.Entry<HK, HV>> entries) {
+   public HashMapPutFunction(MultimapDataConverter<HK, HV> converter, Collection<Map.Entry<HK, HV>> entries) {
+      super(converter);
       this.entries = entries;
    }
 
@@ -43,9 +45,9 @@ public class HashMapPutFunction<K, HK, HV> extends HashMapBucketBaseFunction<K, 
       HashMapBucket<HK, HV> bucket;
       if (existing.isPresent()) {
          bucket = existing.get();
-         res = bucket.putAll(values);
+         res = bucket.putAll(values, converter);
       } else {
-         bucket = HashMapBucket.create(values);
+         bucket = HashMapBucket.create(values, converter);
          res = values.size();
       }
       view.set(bucket);
@@ -67,6 +69,7 @@ public class HashMapPutFunction<K, HK, HV> extends HashMapBucketBaseFunction<K, 
 
       @Override
       public void writeObject(ObjectOutput output, HashMapPutFunction object) throws IOException {
+         output.writeObject(object.converter);
          output.writeInt(object.entries.size());
          Collection<Map.Entry> e = object.entries;
          for (Map.Entry entry : e) {
@@ -77,12 +80,13 @@ public class HashMapPutFunction<K, HK, HV> extends HashMapBucketBaseFunction<K, 
 
       @Override
       public HashMapPutFunction<?, ?, ?> readObject(ObjectInput input) throws IOException, ClassNotFoundException {
+         MultimapDataConverter converter = (MultimapDataConverter) input.readObject();
          int size = input.readInt();
          Map<Object, Object> values = new HashMap<>(size);
          for (int i = 0; i < size; i++) {
             values.put(input.readObject(), input.readObject());
          }
-         return new HashMapPutFunction<>(values.entrySet());
+         return new HashMapPutFunction<>(converter, values.entrySet());
       }
    }
 }

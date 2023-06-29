@@ -23,6 +23,7 @@ import org.infinispan.multimap.impl.function.RemoveFunction;
 import org.infinispan.multimap.impl.function.RotateFunction;
 import org.infinispan.multimap.impl.function.SetFunction;
 import org.infinispan.multimap.impl.function.SubListFunction;
+import org.infinispan.multimap.internal.MultimapDataConverter;
 import org.infinispan.multimap.impl.function.TrimFunction;
 
 
@@ -62,6 +63,7 @@ public class MultimapModuleLifecycle implements ModuleLifecycle {
       addAdvancedExternalizer(externalizerMap, InsertFunction.EXTERNALIZER);
       addAdvancedExternalizer(externalizerMap, RemoveCountFunction.EXTERNALIZER);
       addAdvancedExternalizer(externalizerMap, HashMapPutFunction.EXTERNALIZER);
+      addAdvancedExternalizer(externalizerMap, MultimapDataConverter.EXTERNALIZER);
       addAdvancedExternalizer(externalizerMap, AddFunction.EXTERNALIZER);
       addAdvancedExternalizer(externalizerMap, TrimFunction.EXTERNALIZER);
       addAdvancedExternalizer(externalizerMap, RotateFunction.EXTERNALIZER);

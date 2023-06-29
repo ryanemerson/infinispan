@@ -2,13 +2,14 @@ package org.infinispan.multimap.impl;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
-import org.infinispan.multimap.impl.internal.MultimapObjectWrapper;
+import org.infinispan.multimap.internal.MultimapDataConverter;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
@@ -16,60 +17,70 @@ import org.infinispan.protostream.annotations.ProtoTypeId;
 @ProtoTypeId(ProtoStreamTypeIds.MULTIMAP_HASH_MAP_BUCKET)
 public class HashMapBucket<K, V> {
 
-   final Map<MultimapObjectWrapper<K>, V> values;
+   final Map<Object, Object> values;
 
-   private HashMapBucket(Map<K, V> values) {
-      this.values = toStore(values);
+   public HashMapBucket() {
+      this.values = Collections.emptyMap();
+   }
+
+   public HashMapBucket(K key, V value) {
+      this.values = new HashMap<>();
+      values.put(key, value);
+   }
+
+   private HashMapBucket(Map<K, V> values, MultimapDataConverter<K, V> converter) {
+      this.values = toStore(values, converter);
    }
 
    @ProtoFactory
    HashMapBucket(Collection<BucketEntry<K, V>> wrappedValues) {
-      this.values = wrappedValues.stream()
-            .collect(Collectors.toMap(e -> new MultimapObjectWrapper<>(e.getKey()), BucketEntry::getValue));
+      this.values = wrappedValues.stream().collect(Collectors.toMap(BucketEntry::getKey, BucketEntry::getValue));
    }
 
-   public static <K, V> HashMapBucket<K, V> create(Map<K, V> values) {
-      return new HashMapBucket<>(values);
+   public static <K, V> HashMapBucket<K, V> create(Map<K, V> values, MultimapDataConverter<K, V> converter) {
+      return new HashMapBucket<>(values, converter);
    }
 
    @ProtoField(number = 1, collectionImplementation = ArrayList.class)
-   Collection<BucketEntry<K, V>> getWrappedValues() {
+   Collection<BucketEntry<Object, Object>> getWrappedValues() {
       return values.entrySet().stream().map(BucketEntry::new).collect(Collectors.toList());
    }
 
-   public int putAll(Map<K, V> map) {
+   public int putAll(Map<K, V> map, MultimapDataConverter<K, V> converter) {
       int res = 0;
       for (Map.Entry<K, V> entry : map.entrySet()) {
-         V prev = values.put(new MultimapObjectWrapper<>(entry.getKey()), entry.getValue());
+         Object prev = values.put(converter.convertKeyToStore(entry.getKey()), converter.convertValueToStore(entry.getValue()));
          if (prev == null) res++;
       }
       return res;
    }
 
-   public Map<K, V> values() {
-      return fromStore();
+   public Map<K, V> values(MultimapDataConverter<K, V> converter) {
+      return fromStore(converter);
    }
 
-   public V get(K k) {
-      return values.get(new MultimapObjectWrapper<>(k));
+   public V get(K k, MultimapDataConverter<K, V> converter) {
+      Object value = values.get(converter.convertKeyToStore(k));
+      if (value == null) return null;
+      return converter.convertValueFromStore(value);
    }
 
    public int size() {
       return values.size();
    }
 
-   private Map<MultimapObjectWrapper<K>, V> toStore(Map<K, V> raw) {
-      Map<MultimapObjectWrapper<K>, V> converted = new HashMap<>();
+   private Map<Object, Object> toStore(Map<K, V> raw, MultimapDataConverter<K, V> converter) {
+      Map<Object, Object> converted = new HashMap<>();
       for (Map.Entry<K, V> entry : raw.entrySet()) {
-         converted.put(new MultimapObjectWrapper<>(entry.getKey()), entry.getValue());
+         converted.put(converter.convertKeyToStore(entry.getKey()), converter.convertValueToStore(entry.getValue()));
       }
       return converted;
    }
 
-   private Map<K, V> fromStore() {
+   private Map<K, V> fromStore(MultimapDataConverter<K, V> converter) {
       Map<K, V> converted = new HashMap<>();
-      for (Map.Entry<MultimapObjectWrapper<K>, V> entry : values.entrySet()) {
-         converted.put(entry.getKey().get(), entry.getValue());
+      for (Map.Entry<Object, Object> entry : values.entrySet()) {
+         converted.put(converter.convertKeyFromStore(entry.getKey()), converter.convertValueFromStore(entry.getValue()));
       }
       return converted;
    }
@@ -84,8 +95,8 @@ public class HashMapBucket<K, V> {
          this.value = value;
       }
 
-      private BucketEntry(Map.Entry<MultimapObjectWrapper<K>, V> entry) {
-         this(entry.getKey().get(), entry.getValue());
+      private BucketEntry(Map.Entry<K, V> entry) {
+         this(entry.getKey(), entry.getValue());
       }
 
       @ProtoFactory
