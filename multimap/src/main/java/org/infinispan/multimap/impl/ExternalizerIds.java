@@ -23,8 +23,7 @@ public interface ExternalizerIds {
    Integer REMOVE_COUNT_FUNCTION = 2061;
    Integer HASH_MAP_PUT_FUNCTION = 2062;
    Integer MULTIMAP_CONVERTER = 2063;
-   Integer SET_ADD_FUNCTION = 2064;
+   Integer ADD_FUNCTION = 2064;
    Integer TRIM_FUNCTION = 2065;
    Integer ROTATE_FUNCTION = 2066;
-   Integer SORTED_SET_ADDMANY_FUNCTION = 2067;
 }
