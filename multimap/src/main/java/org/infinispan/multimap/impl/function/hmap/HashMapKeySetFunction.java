@@ -15,9 +15,8 @@ import org.infinispan.multimap.impl.HashMapBucket;
 
 /**
  * Serializable function used by {@link org.infinispan.multimap.impl.EmbeddedMultimapPairCache#keySet(Object)}.
- * <p>
- * This functions returns the key set of the {@link HashMapBucket}, or an empty set if the entry is not found.
  * </p>
+ * This functions returns the key set of the {@link HashMapBucket}, or an empty set if the entry is not found.
  *
  * @param <K>: Key type to identify the {@link HashMapBucket}.
  * @param <HK>: The {@link HashMapBucket} key type.

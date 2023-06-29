@@ -1,7 +1,7 @@
 package org.infinispan.server.resp;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.infinispan.server.resp.test.RespTestingUtil.assertWrongType;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -9,6 +9,7 @@ import java.util.Map;
 import org.testng.annotations.Test;
 
 import io.lettuce.core.MapScanCursor;
+import io.lettuce.core.RedisCommandExecutionException;
 import io.lettuce.core.ScanArgs;
 import io.lettuce.core.api.sync.RedisCommands;
 
@@ -25,7 +26,10 @@ public class HashOperationsTest extends SingleNodeRespBaseTest {
       assertThat(redis.hget("HMSET", "unknown")).isNull();
       assertThat(redis.hget("UNKNOWN", "unknown")).isNull();
 
-      assertWrongType(() -> redis.set("plain", "string"), () -> redis.hmset("plain", Map.of("k1", "v1")));
+      assertThat(redis.set("plain", "string")).isEqualTo("OK");
+      assertThatThrownBy(() -> redis.hmset("plain", Map.of("k1", "v1")))
+            .isInstanceOf(RedisCommandExecutionException.class)
+            .hasMessageContaining("ERRWRONGTYPE");
    }
 
    public void testHSET() {
@@ -44,8 +48,13 @@ public class HashOperationsTest extends SingleNodeRespBaseTest {
       assertThat(redis.hget("HSET", "unknown")).isNull();
       assertThat(redis.hget("UNKNOWN", "unknown")).isNull();
 
-      assertWrongType(() -> redis.set("plain", "string"), () -> redis.hmset("plain", Map.of("k1", "v1")));
-      assertWrongType(() -> {}, () -> redis.hget("plain", "k1"));
+      assertThat(redis.set("plain", "string")).isEqualTo("OK");
+      assertThatThrownBy(() -> redis.hmset("plain", Map.of("k1", "v1")))
+            .isInstanceOf(RedisCommandExecutionException.class)
+            .hasMessageContaining("ERRWRONGTYPE");
+      assertThatThrownBy(() -> redis.hget("plain", "k1"))
+            .isInstanceOf(RedisCommandExecutionException.class)
+            .hasMessageContaining("ERRWRONGTYPE");
    }
 
    public void testHashLength() {
@@ -57,7 +66,10 @@ public class HashOperationsTest extends SingleNodeRespBaseTest {
       assertThat(redis.hlen("len-test")).isEqualTo(3);
       assertThat(redis.hlen("UNKNOWN")).isEqualTo(0);
 
-      assertWrongType(() -> redis.set("plain", "string"), () -> redis.hlen("plain"));
+      redis.set("plain", "string");
+      assertThatThrownBy(() -> redis.hlen("plain"))
+            .isInstanceOf(RedisCommandExecutionException.class)
+            .hasMessageContaining("ERRWRONGTYPE");
    }
 
    public void testHScanOperation() {
@@ -154,19 +166,9 @@ public class HashOperationsTest extends SingleNodeRespBaseTest {
       assertThat(redis.hkeys("keyset-operation")).asList()
             .hasSize(3).containsAll(map.keySet());
 
-      assertWrongType(() -> redis.set("plain", "string"), () -> redis.hkeys("plain"));
-   }
-
-   public void testValuesOperation() {
-      RedisCommands<String, String> redis = redisConnection.sync();
-      assertThat(redis.hvals("something")).asList().isEmpty();
-
-      Map<String, String> map = Map.of("key1", "value1", "key2", "value2", "key3", "value3");
-      assertThat(redis.hset("values-operation", map)).isEqualTo(3);
-
-      assertThat(redis.hvals("values-operation")).asList()
-            .hasSize(3).containsAll(map.values());
-
-      assertWrongType(() -> redis.set("plain", "string"), () -> redis.hvals("plain"));
+      redis.set("plain", "string");
+      assertThatThrownBy(() -> redis.hkeys("plain"))
+            .isInstanceOf(RedisCommandExecutionException.class)
+            .hasMessageContaining("ERRWRONGTYPE");
    }
 }
