@@ -1,76 +1,47 @@
 package org.infinispan.checkstyle.checks.regexp;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
+import java.util.regex.Pattern;
 
 import com.puppycrawl.tools.checkstyle.api.AbstractCheck;
 import com.puppycrawl.tools.checkstyle.api.DetailAST;
 import com.puppycrawl.tools.checkstyle.api.FullIdent;
 import com.puppycrawl.tools.checkstyle.api.TokenTypes;
+import com.puppycrawl.tools.checkstyle.utils.CommonUtil;
 
 /**
  * A simple CheckStyle checker to verify specific import statements are not being used.
  *
  * @author Sanne Grinovero
  */
-public class IllegalImport extends AbstractCheck {
+public class IllegalImport extends com.puppycrawl.tools.checkstyle.checks.imports.IllegalImportCheck {
 
-   private final HashSet<String> notAllowedImports = new HashSet<>();
-   private String message = "";
+   private final List<Pattern> skipPkgsRegexps = new ArrayList<>();
+   private String[] skipPkgs;
 
-   /**
-    * Set the list of illegal import statements.
-    *
-    * @param importStatements
-    *           array of illegal packages
-    */
-   public void setIllegalClassnames(String[] importStatements) {
-      notAllowedImports.addAll(Arrays.asList(importStatements));
+   public String[] getSkipPkgs() {
+      return skipPkgs;
    }
 
-   public void setMessage(String message) {
-      if (message != null) {
-         this.message = message;
+   public void setSkipPkgs(String... from) {
+      skipPkgs = from.clone();
+      for (String illegalClass : skipPkgs) {
+         skipPkgsRegexps.add(CommonUtil.createPattern(illegalClass));
       }
-   }
-
-   @Override
-   public int[] getDefaultTokens() {
-      return new int[] { TokenTypes.IMPORT, TokenTypes.STATIC_IMPORT };
-   }
-
-   @Override
-   public int[] getAcceptableTokens() {
-      return getDefaultTokens();
    }
 
    @Override
    public int[] getRequiredTokens() {
-      return getDefaultTokens();
+      return new int[] {TokenTypes.PACKAGE_DEF, TokenTypes.IMPORT, TokenTypes.STATIC_IMPORT};
    }
 
    @Override
-   public void visitToken(DetailAST aAST) {
-      final FullIdent imp;
-      if (aAST.getType() == TokenTypes.IMPORT) {
-         imp = FullIdent.createFullIdentBelow(aAST);
-      } else {
-         // handle case of static imports of method names
-         imp = FullIdent.createFullIdent(aAST.getFirstChild().getNextSibling());
-      }
-      final String text = imp.getText();
-      if (isIllegalImport(text)) {
-         final String message = buildError(text);
-         log(aAST.getLineNo(), aAST.getColumnNo(), message, text);
+   public void visitToken(DetailAST ast) {
+      if (ast.getType() == TokenTypes.PACKAGE_DEF) {
+
       }
    }
-
-   private String buildError(String importStatement) {
-      return "Import statement violating a checkstyle rule: " + importStatement + ". " + message;
-   }
-
-   private boolean isIllegalImport(String importString) {
-      return notAllowedImports.contains(importString);
-   }
-
 }
