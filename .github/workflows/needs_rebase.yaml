@@ -11,4 +11,4 @@ jobs:
           CONFLICT_LABEL_NAME: "Needs Rebase"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           MAX_RETRIES: 5
-          WAIT_MS: 5000
+          WAIT_MS: 5002
