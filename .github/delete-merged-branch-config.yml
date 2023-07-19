@@ -1,0 +1,4 @@
+exclude:
+  - '*.0.x'
+  - 'main'
+delete_closed_pr: true
