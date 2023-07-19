@@ -1,0 +1,21 @@
+name: Backport branch reaper
+
+on:
+  pull_request_target:
+    types:
+      - closed
+    branches:
+      - '*.0.x'
+jobs:
+  delete-branch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: delete branch
+        uses: SvanBoxel/delete-merged-branch@main
+        with:
+          exclude:
+            - '*.0.x'
+            - 'main'
+          delete-closed-pr: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
