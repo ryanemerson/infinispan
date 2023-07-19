@@ -1,0 +1,26 @@
+name: Backport branch reaper
+
+on:
+  pull_request_target:
+    types:
+      - closed
+    branches:
+      - '*.0.x'
+
+jobs:
+  output_values:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo ${{ github.event.pull_request.head.repo.fork }}
+          echo ${{ github.event.pull_request.head.ref }}
+          echo ${{ github.event.pull_request.head }}
+  remove_backport_branch:
+    if: startsWith('bp-', github.event.pull_request.head.ref) && !github.event.pull_request.head.repo.fork
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete PR head branches
+        uses: dawidd6/action-delete-branch@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{github.event.pull_request.number}}
