@@ -67,8 +67,9 @@ import org.infinispan.commons.CacheException;
 import org.infinispan.commons.TimeoutException;
 import org.infinispan.commons.api.Lifecycle;
 import org.infinispan.commons.jdkspecific.CallerId;
+import org.infinispan.commons.marshall.Marshaller;
 import org.infinispan.commons.marshall.ProtoStreamMarshaller;
-import org.infinispan.commons.marshall.StreamingMarshaller;
+import org.infinispan.commons.marshall.StreamAwareMarshaller;
 import org.infinispan.commons.test.Exceptions;
 import org.infinispan.commons.util.IntSet;
 import org.infinispan.commons.util.IntSets;
@@ -1080,7 +1081,7 @@ public class TestingUtil {
 
    public static GlobalMarshaller extractGlobalMarshaller(EmbeddedCacheManager cm) {
       GlobalComponentRegistry gcr = extractGlobalComponentRegistry(cm);
-      return (GlobalMarshaller) gcr.getComponent(StreamingMarshaller.class, KnownComponentNames.INTERNAL_MARSHALLER);
+      return (GlobalMarshaller) gcr.getComponent(Marshaller.class, KnownComponentNames.INTERNAL_MARSHALLER);
    }
 
    public static PersistenceMarshallerImpl extractPersistenceMarshaller(EmbeddedCacheManager cm) {

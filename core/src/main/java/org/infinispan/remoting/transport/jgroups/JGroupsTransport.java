@@ -42,7 +42,7 @@ import org.infinispan.commons.CacheConfigurationException;
 import org.infinispan.commons.CacheException;
 import org.infinispan.commons.IllegalLifecycleStateException;
 import org.infinispan.commons.io.ByteBuffer;
-import org.infinispan.commons.marshall.StreamingMarshaller;
+import org.infinispan.commons.marshall.Marshaller;
 import org.infinispan.commons.time.TimeService;
 import org.infinispan.commons.util.FileLookup;
 import org.infinispan.commons.util.FileLookupFactory;
@@ -171,7 +171,7 @@ public class JGroupsTransport implements Transport, ChannelListener, AddressGene
 
    @Inject protected GlobalConfiguration configuration;
    @Inject @ComponentName(KnownComponentNames.INTERNAL_MARSHALLER)
-   protected StreamingMarshaller marshaller;
+   protected Marshaller marshaller;
    @Inject protected CacheManagerNotifier notifier;
    @Inject protected TimeService timeService;
    @Inject protected InboundInvocationHandler invocationHandler;

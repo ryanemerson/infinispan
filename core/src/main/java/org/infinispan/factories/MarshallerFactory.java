@@ -22,7 +22,6 @@ import org.infinispan.marshall.protostream.impl.SerializationContextRegistry;
 @DefaultFactoryFor(
       classes = {
             Marshaller.class,
-            StreamingMarshaller.class,
             StreamAwareMarshaller.class
       },
       names = {
