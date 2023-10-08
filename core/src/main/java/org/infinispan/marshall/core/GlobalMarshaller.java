@@ -28,13 +28,6 @@ import org.infinispan.commons.marshall.StreamAwareMarshaller;
 import org.infinispan.commons.marshall.StreamingMarshaller;
 import org.infinispan.configuration.global.GlobalConfiguration;
 import org.infinispan.factories.GlobalComponentRegistry;
-import org.infinispan.factories.KnownComponentNames;
-import org.infinispan.factories.annotations.ComponentName;
-import org.infinispan.factories.annotations.Inject;
-import org.infinispan.factories.annotations.Start;
-import org.infinispan.factories.annotations.Stop;
-import org.infinispan.factories.scopes.Scope;
-import org.infinispan.factories.scopes.Scopes;
 import org.infinispan.marshall.core.impl.ClassToExternalizerMap;
 import org.infinispan.marshall.core.impl.ClassToExternalizerMap.IdToExternalizerMap;
 import org.infinispan.marshall.core.impl.ExternalExternalizers;
@@ -51,7 +44,6 @@ import org.infinispan.util.logging.LogFactory;
  * @author Galder Zamarreño
  * @since 5.0
  */
-@Scope(Scopes.GLOBAL)
 public class GlobalMarshaller implements StreamingMarshaller {
 
    private static final Log log = LogFactory.getLog(GlobalMarshaller.class);
@@ -105,9 +97,8 @@ public class GlobalMarshaller implements StreamingMarshaller {
 
    private final MarshallableTypeHints marshallableTypeHints = new MarshallableTypeHints();
 
-   @Inject GlobalComponentRegistry gcr;
-   @Inject RemoteCommandsFactory cmdFactory;
-   @Inject @ComponentName(KnownComponentNames.PERSISTENCE_MARSHALLER)
+   GlobalComponentRegistry gcr;
+   RemoteCommandsFactory cmdFactory;
    PersistenceMarshaller persistenceMarshaller;
 
    ClassToExternalizerMap internalExts;
@@ -120,8 +111,13 @@ public class GlobalMarshaller implements StreamingMarshaller {
    public GlobalMarshaller() {
    }
 
+   public void init(GlobalComponentRegistry gcr, RemoteCommandsFactory cmdFactory, PersistenceMarshaller persistenceMarshaller) {
+      this.gcr = gcr;
+      this.cmdFactory = cmdFactory;
+      this.persistenceMarshaller = persistenceMarshaller;
+   }
+
    @Override
-   @Start // Should start after the externalizer table and before transport
    public void start() {
       GlobalConfiguration globalCfg = gcr.getGlobalConfiguration();
       classLoader = globalCfg.classLoader();
@@ -142,15 +138,12 @@ public class GlobalMarshaller implements StreamingMarshaller {
       classIdentifiers = ClassIdentifiers.load(globalCfg);
    }
 
-   @Override
-   @Stop // Stop after transport to avoid send/receive and marshaller not being ready
    public void stop() {
       internalExts = null;
       reverseInternalExts = null;
       externalExts = null;
       reverseExternalExts = null;
       classIdentifiers = null;
-      persistenceMarshaller.stop();
    }
 
    public PersistenceMarshaller getPersistenceMarshaller() {

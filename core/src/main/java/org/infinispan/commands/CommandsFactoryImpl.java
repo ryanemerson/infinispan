@@ -111,7 +111,7 @@ import org.infinispan.functional.EntryView.WriteEntryView;
 import org.infinispan.functional.impl.Params;
 import org.infinispan.interceptors.locking.ClusteringDependentLogic;
 import org.infinispan.manager.EmbeddedCacheManager;
-import org.infinispan.marshall.core.GlobalMarshaller;
+import org.infinispan.marshall.core.proto.DelegatingGlobalMarshaller;
 import org.infinispan.metadata.Metadata;
 import org.infinispan.metadata.impl.PrivateMetadata;
 import org.infinispan.notifications.cachelistener.cluster.ClusterEvent;
@@ -591,7 +591,7 @@ public class CommandsFactoryImpl implements CommandsFactory {
       if (ann != null)
          return ValueMatcher.valueOf(ann.valueMatcher().toString());
 
-      Externalizer ext = ((GlobalMarshaller) marshaller).findExternalizerFor(o);
+      Externalizer ext = ((DelegatingGlobalMarshaller) marshaller).findExternalizerFor(o);
       if (ext instanceof LambdaExternalizer)
          return ValueMatcher.valueOf(((LambdaExternalizer) ext).valueMatcher(o).toString());
 
