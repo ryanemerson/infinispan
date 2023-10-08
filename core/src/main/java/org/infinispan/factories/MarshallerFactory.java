@@ -1,15 +1,15 @@
 package org.infinispan.factories;
 
+import org.infinispan.commons.dataconversion.MediaType;
 import org.infinispan.commons.marshall.ImmutableProtoStreamMarshaller;
 import org.infinispan.commons.marshall.Marshaller;
 import org.infinispan.commons.marshall.StreamAwareMarshaller;
-import org.infinispan.commons.marshall.StreamingMarshaller;
 import org.infinispan.factories.annotations.DefaultFactoryFor;
 import org.infinispan.factories.annotations.Inject;
-import org.infinispan.factories.impl.ComponentAlias;
 import org.infinispan.factories.impl.ComponentRef;
 import org.infinispan.marshall.core.GlobalMarshaller;
 import org.infinispan.marshall.core.impl.DelegatingUserMarshaller;
+import org.infinispan.marshall.core.proto.DelegatingGlobalMarshaller;
 import org.infinispan.marshall.persistence.impl.PersistenceMarshallerImpl;
 import org.infinispan.marshall.protostream.impl.SerializationContextRegistry;
 
@@ -22,7 +22,6 @@ import org.infinispan.marshall.protostream.impl.SerializationContextRegistry;
 @DefaultFactoryFor(
       classes = {
             Marshaller.class,
-            StreamingMarshaller.class,
             StreamAwareMarshaller.class
       },
       names = {
@@ -38,16 +37,13 @@ public class MarshallerFactory extends AbstractComponentFactory implements AutoI
 
    @Override
    public Object construct(String componentName) {
-
-      if (componentName.equals(StreamingMarshaller.class.getName())) {
-         return ComponentAlias.of(KnownComponentNames.INTERNAL_MARSHALLER);
-      }
-
       switch (componentName) {
          case KnownComponentNames.PERSISTENCE_MARSHALLER:
             return new PersistenceMarshallerImpl();
          case KnownComponentNames.INTERNAL_MARSHALLER:
-            return new GlobalMarshaller();
+            org.infinispan.marshall.core.next.GlobalMarshaller newGm = new org.infinispan.marshall.core.next.GlobalMarshaller();
+            GlobalMarshaller oldGm = new GlobalMarshaller();
+            return new DelegatingGlobalMarshaller(newGm, oldGm, MediaType.APPLICATION_INFINISPAN_MARSHALLED);
          case KnownComponentNames.USER_MARSHALLER:
             Marshaller marshaller = globalConfiguration.serialization().marshaller();
             if (marshaller != null) {

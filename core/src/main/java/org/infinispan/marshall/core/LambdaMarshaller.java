@@ -18,7 +18,8 @@ class LambdaMarshaller {
 
    static void write(ObjectOutput out, Object o) throws IOException {
       try {
-         Method writeReplace = SecurityActions.getMethodAndSetAccessible(o, "writeReplace");
+         Method writeReplace = o.getClass().getDeclaredMethod("writeReplace");
+         writeReplace.setAccessible(true);
          SerializedLambda sl = (SerializedLambda) writeReplace.invoke(o);
          writeSerializedLambda(out, sl);
       } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
@@ -45,8 +46,9 @@ class LambdaMarshaller {
    public static Object read(ObjectInput in, ClassLoader classLoader) throws ClassNotFoundException, IOException {
       SerializedLambda sl = createSerializedLambda(in, classLoader);
       try {
-         Class clazz = Class.forName(sl.getCapturingClass().replace("/", "."), true, classLoader);
-         Method method = SecurityActions.getMethodAndSetAccessible(clazz, "$deserializeLambda$", SerializedLambda.class);
+         Class<?> clazz = Class.forName(sl.getCapturingClass().replace("/", "."), true, classLoader);
+         Method method = clazz.getDeclaredMethod("$deserializeLambda$", SerializedLambda.class);
+         method.setAccessible(true);
          return method.invoke(null, sl);
       } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
          throw new MarshallingException(e);

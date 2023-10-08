@@ -25,6 +25,7 @@ import java.lang.annotation.Target;
 @Inherited
 @Documented
 @Deprecated(forRemoval=true, since = "10.0")
+// TODO remove all references from src & test
 public @interface SerializeWith {
 
    /**

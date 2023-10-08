@@ -40,6 +40,7 @@ import org.infinispan.commons.configuration.BuiltBy;
 import org.infinispan.commons.configuration.Combine;
 import org.infinispan.commons.configuration.ConfigurationFor;
 import org.infinispan.commons.configuration.attributes.AttributeSet;
+import org.infinispan.commons.dataconversion.MediaType;
 import org.infinispan.commons.test.Exceptions;
 import org.infinispan.configuration.cache.AbstractStoreConfiguration;
 import org.infinispan.configuration.cache.AbstractStoreConfigurationBuilder;
@@ -54,13 +55,15 @@ import org.infinispan.configuration.parsing.ConfigurationBuilderHolder;
 import org.infinispan.container.DataContainer;
 import org.infinispan.container.impl.InternalDataContainer;
 import org.infinispan.factories.ComponentRegistry;
+import org.infinispan.factories.GlobalComponentRegistry;
 import org.infinispan.factories.annotations.Start;
 import org.infinispan.factories.annotations.Stop;
 import org.infinispan.factories.scopes.Scope;
 import org.infinispan.factories.scopes.Scopes;
 import org.infinispan.interceptors.BaseCustomAsyncInterceptor;
 import org.infinispan.lifecycle.ComponentStatus;
-import org.infinispan.marshall.core.GlobalMarshaller;
+import org.infinispan.marshall.core.proto.DelegatingGlobalMarshaller;
+import org.infinispan.marshall.protostream.impl.SerializationContextRegistry;
 import org.infinispan.notifications.Listener;
 import org.infinispan.notifications.cachemanagerlistener.annotation.CacheStarted;
 import org.infinispan.notifications.cachemanagerlistener.annotation.CacheStopped;
@@ -76,6 +79,7 @@ import org.infinispan.test.AbstractInfinispanTest;
 import org.infinispan.test.CacheManagerCallable;
 import org.infinispan.test.MultiCacheManagerCallable;
 import org.infinispan.test.TestException;
+import org.infinispan.test.TestingUtil;
 import org.infinispan.test.fwk.CheckPoint;
 import org.infinispan.test.fwk.TestCacheManagerFactory;
 import org.testng.annotations.Test;
@@ -301,8 +305,14 @@ public class CacheManagerTest extends AbstractInfinispanTest {
       CompletableFuture<Void> managerStopResumed = new CompletableFuture<>();
       try {
          manager.addListener(new MyListener(CACHE_NAME, cacheStartBlocked, cacheStartResumed));
-         replaceComponent(manager, GlobalMarshaller.class,
-               new LatchGlobalMarshaller(managerStopBlocked, managerStopResumed), true);
+         DelegatingGlobalMarshaller dgm = TestingUtil.extractGlobalMarshaller(manager);
+         LatchGlobalMarshaller lgm = new LatchGlobalMarshaller(dgm.getNewMarshaller(), dgm.getOldMarshaller(), dgm.mediaType(), managerStopBlocked, managerStopResumed);
+         dgm.getNewMarshaller().init(
+               GlobalComponentRegistry.of(manager),
+               TestingUtil.extractGlobalComponent(manager, SerializationContextRegistry.class),
+               TestingUtil.extractPersistenceMarshaller(manager).getUserMarshaller()
+         );
+         replaceComponent(manager, DelegatingGlobalMarshaller.class, lgm, true);
          // Need to start after replacing the global marshaller because we can't delegate to the old GlobalMarshaller
          manager.start();
 
@@ -674,12 +684,13 @@ public class CacheManagerTest extends AbstractInfinispanTest {
       }
    }
 
-   static class LatchGlobalMarshaller extends GlobalMarshaller {
+   static class LatchGlobalMarshaller extends DelegatingGlobalMarshaller {
       private final CompletableFuture<Void> managerStopBlocked;
       private final CompletableFuture<Void> managerStopResumed;
 
-      public LatchGlobalMarshaller(CompletableFuture<Void> managerStopBlocked,
+      public LatchGlobalMarshaller(org.infinispan.marshall.core.next.GlobalMarshaller newMarshaller, org.infinispan.marshall.core.GlobalMarshaller oldMarshaller, MediaType mediaType, CompletableFuture<Void> managerStopBlocked,
                                    CompletableFuture<Void> managerStopResumed) {
+         super(newMarshaller, oldMarshaller, mediaType);
          this.managerStopBlocked = managerStopBlocked;
          this.managerStopResumed = managerStopResumed;
       }
