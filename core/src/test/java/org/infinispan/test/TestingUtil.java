@@ -101,6 +101,7 @@ import org.infinispan.lifecycle.ModuleLifecycle;
 import org.infinispan.manager.CacheContainer;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.marshall.core.GlobalMarshaller;
+import org.infinispan.marshall.core.proto.DelegatingGlobalMarshaller;
 import org.infinispan.marshall.persistence.impl.MarshalledEntryUtil;
 import org.infinispan.marshall.persistence.impl.PersistenceMarshallerImpl;
 import org.infinispan.metadata.EmbeddedMetadata;
@@ -1076,7 +1077,8 @@ public class TestingUtil {
 
    public static GlobalMarshaller extractGlobalMarshaller(EmbeddedCacheManager cm) {
       GlobalComponentRegistry gcr = extractGlobalComponentRegistry(cm);
-      return (GlobalMarshaller) gcr.getComponent(Marshaller.class, KnownComponentNames.INTERNAL_MARSHALLER);
+      DelegatingGlobalMarshaller dgm = (DelegatingGlobalMarshaller) gcr.getComponent(Marshaller.class, KnownComponentNames.INTERNAL_MARSHALLER);
+      return dgm.getOldMarshaller();
    }
 
    public static PersistenceMarshallerImpl extractPersistenceMarshaller(EmbeddedCacheManager cm) {
