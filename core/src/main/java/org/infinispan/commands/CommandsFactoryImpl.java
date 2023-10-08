@@ -84,8 +84,8 @@ import org.infinispan.commands.write.ValueMatcher;
 import org.infinispan.commands.write.WriteCommand;
 import org.infinispan.commons.marshall.Externalizer;
 import org.infinispan.commons.marshall.LambdaExternalizer;
+import org.infinispan.commons.marshall.Marshaller;
 import org.infinispan.commons.marshall.SerializeFunctionWith;
-import org.infinispan.commons.marshall.StreamingMarshaller;
 import org.infinispan.commons.tx.XidImpl;
 import org.infinispan.commons.util.EnumUtil;
 import org.infinispan.commons.util.IntSet;
@@ -170,7 +170,7 @@ public class CommandsFactoryImpl implements CommandsFactory {
    @Inject ComponentRegistry componentRegistry;
    @Inject EmbeddedCacheManager cacheManager;
    @Inject @ComponentName(KnownComponentNames.INTERNAL_MARSHALLER)
-   StreamingMarshaller marshaller;
+   Marshaller marshaller;
 
    private ByteString cacheName;
    private boolean transactional;
