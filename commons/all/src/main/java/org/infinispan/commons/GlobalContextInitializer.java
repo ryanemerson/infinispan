@@ -11,6 +11,9 @@ import org.infinispan.protostream.annotations.AutoProtoSchemaBuilder;
  * @author Ryan Emerson
  * @since 10.0
  */
+// TODO
+//            org.infinispan.commons.api.CacheContainerAdmin.AdminFlag.class,
+//      org.infinispan.commons.tx.XidImpl.class,
 @AutoProtoSchemaBuilder(
       includeClasses = KeyValueWithPrevious.class,
       schemaFileName = "global.commons.proto",

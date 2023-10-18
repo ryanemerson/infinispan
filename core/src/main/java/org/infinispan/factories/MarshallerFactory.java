@@ -48,9 +48,9 @@ public class MarshallerFactory extends AbstractComponentFactory implements AutoI
          case KnownComponentNames.PERSISTENCE_MARSHALLER:
             return new PersistenceMarshallerImpl();
          case KnownComponentNames.INTERNAL_MARSHALLER:
-            GlobalMarshaller gm = new GlobalMarshaller();
-//            return gm;
-            return new DelegatingGlobalMarshaller(gm, gm, MediaType.APPLICATION_INFINISPAN_MARSHALLED);
+            org.infinispan.marshall.core.next.GlobalMarshaller newGm = new org.infinispan.marshall.core.next.GlobalMarshaller();
+            GlobalMarshaller oldGm = new GlobalMarshaller();
+            return new DelegatingGlobalMarshaller(newGm, oldGm, MediaType.APPLICATION_INFINISPAN_MARSHALLED);
          case KnownComponentNames.USER_MARSHALLER:
             Marshaller marshaller = globalConfiguration.serialization().marshaller();
             if (marshaller != null) {
