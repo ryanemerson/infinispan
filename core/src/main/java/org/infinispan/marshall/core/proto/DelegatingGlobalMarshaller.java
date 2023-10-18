@@ -14,10 +14,12 @@ import org.infinispan.factories.annotations.ComponentName;
 import org.infinispan.factories.annotations.Inject;
 import org.infinispan.factories.annotations.Start;
 import org.infinispan.factories.annotations.Stop;
+import org.infinispan.factories.impl.ComponentRef;
 import org.infinispan.factories.scopes.Scope;
 import org.infinispan.factories.scopes.Scopes;
 import org.infinispan.marshall.core.GlobalMarshaller;
 import org.infinispan.marshall.persistence.PersistenceMarshaller;
+import org.infinispan.marshall.protostream.impl.SerializationContextRegistry;
 
 @Scope(Scopes.GLOBAL)
 public class DelegatingGlobalMarshaller implements Marshaller {
@@ -25,7 +27,7 @@ public class DelegatingGlobalMarshaller implements Marshaller {
    // Set to false in order to determine what can't be serialized with the new marshaller
    private static final boolean DELEGATE = true;
 
-   final Marshaller newMarshaller;
+   final org.infinispan.marshall.core.next.GlobalMarshaller newMarshaller;
    final GlobalMarshaller oldMarshaller;
 
    final MediaType mediaType;
@@ -37,7 +39,14 @@ public class DelegatingGlobalMarshaller implements Marshaller {
    @Inject @ComponentName(KnownComponentNames.PERSISTENCE_MARSHALLER)
    PersistenceMarshaller persistenceMarshaller;
 
-   public DelegatingGlobalMarshaller(Marshaller newMarshaller, GlobalMarshaller oldMarshaller, MediaType mediaType) {
+   @Inject
+   SerializationContextRegistry ctxRegistry;
+
+   @Inject @ComponentName(KnownComponentNames.USER_MARSHALLER)
+   ComponentRef<Marshaller> userMarshallerRef;
+
+
+   public DelegatingGlobalMarshaller(org.infinispan.marshall.core.next.GlobalMarshaller newMarshaller, GlobalMarshaller oldMarshaller, MediaType mediaType) {
       this.newMarshaller = newMarshaller;
       this.oldMarshaller = oldMarshaller;
       this.mediaType = mediaType;
@@ -46,6 +55,7 @@ public class DelegatingGlobalMarshaller implements Marshaller {
    @Override
    @Start(priority = 8) // Should start after the externalizer table and before transport
    public void start() {
+      newMarshaller.init(gcr, ctxRegistry, userMarshallerRef.running());
       oldMarshaller.init(gcr, cmdFactory, persistenceMarshaller);
       oldMarshaller.start();
    }
