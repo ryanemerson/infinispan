@@ -11,7 +11,11 @@ import java.util.Set;
 
 import org.infinispan.commons.marshall.AbstractExternalizer;
 import org.infinispan.commons.marshall.AdvancedExternalizer;
+import org.infinispan.configuration.cache.AbstractModuleConfigurationBuilder;
+import org.infinispan.configuration.cache.StoreConfiguration;
+import org.infinispan.configuration.cache.StoreConfigurationBuilder;
 import org.infinispan.configuration.parsing.ConfigurationParser;
+import org.infinispan.configuration.serializing.ConfigurationSerializer;
 import org.infinispan.factories.impl.ModuleMetadataBuilder;
 import org.infinispan.interceptors.AsyncInterceptor;
 import org.infinispan.notifications.Listener;
@@ -26,6 +30,7 @@ import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.Index;
 import org.jboss.jandex.IndexView;
+import org.jgroups.util.Util;
 
 import com.github.benmanes.caffeine.cache.CacheLoader;
 
@@ -37,6 +42,7 @@ import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.ApplicationIndexBuildItem;
 import io.quarkus.deployment.builditem.CombinedIndexBuildItem;
 import io.quarkus.deployment.builditem.IndexDependencyBuildItem;
+import io.quarkus.deployment.builditem.nativeimage.NativeImageResourceBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ServiceProviderBuildItem;
 
@@ -47,14 +53,16 @@ class InfinispanEmbeddedProcessor {
         indexDependency.produce(new IndexDependencyBuildItem("org.jgroups", "jgroups"));
         indexDependency.produce(new IndexDependencyBuildItem("org.infinispan", "infinispan-commons"));
         indexDependency.produce(new IndexDependencyBuildItem("org.infinispan", "infinispan-core"));
+        indexDependency.produce(new IndexDependencyBuildItem("org.infinispan", "infinispan-cachestore-jdbc-common"));
+        indexDependency.produce(new IndexDependencyBuildItem("org.infinispan", "infinispan-cachestore-jdbc"));
     }
 
     @BuildStep
     void setup(BuildProducer<ReflectiveClassBuildItem> reflectiveClass,
-            BuildProducer<ServiceProviderBuildItem> serviceProvider, BuildProducer<AdditionalBeanBuildItem> additionalBeans,
-            CombinedIndexBuildItem combinedIndexBuildItem,
-            List<InfinispanReflectionExcludedBuildItem> excludedReflectionClasses,
-            ApplicationIndexBuildItem applicationIndexBuildItem) {
+               BuildProducer<ServiceProviderBuildItem> serviceProvider, BuildProducer<AdditionalBeanBuildItem> additionalBeans,
+               BuildProducer<NativeImageResourceBuildItem> resources, CombinedIndexBuildItem combinedIndexBuildItem,
+               List<InfinispanReflectionExcludedBuildItem> excludedReflectionClasses,
+               ApplicationIndexBuildItem applicationIndexBuildItem) {
 
         additionalBeans.produce(AdditionalBeanBuildItem.unremovableOf(InfinispanEmbeddedProducer.class));
 
@@ -87,6 +95,25 @@ class InfinispanEmbeddedProcessor {
         addReflectionForClass(NonBlockingStore.class, combinedIndex, reflectiveClass, excludedClasses);
         addReflectionForName(AsyncInterceptor.class.getName(), true, combinedIndex, reflectiveClass, false, true, excludedClasses);
 
+        addReflectionForClass(StoreConfigurationBuilder.class, combinedIndex, reflectiveClass, excludedClasses);
+        addReflectionForClass(StoreConfiguration.class, combinedIndex, reflectiveClass, true, excludedClasses);
+        addReflectionForClass(ConfigurationSerializer.class, combinedIndex, reflectiveClass, excludedClasses);
+        addReflectionForClass(AbstractModuleConfigurationBuilder.class, combinedIndex, reflectiveClass, excludedClasses);
+
+        if (combinedIndex.getClassByName("org.infinispan.persistence.jdbc.common.SqlManager") != null) {
+            addReflectionForName("org.infinispan.persistence.jdbc.common.configuration.ConnectionFactoryConfiguration", true, combinedIndex, reflectiveClass, true, false, excludedClasses);
+            addReflectionForName("org.infinispan.persistence.jdbc.common.configuration.ConnectionFactoryConfigurationBuilder", true, combinedIndex, reflectiveClass, true, false, excludedClasses);
+            addReflectionForName("org.infinispan.configuration.cache.LoaderConfigurationChildBuilder.JdbcStoreConfigurationChildBuilder", true, combinedIndex, reflectiveClass, false, false, excludedClasses);
+            addReflectionForName("org.infinispan.persistence.jdbc.common.connectionfactory.ConnectionFactory", false, combinedIndex, reflectiveClass, false, false, excludedClasses);
+            addReflectionForName("org.infinispan.persistence.keymappers.Key2StringMapper", true, combinedIndex, reflectiveClass, false, false, excludedClasses);
+
+            resources.produce(new NativeImageResourceBuildItem(
+                  "proto/generated/persistence.jdbc.proto"
+            ));
+        }
+
+        reflectiveClass.produce(new ReflectiveClassBuildItem(false, false, Util.AddressScope.class));
+
         // Add user listeners
         Collection<AnnotationInstance> listenerInstances = combinedIndex.getAnnotations(
                 DotName.createSimple(Listener.class.getName())
@@ -112,9 +139,14 @@ class InfinispanEmbeddedProcessor {
     }
 
     private void addReflectionForClass(Class<?> classToUse, IndexView indexView,
+                                       BuildProducer<ReflectiveClassBuildItem> reflectiveClass, boolean methods, Set<DotName> excludedClasses) {
+        addReflectionForName(classToUse.getName(), classToUse.isInterface(), indexView, reflectiveClass, methods, false,
+              excludedClasses);
+    }
+
+    private void addReflectionForClass(Class<?> classToUse, IndexView indexView,
                                        BuildProducer<ReflectiveClassBuildItem> reflectiveClass, Set<DotName> excludedClasses) {
-        addReflectionForName(classToUse.getName(), classToUse.isInterface(), indexView, reflectiveClass, false, false,
-                excludedClasses);
+        addReflectionForClass(classToUse, indexView, reflectiveClass, false, excludedClasses);
     }
 
     private void addReflectionForName(String className, boolean isInterface, IndexView indexView,
