@@ -19,6 +19,11 @@ public class InfinispanEmbeddedFunctionalityTest {
     }
 
     @Test
+    public void testCDIDatasource() {
+        testCache("jdbc");
+    }
+
+    @Test
     public void testOffHeapCache() {
         testCache("off-heap-memory");
     }

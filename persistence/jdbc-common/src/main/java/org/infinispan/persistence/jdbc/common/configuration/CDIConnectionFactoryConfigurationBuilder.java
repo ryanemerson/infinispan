@@ -17,7 +17,7 @@ public class CDIConnectionFactoryConfigurationBuilder<S extends AbstractJdbcStor
 
    public CDIConnectionFactoryConfigurationBuilder(AbstractJdbcStoreConfigurationBuilder<?, S> builder) {
       super(builder);
-      attributes = ManagedConnectionFactoryConfiguration.attributeSet();
+      attributes = CDIConnectionFactoryConfiguration.attributeSet();
    }
 
    @Override
