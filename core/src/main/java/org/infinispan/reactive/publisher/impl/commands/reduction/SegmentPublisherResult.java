@@ -1,11 +1,13 @@
 package org.infinispan.reactive.publisher.impl.commands.reduction;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.commons.util.IntSet;
 import org.infinispan.commons.util.IntSets;
+import org.infinispan.marshall.protostream.impl.MarshallableCollection;
 import org.infinispan.marshall.protostream.impl.MarshallableObject;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
@@ -27,23 +29,33 @@ public class SegmentPublisherResult<R> implements PublisherResult<R> {
    }
 
    @ProtoFactory
-   SegmentPublisherResult(Set<Integer> suspectedSegmentsSet, MarshallableObject<R> wrappedResult) {
+   SegmentPublisherResult(Set<Integer> suspectedSegmentsSet, MarshallableObject<R> wrappedObject, MarshallableCollection<?> wrappedCollection) {
       this.suspectedSegments = IntSets.from(suspectedSegmentsSet);
-      this.result = MarshallableObject.unwrap(wrappedResult);
+      // IPROTO-273 workaround
+      if (wrappedObject != null)
+         this.result = MarshallableObject.unwrap(wrappedObject);
+      else
+         this.result = (R) MarshallableCollection.unwrap(wrappedCollection);
    }
 
    @ProtoField(number = 1, collectionImplementation = HashSet.class)
-   final Set<Integer> getSuspectedSegmentsSet() {
+   Set<Integer> getSuspectedSegmentsSet() {
       return new HashSet<>(suspectedSegments);
    }
 
    @ProtoField(number = 2)
-   final MarshallableObject<R> getWrappedResult() {
+   MarshallableObject<R> getWrappedObject() {
       return MarshallableObject.create(result);
    }
 
+   @ProtoField(number = 3)
+   MarshallableCollection<?> getWrappedCollection() {
+      if (result instanceof Collection<?>)
+         return MarshallableCollection.create((Collection<?>) result);
+      return null;
+   }
+
    @Override
-   //      @ProtoField(number = 1)
    public IntSet getSuspectedSegments() {
       return suspectedSegments;
    }

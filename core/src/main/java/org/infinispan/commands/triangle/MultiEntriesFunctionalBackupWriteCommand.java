@@ -13,6 +13,7 @@ import org.infinispan.commands.write.WriteCommand;
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.encoding.DataConversion;
 import org.infinispan.functional.impl.Params;
+import org.infinispan.marshall.protostream.impl.MarshallableMap;
 import org.infinispan.marshall.protostream.impl.MarshallableObject;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
@@ -34,28 +35,7 @@ public class MultiEntriesFunctionalBackupWriteCommand extends FunctionalBackupWr
 
    @ProtoField(number = 11, defaultValue = "false")
    final boolean writeOnly;
-
-//   @ProtoField(number = 12)
-   // Use List<KeyValuePair> and convert KeyValuePair to use MarshallableObject?
    final Map<?, ?> entries;
-
-   // TODO add entries
-   @ProtoFactory
-   MultiEntriesFunctionalBackupWriteCommand(ByteString cacheName, CommandInvocationId commandInvocationId, int topologyId,
-                                            long flags, long sequence, int segmentId, MarshallableObject<?> function,
-                                            Params params, DataConversion keyDataConversion, DataConversion valueDataConversion,
-                                            boolean writeOnly) {
-      super(cacheName, commandInvocationId, topologyId, flags, sequence, segmentId, function, params, keyDataConversion, valueDataConversion);
-      this.writeOnly = writeOnly;
-      this.entries = null;
-   }
-
-   private MultiEntriesFunctionalBackupWriteCommand(ByteString cacheName, AbstractWriteManyCommand<?, ?> command, long sequence,
-                                                    int segmentId, Object function, boolean writeOnly, Map<?, ?> entries) {
-      super(cacheName, command, sequence, segmentId, function);
-      this.writeOnly = writeOnly;
-      this.entries = entries;
-   }
 
    public static <K, V, T> MultiEntriesFunctionalBackupWriteCommand create(ByteString cacheName, WriteOnlyManyEntriesCommand<K, V, T> command,
                                                                            Collection<Object> keys, long sequence, int segmentId) {
@@ -67,6 +47,28 @@ public class MultiEntriesFunctionalBackupWriteCommand extends FunctionalBackupWr
                                                                               Collection<Object> keys, long sequence, int segmentId) {
       Map<?, ?> entries = TriangleFunctionsUtil.filterEntries(command.getArguments(), keys);
       return new MultiEntriesFunctionalBackupWriteCommand(cacheName, command, sequence, segmentId, command.getBiFunction(), false, entries);
+   }
+
+   @ProtoFactory
+   MultiEntriesFunctionalBackupWriteCommand(ByteString cacheName, CommandInvocationId commandInvocationId, int topologyId,
+                                            long flags, long sequence, int segmentId, MarshallableObject<?> function,
+                                            Params params, DataConversion keyDataConversion, DataConversion valueDataConversion,
+                                            boolean writeOnly, MarshallableMap<?, ?> wrappedEntries) {
+      super(cacheName, commandInvocationId, topologyId, flags, sequence, segmentId, function, params, keyDataConversion, valueDataConversion);
+      this.writeOnly = writeOnly;
+      this.entries = MarshallableMap.unwrap(wrappedEntries);
+   }
+
+   private MultiEntriesFunctionalBackupWriteCommand(ByteString cacheName, AbstractWriteManyCommand<?, ?> command, long sequence,
+                                                    int segmentId, Object function, boolean writeOnly, Map<?, ?> entries) {
+      super(cacheName, command, sequence, segmentId, function);
+      this.writeOnly = writeOnly;
+      this.entries = entries;
+   }
+
+   @ProtoField(number = 12)
+   MarshallableMap<?, ?> getWrappedEntries() {
+      return MarshallableMap.create(entries);
    }
 
    @Override

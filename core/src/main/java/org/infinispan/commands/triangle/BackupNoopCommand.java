@@ -1,6 +1,10 @@
 package org.infinispan.commands.triangle;
 
+import org.infinispan.commands.CommandInvocationId;
 import org.infinispan.commands.write.WriteCommand;
+import org.infinispan.commons.marshall.ProtoStreamTypeIds;
+import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.util.ByteString;
 
 /**
@@ -9,9 +13,16 @@ import org.infinispan.util.ByteString;
  * @author Dan Berindei
  * @since 12.1
  */
+@ProtoTypeId(ProtoStreamTypeIds.BACKUP_NOOP_COMMAND)
 public class BackupNoopCommand extends BackupWriteCommand {
 
    public static final byte COMMAND_ID = 81;
+
+   @ProtoFactory
+   BackupNoopCommand(ByteString cacheName, CommandInvocationId commandInvocationId, int topologyId,
+                     long flags, long sequence, int segmentId) {
+      super(cacheName, commandInvocationId, topologyId, flags, sequence, segmentId);
+   }
 
    public BackupNoopCommand(ByteString cacheName, WriteCommand command, long sequence, int segmentId) {
       super(cacheName, command, sequence, segmentId);
