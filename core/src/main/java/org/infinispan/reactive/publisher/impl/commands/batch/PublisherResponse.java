@@ -53,8 +53,8 @@ public class PublisherResponse {
                      Set<Integer> lostSegmentsSet, boolean complete,
                      MarshallableCollection<PublisherHandler.SegmentResult> wrappedSegmentResults) {
       this.results = MarshallableArray.unwrap(wrappedResults, new Object[0]);
-      this.completedSegments = completedSegmentsSet == null ? null : IntSets.from(completedSegmentsSet);
-      this.lostSegments = lostSegmentsSet == null ? null : IntSets.from(lostSegmentsSet);
+      this.completedSegments = completedSegmentsSet == null ? null : IntSets.mutableCopyFrom(completedSegmentsSet);
+      this.lostSegments = lostSegmentsSet == null ? null : IntSets.mutableCopyFrom(lostSegmentsSet);
       this.complete = complete;
       this.size = results.length;
       this.segmentResults = MarshallableCollection.unwrapAsList(wrappedSegmentResults);

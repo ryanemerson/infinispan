@@ -291,6 +291,7 @@ import org.infinispan.protostream.annotations.AutoProtoSchemaBuilder;
             org.infinispan.stream.impl.intops.primitive.i.LimitIntOperation.class,
             org.infinispan.stream.impl.intops.primitive.i.MapIntOperation.class,
             org.infinispan.stream.impl.intops.primitive.i.MapToDoubleIntOperation.class,
+            org.infinispan.stream.impl.intops.primitive.i.MapToLongIntOperation.class,
             org.infinispan.stream.impl.intops.primitive.i.MapToObjIntOperation.class,
             org.infinispan.stream.impl.intops.primitive.i.PeekIntOperation.class,
             org.infinispan.stream.impl.intops.primitive.i.SortedIntOperation.class,

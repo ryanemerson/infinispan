@@ -50,17 +50,21 @@ public class KeyPublisherResponse extends PublisherResponse {
       super(wrappedResults, completedSegmentsSet, lostSegmentsSet, complete, wrappedSegmentResults);
       this.extraObjects = null;
       this.extraSize = 0;
-      this.keys = MarshallableArray.unwrap(keys, new Object[0]);
+      this.keys = keys != null ? MarshallableArray.unwrap(keys, new Object[0]) :  new Object[0];
       this.keySize = this.keys.length;
    }
 
    @Override
    MarshallableArray<Object> wrappedResults() {
-      if (extraObjects.length > 0) {
-         Object[] r = new Object[this.results.length + extraObjects.length];
+      if (extraSize > 0) {
+         Object[] r = new Object[size + extraSize];
+
          int i = 0;
-         for (Object result : this.results) r[i++] = result;
-         for (Object result : this.extraObjects) r[i++] = result;
+         for (int j = 0; j < size; j++)
+            r[i++] = results[j];
+
+         for (int j = 0; j < extraSize; j++)
+            r[i++] = extraObjects[j];
          return MarshallableArray.create(r);
       }
       return MarshallableArray.create(results);
