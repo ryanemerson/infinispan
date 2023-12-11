@@ -136,7 +136,6 @@ import org.infinispan.protostream.annotations.AutoProtoSchemaBuilder;
             org.infinispan.distribution.ch.impl.TopologyAwareConsistentHashFactory.class,
             org.infinispan.distribution.ch.impl.TopologyAwareSyncConsistentHashFactory.class,
             org.infinispan.distribution.group.impl.CacheEntryGroupPredicate.class,
-            org.infinispan.distribution.group.impl.GroupManagerImpl.CollectorImpl.class,
             org.infinispan.encoding.DataConversion.class,
             org.infinispan.expiration.impl.TouchCommand.class,
             org.infinispan.filter.AcceptAllKeyValueFilter.class,
