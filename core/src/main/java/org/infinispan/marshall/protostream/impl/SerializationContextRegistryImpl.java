@@ -58,6 +58,7 @@ public class SerializationContextRegistryImpl implements SerializationContextReg
          initializers = ServiceFinder.load(SerializationContextInitializer.class, globalConfig.classLoader());
       }
       initializers.forEach(user::addContextInitializer);
+      initializers.forEach(global::addContextInitializer);
 
       String messageName = PersistenceContextInitializer.getFqTypeName(MarshallableUserObject.class);
       BaseMarshaller userObjectMarshaller = new MarshallableUserObject.Marshaller(messageName, userMarshaller.wired());
