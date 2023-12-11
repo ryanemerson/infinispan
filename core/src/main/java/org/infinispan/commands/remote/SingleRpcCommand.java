@@ -9,7 +9,7 @@ import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.context.InvocationContext;
 import org.infinispan.context.InvocationContextFactory;
 import org.infinispan.factories.ComponentRegistry;
-import org.infinispan.protostream.WrappedMessage;
+import org.infinispan.marshall.protostream.impl.MarshallableObject;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
@@ -30,7 +30,7 @@ public class SingleRpcCommand extends BaseRpcCommand {
    public static final int COMMAND_ID = 1;
    private static final Log log = LogFactory.getLog(SingleRpcCommand.class);
 
-   private VisitableCommand command;
+   final VisitableCommand command;
    private InfinispanSpanAttributes spanAttributes;
 
    public SingleRpcCommand(ByteString cacheName, VisitableCommand command) {
@@ -39,14 +39,14 @@ public class SingleRpcCommand extends BaseRpcCommand {
    }
 
    @ProtoFactory
-   SingleRpcCommand(ByteString cacheName, WrappedMessage wrappedCommand) {
-      this(cacheName, (VisitableCommand) wrappedCommand.getValue());
+   SingleRpcCommand(ByteString cacheName, MarshallableObject<VisitableCommand> wrappedCommand) {
+      this(cacheName, MarshallableObject.unwrap(wrappedCommand));
    }
 
 
    @ProtoField(number = 2, name = "command")
-   WrappedMessage getWrappedCommand() {
-      return new WrappedMessage(command);
+   MarshallableObject<VisitableCommand> getWrappedCommand() {
+      return MarshallableObject.create(command);
    }
 
    @Override
