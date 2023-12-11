@@ -1,13 +1,11 @@
 package org.infinispan.reactive.publisher.impl.commands.reduction;
 
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.commons.util.IntSet;
 import org.infinispan.commons.util.IntSets;
-import org.infinispan.marshall.protostream.impl.MarshallableCollection;
 import org.infinispan.marshall.protostream.impl.MarshallableObject;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
@@ -29,13 +27,9 @@ public class SegmentPublisherResult<R> implements PublisherResult<R> {
    }
 
    @ProtoFactory
-   SegmentPublisherResult(Set<Integer> suspectedSegmentsSet, MarshallableObject<R> wrappedObject, MarshallableCollection<?> wrappedCollection) {
+   SegmentPublisherResult(Set<Integer> suspectedSegmentsSet, MarshallableObject<R> wrappedObject) {
       this.suspectedSegments = IntSets.from(suspectedSegmentsSet);
-      // IPROTO-273 workaround
-      if (wrappedObject != null)
-         this.result = MarshallableObject.unwrap(wrappedObject);
-      else
-         this.result = (R) MarshallableCollection.unwrap(wrappedCollection);
+      this.result = MarshallableObject.unwrap(wrappedObject);
    }
 
    @ProtoField(number = 1, collectionImplementation = HashSet.class)
@@ -46,13 +40,6 @@ public class SegmentPublisherResult<R> implements PublisherResult<R> {
    @ProtoField(number = 2)
    MarshallableObject<R> getWrappedObject() {
       return MarshallableObject.create(result);
-   }
-
-   @ProtoField(number = 3)
-   MarshallableCollection<?> getWrappedCollection() {
-      if (result instanceof Collection<?>)
-         return MarshallableCollection.create((Collection<?>) result);
-      return null;
    }
 
    @Override
