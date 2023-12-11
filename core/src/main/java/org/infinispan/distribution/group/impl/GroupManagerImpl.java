@@ -4,20 +4,14 @@ import static org.infinispan.commons.util.ReflectionUtil.invokeMethod;
 import static org.infinispan.transaction.impl.WriteSkewHelper.addVersionRead;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.function.BiConsumer;
-import java.util.function.BinaryOperator;
-import java.util.function.Function;
-import java.util.function.Supplier;
-import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 import org.infinispan.CacheStream;
 import org.infinispan.commons.util.IntSets;
@@ -37,8 +31,6 @@ import org.infinispan.factories.annotations.Inject;
 import org.infinispan.factories.impl.ComponentRef;
 import org.infinispan.factories.scopes.Scope;
 import org.infinispan.factories.scopes.Scopes;
-import org.infinispan.marshall.protostream.impl.MarshallableCollection;
-import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 
@@ -79,48 +71,10 @@ public class GroupManagerImpl implements GroupManager {
    public <K, V> Map<K, V> collect(CacheStream<? extends CacheEntry<K, V>> stream, InvocationContext ctx, String groupName) {
       CacheEntryGroupPredicate<K> predicate = new CacheEntryGroupPredicate<>(groupName);
       predicate.inject(componentRegistry);
-      // TODO use Intermediate object to correctly marshall entries?
-      // MarshallableCollection workaround for IPROTO-273. CollectorImpl can be removed once this has been resolved in ProtoStream
-      MarshallableCollection<CacheEntry<K, V>> collection = stream.filterKeySegments(IntSets.immutableSet(groupSegment(groupName)))
+      List<CacheEntry<K, V>> list = stream.filterKeySegments(IntSets.immutableSet(groupSegment(groupName)))
             .filter(predicate)
-            .collect(new CollectorImpl<>());
-      List<CacheEntry<K, V>> list = MarshallableCollection.unwrapAsList(collection);
+            .collect(Collectors::toList);
       return ctx.isInTxScope() ? handleTxGetGroup((TxInvocationContext<?>) ctx, list, groupName) : handleNoTxGetGroup(list, groupName);
-   }
-
-   public static class CollectorImpl<K, V> implements Collector<CacheEntry<K, V>, List<CacheEntry<K, V>>, MarshallableCollection<CacheEntry<K, V>>> {
-
-      @ProtoFactory
-      CollectorImpl() {
-      }
-
-      @Override
-      public Supplier<List<CacheEntry<K, V>>> supplier() {
-         return ArrayList::new;
-      }
-
-      @Override
-      public BiConsumer<List<CacheEntry<K, V>>, CacheEntry<K, V>> accumulator() {
-         return List::add;
-      }
-
-      @Override
-      public BinaryOperator<List<CacheEntry<K, V>>> combiner() {
-         return (left, right) -> {
-            left.addAll(right);
-            return left;
-         };
-      }
-
-      @Override
-      public Function<List<CacheEntry<K, V>>, MarshallableCollection<CacheEntry<K, V>>> finisher() {
-         return MarshallableCollection::create;
-      }
-
-      @Override
-      public Set<Characteristics> characteristics() {
-         return Set.of();
-      }
    }
 
    private <V, K> Map<K, V> handleNoTxGetGroup(List<? extends CacheEntry<K, V>> entries, String groupName) {
