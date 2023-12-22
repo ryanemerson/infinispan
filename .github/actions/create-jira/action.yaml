@@ -25,32 +25,34 @@ runs:
     - name: Create Jira Ticket
       shell: bash
       run: |
-        echo ${{ inputs.summary }}
-        API_URL=https://issues.redhat.com/rest/api/2/
-
-        cat << EOF > headers
-        Authorization: Bearer ${{ inputs.token }}
-        Content-Type: application/json
-        EOF
-
-        PROJECT=$(curl -H @headers $API_URL/project/${{ inputs.project }})
-        PROJECT_ID=$(echo ${PROJECT} | jq -r .id)
-        ISSUE_TYPE_ID=$(echo ${PROJECT} | jq -r '.issueTypes[] | select(.name=="${{ inputs.type }}").id')
-
-        cat << EOF > create-jira.json
-        {
-          "fields": {
-            "project": {
-              "id": "${PROJECT_ID}"
-            },
-            "summary": "${{ inputs.summary }}",
-            "description": "${{ inputs.description }}",
-            "customfield_12310220": "${{ inputs.pullRequest }}",
-            "issuetype": {
-              "id": "${ISSUE_TYPE_ID}"
-            }
-          }
-        }
-        EOF
-
-        curl -v -H @headers --data @create-jira.json $API_URL/issue
+        BASE_URL=https://issues.redhat.com
+        API_URL=${BASE_URL}/rest/api/2/
+        echo "JIRA_TICKET_URL=${BASE_URL}/browse/ISPN-15414" >> $GITHUB_ENV
+#
+#        cat << EOF > headers
+#        Authorization: Bearer ${{ inputs.token }}
+#        Content-Type: application/json
+#        EOF
+#
+#        PROJECT=$(curl -H @headers $API_URL/project/${{ inputs.project }})
+#        PROJECT_ID=$(echo ${PROJECT} | jq -r .id)
+#        ISSUE_TYPE_ID=$(echo ${PROJECT} | jq -r '.issueTypes[] | select(.name=="${{ inputs.type }}").id')
+#
+#        cat << EOF > create-jira.json
+#        {
+#          "fields": {
+#            "project": {
+#              "id": "${PROJECT_ID}"
+#            },
+#            "summary": "${{ inputs.summary }}",
+#            "description": "${{ inputs.description }}",
+#            "customfield_12310220": "${{ inputs.pullRequest }}",
+#            "issuetype": {
+#              "id": "${ISSUE_TYPE_ID}"
+#            }
+#          }
+#        }
+#        EOF
+#
+#        JIRA_KEY=$(curl -H @headers --data @create-jira.json $API_URL/issue | jq -r .key)
+#        echo JIRA_TICKET_URL="${BASE_URL}/browse/${JIRA_KEY}" >> $GITHUB_ENV
