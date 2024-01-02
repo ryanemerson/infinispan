@@ -4,8 +4,11 @@ on:
   pull_request:
     branches:
       - main
+      - 14.0.x
+
     types:
       - opened
+      - reopened
 
 jobs:
   create_jira:
@@ -19,8 +22,8 @@ jobs:
       - name: Extract Jira Summary
         run: echo SUMMARY=$(echo ${{ github.event.pull_request.title }} | grep -oP '(?<=Bump )(.*)(?=from)|(?<=to )(.*)' | tr -d '\n') >> $GITHUB_ENV
 
-      - name: Create Jira Ticket
-        uses: ./.github/actions/create-jira
+      - name: Create or Update Jira Ticket
+        uses: ./.github/actions/jira-upsert
         with:
           token: ${{ secrets.JIRA_API_TOKEN }}
           project: ISPN
