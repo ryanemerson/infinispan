@@ -24,77 +24,13 @@ runs:
   steps:
     - name: Create Jira Ticket
       shell: bash
-      run: |
-        BASE_URL=https://issues.redhat.com
-        API_URL=${BASE_URL}/rest/api/2
-
-        cat << EOF > headers
-        Authorization: Bearer ${{ inputs.token }}
-        Content-Type: application/json
-        EOF
-
-        PROJECT=$(curl -H @headers $API_URL/project/${{ inputs.project }})
-        PROJECT_ID=$(echo ${PROJECT} | jq -r .id)
-        ISSUE_TYPE_ID=$(echo ${PROJECT} | jq -r '.issueTypes[] | select(.name=="${{ inputs.type }}").id')
-
-        JQL="project = ${{ inputs.project }} AND summary ~ '${{ inputs.summary }}'"
-        # Search issues for existing Jira ticket
-        ISSUES=$(curl --silent ${API_URL}/search \
-        -G --data-urlencode "jql=${JQL}"\
-        -H @headers
-        )
-        TOTAL_ISSUES=$(echo ${ISSUES} | jq -r .total)
-        if [ ${TOTAL_ISSUES} == 0 ]; then
-
-          echo "Existing Jira not found, creating a new one"
-          cat << EOF > create-jira.json
-          {
-            "fields": {
-              "project": {
-                "id": "${PROJECT_ID}"
-              },
-              "summary": "${{ inputs.summary }}",
-              "description": "${{ inputs.description }}",
-              "customfield_12310220": "${{ inputs.pullRequest }}",
-              "issuetype": {
-                "id": "${ISSUE_TYPE_ID}"
-              }
-            }
-          }
-          EOF
-
-          JIRA_KEY=$(curl -H @headers --data @create-jira.json $API_URL/issue | jq -r .key)
-          echo "JIRA_TICKET_URL=${BASE_URL}/browse/${JIRA_KEY}" >> $GITHUB_ENV
-
-        elif [ ${TOTAL_ISSUES} -gt 1 ]; then
-
-          echo "Multiple Jiras found in '${PROJECT}' with summary ~ '${SUMMARY}'"
-          exit 1
-
-        else
-          ISSUE=$(echo ${ISSUES} | jq .issues[0])
-          ISSUE_KEY=$(echo ${ISSUE} | jq -r .key)
-
-          echo "Updating existing Jira ${ISSUE_KEY}"
-
-          EXISTING_PRS=$(echo ${ISSUE} | jq .fields.customfield_12310220)
-          ALL_PRS="$(echo ${EXISTING_PRS} | jq '. + ["'${NEW_PR}'"]' | jq -r '. |= join("\\n")')"
-          echo $ALL_PRS
-
-          cat << EOF > update-jira.json
-          {
-            "update": {
-              "customfield_12310220": [
-                {
-                  "set": "${ALL_PRS}"
-                }
-              ]
-            }
-          }
-          EOF
-
-          # Add PR to existing issue
-          curl -X PUT ${API_URL}/issue/${ISSUE_KEY} \
-          -H @headers \
-          --data @update-jira.json
-        fi
+      run: ./jira_upsert.sh
+      working-directory: bin
+      env:
+        DESCRIPTION: ${{ inputs.description }}
+        PROJECT_KEY: ${{ inputs.project }}
+        PULL_REQUEST: ${{ inputs.pullRequest }}
+        SUMMARY: ${{ inputs.summary }}
+        TOKEN: ${{ inputs.token }}
+        TYPE: ${{ inputs.type }}
+        RUNNER_DEBUG: "1"
