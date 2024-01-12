@@ -45,7 +45,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ inputs.infinispanBranch }}
-          repository: infinispan/infinispan
+          repository: ryanemerson/infinispan
 
       - id: jira
         name: Create Jira Ticket
