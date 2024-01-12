@@ -50,7 +50,7 @@ jobs:
       - id: jira
         name: Create Jira Ticket
         run: |
-          source ./bin/jira_upsert.sh
+          source ./bin/jira/upsert.sh
           echo "url=${JIRA_TICKET_URL}" >> $GITHUB_OUTPUT
         env:
           DESCRIPTION: ${{ inputs.description }}
