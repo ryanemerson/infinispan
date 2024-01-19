@@ -49,8 +49,8 @@
       </mailingList>
    </mailingLists>
    <scm>
-      <connection>scm:git:git@github.com:infinispan/infinispan.git</connection>
-      <developerConnection>scm:git:git@github.com:infinispan/infinispan.git</developerConnection>
+      <connection>scm:git:git@github.com:ryanemerson/infinispan.git</connection>
+      <developerConnection>scm:git:git@github.com:ryanemerson/infinispan.git</developerConnection>
       <url>https://github.com/infinispan/infinispan</url>
    </scm>
    <issueManagement>
