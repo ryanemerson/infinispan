@@ -170,11 +170,11 @@ public class RollingUpgradeDynamicStoreIT extends AbstractMultiClusterIT {
 
    void addRemoteStore(String cacheName, ConfigurationBuilder builder) {
       RemoteStoreConfigurationBuilder storeConfigurationBuilder = builder.clustering()
-            .cacheMode(CacheMode.DIST_SYNC).persistence().addStore(RemoteStoreConfigurationBuilder.class);
+            .cacheMode(CacheMode.DIST_SYNC).encoding().mediaType(MediaType.APPLICATION_PROTOSTREAM).persistence().addStore(RemoteStoreConfigurationBuilder.class);
       storeConfigurationBuilder
             .remoteCacheName(cacheName)
             .rawValues(true)
-            .segmented(false)
+            .segmented(true)
             .shared(true)
             .addServer()
             .host(source.driver.getServerAddress(0).getHostAddress())
