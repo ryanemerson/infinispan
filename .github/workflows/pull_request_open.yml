@@ -39,3 +39,21 @@ jobs:
           ISSUE_KEY: ${{ env.ISSUE_KEY }}
           TOKEN: ${{ secrets.JIRA_API_TOKEN }}
           TRANSITION: Code Review
+
+      - name: Determine Milestone
+        id: milestone
+        run: |
+          MVN_VERSION=$(xmlstarlet sel -t -m _:project -v _:version pom.xml)
+          MAJOR_VERSION=${MVN_VERSION%.*.*}
+          echo "version=$(./bin/jira/get_milestone.sh)" >> $GITHUB_OUTPUT
+
+      - name: Set PR Milestone
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: ${{ github.event.pull_request.number }},
+              milestone: ${{ steps.milestone.outputs.version }}
+            })

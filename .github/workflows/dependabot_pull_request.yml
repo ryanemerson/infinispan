@@ -71,3 +71,32 @@ jobs:
               pull_number: ${{ github.event.pull_request.number }},
               title: '[14.0.x] ${{ env.JIRA_ISSUE_KEY }} ${{ github.event.pull_request.title }}'
             })
+
+      - name: Determine Milestone
+        id: milestone
+        run: |
+          MVN_VERSION=$(xmlstarlet sel -t -m _:project -v _:version pom.xml)
+          MAJOR_VERSION=${MVN_VERSION%.*.*}
+          echo "version=$(./bin/jira/get_milestone.sh)" >> $GITHUB_OUTPUT
+
+      - name: Set PR Milestone
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: ${{ github.event.pull_request.number }},
+              milestone: ${{ steps.milestone.outputs.version }}
+            })
+
+      - name: Approve PR for auto-merge
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.pulls.createReview({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: ${{ github.event.pull_request.number }},
+              event: APPROVE
+            })
