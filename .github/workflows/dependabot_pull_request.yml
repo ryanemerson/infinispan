@@ -23,36 +23,36 @@ jobs:
       - name: Jira Summary
         run: echo SUMMARY=$(echo "${{ github.event.pull_request.title }}" | grep -oP '(?<=Bump )(.*)(?=from)|(?<=to )(.*)' | tr -d '\n') >> $GITHUB_ENV
 
-      - name: Create or Update Existing Jira
-        run: |
-          source ./bin/jira/upsert.sh
-          echo "JIRA_ISSUE_KEY=${JIRA_ISSUE_KEY}" >> $GITHUB_ENV
-          echo "JIRA_ISSUE_URL=${JIRA_ISSUE_URL}" >> $GITHUB_ENV
-        env:
-          ASSIGNEE: infinispan-bot
-          PROJECT_KEY: ISPN
-          PULL_REQUEST: ${{ github.event.pull_request.html_url }}
-          SUMMARY: ${{ env.SUMMARY }}
-          TOKEN: ${{ secrets.JIRA_API_TOKEN }}
-          TYPE: Component Upgrade
-          RUNNER_DEBUG: "1"
-
-      - name: Add comment to PR
-        run: gh pr comment ${{ github.event.pull_request.number }} --body ${{ env.JIRA_ISSUE_URL }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Update PR Title main
-        if: ${{ github.base_ref == 'main' }}
-        run: gh pr edit ${{ github.event.pull_request.number }} --title "${{ env.JIRA_ISSUE_KEY }} ${{ github.event.pull_request.title }}"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Update PR Title 14.0.x
-        if: ${{ github.base_ref == '14.0.x' }}
-        run: gh pr edit ${{ github.event.pull_request.number }} --title "[14.0.x] ${{ env.JIRA_ISSUE_KEY }} ${{ github.event.pull_request.title }}"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#      - name: Create or Update Existing Jira
+#        run: |
+#          source ./bin/jira/upsert.sh
+#          echo "JIRA_ISSUE_KEY=${JIRA_ISSUE_KEY}" >> $GITHUB_ENV
+#          echo "JIRA_ISSUE_URL=${JIRA_ISSUE_URL}" >> $GITHUB_ENV
+#        env:
+#          ASSIGNEE: infinispan-bot
+#          PROJECT_KEY: ISPN
+#          PULL_REQUEST: ${{ github.event.pull_request.html_url }}
+#          SUMMARY: ${{ env.SUMMARY }}
+#          TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+#          TYPE: Component Upgrade
+#          RUNNER_DEBUG: "1"
+#
+#      - name: Add comment to PR
+#        run: gh pr comment ${{ github.event.pull_request.number }} --body ${{ env.JIRA_ISSUE_URL }}
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#
+#      - name: Update PR Title main
+#        if: ${{ github.base_ref == 'main' }}
+#        run: gh pr edit ${{ github.event.pull_request.number }} --title "${{ env.JIRA_ISSUE_KEY }} ${{ github.event.pull_request.title }}"
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#
+#      - name: Update PR Title 14.0.x
+#        if: ${{ github.base_ref == '14.0.x' }}
+#        run: gh pr edit ${{ github.event.pull_request.number }} --title "[14.0.x] ${{ env.JIRA_ISSUE_KEY }} ${{ github.event.pull_request.title }}"
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set PR Milestone
         id: milestone
