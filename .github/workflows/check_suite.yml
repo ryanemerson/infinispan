@@ -1,0 +1,16 @@
+name: Check Suite Pass
+
+on:
+  check_suite:
+    types: [completed]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: |
+          echo "$GITHUB_CONTEXT"
