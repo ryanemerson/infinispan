@@ -185,6 +185,7 @@ import org.infinispan.protostream.annotations.AutoProtoSchemaBuilder;
             org.infinispan.marshall.core.MarshallableFunctions.SetValueMetasReturnView.class,
             org.infinispan.marshall.core.MarshallableFunctions.SetValueReturnPrevOrNull.class,
             org.infinispan.marshall.core.MarshallableFunctions.SetValueReturnView.class,
+            org.infinispan.marshall.protostream.impl.adapters.ClassAdapter.class,
             org.infinispan.marshall.protostream.impl.MarshallableArray.class,
             org.infinispan.marshall.protostream.impl.MarshallableCollection.class,
             org.infinispan.marshall.protostream.impl.MarshallableLambda.class,
