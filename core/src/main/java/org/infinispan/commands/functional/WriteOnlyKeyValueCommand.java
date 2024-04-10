@@ -31,7 +31,7 @@ public final class WriteOnlyKeyValueCommand<K, V, T> extends AbstractWriteKeyCom
                                    DataConversion keyDataConversion, DataConversion valueDataConversion) {
       super(key, valueMatcher, segment, id, params, keyDataConversion, valueDataConversion);
       this.f = f;
-      this.argument = MarshallableObject.create(argument);
+      this.argument = argument;
    }
 
    @ProtoFactory
