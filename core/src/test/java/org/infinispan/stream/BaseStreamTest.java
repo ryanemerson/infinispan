@@ -8,6 +8,7 @@ import static org.testng.AssertJUnit.fail;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.DoubleSummaryStatistics;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IntSummaryStatistics;
 import java.util.Iterator;
@@ -55,12 +56,16 @@ import org.infinispan.marshall.core.next.impl.GlobalContextInitializer;
 import org.infinispan.marshall.protostream.impl.MarshallableObject;
 import org.infinispan.protostream.SerializationContextInitializer;
 import org.infinispan.protostream.annotations.AutoProtoSchemaBuilder;
+import org.infinispan.protostream.annotations.ProtoAdapter;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.protostream.annotations.ProtoName;
+import org.infinispan.protostream.types.java.arrays.AbstractArrayAdapter;
 import org.infinispan.test.MultipleCacheManagersTest;
 import org.infinispan.test.TestingUtil;
 import org.infinispan.test.fwk.TestCacheManagerFactory;
 import org.infinispan.transaction.TransactionMode;
+import org.infinispan.util.KeyValuePair;
 import org.infinispan.util.function.SerializableToDoubleFunction;
 import org.infinispan.util.function.SerializableToIntFunction;
 import org.infinispan.util.function.SerializableToLongFunction;
@@ -677,11 +682,20 @@ public abstract class BaseStreamTest extends MultipleCacheManagersTest {
 
       CacheSet<Map.Entry<Integer, String>> entrySet = cache.entrySet();
 
-      Map.Entry<Integer, String>[] array = createStream(entrySet).toArray(Map.Entry[]::new);
+      KeyValuePair<Integer, String>[] array = createStream(entrySet).map(e -> new KeyValuePair<>(e.getKey(), e.getValue())).toArray(KeyValuePair[]::new);
       assertEquals(cache.size(), array.length);
-      Spliterator<Map.Entry<Integer, String>> spliterator = Spliterators.spliterator(array, Spliterator.DISTINCT |
+      Spliterator<KeyValuePair<Integer, String>> spliterator = Spliterators.spliterator(array, Spliterator.DISTINCT |
             Spliterator.NONNULL);
       StreamSupport.stream(spliterator, false).forEach(e -> assertEquals(cache.get(e.getKey()), e.getValue()));
+   }
+
+   @ProtoAdapter(KeyValuePair[].class)
+   @ProtoName("KeyValuePairArray")
+   static class KeyValuePairArrayAdapter extends AbstractArrayAdapter<KeyValuePair> {
+      @ProtoFactory
+      public KeyValuePair[] create(int size) {
+         return new KeyValuePair[size];
+      }
    }
 
    public void testObjSortedSkipIterator() {
@@ -2246,13 +2260,34 @@ public abstract class BaseStreamTest extends MultipleCacheManagersTest {
       assertEquals(keys.size() - 1, createStream(entrySet).filterKeys(keys).count());
    }
 
+   @ProtoAdapter(ConcurrentHashMap.class)
+   public static class ConcurrentHashMapAdapter<K, V> {
+      @ProtoFactory
+      static <K, V> ConcurrentHashMap<K, V> create(List<KeyValuePair<K, V>> pairs) {
+         ConcurrentHashMap<K, V> map = new ConcurrentHashMap<>(pairs.size());
+         for (var kvp : pairs)
+            map.put(kvp.getKey(), kvp.getValue());
+         return map;
+      }
+
+      @ProtoField(1)
+      List<KeyValuePair<K, V>> getPairs(ConcurrentHashMap<K, V> map) {
+         return map.entrySet()
+               .stream()
+               .map(e -> new KeyValuePair<>(e.getKey(), e.getValue()))
+               .collect(Collectors.toList());
+      }
+   }
+
    @AutoProtoSchemaBuilder(
          dependsOn = GlobalContextInitializer.class,
          includeClasses = {
+               ConcurrentHashMapAdapter.class,
                ForEachDoubleInjected.class,
                ForEachInjected.class,
                ForEachIntInjected.class,
-               ForEachLongInjected.class
+               ForEachLongInjected.class,
+               KeyValuePairArrayAdapter.class
          },
          schemaFileName = "test.core.BaseStreamTest.proto",
          schemaFilePath = "proto/generated",
