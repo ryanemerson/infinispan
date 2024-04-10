@@ -465,7 +465,8 @@ public abstract class BaseDistributionInterceptor extends ClusteringInterceptor 
             return;
          }
          try {
-            Object[] values = unwrapFunctionalManyResultOnOrigin(ctx, keys, response.getResponseArray(new Object[0]));
+            Object responseValue = response.getResponseValue();
+            Object[] values = unwrapFunctionalManyResultOnOrigin(ctx, keys, responseValue);
             if (values != null) {
                System.arraycopy(values, 0, allFuture.results, destinationIndex, values.length);
                allFuture.countDown();
