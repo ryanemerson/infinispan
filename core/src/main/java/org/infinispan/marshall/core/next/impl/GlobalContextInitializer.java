@@ -144,6 +144,7 @@ import org.infinispan.protostream.annotations.AutoProtoSchemaBuilder;
             org.infinispan.filter.CacheFilters.FilterConverterAsCacheEntryFunction.class,
             org.infinispan.filter.CacheFilters.FilterConverterAsValueFunction.class,
             org.infinispan.filter.CacheFilters.KeyValueFilterAsPredicate.class,
+            org.infinispan.filter.CacheFilters.NotNullCacheEntryPredicate.class,
             org.infinispan.functional.MetaParam.MetaEntryVersion.class,
             org.infinispan.functional.MetaParam.MetaLifespan.class,
             org.infinispan.functional.MetaParam.MetaMaxIdle.class,

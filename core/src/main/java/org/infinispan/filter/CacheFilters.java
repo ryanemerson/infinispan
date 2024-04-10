@@ -121,7 +121,8 @@ public final class CacheFilters {
    }
 
    @Scope(Scopes.NONE)
-   static class NotNullCacheEntryPredicate<K, V> implements Predicate<CacheEntry<K, V>> {
+   @ProtoTypeId(ProtoStreamTypeIds.CACHE_FILTERS_NOT_NULL_CACHE_ENTRY_PREDICATE)
+   public static class NotNullCacheEntryPredicate<K, V> implements Predicate<CacheEntry<K, V>> {
       private static final NotNullCacheEntryPredicate SINGLETON = new NotNullCacheEntryPredicate();
 
       @Override
