@@ -19,9 +19,10 @@ jobs:
 
       - id: images
         run: |
+          set -x
           BRANCH=${{ github.ref_name }}
-          MAJOR=${BRANCH%.*.*}
-          [ "${MAJOR}" -ge "15" ] && echo "images=true" >> ${GITHUB_OUTPUT}
+          MAJOR=${BRANCH%.*.*.*}
+          [ "${MAJOR}" -ge "15" ] && echo "images=true" >> ${GITHUB_OUTPUT} || true
 
       - id: release
         name: Create Release
@@ -36,8 +37,10 @@ jobs:
   images:
     needs: release
     if: needs.release.outputs.images == 'true'
-    uses: ryanemerson/infinispan-images/.github/workflows/release.yaml@main
+    uses: ryanemerson/infinispan-images/.github/workflows/release.yml@main
     with:
+      branch: main
+      repository: ryanemerson/infinispan-images
       ispnVersion: ${{ github.ref_name }}
 #
 #  server-upload:
