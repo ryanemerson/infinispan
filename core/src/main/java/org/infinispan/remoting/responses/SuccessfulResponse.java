@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
+import org.infinispan.commons.util.IntSet;
 import org.infinispan.marshall.protostream.impl.MarshallableArray;
 import org.infinispan.marshall.protostream.impl.MarshallableCollection;
 import org.infinispan.marshall.protostream.impl.MarshallableMap;
@@ -34,7 +35,12 @@ public class SuccessfulResponse<T> extends ValidResponse {
    @SuppressWarnings("unchecked")
    public static <T> SuccessfulResponse<T> create(T responseValue) {
       if (responseValue == null) return SUCCESSFUL_EMPTY_RESPONSE;
-      if (responseValue instanceof Collection)
+      // TODO how to make this more robust?
+      // We could introduce a check to see if the type is natively marshallable with the GlobalMarshaller, but this would
+      // require passing an additional component to the factory method.
+      if (responseValue instanceof IntSet) {
+         return new SuccessfulResponse<>(null);
+      } else if (responseValue instanceof Collection)
          return new SuccessfulResponse<>(null, MarshallableCollection.create((Collection<?>) responseValue),null, null);
       else if (responseValue.getClass().isArray())
          return new SuccessfulResponse<>(null, null, null, MarshallableArray.create((Object[]) responseValue));

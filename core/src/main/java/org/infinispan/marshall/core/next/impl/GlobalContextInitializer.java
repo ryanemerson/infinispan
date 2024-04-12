@@ -321,6 +321,7 @@ import org.infinispan.protostream.annotations.AutoProtoSchemaBuilder;
             org.infinispan.xsite.events.XSiteEvent.class,
             org.infinispan.xsite.events.XSiteEventType.class,
             org.infinispan.xsite.SingleXSiteRpcCommand.class,
+            org.infinispan.xsite.commands.remote.IracClearKeysRequest.class,
             org.infinispan.xsite.commands.remote.IracPutManyRequest.class,
             org.infinispan.xsite.commands.remote.IracPutManyRequest.Expire.class,
             org.infinispan.xsite.commands.remote.IracPutManyRequest.Remove.class,

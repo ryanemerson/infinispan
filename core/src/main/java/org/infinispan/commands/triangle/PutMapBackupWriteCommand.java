@@ -39,6 +39,9 @@ public class PutMapBackupWriteCommand extends BackupWriteCommand {
       this.map = TriangleFunctionsUtil.filterEntries(command.getMap(), keys);
       this.metadata = command.getMetadata();
       this.internalMetadataMap = new HashMap<>();
+      for (Object key : map.keySet()) {
+         internalMetadataMap.put(key, command.getInternalMetadata(key));
+      }
    }
 
    @ProtoFactory

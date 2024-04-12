@@ -82,7 +82,7 @@ public class IracPutManyRequest extends IracUpdateKeyRequest<IntSet> {
 
    @Override
    public String toString() {
-      return "IracPutManyCommand{" +
+      return "IracPutManyRequest{" +
             "cacheName=" + cacheName +
             ", updateList=" + Util.toStr(updateList) +
             '}';
