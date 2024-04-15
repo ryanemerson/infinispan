@@ -1,12 +1,12 @@
 package org.infinispan.reactive.publisher.impl.commands.reduction;
 
-import java.util.HashSet;
 import java.util.Set;
 
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.commons.util.IntSet;
-import org.infinispan.commons.util.IntSets;
 import org.infinispan.marshall.protostream.impl.MarshallableObject;
+import org.infinispan.marshall.protostream.impl.WrappedMessages;
+import org.infinispan.protostream.WrappedMessage;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
@@ -27,17 +27,17 @@ public class SegmentPublisherResult<R> implements PublisherResult<R> {
    }
 
    @ProtoFactory
-   SegmentPublisherResult(Set<Integer> suspectedSegmentsSet, MarshallableObject<R> wrappedObject) {
-      this.suspectedSegments = IntSets.from(suspectedSegmentsSet);
+   SegmentPublisherResult(WrappedMessage wrappedSuspectedSegments, MarshallableObject<R> wrappedObject) {
+      this.suspectedSegments = WrappedMessages.unwrap(wrappedSuspectedSegments);
       this.result = MarshallableObject.unwrap(wrappedObject);
    }
 
-   @ProtoField(number = 1, collectionImplementation = HashSet.class)
-   Set<Integer> getSuspectedSegmentsSet() {
-      return new HashSet<>(suspectedSegments);
+   @ProtoField(1)
+   WrappedMessage getWrappedSuspectedSegments() {
+      return WrappedMessages.orElseNull(suspectedSegments);
    }
 
-   @ProtoField(number = 2)
+   @ProtoField(2)
    MarshallableObject<R> getWrappedObject() {
       return MarshallableObject.create(result);
    }

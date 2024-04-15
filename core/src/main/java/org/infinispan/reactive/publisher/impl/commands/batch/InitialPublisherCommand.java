@@ -1,6 +1,5 @@
 package org.infinispan.reactive.publisher.impl.commands.batch;
 
-import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Function;
@@ -10,10 +9,11 @@ import org.infinispan.commands.functional.functions.InjectableComponent;
 import org.infinispan.commands.remote.BaseRpcCommand;
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.commons.util.IntSet;
-import org.infinispan.commons.util.IntSets;
 import org.infinispan.factories.ComponentRegistry;
 import org.infinispan.marshall.protostream.impl.MarshallableCollection;
 import org.infinispan.marshall.protostream.impl.MarshallableObject;
+import org.infinispan.marshall.protostream.impl.WrappedMessages;
+import org.infinispan.protostream.WrappedMessage;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
@@ -57,14 +57,14 @@ public class InitialPublisherCommand<K, I, R> extends BaseRpcCommand implements 
 
    @ProtoFactory
    InitialPublisherCommand(ByteString cacheName, String requestId, DeliveryGuarantee deliveryGuarantee, int batchSize,
-                           Set<Integer> segmentsSet, MarshallableCollection<K> wrappedKeys, MarshallableCollection<K> wrappedExcludedKeys,
+                           WrappedMessage wrappedSegments, MarshallableCollection<K> wrappedKeys, MarshallableCollection<K> wrappedExcludedKeys,
                            long explicitFlags, boolean entryStream, boolean trackKeys, int topologyId,
                            MarshallableObject<Function<? super Publisher<I>, ? extends Publisher<R>>> wrappedTransformer) {
       super(cacheName);
       this.requestId = requestId;
       this.deliveryGuarantee = deliveryGuarantee;
       this.batchSize = batchSize;
-      this.segments = segmentsSet == null ? null : IntSets.from(segmentsSet);
+      this.segments = WrappedMessages.unwrap(wrappedSegments);
       this.keys = MarshallableCollection.unwrapAsSet(wrappedKeys);
       this.excludedKeys = MarshallableCollection.unwrapAsSet(wrappedExcludedKeys);
       this.explicitFlags = explicitFlags;
@@ -93,9 +93,9 @@ public class InitialPublisherCommand<K, I, R> extends BaseRpcCommand implements 
       return segments;
    }
 
-   @ProtoField(number = 5, collectionImplementation = HashSet.class)
-   Set<Integer> getSegmentsSet() {
-      return new HashSet<>(segments);
+   @ProtoField(number = 5)
+   WrappedMessage getWrappedSegments() {
+      return WrappedMessages.orElseNull(segments);
    }
 
    public Set<K> getKeys() {

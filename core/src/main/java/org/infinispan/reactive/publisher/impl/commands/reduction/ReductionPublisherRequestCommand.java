@@ -1,6 +1,5 @@
 package org.infinispan.reactive.publisher.impl.commands.reduction;
 
-import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Function;
@@ -11,12 +10,13 @@ import org.infinispan.commands.remote.BaseRpcCommand;
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.commons.util.EnumUtil;
 import org.infinispan.commons.util.IntSet;
-import org.infinispan.commons.util.IntSets;
 import org.infinispan.commons.util.Util;
 import org.infinispan.context.Flag;
 import org.infinispan.factories.ComponentRegistry;
 import org.infinispan.marshall.protostream.impl.MarshallableCollection;
 import org.infinispan.marshall.protostream.impl.MarshallableObject;
+import org.infinispan.marshall.protostream.impl.WrappedMessages;
+import org.infinispan.protostream.WrappedMessage;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
@@ -35,7 +35,7 @@ public class ReductionPublisherRequestCommand<K> extends BaseRpcCommand implemen
    @ProtoField(number = 2, defaultValue = "false")
    final boolean parallelStream;
 
-   @ProtoField(number = 3)
+   @ProtoField(3)
    final DeliveryGuarantee deliveryGuarantee;
 
    @ProtoField(number = 4, defaultValue = "0")
@@ -69,36 +69,36 @@ public class ReductionPublisherRequestCommand<K> extends BaseRpcCommand implemen
 
    @ProtoFactory
    ReductionPublisherRequestCommand(ByteString cacheName, boolean parallelStream, DeliveryGuarantee deliveryGuarantee,
-                                    Set<Integer> segmentsSet, MarshallableCollection<K> keys, long explicitFlags, boolean entryStream,
+                                    WrappedMessage wrappedSegments, MarshallableCollection<K> keys, long explicitFlags, boolean entryStream,
                                     MarshallableCollection<K> excludedKeys, MarshallableObject<Function<?, ?>> transformer,
                                     MarshallableObject<Function<?, ?>> finalizer) {
-      this(cacheName, parallelStream, deliveryGuarantee, segmentsSet == null ? null : IntSets.from(segmentsSet),
+      this(cacheName, parallelStream, deliveryGuarantee, WrappedMessages.unwrap(wrappedSegments),
             MarshallableCollection.unwrapAsSet(keys), MarshallableCollection.unwrapAsSet(excludedKeys), explicitFlags, entryStream,
             MarshallableObject.unwrap(transformer), MarshallableObject.unwrap(finalizer));
    }
 
-   @ProtoField(number = 6, collectionImplementation = HashSet.class)
-   Set<Integer> getSegmentsSet() {
-      return segments;
+   @ProtoField(6)
+   WrappedMessage getWrappedSegments() {
+      return WrappedMessages.orElseNull(segments);
    }
 
-   @ProtoField(number = 7)
+   @ProtoField(7)
    MarshallableCollection<K> getKeys() {
       return MarshallableCollection.create(keys);
    }
 
-   @ProtoField(number = 8)
+   @ProtoField(8)
    MarshallableCollection<K> getExcludedKeys() {
       return MarshallableCollection.create(excludedKeys);
    }
 
-   @ProtoField(number = 9)
+   @ProtoField(9)
    MarshallableObject<Function<?, ?>> getTransformer() {
       // If transformer is the same as the finalizer, then only set the finalizer field
       return transformer == finalizer ? null : MarshallableObject.create(transformer);
    }
 
-   @ProtoField(number = 10)
+   @ProtoField(10)
    MarshallableObject<Function<?, ?>> getFinalizer() {
       return MarshallableObject.create(finalizer);
    }

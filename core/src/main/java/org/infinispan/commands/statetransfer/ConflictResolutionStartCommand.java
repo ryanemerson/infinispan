@@ -1,13 +1,13 @@
 package org.infinispan.commands.statetransfer;
 
-import java.util.Set;
 import java.util.concurrent.CompletionStage;
 
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.commons.util.IntSet;
-import org.infinispan.commons.util.IntSets;
 import org.infinispan.commons.util.concurrent.CompletableFutures;
 import org.infinispan.factories.ComponentRegistry;
+import org.infinispan.marshall.protostream.impl.WrappedMessages;
+import org.infinispan.protostream.WrappedMessage;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.statetransfer.StateProvider;
@@ -25,8 +25,8 @@ public class ConflictResolutionStartCommand extends AbstractStateTransferCommand
    public static final byte COMMAND_ID = 112;
 
    @ProtoFactory
-   ConflictResolutionStartCommand(ByteString cacheName, int topologyId, Set<Integer> segmentsSet) {
-      this(cacheName, topologyId, segmentsSet == null ? null : IntSets.from(segmentsSet));
+   ConflictResolutionStartCommand(ByteString cacheName, int topologyId, WrappedMessage wrappedSegments) {
+      this(cacheName, topologyId, WrappedMessages.<IntSet>unwrap(wrappedSegments));
    }
 
    public ConflictResolutionStartCommand(ByteString cacheName, int topologyId, IntSet segments) {

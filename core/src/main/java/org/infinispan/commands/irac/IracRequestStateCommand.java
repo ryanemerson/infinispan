@@ -1,15 +1,14 @@
 package org.infinispan.commands.irac;
 
-import java.util.HashSet;
-import java.util.Set;
 import java.util.concurrent.CompletionStage;
 
 import org.infinispan.commands.remote.BaseRpcCommand;
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.commons.util.IntSet;
-import org.infinispan.commons.util.IntSets;
 import org.infinispan.commons.util.concurrent.CompletableFutures;
 import org.infinispan.factories.ComponentRegistry;
+import org.infinispan.marshall.protostream.impl.WrappedMessages;
+import org.infinispan.protostream.WrappedMessage;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
@@ -34,13 +33,13 @@ public class IracRequestStateCommand extends BaseRpcCommand {
    }
 
    @ProtoFactory
-   IracRequestStateCommand(ByteString cacheName, Set<Integer> segmentsSet) {
-      this(cacheName, IntSets.from(segmentsSet));
+   IracRequestStateCommand(ByteString cacheName, WrappedMessage segments) {
+      this(cacheName, WrappedMessages.<IntSet>unwrap(segments));
    }
 
-   @ProtoField(number = 2, collectionImplementation = HashSet.class)
-   Set<Integer> getSegmentsSet() {
-      return segments;
+   @ProtoField(2)
+   WrappedMessage getSegments() {
+      return WrappedMessages.orElseNull(segments);
    }
 
    @Override

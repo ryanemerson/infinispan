@@ -1,10 +1,5 @@
 package org.infinispan.commands.read;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.concurrent.CompletionStage;
 
 import org.infinispan.commands.FlagAffectedCommand;
@@ -14,11 +9,12 @@ import org.infinispan.commands.remote.BaseRpcCommand;
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.commons.util.EnumUtil;
 import org.infinispan.commons.util.IntSet;
-import org.infinispan.commons.util.IntSets;
 import org.infinispan.context.InvocationContext;
 import org.infinispan.context.InvocationContextFactory;
 import org.infinispan.factories.ComponentRegistry;
 import org.infinispan.interceptors.AsyncInterceptorChain;
+import org.infinispan.marshall.protostream.impl.WrappedMessages;
+import org.infinispan.protostream.WrappedMessage;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
@@ -51,8 +47,8 @@ public class SizeCommand extends BaseRpcCommand implements FlagAffectedCommand, 
    }
 
    @ProtoFactory
-   SizeCommand(ByteString cacheName, int topologyId, long flagsBitSet, Set<Integer> segmentsSet) {
-      this(cacheName, IntSets.from(segmentsSet), flagsBitSet);
+   SizeCommand(ByteString cacheName, int topologyId, long flagsBitSet, WrappedMessage wrappedSegments) {
+      this(cacheName, WrappedMessages.unwrap(wrappedSegments), flagsBitSet);
       this.topologyId = topologyId;
    }
 
@@ -110,21 +106,9 @@ public class SizeCommand extends BaseRpcCommand implements FlagAffectedCommand, 
       return segments;
    }
 
-   @ProtoField(number = 4, collectionImplementation = HashSet.class)
-   Set<Integer> getSegmentsSet() {
-      return segments;
-   }
-
-   @Override
-   public void writeTo(ObjectOutput output) throws IOException {
-      output.writeLong(flags);
-      output.writeObject(segments);
-   }
-
-   @Override
-   public void readFrom(ObjectInput input) throws IOException, ClassNotFoundException {
-      setFlagsBitSet(input.readLong());
-      segments = (IntSet) input.readObject();
+   @ProtoField(4)
+   WrappedMessage getWrappedSegments() {
+      return WrappedMessages.orElseNull(segments);
    }
 
    @Override

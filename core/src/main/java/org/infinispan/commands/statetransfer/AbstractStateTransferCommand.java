@@ -1,11 +1,10 @@
 package org.infinispan.commands.statetransfer;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import org.infinispan.commands.TopologyAffectedCommand;
 import org.infinispan.commands.remote.BaseRpcCommand;
 import org.infinispan.commons.util.IntSet;
+import org.infinispan.marshall.protostream.impl.WrappedMessages;
+import org.infinispan.protostream.WrappedMessage;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.util.ByteString;
 
@@ -38,9 +37,9 @@ abstract class AbstractStateTransferCommand extends BaseRpcCommand implements To
       return topologyId;
    }
 
-   @ProtoField(number = 3, collectionImplementation = HashSet.class)
-   Set<Integer> getSegmentsSet() {
-      return segments;
+   @ProtoField(3)
+   WrappedMessage getWrappedSegments() {
+      return WrappedMessages.orElseNull(segments);
    }
 
    @Override
