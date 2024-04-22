@@ -1,12 +1,10 @@
 package org.infinispan.statetransfer;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.stream.Collectors;
 
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.container.entries.InternalCacheEntry;
-import org.infinispan.protostream.WrappedMessage;
+import org.infinispan.marshall.protostream.impl.MarshallableCollection;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
@@ -36,39 +34,20 @@ public class StateChunk {
    /**
     * The cache entries. They are all guaranteed to be long to the same segment: segmentId.
     */
-   @ProtoField(number = 3, collectionImplementation = ArrayList.class)
-   final Collection<WrappedMessage> entries;
    final Collection<InternalCacheEntry<?, ?>> cacheEntries;
 
 
    @ProtoFactory
-   @SuppressWarnings("unchecked")
-   StateChunk(int segmentId, boolean isLastChunk, Collection<WrappedMessage> entries) {
+   StateChunk(int segmentId, boolean isLastChunk, MarshallableCollection<InternalCacheEntry<?, ?>> entries) {
       this.segmentId = segmentId;
       this.isLastChunk = isLastChunk;
-      this.entries = entries;
-      this.cacheEntries = entries.stream().map(WrappedMessage::getValue)
-            .map(e -> (InternalCacheEntry<?,?>) e)
-            .collect(Collectors.toList());
+      this.cacheEntries = MarshallableCollection.unwrapAsList(entries);
    }
 
-   public static StateChunk create(int segmentId, boolean isLastChunk, InternalCacheEntry<?, ?>... entries) {
-      StateChunk chunk = new StateChunk(segmentId, isLastChunk);
-      for (InternalCacheEntry<?,?> entry : entries)
-         chunk.add(entry);
-      return chunk;
-   }
-
-   StateChunk(int segmentId, boolean isLastChunk) {
+   public StateChunk(int segmentId, Collection<InternalCacheEntry<?, ?>> cacheEntries, boolean isLastChunk) {
       this.segmentId = segmentId;
+      this.cacheEntries = cacheEntries;
       this.isLastChunk = isLastChunk;
-      this.entries = new ArrayList<>();
-      this.cacheEntries = new ArrayList<>();
-   }
-
-   void add(InternalCacheEntry<?, ?> entry) {
-      this.entries.add(new WrappedMessage(entry));
-      this.cacheEntries.add(entry);
    }
 
    public int getSegmentId() {
@@ -81,6 +60,11 @@ public class StateChunk {
 
    public boolean isLastChunk() {
       return isLastChunk;
+   }
+
+   @ProtoField(3)
+   MarshallableCollection<InternalCacheEntry<?, ?>> getEntries() {
+      return MarshallableCollection.create(cacheEntries);
    }
 
    @Override

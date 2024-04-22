@@ -63,7 +63,7 @@ public abstract class AbstractDataCommand implements DataCommand, SegmentSpecifi
 
    @ProtoField(number = 4,defaultValue = "0")
    public long getFlagsWithoutRemote() {
-      return FlagBitSets.copyWithoutRemotableFlags(flags);
+      return FlagBitSets.copyWithoutRemotableFlags(getFlagsBitSet());
    }
 
    @Override

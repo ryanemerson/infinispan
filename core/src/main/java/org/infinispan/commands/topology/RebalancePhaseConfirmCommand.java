@@ -4,6 +4,7 @@ import java.util.concurrent.CompletionStage;
 
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.factories.GlobalComponentRegistry;
+import org.infinispan.marshall.protostream.impl.MarshallableThrowable;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
@@ -20,25 +21,15 @@ public class RebalancePhaseConfirmCommand extends AbstractCacheControlCommand {
 
    public static final byte COMMAND_ID = 87;
 
-   @ProtoField(number = 1)
+   @ProtoField(1)
    final String cacheName;
-
-   // TODO how to handle?
-   // Create a Wrapper that is able to recreate a generic throwable object? Can this be done without reflection?
-//   @ProtoField(number = 2)
-   private Throwable throwable;
-
-   @ProtoField(number = 3, defaultValue = "-1")
+   @ProtoField(number = 2, defaultValue = "-1")
    final int topologyId;
 
-   @ProtoField(number = 4, defaultValue = "-1")
+   @ProtoField(number = 3, defaultValue = "-1")
    final int viewId;
 
-//   RebalancePhaseConfirmCommand(String cacheName, Throwable throwable, int topologyId, int viewId) {
-   @ProtoFactory
-   RebalancePhaseConfirmCommand(String cacheName, int topologyId, int viewId) {
-      this(cacheName, null, null, topologyId, viewId);
-   }
+   final Throwable throwable;
 
    public RebalancePhaseConfirmCommand(String cacheName, Address origin, Throwable throwable, int topologyId, int viewId) {
       super(COMMAND_ID, origin);
@@ -46,6 +37,16 @@ public class RebalancePhaseConfirmCommand extends AbstractCacheControlCommand {
       this.throwable = throwable;
       this.topologyId = topologyId;
       this.viewId = viewId;
+   }
+
+   @ProtoFactory
+   RebalancePhaseConfirmCommand(String cacheName, int topologyId, int viewId, MarshallableThrowable throwable) {
+      this(cacheName, null, MarshallableThrowable.get(throwable), topologyId, viewId);
+   }
+
+   @ProtoField(4)
+   MarshallableThrowable getThrowable() {
+      return MarshallableThrowable.create(throwable);
    }
 
    @Override

@@ -66,6 +66,10 @@ public class MarshallableThrowable {
       return null;
    }
 
+   public static Throwable get(MarshallableThrowable t) {
+      return t == null ? null : t.get();
+   }
+
    public Throwable get() {
       if (throwable == null) {
 //         switch (type) {

@@ -1,6 +1,8 @@
 package org.infinispan.statetransfer;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletionStage;
@@ -122,7 +124,7 @@ public class OutboundTransferTask {
                for(SegmentPublisherSupplier.Notification<InternalCacheEntry<?, ?>> notification: batch) {
                   if (notification.isValue()) {
                      StateChunk chunk = chunks.computeIfAbsent(
-                           notification.valueSegment(), segment -> StateChunk.create(segment, false));
+                           notification.valueSegment(), segment -> new StateChunk(segment, new ArrayList<>(), false));
                      chunk.getCacheEntries().add(notification.value());
                   }
 
@@ -130,8 +132,8 @@ public class OutboundTransferTask {
                   if (notification.isSegmentComplete()) {
                      int segment = notification.completedSegment();
                      chunks.compute(segment, (s, previous) -> previous == null
-                           ? StateChunk.create(s, true)
-                           : StateChunk.create(segment, true));
+                           ? new StateChunk(s, Collections.emptyList(), true)
+                           : new StateChunk(segment, previous.getCacheEntries(), true));
                   }
                }
 
