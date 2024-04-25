@@ -149,9 +149,9 @@ public class DefaultTakeOfflineManager implements TakeOfflineManager, XSiteRespo
       OfflineStatus status = offlineStatus.get(siteName);
       if (status == null) {
          log.tryingToBringOnlineNonexistentSite(siteName);
-         return BringSiteOnlineResponse.NO_SUCH_SITE;
+         return BringSiteOnlineResponse.BSOR_NO_SUCH_SITE;
       } else {
-         return status.bringOnline() ? BringSiteOnlineResponse.BROUGHT_ONLINE : BringSiteOnlineResponse.ALREADY_ONLINE;
+         return status.bringOnline() ? BringSiteOnlineResponse.BSOR_BROUGHT_ONLINE : BringSiteOnlineResponse.BSOR_ALREADY_ONLINE;
       }
    }
 
@@ -159,10 +159,10 @@ public class DefaultTakeOfflineManager implements TakeOfflineManager, XSiteRespo
    public TakeSiteOfflineResponse takeSiteOffline(String siteName) {
       OfflineStatus status = offlineStatus.get(siteName);
       if (status == null) {
-         return TakeSiteOfflineResponse.NO_SUCH_SITE;
+         return TakeSiteOfflineResponse.TSOR_NO_SUCH_SITE;
       } else {
-         return status.forceOffline() ? TakeSiteOfflineResponse.TAKEN_OFFLINE
-               : TakeSiteOfflineResponse.ALREADY_OFFLINE;
+         return status.forceOffline() ? TakeSiteOfflineResponse.TSOR_TAKEN_OFFLINE
+               : TakeSiteOfflineResponse.TSOR_ALREADY_OFFLINE;
       }
    }
 

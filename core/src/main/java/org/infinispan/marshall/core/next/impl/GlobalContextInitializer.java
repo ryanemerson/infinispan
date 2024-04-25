@@ -172,6 +172,7 @@ import org.infinispan.protostream.annotations.AutoProtoSchemaBuilder;
             org.infinispan.marshall.core.MarshallableFunctions.ReturnReadWriteView.class,
             org.infinispan.marshall.core.MarshallableFunctions.SetValue.class,
             org.infinispan.marshall.core.MarshallableFunctions.SetValueMetas.class,
+            org.infinispan.marshall.core.MarshallableFunctions.SetInternalCacheValue.class,
             org.infinispan.marshall.core.MarshallableFunctions.SetValueIfAbsentReturnBoolean.class,
             org.infinispan.marshall.core.MarshallableFunctions.SetValueIfAbsentReturnPrevOrNull.class,
             org.infinispan.marshall.core.MarshallableFunctions.SetValueIfEqualsReturnBoolean.class,
@@ -349,7 +350,9 @@ import org.infinispan.protostream.annotations.AutoProtoSchemaBuilder;
             org.infinispan.xsite.irac.IracManagerKeyInfo.class,
             org.infinispan.xsite.response.AutoStateTransferResponse.class,
             org.infinispan.xsite.statetransfer.XSiteState.class,
-            org.infinispan.xsite.statetransfer.XSiteStatePushCommand.class
+            org.infinispan.xsite.statetransfer.XSiteStatePushCommand.class,
+            org.infinispan.xsite.status.BringSiteOnlineResponse.class,
+            org.infinispan.xsite.status.TakeSiteOfflineResponse.class,
       },
       schemaFileName = "global.core.proto",
       schemaFilePath = "proto/generated",
