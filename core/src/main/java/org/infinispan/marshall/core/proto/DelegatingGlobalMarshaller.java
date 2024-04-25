@@ -152,4 +152,8 @@ public class DelegatingGlobalMarshaller implements Marshaller {
    public GlobalMarshaller getOldMarshaller() {
       return oldMarshaller;
    }
+
+   public org.infinispan.marshall.core.next.GlobalMarshaller getNewMarshaller() {
+      return newMarshaller;
+   }
 }
