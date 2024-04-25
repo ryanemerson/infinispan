@@ -18,6 +18,8 @@ import org.infinispan.commands.ReplicableCommand;
 import org.infinispan.commands.remote.CacheRpcCommand;
 import org.infinispan.commons.CacheException;
 import org.infinispan.commons.stat.MetricInfo;
+import org.infinispan.commons.util.concurrent.CompletableFutures;
+import org.infinispan.commons.util.concurrent.CompletionStages;
 import org.infinispan.configuration.cache.TakeOfflineConfiguration;
 import org.infinispan.configuration.cache.XSiteStateTransferMode;
 import org.infinispan.configuration.global.GlobalMetricsConfiguration;
@@ -36,8 +38,6 @@ import org.infinispan.remoting.transport.Address;
 import org.infinispan.remoting.transport.ValidResponseCollector;
 import org.infinispan.security.AuthorizationPermission;
 import org.infinispan.security.impl.Authorizer;
-import org.infinispan.commons.util.concurrent.CompletableFutures;
-import org.infinispan.commons.util.concurrent.CompletionStages;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 import org.infinispan.xsite.response.AutoStateTransferResponse;
@@ -136,14 +136,26 @@ public class XSiteAdminOperations implements CustomMetricsSupplier {
       List<Address> offline = new ArrayList<>(statuses.size());
       List<Address> failed = new ArrayList<>(statuses.size());
       statuses.forEach((a, s) -> {
-         if (s.equals(FAILED)) failed.add(a);
-         if (s.equals(OFFLINE)) offline.add(a);
-         if (s.equals(ONLINE)) online.add(a);
+         if (s.equals(FAILED)) {
+            failed.add(a);
+         }
+         if (s.equals(OFFLINE)) {
+            offline.add(a);
+         }
+         if (s.equals(ONLINE)) {
+            online.add(a);
+         }
       });
 
-      if (!failed.isEmpty()) return rpcError(failed, "Could not query nodes ");
-      if (offline.isEmpty()) return ONLINE;
-      if (online.isEmpty()) return OFFLINE;
+      if (!failed.isEmpty()) {
+         return rpcError(failed, "Could not query nodes ");
+      }
+      if (offline.isEmpty()) {
+         return ONLINE;
+      }
+      if (online.isEmpty()) {
+         return OFFLINE;
+      }
 
       return "Site appears online on nodes:" + online + " and offline on nodes: " + offline;
    }
@@ -183,7 +195,7 @@ public class XSiteAdminOperations implements CustomMetricsSupplier {
    public String takeSiteOffline(@Parameter(name = "site", description = "The name of the backup site") String site) {
       authorizer.checkPermission(AuthorizationPermission.ADMIN);
       TakeSiteOfflineResponse rsp = takeOfflineManager.takeSiteOffline(site);
-      if (rsp == TakeSiteOfflineResponse.NO_SUCH_SITE) {
+      if (rsp == TakeSiteOfflineResponse.TSOR_NO_SUCH_SITE) {
          return incorrectSiteName(site);
       }
 
@@ -243,7 +255,7 @@ public class XSiteAdminOperations implements CustomMetricsSupplier {
    public String bringSiteOnline(@Parameter(name = "site", description = "The name of the backup site") String site) {
       authorizer.checkPermission(AuthorizationPermission.ADMIN);
       BringSiteOnlineResponse rsp = takeOfflineManager.bringSiteOnline(site);
-      if (rsp == BringSiteOnlineResponse.NO_SUCH_SITE) {
+      if (rsp == BringSiteOnlineResponse.BSOR_NO_SUCH_SITE) {
          return incorrectSiteName(site);
       }
 
@@ -305,8 +317,7 @@ public class XSiteAdminOperations implements CustomMetricsSupplier {
    @ManagedOperation(displayName = "Cancel Push State",
          description = "Cancels the push state to remote site.",
          name = "CancelPushState")
-   public final String cancelPushState(@Parameter(description = "The destination site name", name = "SiteName")
-                                          final String siteName) {
+   public final String cancelPushState(@Parameter(description = "The destination site name", name = "SiteName") String siteName) {
       authorizer.checkPermission(AuthorizationPermission.ADMIN);
       return performOperation("cancelPushState", siteName, () -> stateTransferManager.cancelPushState(siteName));
    }
@@ -315,8 +326,7 @@ public class XSiteAdminOperations implements CustomMetricsSupplier {
          description = "Cancels the push state to this site. All the state received from state transfer " +
                        "will be ignored.",
          name = "CancelReceiveState")
-   public final String cancelReceiveState(@Parameter(description = "The sending site name", name = "SiteName")
-                                             final String siteName) {
+   public final String cancelReceiveState(@Parameter(description = "The sending site name", name = "SiteName") String siteName) {
       authorizer.checkPermission(AuthorizationPermission.ADMIN);
       return performOperation("cancelReceiveState", siteName, () -> stateTransferManager.cancelReceive(siteName));
    }
@@ -396,18 +406,18 @@ public class XSiteAdminOperations implements CustomMetricsSupplier {
       return returnFailureOrSuccess(response.getErrors(), "Could not amend for nodes:");
    }
 
-   private String returnFailureOrSuccess(List<Address> failed, String prefix) {
+   private static String returnFailureOrSuccess(List<Address> failed, String prefix) {
       if (!failed.isEmpty()) {
          return rpcError(failed, prefix);
       }
       return SUCCESS;
    }
 
-   private String rpcError(List<Address> failed, String prefix) {
+   private static String rpcError(List<Address> failed, String prefix) {
       return prefix + failed.toString();
    }
 
-   private String incorrectSiteName(String site) {
+   private static String incorrectSiteName(String site) {
       return "Incorrect site name: " + site;
    }
 
