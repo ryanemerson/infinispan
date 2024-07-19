@@ -19,6 +19,6 @@
       <FD_SOCK2 connect_timeout="3000"/>
       <FD_ALL3 timeout="3000"
                interval="1000"/>
-      <JDBC_PING stack.combine="REPLACE" stack.position="MPING" />
+      <JDBC_PING2 stack.combine="REPLACE" stack.position="MPING" />
    </stack>
 </jgroups>
