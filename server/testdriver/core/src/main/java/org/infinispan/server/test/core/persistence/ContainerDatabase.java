@@ -31,14 +31,15 @@ import com.github.dockerjava.api.model.MountType;
  **/
 public class ContainerDatabase extends Database {
    private final static Log log = LogFactory.getLog(ContainerDatabase.class);
-   private final static String ENV_PREFIX = "database.container.env.";
+   public final static String DB_PREFIX = "database.container.";
+   private final static String ENV_PREFIX = DB_PREFIX + "env.";
    private final int port;
    private final String volumeName;
    private volatile GenericContainer<?> container;
 
    public ContainerDatabase(String type, Properties properties) {
       super(type, properties);
-      this.port = Integer.parseInt(properties.getProperty("database.container.port"));
+      this.port = Integer.parseInt(dbProp(properties, "port"));
       this.volumeName = Util.threadLocalRandomUUID().toString();
       this.container = createContainer(true);
    }
@@ -49,7 +50,7 @@ public class ContainerDatabase extends Database {
       ImageFromDockerfile image = new ImageFromDockerfile()
             .withDockerfileFromBuilder(builder -> {
                builder
-                     .from(properties.getProperty("database.container.name") + ":" + properties.getProperty("database.container.tag"))
+                     .from(dbProp(properties, "name") + ":" + dbProp(properties, "tag"))
                      .expose(port)
                      .env(env)
                      .build();
@@ -66,18 +67,21 @@ public class ContainerDatabase extends Database {
                .withStartupTimeout(Duration.of(10, ChronoUnit.MINUTES)));
       }
 
-      // TODO add property to disable volume creation by default
-      var volumeRequired = true;
+      var volumeRequired = Boolean.parseBoolean(dbProp(properties, "volume"));
       if (volumeRequired) {
          if (createVolume) DOCKER_CLIENT.createVolumeCmd().withName(volumeName).exec();
-         // TODO set target directory dynamically
+         var volumeMount = dbProp(properties, "volumeMount");
          container.withCreateContainerCmdModifier(cmd ->
                cmd.getHostConfig().withMounts(
-                     List.of(new Mount().withSource(volumeName).withTarget("/var/lib/mysql").withType(MountType.VOLUME))
+                     List.of(new Mount().withSource(volumeName).withTarget(volumeMount).withType(MountType.VOLUME))
                )
          );
       }
       return container;
+   }
+
+   private String dbProp(Properties props, String prop) {
+      return props.getProperty(DB_PREFIX + prop);
    }
 
    @Override

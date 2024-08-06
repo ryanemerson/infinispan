@@ -1,6 +1,7 @@
 package org.infinispan.server.persistence;
 
 import static org.infinispan.server.test.core.TestSystemPropertyNames.INFINISPAN_TEST_CONTAINER_DATABASE_PROPERTIES;
+import static org.infinispan.server.test.core.TestSystemPropertyNames.INFINISPAN_TEST_CONTAINER_DATABASE_TYPES;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -12,11 +13,13 @@ import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
+import java.util.stream.Stream;
 
 import javax.sql.DataSource;
 
@@ -27,7 +30,7 @@ import org.jgroups.JChannel;
 import org.jgroups.protocols.FD_ALL3;
 import org.jgroups.protocols.FD_SOCK2;
 import org.jgroups.protocols.FRAG4;
-import org.jgroups.protocols.JDBC_PING;
+import org.jgroups.protocols.JDBC_PING2;
 import org.jgroups.protocols.MERGE3;
 import org.jgroups.protocols.MFC;
 import org.jgroups.protocols.PingData;
@@ -42,14 +45,30 @@ import org.jgroups.protocols.pbcast.STABLE;
 import org.jgroups.stack.Protocol;
 import org.jgroups.stack.ProtocolStack;
 import org.junit.experimental.categories.Category;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.ArgumentsProvider;
+import org.junit.jupiter.params.provider.ArgumentsSource;
 
 @Category(Persistence.class)
 public class JGroupsJdbcPingIT {
 
-   @Test
-   public void testDBConnectionLost() throws Exception {
-      ContainerDatabase db = initDatabase("mysql");
+   public static class DatabaseProvider implements ArgumentsProvider {
+      @Override
+      public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
+         String property = System.getProperty(INFINISPAN_TEST_CONTAINER_DATABASE_TYPES);
+         property = "oracle";
+         return Arrays
+               .stream(property != null ? property.split(",") : PersistenceIT.DEFAULT_DATABASES)
+               .map(Arguments::of);
+      }
+   }
+
+   @ParameterizedTest
+   @ArgumentsSource(DatabaseProvider.class)
+   public void testDBConnectionLost(String databaseType) throws Exception {
+      ContainerDatabase db = initDatabase(databaseType);
       db.start();
 
       var clusterName = "test";
@@ -65,7 +84,7 @@ public class JGroupsJdbcPingIT {
       db.stop();
       CountDownLatch reqLatch = new CountDownLatch(1);
       CountDownLatch successLatch = new CountDownLatch(2);
-      c1.getProtocolStack().insertProtocol(new DiscoveryListener(reqLatch, successLatch), ProtocolStack.Position.ABOVE, JDBC_PING.class);
+      c1.getProtocolStack().insertProtocol(new DiscoveryListener(reqLatch, successLatch), ProtocolStack.Position.ABOVE, JDBC_PING2.class);
       assertTrue(reqLatch.await(10, TimeUnit.MINUTES));
       assertEquals(2, successLatch.getCount());
       db.restart();
@@ -73,7 +92,10 @@ public class JGroupsJdbcPingIT {
    }
 
    private ContainerDatabase initDatabase(String databaseType) {
-      return new ContainerDatabase(databaseType, properties(databaseType));
+      var props = properties(databaseType);
+      // Ensure that a volume is created so that tables and their content survive container recreation
+      props.put(ContainerDatabase.DB_PREFIX + "volume", "true");
+      return new ContainerDatabase(databaseType, props);
    }
 
    private Properties properties(String databaseType) {
@@ -91,7 +113,7 @@ public class JGroupsJdbcPingIT {
       return new JChannel(
             new TCP().setBindAddr(InetAddress.getLocalHost()).setBindPort(port),
             new RED(),
-            new JDBC_PING().setDataSource(dataSource),
+            new JDBC_PING2().setDataSource(dataSource),
             new MERGE3().setMinInterval(1000).setMaxInterval(30000),
             new FD_SOCK2().setOffset(50000),
             new FD_ALL3(),
