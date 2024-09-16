@@ -128,7 +128,7 @@ jobs:
 
       - name: Test
         run: |
-          ./mvnw verify -s maven-settings.xml -B -e -am -pl server/tests \
+          ./mvnw verify -s maven-settings.xml -B -e -pl server/tests \
             -Dansi.strip=true \
             -Dmaven.test.failure.ignore=true \
             -Dorg.infinispan.test.database.types=${{ matrix.dbs }}
