@@ -6,8 +6,24 @@ on:
       - main
       - 15.[0-9]+.x
       - 14.0.x
+
+concurrency:
+  # Only cancel jobs for PR updates
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Infinispan
+        uses: ./.github/actions/build-infinispan
+
   ci-build-test-pr:
+    needs: build
     name: Maven Build and Test
     runs-on: ubuntu-latest
     env:
@@ -18,11 +34,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          java-version: 21
-          distribution: temurin
-          cache: maven
+        uses: ./.github/actions/setup-java
 
       - uses: graalvm/setup-graalvm@v1
         with:
@@ -30,11 +42,10 @@ jobs:
           distribution: 'graalvm'
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - run: ./mvnw --version
+      - name: Extract Maven Artifacts
+        uses: ./.github/actions/extract-maven-artifacts
 
-      - name: Maven build
-        run: >
-            ./mvnw clean install -s maven-settings.xml -B -e -DskipTests -Pnative
+      - run: ./mvnw --version
 
       - name: Maven Test
         run: >
@@ -96,3 +107,28 @@ jobs:
             target-branch.txt
             event_name.txt
             event_number.txt
+
+  db:
+    needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        dbs:
+          - mssql
+          - oracle
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: ./.github/actions/setup-java
+
+      - name: Extract Maven Artifacts
+        uses: ./.github/actions/extract-maven-artifacts
+
+      - name: Test
+        run: |
+          ./mvnw verify -s maven-settings.xml -B -e -am -pl server/tests \
+            -Dansi.strip=true \
+            -Dmaven.test.failure.ignore=true \
+            -Dorg.infinispan.test.database.types=${{ matrix.dbs }}
