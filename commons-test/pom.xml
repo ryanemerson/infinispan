@@ -26,8 +26,8 @@
       </dependency>
 
       <dependency>
-         <groupId>junit</groupId>
-         <artifactId>junit</artifactId>
+         <groupId>org.junit.jupiter</groupId>
+         <artifactId>junit-jupiter-api</artifactId>
          <scope>provided</scope>
       </dependency>
 
@@ -68,7 +68,4 @@
          <version>${version.org.wildfly.elytron}</version>
       </dependency>
    </dependencies>
-
-   <build>
-   </build>
 </project>

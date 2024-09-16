@@ -12,19 +12,10 @@ import java.util.function.Function;
 
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.infinispan.commons.test.categories.Smoke;
-import org.infinispan.hibernate.cache.commons.InfinispanBaseRegion;
-
-import org.infinispan.test.hibernate.cache.commons.AbstractGeneralDataRegionTest;
-import org.infinispan.test.hibernate.cache.commons.util.TestRegionFactory;
-import org.infinispan.test.hibernate.cache.commons.functional.entities.Account;
-import org.infinispan.test.hibernate.cache.commons.functional.entities.AccountHolder;
-import org.infinispan.test.hibernate.cache.commons.functional.classloader.SelectedClassnameClassLoader;
-import org.infinispan.test.hibernate.cache.commons.util.CacheTestUtil;
-import org.infinispan.test.hibernate.cache.commons.util.ClassLoaderAwareCache;
-
 import org.infinispan.AdvancedCache;
+import org.infinispan.commons.test.tags.Smoke;
 import org.infinispan.context.Flag;
+import org.infinispan.hibernate.cache.commons.InfinispanBaseRegion;
 import org.infinispan.notifications.Listener;
 import org.infinispan.notifications.cachelistener.annotation.CacheEntryActivated;
 import org.infinispan.notifications.cachelistener.annotation.CacheEntryCreated;
@@ -35,8 +26,14 @@ import org.infinispan.notifications.cachelistener.annotation.CacheEntryPassivate
 import org.infinispan.notifications.cachelistener.annotation.CacheEntryRemoved;
 import org.infinispan.notifications.cachelistener.annotation.CacheEntryVisited;
 import org.infinispan.notifications.cachelistener.event.Event;
+import org.infinispan.test.hibernate.cache.commons.AbstractGeneralDataRegionTest;
+import org.infinispan.test.hibernate.cache.commons.functional.classloader.SelectedClassnameClassLoader;
+import org.infinispan.test.hibernate.cache.commons.functional.entities.Account;
+import org.infinispan.test.hibernate.cache.commons.functional.entities.AccountHolder;
+import org.infinispan.test.hibernate.cache.commons.util.CacheTestUtil;
+import org.infinispan.test.hibernate.cache.commons.util.ClassLoaderAwareCache;
+import org.infinispan.test.hibernate.cache.commons.util.TestRegionFactory;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 /**
  * Tests of TimestampsRegionImpl.
@@ -44,7 +41,7 @@ import org.junit.experimental.categories.Category;
  * @author Galder Zamarreño
  * @since 3.5
  */
-@Category(Smoke.class)
+@Smoke
 public class TimestampsRegionImplTest extends AbstractGeneralDataRegionTest {
 
 	@Override

@@ -23,7 +23,7 @@ import org.hibernate.jpa.QueryHints;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.infinispan.Cache;
-import org.infinispan.commons.test.categories.Smoke;
+import org.infinispan.commons.test.tags.Smoke;
 import org.infinispan.hibernate.cache.commons.InfinispanBaseRegion;
 import org.infinispan.hibernate.cache.commons.util.InfinispanMessageLogger;
 import org.infinispan.manager.CacheContainer;
@@ -43,7 +43,6 @@ import org.infinispan.test.hibernate.cache.commons.util.TestSessionAccess;
 import org.jboss.util.collection.ConcurrentSet;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 import org.junit.rules.TestName;
 
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -54,7 +53,7 @@ import jakarta.persistence.criteria.Root;
  *
  * @author Galder Zamarreño
  */
-@Category(Smoke.class)
+@Smoke
 public class NaturalIdInvalidationTest extends DualNodeTest {
 
 	private static final InfinispanMessageLogger log = InfinispanMessageLogger.Provider.getLog(NaturalIdInvalidationTest.class);

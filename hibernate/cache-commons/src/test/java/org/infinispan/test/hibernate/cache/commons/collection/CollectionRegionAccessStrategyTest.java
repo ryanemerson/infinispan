@@ -19,7 +19,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import org.hibernate.cache.spi.access.SoftLock;
-import org.infinispan.commons.test.categories.Smoke;
+import org.infinispan.commons.test.tags.Smoke;
 import org.infinispan.hibernate.cache.commons.InfinispanBaseRegion;
 import org.infinispan.hibernate.cache.commons.InfinispanDataRegion;
 import org.infinispan.hibernate.cache.commons.access.AccessDelegate;
@@ -32,7 +32,6 @@ import org.infinispan.test.hibernate.cache.commons.util.TestSessionAccess.TestRe
 import org.infinispan.test.hibernate.cache.commons.util.TestSynchronization;
 import org.infinispan.test.hibernate.cache.commons.util.TestingKeyFactory;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 /**
  * Base class for tests of CollectionRegionAccessStrategy impls.
@@ -40,7 +39,7 @@ import org.junit.experimental.categories.Category;
  * @author Galder Zamarreño
  * @since 3.5
  */
-@Category(Smoke.class)
+@Smoke
 public class CollectionRegionAccessStrategyTest extends AbstractRegionAccessStrategyTest<Object> {
 	protected static int testCount;
 

@@ -25,7 +25,7 @@ import org.hibernate.Transaction;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.testing.TestForIssue;
 import org.infinispan.AdvancedCache;
-import org.infinispan.commons.test.categories.Smoke;
+import org.infinispan.commons.test.tags.Smoke;
 import org.infinispan.configuration.cache.IsolationLevel;
 import org.infinispan.hibernate.cache.commons.InfinispanBaseRegion;
 import org.infinispan.notifications.Listener;
@@ -38,7 +38,6 @@ import org.infinispan.test.hibernate.cache.commons.util.CacheTestUtil;
 import org.infinispan.test.hibernate.cache.commons.util.TestRegionFactory;
 import org.jboss.logging.Logger;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 import junit.framework.AssertionFailedError;
 
@@ -48,7 +47,7 @@ import junit.framework.AssertionFailedError;
  * @author Galder Zamarreño
  * @since 3.5
  */
-@Category(Smoke.class)
+@Smoke
 public class QueryRegionImplTest extends AbstractGeneralDataRegionTest {
 	private static final Logger log = Logger.getLogger( QueryRegionImplTest.class );
 

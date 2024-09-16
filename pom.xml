@@ -146,7 +146,7 @@
       <bnd.provider.policy>$&lt;range;[==,=+)&gt;</bnd.provider.policy>
       <buildDirectory>target</buildDirectory>
       <commitProtoLockChanges>false</commitProtoLockChanges>
-      <defaultExcludedJUnitGroups>org.infinispan.commons.test.categories.Unstable,org.infinispan.commons.test.categories.Stress,org.infinispan.commons.test.categories.Profiling</defaultExcludedJUnitGroups>
+      <defaultExcludedJUnitGroups>unstable,stress,profiling</defaultExcludedJUnitGroups>
       <!-- unstable and stress because we can have them inside a functional class, for example -->
       <defaultExcludedTestNGGroups>unstable,stress</defaultExcludedTestNGGroups>
       <defaultTestNGGroups>functional,unit,xsite,arquillian</defaultTestNGGroups>
@@ -2835,14 +2835,14 @@
          <id>smoke</id>
          <properties>
             <defaultTestNGGroups>smoke</defaultTestNGGroups>
-            <defaultJUnitGroups>org.infinispan.commons.test.categories.Smoke</defaultJUnitGroups>
+            <defaultJUnitGroups>smoke</defaultJUnitGroups>
          </properties>
       </profile>
       <profile>
          <id>test-unstable</id>
          <properties>
             <defaultTestNGGroups>unstable</defaultTestNGGroups>
-            <defaultJUnitGroups>org.infinispan.commons.test.categories.Unstable</defaultJUnitGroups>
+            <defaultJUnitGroups>unstable</defaultJUnitGroups>
             <!-- empty since we are not going to exclude any group -->
             <defaultExcludedTestNGGroups/>
             <defaultExcludedJUnitGroups/>
@@ -2865,7 +2865,7 @@
          <id>test-stress</id>
          <properties>
             <defaultTestNGGroups>stress</defaultTestNGGroups>
-            <defaultJUnitGroups>org.infinispan.commons.test.categories.Stress</defaultJUnitGroups>
+            <defaultJUnitGroups>stress</defaultJUnitGroups>
             <defaultExcludedTestNGGroups/>
             <defaultExcludedJUnitGroups/>
             <infinispan.test.parallel.threads>1</infinispan.test.parallel.threads>

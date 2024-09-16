@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.SoftLock;
-import org.infinispan.commons.test.categories.Smoke;
+import org.infinispan.commons.test.tags.Smoke;
 import org.infinispan.hibernate.cache.commons.InfinispanBaseRegion;
 import org.infinispan.test.hibernate.cache.commons.AbstractRegionAccessStrategyTest;
 import org.infinispan.test.hibernate.cache.commons.NodeEnvironment;
@@ -24,7 +24,6 @@ import org.infinispan.test.hibernate.cache.commons.util.TestSynchronization;
 import org.infinispan.test.hibernate.cache.commons.util.TestingKeyFactory;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 /**
  * Base class for tests of EntityRegionAccessStrategy impls.
@@ -32,7 +31,7 @@ import org.junit.experimental.categories.Category;
  * @author Galder Zamarreño
  * @since 3.5
  */
-@Category(Smoke.class)
+@Smoke
 public class EntityRegionAccessStrategyTest extends
 		AbstractRegionAccessStrategyTest<Object> {
 	protected static int testCount;
