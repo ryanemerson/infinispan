@@ -19,7 +19,7 @@ runs:
       shell: bash
       run: |
         tar -C ~/ --use-compress-program zstd -cf m2-infinispan.tzts \
-        --exclude '*.tar.gz' \
+        --exclude '*.zip' \
         .m2/repository/org/infinispan
 
     - name: Upload Infinispan Maven artifacts

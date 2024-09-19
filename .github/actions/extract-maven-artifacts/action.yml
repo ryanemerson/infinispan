@@ -11,4 +11,4 @@ runs:
 
     - name: Extract Infinispan Maven artifacts
       shell: bash
-      run: tar -C ~/ --use-compress-program="zstd -d" -xf m2-infinispan.tzts
+      run: tar --verbose -C ~/ --use-compress-program="zstd -d" -xf m2-infinispan.tzts
