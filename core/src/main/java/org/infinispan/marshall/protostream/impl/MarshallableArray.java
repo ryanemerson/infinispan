@@ -72,8 +72,8 @@ public class MarshallableArray<T> {
       throw illegalState();
    }
 
-   public T[] get() {
-      return array;
+   public Object[] get() {
+      return array != null ? array : collection.toArray();
    }
 
    private IllegalStateException illegalState() {
