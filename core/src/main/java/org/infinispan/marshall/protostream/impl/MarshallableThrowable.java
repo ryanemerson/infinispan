@@ -2,9 +2,12 @@ package org.infinispan.marshall.protostream.impl;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.infinispan.commons.marshall.MarshallingException;
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
@@ -15,10 +18,8 @@ import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.statetransfer.AllOwnersLostException;
 
 /**
- * // TODO: Document this
- *
  * @author Ryan Emerson
- * @since 11.0
+ * @since 16.0
  */
 @ProtoName("Throwable")
 @ProtoTypeId(ProtoStreamTypeIds.MARSHALLABLE_THROWABLE)
@@ -44,13 +45,15 @@ public class MarshallableThrowable {
    @ProtoField(number = 4)
    final MarshallableThrowable cause;
 
+   @ProtoField(number = 5)
+   final ArrayList<MarshallableThrowable> suppressed;
+
    @ProtoFactory
-   MarshallableThrowable(String impl, String msg, MarshallableThrowable cause) {
-//   WrappedThrowable(Type type, String impl, String msg, WrappedThrowable cause) {
-//      this.type = type;
+   MarshallableThrowable(String impl, String msg, MarshallableThrowable cause, ArrayList<MarshallableThrowable> suppressed) {
       this.impl = impl;
       this.msg = msg;
       this.cause = cause;
+      this.suppressed = suppressed;
    }
 
    // TODO only create if not a known internal exception class
@@ -59,8 +62,10 @@ public class MarshallableThrowable {
          return null;
 
       Type type = KNOWN_THROWABLES.getOrDefault(t.getClass(), null);
-      if (type == null)
-         return new MarshallableThrowable(t.getClass().getName(), t.getMessage(), create(t.getCause()));
+      if (type == null) {
+         var suppressed = t.getSuppressed().length == 0 ? null : Stream.of(t.getSuppressed()).map(MarshallableThrowable::create).collect(Collectors.toCollection(ArrayList::new));
+         return new MarshallableThrowable(t.getClass().getName(), t.getMessage(), create(t.getCause()), suppressed);
+      }
 
       // TODO switch
       return null;
@@ -77,6 +82,7 @@ public class MarshallableThrowable {
 //               throwable = recreateGenericThrowable(impl, msg, cause);
 //         }
          throwable = recreateGenericThrowable(impl, msg, cause);
+         suppressed.forEach(s -> throwable.addSuppressed(s.get()));
       }
       return throwable;
    }
@@ -88,7 +94,7 @@ public class MarshallableThrowable {
 
          Object retVal;
          if (cause == null && msg == null) {
-            retVal = create(clazz, c -> getInstance(c));
+            retVal = create(clazz, this::getInstance);
          } else if (cause == null) {
             retVal = create(clazz, c -> getInstance(c, msg), String.class);
          } else if (msg == null) {
