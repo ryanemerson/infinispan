@@ -11,8 +11,8 @@ import org.infinispan.test.TestingUtil;
 import org.infinispan.test.fwk.TestCacheManagerFactory;
 import org.testng.annotations.Test;
 
-@Test(groups = "unit", testName = "marshall.RemoteExceptionExternalizerTest")
-public class RemoteExceptionExternalizerTest extends SingleCacheManagerTest {
+@Test(groups = "unit", testName = "marshall.RemoteExceptionMarshallingTest")
+public class RemoteExceptionMarshallingTest extends SingleCacheManagerTest {
 
     @Override
     protected EmbeddedCacheManager createCacheManager() throws Exception {
