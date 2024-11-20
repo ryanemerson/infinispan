@@ -67,11 +67,11 @@ public class LockControlCommand extends AbstractTransactionBoundaryCommand imple
 
    @ProtoFactory
    LockControlCommand(ByteString cacheName, GlobalTransaction globalTransaction, MarshallableCollection<Object> wrappedKeys,
-                      boolean unlock, long flagsBitSet) {
+                      boolean unlock, long flagsBitSetWithoutRemote) {
       super(cacheName, globalTransaction);
       this.keys = MarshallableCollection.unwrapAsList(wrappedKeys);
       this.unlock = unlock;
-      this.flags = flagsBitSet;
+      this.flags = flagsBitSetWithoutRemote;
    }
 
    @ProtoField(number = 3, name = "keys")
@@ -85,9 +85,13 @@ public class LockControlCommand extends AbstractTransactionBoundaryCommand imple
    }
 
    @Override
-   @ProtoField(number = 5, defaultValue = "0")
    public long getFlagsBitSet() {
       return flags;
+   }
+
+   @ProtoField(number = 5, defaultValue = "0")
+   long getFlagsBitSetWithoutRemote() {
+      return FlagBitSets.copyWithoutRemotableFlags(flags);
    }
 
    public void setGlobalTransaction(GlobalTransaction gtx) {
