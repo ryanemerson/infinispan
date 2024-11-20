@@ -37,11 +37,6 @@ public class TouchCommand extends AbstractDataCommand {
       return COMMAND_ID;
    }
 
-   @Override
-   public boolean isReturnValueExpected() {
-      return true;
-   }
-
    public boolean isTouchEvenIfExpired() {
       return touchEvenIfExpired;
    }

@@ -31,7 +31,7 @@ public class RemoveExpiredCommand extends RemoveCommand {
    @ProtoField(number = 11, defaultValue = "false")
    boolean maxIdle;
 
-   @ProtoField(number = 12, defaultValue = "-1")
+   @ProtoField(number = 12)
    Long lifespan;
 
    @ProtoFactory
