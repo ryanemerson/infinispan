@@ -161,7 +161,7 @@ public class Parser extends CacheParser {
                break;
             }
             case ADVANCED_EXTERNALIZER: {
-               ParseUtils.removedSince(reader, 15, 0);
+               ParseUtils.removedSince(reader, 16, 0);
                ignoreElement(reader, element);
                break;
             }
