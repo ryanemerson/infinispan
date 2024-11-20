@@ -31,7 +31,7 @@ public class CacheState {
 
    @ProtoFactory
    CacheState(String template, String configuration, List<CacheContainerAdmin.AdminFlag> flagList) {
-      this(template, configuration, flagList == null ? EnumSet.noneOf(CacheContainerAdmin.AdminFlag.class) : EnumSet.copyOf(flagList));
+      this(template, configuration, flagList == null || flagList.isEmpty() ? EnumSet.noneOf(CacheContainerAdmin.AdminFlag.class) : EnumSet.copyOf(flagList));
    }
 
    @ProtoField(number = 1)
@@ -46,7 +46,7 @@ public class CacheState {
 
    @ProtoField(number = 3, collectionImplementation = ArrayList.class)
    List<CacheContainerAdmin.AdminFlag> getFlagList() {
-      return flags == null ? null : new ArrayList<>(flags);
+      return flags == null || flags.isEmpty() ? null : new ArrayList<>(flags);
    }
 
    public EnumSet<CacheContainerAdmin.AdminFlag> getFlags() {
