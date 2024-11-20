@@ -38,9 +38,7 @@ public class SuccessfulResponse<T> extends ValidResponse {
       // TODO how to make this more robust?
       // We could introduce a check to see if the type is natively marshallable with the GlobalMarshaller, but this would
       // require passing an additional component to the factory method.
-      if (responseValue instanceof IntSet) {
-         return new SuccessfulResponse<>(null);
-      } else if (responseValue instanceof Collection)
+      if (responseValue instanceof Collection && !(responseValue instanceof IntSet))
          return new SuccessfulResponse<>(null, MarshallableCollection.create((Collection<?>) responseValue),null, null);
       else if (responseValue.getClass().isArray())
          return new SuccessfulResponse<>(null, null, null, MarshallableArray.create((Object[]) responseValue));

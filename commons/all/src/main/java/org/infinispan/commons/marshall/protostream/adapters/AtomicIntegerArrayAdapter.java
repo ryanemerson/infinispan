@@ -5,30 +5,24 @@ import java.util.concurrent.atomic.AtomicIntegerArray;
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.protostream.annotations.ProtoAdapter;
 import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
-import org.infinispan.protostream.containers.IndexedElementContainerAdapter;
 
 @ProtoTypeId(ProtoStreamTypeIds.ATOMIC_INTEGER_ARRAY)
 @ProtoAdapter(AtomicIntegerArray.class)
-public class AtomicIntegerArrayAdapter implements IndexedElementContainerAdapter<AtomicIntegerArray, Integer> {
+public class AtomicIntegerArrayAdapter {
 
    @ProtoFactory
-   public AtomicIntegerArray create(int size) {
-      return new AtomicIntegerArray(size);
+   public AtomicIntegerArray create(int[] elements) {
+      return new AtomicIntegerArray(elements);
    }
 
-   @Override
-   public Integer getElement(AtomicIntegerArray container, int index) {
-      return container.get(index);
-   }
-
-   @Override
-   public void setElement(AtomicIntegerArray container, int index, Integer element) {
-      container.set(index, element);
-   }
-
-   @Override
-   public int getNumElements(AtomicIntegerArray container) {
-      return container.length();
+   @ProtoField(1)
+   int[] getElements(AtomicIntegerArray array) {
+      int[] elements = new int[array.length()];
+      for (int i = 0; i < array.length(); i++) {
+         elements[i] = array.get(i);
+      }
+      return elements;
    }
 }

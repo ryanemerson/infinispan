@@ -102,7 +102,7 @@ public class IracTombstoneCheckRequest extends XSiteCacheRequest<IntSet> {
 
    @Override
    public String toString() {
-      return "IracSiteTombstoneCheckCommand{" +
+      return "IracTombstoneCheckRequest{" +
             "cacheName=" + cacheName +
             ", keys=" + keys.stream().map(Util::toStr).collect(Collectors.joining(",")) +
             '}';
