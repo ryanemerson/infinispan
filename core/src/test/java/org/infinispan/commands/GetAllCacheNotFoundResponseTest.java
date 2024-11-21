@@ -3,7 +3,6 @@ package org.infinispan.commands;
 import static org.testng.AssertJUnit.assertEquals;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
@@ -18,6 +17,7 @@ import org.infinispan.commands.statetransfer.StateResponseCommand;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.container.entries.ImmortalCacheValue;
+import org.infinispan.container.entries.InternalCacheValue;
 import org.infinispan.distribution.DistributionManager;
 import org.infinispan.distribution.LocalizedCacheTopology;
 import org.infinispan.distribution.MagicKey;
@@ -72,8 +72,8 @@ public class GetAllCacheNotFoundResponseTest extends MultipleCacheManagersTest {
       // Provide a response for the retry commands.
       // We simulate that key1 is completely lost due to crashing nodes.
       round2.skipSendAndReceive(address(1), CacheNotFoundResponse.INSTANCE);
-      round2.skipSendAndReceive(address(2), SuccessfulResponse.create(Collections.singletonList(new ImmortalCacheValue("value2"))));
-      round2.skipSendAndReceiveAsync(address(3), SuccessfulResponse.create(Collections.singletonList(new ImmortalCacheValue("value3"))));
+      round2.skipSendAndReceive(address(2), SuccessfulResponse.create(new InternalCacheValue[]{new ImmortalCacheValue("value2")}));
+      round2.skipSendAndReceiveAsync(address(3), SuccessfulResponse.create(new InternalCacheValue[]{new ImmortalCacheValue("value3")}));
 
       // After all the owners are lost, we must wait for a new topology in case the key is still available
       crm4.expectNoCommand(10, TimeUnit.MILLISECONDS);
@@ -85,7 +85,7 @@ public class GetAllCacheNotFoundResponseTest extends MultipleCacheManagersTest {
          crm4.expectCommands(ClusteredGetAllCommand.class, address(0));
       // Provide a response for the 2nd retry
       // Because we only simulated the loss of cache0, the primary owner is the same
-      round3.skipSendAndReceive(address(0), SuccessfulResponse.create(Collections.singletonList(null)));
+      round3.skipSendAndReceive(address(0), SuccessfulResponse.create(new InternalCacheValue[]{null}));
 
       log.debugf("Expect final result");
       topologyUpdateFuture.get(10, TimeUnit.SECONDS);

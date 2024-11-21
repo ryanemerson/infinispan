@@ -5,7 +5,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletionStage;
 
-import org.infinispan.commands.TopologyAffectedCommand;
 import org.infinispan.commands.read.GetAllCommand;
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.commons.util.EnumUtil;
@@ -33,51 +32,35 @@ import org.infinispan.util.logging.LogFactory;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @ProtoTypeId(ProtoStreamTypeIds.CLUSTERED_GET_ALL_COMMAND)
-public class ClusteredGetAllCommand<K, V> extends BaseRpcCommand implements TopologyAffectedCommand {
+public class ClusteredGetAllCommand<K, V> extends BaseClusteredReadCommand {
    public static final byte COMMAND_ID = 46;
    private static final Log log = LogFactory.getLog(ClusteredGetAllCommand.class);
 
    private List<?> keys;
    private GlobalTransaction gtx;
-   private int topologyId = -1;
-   final long flags;
 
    public ClusteredGetAllCommand(ByteString cacheName, List<?> keys, long flags, GlobalTransaction gtx) {
-      super(cacheName);
+      super(cacheName, -1, flags);
       this.keys = keys;
       this.gtx = gtx;
-      this.flags = flags;
    }
 
    @ProtoFactory
-   ClusteredGetAllCommand(ByteString cacheName, int topologyId, MarshallableCollection<?> wrappedKeys,
-                          GlobalTransaction globalTransaction, long flagsWithoutRemote) {
-      super(cacheName);
-      this.topologyId = topologyId;
+   ClusteredGetAllCommand(ByteString cacheName, int topologyId, long flagsWithoutRemote, MarshallableCollection<?> wrappedKeys,
+                          GlobalTransaction globalTransaction) {
+      super(cacheName, topologyId, flagsWithoutRemote);
       this.keys = MarshallableCollection.unwrapAsList(wrappedKeys);
       this.gtx = globalTransaction;
-      this.flags = flagsWithoutRemote;
    }
 
-   @Override
-   @ProtoField(number = 2, defaultValue = "-1")
-   public int getTopologyId() {
-      return topologyId;
-   }
-
-   @ProtoField(number = 3, name = "keys")
+   @ProtoField(number = 4, name = "keys")
    MarshallableCollection<?> getWrappedKeys() {
       return MarshallableCollection.create(keys);
    }
 
-   @ProtoField(number = 4)
+   @ProtoField(number = 5)
    GlobalTransaction getGlobalTransaction() {
       return gtx;
-   }
-
-   @ProtoField(number = 5, name = "flags", defaultValue = "0")
-   long getFlagsWithoutRemote() {
-      return FlagBitSets.copyWithoutRemotableFlags(flags);
    }
 
    @Override
@@ -132,16 +115,6 @@ public class ClusteredGetAllCommand<K, V> extends BaseRpcCommand implements Topo
    @Override
    public byte getCommandId() {
       return COMMAND_ID;
-   }
-
-   @Override
-   public boolean isReturnValueExpected() {
-      return true;
-   }
-
-   @Override
-   public void setTopologyId(int topologyId) {
-      this.topologyId = topologyId;
    }
 
    @Override

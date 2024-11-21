@@ -4,7 +4,6 @@ import java.util.Objects;
 import java.util.concurrent.CompletionStage;
 
 import org.infinispan.commands.SegmentSpecificCommand;
-import org.infinispan.commands.TopologyAffectedCommand;
 import org.infinispan.commands.read.GetCacheEntryCommand;
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.commons.util.EnumUtil;
@@ -38,20 +37,17 @@ import org.infinispan.util.logging.LogFactory;
  * @since 4.0
  */
 @ProtoTypeId(ProtoStreamTypeIds.CLUSTERED_GET_COMMAND)
-public class ClusteredGetCommand extends BaseRpcCommand implements SegmentSpecificCommand, TopologyAffectedCommand {
+public class ClusteredGetCommand extends BaseClusteredReadCommand implements SegmentSpecificCommand {
 
    public static final byte COMMAND_ID = 16;
    private static final Log log = LogFactory.getLog(ClusteredGetCommand.class);
 
-   private Object key;
-
+   private final Object key;
+   private final Integer segment;
    private boolean isWrite;
-   private Integer segment;
-   private int topologyId = -1;
-   private long flags;
 
    public ClusteredGetCommand(Object key, ByteString cacheName, Integer segment, long flags) {
-      super(cacheName);
+      super(cacheName, -1, flags);
       this.key = key;
       this.isWrite = false;
       if (segment != null && segment < 0) {
@@ -62,18 +58,12 @@ public class ClusteredGetCommand extends BaseRpcCommand implements SegmentSpecif
    }
 
    @ProtoFactory
-   ClusteredGetCommand(ByteString cacheName, int topologyId, MarshallableObject<?> wrappedKey, Integer boxedSegment, long flagsWithoutRemote) {
+   ClusteredGetCommand(ByteString cacheName, int topologyId, long flagsWithoutRemote, MarshallableObject<?> wrappedKey, Integer boxedSegment) {
       this(MarshallableObject.unwrap(wrappedKey), cacheName, boxedSegment, flagsWithoutRemote);
       this.topologyId = topologyId;
    }
 
-   @Override
-   @ProtoField(number = 2, defaultValue = "-1")
-   public int getTopologyId() {
-      return topologyId;
-   }
-
-   @ProtoField(number = 3, name = "key")
+   @ProtoField(number = 4, name = "key")
    MarshallableObject<?> getWrappedKey() {
       return MarshallableObject.create(key);
    }
@@ -83,14 +73,9 @@ public class ClusteredGetCommand extends BaseRpcCommand implements SegmentSpecif
       return segment;
    }
 
-   @ProtoField(number = 4, name = "segment")
+   @ProtoField(number = 5, name = "segment")
    Integer getBoxedSegment() {
       return segment;
-   }
-
-   @ProtoField(number = 5, name = "flags", defaultValue = "0")
-   long getFlagsWithoutRemote() {
-      return FlagBitSets.copyWithoutRemotableFlags(flags);
    }
 
    /**
@@ -181,15 +166,5 @@ public class ClusteredGetCommand extends BaseRpcCommand implements SegmentSpecif
 
    public Object getKey() {
       return key;
-   }
-
-   @Override
-   public boolean isReturnValueExpected() {
-      return true;
-   }
-
-   @Override
-   public void setTopologyId(int topologyId) {
-      this.topologyId = topologyId;
    }
 }

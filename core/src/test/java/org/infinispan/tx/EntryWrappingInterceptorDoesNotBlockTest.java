@@ -17,6 +17,7 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import org.infinispan.Cache;
+import org.infinispan.commands.remote.BaseClusteredReadCommand;
 import org.infinispan.commands.remote.ClusteredGetCommand;
 import org.infinispan.commands.remote.recovery.TxCompletionNotificationCommand;
 import org.infinispan.commands.statetransfer.StateResponseCommand;
@@ -150,7 +151,7 @@ public class EntryWrappingInterceptorDoesNotBlockTest extends MultipleCacheManag
       // The PrepareCommand attempts to load moving keys, and we allow the request to be sent
       // but block receiving the responses. Here we'll intercept only the first remote get because the second one
       // is not fired until the first is received (implementation inefficiency).
-      ControlledRpcManager.SentRequest firstRemoteGet = crm2.expectCommand(ClusteredGetCommand.class).send();
+      ControlledRpcManager.SentRequest firstRemoteGet = crm2.expectCommand(BaseClusteredReadCommand.class).send();
 
       // The topmost interceptor gets the InvocationStage from the PrepareCommand and verifies
       // that it is not completed yet (as we are waiting for the remote gets). Receiving the invocation stage
@@ -161,7 +162,7 @@ public class EntryWrappingInterceptorDoesNotBlockTest extends MultipleCacheManag
       // Receiving the responses for one remote get triggers the next remote get, so complete them in parallel
       firstRemoteGet.expectAllResponses().receiveAsync();
       for (int i = 1; i < expectRemoteGets; ++i) {
-         crm2.expectCommand(ClusteredGetCommand.class).send().receiveAll();
+         crm2.expectCommand(BaseClusteredReadCommand.class).send().receiveAll();
       }
 
       sentPrepare.expectAllResponses().receiveAsync();

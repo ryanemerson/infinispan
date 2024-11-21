@@ -44,9 +44,10 @@ public class MarshallableArray<T> {
       if (wrapper == null)
          return null;
 
-      if (wrapper.collection == null)
-         throw new IllegalStateException(MarshallableArray.class.getSimpleName() + " has not been marshalled yet");
+      if (wrapper.array != null)
+         return wrapper.array;
 
+      assert wrapper.collection != null;
       wrapper.array = wrapper.collection.toArray(array);
       return wrapper.array;
    }
