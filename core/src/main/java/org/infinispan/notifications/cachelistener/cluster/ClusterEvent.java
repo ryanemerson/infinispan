@@ -55,25 +55,19 @@ public class ClusterEvent<K, V> implements CacheEntryCreatedEvent<K, V>, CacheEn
       }
       V oldValue = null;
       Type eventType = event.getType();
-      boolean commandRetried;
-      switch (eventType) {
-         case CACHE_ENTRY_REMOVED:
-            oldValue = ((CacheEntryRemovedEvent<K, V>)event).getOldValue();
-            commandRetried = ((CacheEntryRemovedEvent<K, V>)event).isCommandRetried();
-            break;
-         case CACHE_ENTRY_CREATED:
-            commandRetried = ((CacheEntryCreatedEvent<K, V>)event).isCommandRetried();
-            break;
-         case CACHE_ENTRY_MODIFIED:
-            commandRetried = ((CacheEntryModifiedEvent<K, V>)event).isCommandRetried();
-            break;
-         case CACHE_ENTRY_EXPIRED:
-            // Expired doesn't have a retry
-            commandRetried = false;
-            break;
-         default:
-            throw new IllegalArgumentException("Cluster Event can only be created from a CacheEntryRemoved, CacheEntryCreated or CacheEntryModified event!");
-      }
+      boolean commandRetried = switch (eventType) {
+          case CACHE_ENTRY_REMOVED -> {
+              oldValue = ((CacheEntryRemovedEvent<K, V>) event).getOldValue();
+              yield ((CacheEntryRemovedEvent<K, V>) event).isCommandRetried();
+          }
+          case CACHE_ENTRY_CREATED -> ((CacheEntryCreatedEvent<K, V>) event).isCommandRetried();
+          case CACHE_ENTRY_MODIFIED -> ((CacheEntryModifiedEvent<K, V>) event).isCommandRetried();
+          case CACHE_ENTRY_EXPIRED ->
+              // Expired doesn't have a retry
+                false;
+          default ->
+                throw new IllegalArgumentException("Cluster Event can only be created from a CacheEntryRemoved, CacheEntryCreated or CacheEntryModified event!");
+      };
 
       GlobalTransaction transaction = event.getGlobalTransaction();
       Metadata metadata = null;
@@ -121,7 +115,7 @@ public class ClusterEvent<K, V> implements CacheEntryCreatedEvent<K, V>, CacheEn
 
    @ProtoField(number = 7, name = "oldValue")
    MarshallableObject<V> getWrappedOldValue() {
-      return MarshallableObject.create(value);
+      return MarshallableObject.create(oldValue);
    }
 
    @ProtoField(number = 8, name = "metadata")

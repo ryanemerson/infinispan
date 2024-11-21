@@ -34,7 +34,7 @@ public class MultiClusterEventCommand<K, V> extends BaseRpcCommand {
 
    private static final Log log = LogFactory.getLog(MultiClusterEventCommand.class);
 
-   private Map<UUID, Collection<ClusterEvent<K, V>>> multiEvents;
+   private final Map<UUID, Collection<ClusterEvent<K, V>>> multiEvents;
 
    public MultiClusterEventCommand(ByteString cacheName, Map<UUID, Collection<ClusterEvent<K, V>>> events) {
       super(cacheName);
