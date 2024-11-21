@@ -71,7 +71,7 @@ public class GlobalMarshaller extends AbstractInternalProtoStreamMarshaller {
       Class<?> clazz = obj.getClass();
       if (clazz.isSynthetic()) {
          obj = MarshallableLambda.create(obj);
-      } else if (obj instanceof Throwable) {
+      } else if (obj instanceof Throwable && !isMarshallable(obj)) {
          obj = MarshallableThrowable.create((Throwable) obj);
       }
 

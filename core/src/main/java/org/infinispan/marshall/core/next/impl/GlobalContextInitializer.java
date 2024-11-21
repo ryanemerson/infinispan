@@ -318,6 +318,7 @@ import org.infinispan.protostream.annotations.AutoProtoSchemaBuilder;
             org.infinispan.topology.RebalancingStatus.class,
             org.infinispan.transaction.xa.GlobalTransaction.class,
             org.infinispan.transaction.xa.recovery.InDoubtTxInfo.class,
+            org.infinispan.transaction.WriteSkewException.class,
             org.infinispan.util.KeyValuePair.class,
             org.infinispan.xsite.events.XSiteEvent.class,
             org.infinispan.xsite.events.XSiteEventType.class,

@@ -41,7 +41,7 @@ public class RebalancePhaseConfirmCommand extends AbstractCacheControlCommand {
 
    @ProtoFactory
    RebalancePhaseConfirmCommand(String cacheName, int topologyId, int viewId, MarshallableThrowable throwable) {
-      this(cacheName, null, MarshallableThrowable.get(throwable), topologyId, viewId);
+      this(cacheName, null, MarshallableThrowable.unwrap(throwable), topologyId, viewId);
    }
 
    @ProtoField(4)
