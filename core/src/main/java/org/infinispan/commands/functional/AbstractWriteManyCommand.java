@@ -120,11 +120,6 @@ public abstract class AbstractWriteManyCommand<K, V> implements WriteCommand, Fu
    }
 
    @Override
-   public boolean isWriteOnly() {
-      return true;
-   }
-
-   @Override
    public boolean isSuccessful() {
       return true;
    }

@@ -76,6 +76,11 @@ public final class WriteOnlyKeyCommand<K, V> extends AbstractWriteKeyCommand<K, 
    }
 
    @Override
+   public boolean isWriteOnly() {
+      return true;
+   }
+
+   @Override
    public Mutation<K, V, ?> toMutation(Object key) {
       return new Mutations.Write(keyDataConversion, valueDataConversion, f);
    }

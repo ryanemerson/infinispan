@@ -104,6 +104,11 @@ public final class WriteOnlyManyCommand<K, V> extends AbstractWriteManyCommand<K
    }
 
    @Override
+   public boolean isWriteOnly() {
+      return true;
+   }
+
+   @Override
    public String toString() {
       return "WriteOnlyManyCommand{" + "keys=" + keys +
             ", f=" + f.getClass().getName() +

@@ -108,6 +108,11 @@ public final class WriteOnlyManyEntriesCommand<K, V, T> extends AbstractWriteMan
    }
 
    @Override
+   public boolean isWriteOnly() {
+      return true;
+   }
+
+   @Override
    public String toString() {
       return "WriteOnlyManyEntriesCommand{" + "arguments=" + arguments +
             ", f=" + f.getClass().getName() +
