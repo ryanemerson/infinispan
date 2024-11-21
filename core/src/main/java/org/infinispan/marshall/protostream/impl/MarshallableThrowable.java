@@ -82,7 +82,7 @@ public class MarshallableThrowable {
 //               throwable = recreateGenericThrowable(impl, msg, cause);
 //         }
          throwable = recreateGenericThrowable(impl, msg, cause);
-         suppressed.forEach(s -> throwable.addSuppressed(s.get()));
+         if (suppressed != null) suppressed.forEach(s -> throwable.addSuppressed(s.get()));
       }
       return throwable;
    }
