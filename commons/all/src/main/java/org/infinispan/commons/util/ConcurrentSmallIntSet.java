@@ -34,7 +34,6 @@ import org.infinispan.protostream.annotations.ProtoTypeId;
 @ProtoTypeId(ProtoStreamTypeIds.INTSET_CONCURRENT_SMALL)
 public class ConcurrentSmallIntSet implements IntSet {
 
-   @ProtoField(1)
    final AtomicIntegerArray array;
 
    // Note per Java Language Specification 15.19 Shift Operators
@@ -62,8 +61,30 @@ public class ConcurrentSmallIntSet implements IntSet {
    }
 
    @ProtoFactory
-   ConcurrentSmallIntSet(AtomicIntegerArray array) {
-      this.array = array;
+   static ConcurrentSmallIntSet protoFactory(int[] entries) {
+      int arrayLength = entries.length;
+      ConcurrentSmallIntSet intSet = new ConcurrentSmallIntSet(arrayLength << ADDRESS_BITS_PER_INT);
+
+      int size = 0;
+      for (int i = 0; i < arrayLength - 1; ++i) {
+         int value = entries[i];
+         // Use lazy set - we use set below on the last
+         intSet.array.lazySet(i, value);
+         size += Integer.bitCount(value);
+      }
+      int lastValue = entries[arrayLength - 1];
+      intSet.array.set(arrayLength - 1, lastValue);
+      size += Integer.bitCount(lastValue);
+      intSet.currentSize.addAndGet(size);
+
+      return intSet;
+   }
+
+   @ProtoField(1)
+   int[] entries() {
+      int[] entries = new int[array.length()];
+      for (int i = 0; i < array.length(); i++) entries[i] = array.get(i);
+      return entries;
    }
 
    private void valueNonZero(int value) {

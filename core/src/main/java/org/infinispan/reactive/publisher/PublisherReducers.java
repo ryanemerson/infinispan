@@ -206,7 +206,6 @@ public class PublisherReducers {
                // This is to ensure at least the default value is provided - this shouldnt be required - but
                // the disconnect between reducer and finalizer for collector leaves this ambiguous
                .switchIfEmpty(Single.fromCallable(collector.supplier()::get))
-               // TODO why is this not respecting the finalizer?
                .toCompletionStage();
       }
    }

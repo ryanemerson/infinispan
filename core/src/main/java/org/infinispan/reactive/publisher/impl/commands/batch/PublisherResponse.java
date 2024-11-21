@@ -1,17 +1,16 @@
 package org.infinispan.reactive.publisher.impl.commands.batch;
 
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.function.ObjIntConsumer;
 
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.commons.util.IntSet;
-import org.infinispan.commons.util.IntSets;
 import org.infinispan.commons.util.Util;
 import org.infinispan.marshall.protostream.impl.MarshallableArray;
 import org.infinispan.marshall.protostream.impl.MarshallableCollection;
+import org.infinispan.marshall.protostream.impl.WrappedMessages;
+import org.infinispan.protostream.WrappedMessage;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
@@ -49,12 +48,12 @@ public class PublisherResponse {
    }
 
    @ProtoFactory
-   PublisherResponse(MarshallableArray<Object> wrappedResults, Set<Integer> completedSegmentsSet,
-                     Set<Integer> lostSegmentsSet, boolean complete,
+   PublisherResponse(MarshallableArray<Object> wrappedResults, WrappedMessage completedSegmentsWrapped,
+                     WrappedMessage lostSegmentsWrapped, boolean complete,
                      MarshallableCollection<PublisherHandler.SegmentResult> wrappedSegmentResults) {
       this.results = MarshallableArray.unwrap(wrappedResults, new Object[0]);
-      this.completedSegments = completedSegmentsSet == null ? null : IntSets.mutableCopyFrom(completedSegmentsSet);
-      this.lostSegments = lostSegmentsSet == null ? null : IntSets.mutableCopyFrom(lostSegmentsSet);
+      this.completedSegments = WrappedMessages.unwrap(completedSegmentsWrapped);
+      this.lostSegments = WrappedMessages.unwrap(lostSegmentsWrapped);
       this.complete = complete;
       this.size = results.length;
       this.segmentResults = MarshallableCollection.unwrapAsList(wrappedSegmentResults);
@@ -78,18 +77,18 @@ public class PublisherResponse {
       return completedSegments;
    }
 
-   @ProtoField(value = 2, collectionImplementation = HashSet.class)
-   Set<Integer> getCompletedSegmentsSet() {
-      return completedSegments;
+   @ProtoField(value = 2, name = "completedSegments")
+   WrappedMessage getCompletedSegmentsWrapped() {
+      return WrappedMessages.orElseNull(completedSegments);
    }
 
    public IntSet getLostSegments() {
       return lostSegments;
    }
 
-   @ProtoField(value = 3, collectionImplementation = HashSet.class)
-   Set<Integer> getLostSegmentsSet() {
-      return lostSegments;
+   @ProtoField(value = 3, name = "lostSegments")
+   WrappedMessage getLostSegmentsWrapped() {
+      return WrappedMessages.orElseNull(lostSegments);
    }
 
    public int getSize() {

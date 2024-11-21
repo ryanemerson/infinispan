@@ -22,6 +22,7 @@ import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.reactive.publisher.impl.DeliveryGuarantee;
 import org.infinispan.reactive.publisher.impl.LocalPublisherManager;
+import org.infinispan.remoting.transport.jgroups.JGroupsAddress;
 import org.infinispan.util.ByteString;
 
 /**
@@ -71,10 +72,18 @@ public class ReductionPublisherRequestCommand<K> extends BaseRpcCommand implemen
    ReductionPublisherRequestCommand(ByteString cacheName, boolean parallelStream, DeliveryGuarantee deliveryGuarantee,
                                     WrappedMessage wrappedSegments, MarshallableCollection<K> keys, long explicitFlags, boolean entryStream,
                                     MarshallableCollection<K> excludedKeys, MarshallableObject<Function<?, ?>> transformer,
-                                    MarshallableObject<Function<?, ?>> finalizer) {
-      this(cacheName, parallelStream, deliveryGuarantee, WrappedMessages.unwrap(wrappedSegments),
-            MarshallableCollection.unwrapAsSet(keys), MarshallableCollection.unwrapAsSet(excludedKeys), explicitFlags, entryStream,
-            MarshallableObject.unwrap(transformer), MarshallableObject.unwrap(finalizer));
+                                    MarshallableObject<Function<?, ?>> finalizer, JGroupsAddress origin) {
+      super(cacheName);
+      this.parallelStream = parallelStream;
+      this.deliveryGuarantee = deliveryGuarantee;
+      this.segments = WrappedMessages.unwrap(wrappedSegments);
+      this.keys = MarshallableCollection.unwrapAsSet(keys);
+      this.excludedKeys = MarshallableCollection.unwrapAsSet(excludedKeys);
+      this.explicitFlags = explicitFlags;
+      this.entryStream = entryStream;
+      this.finalizer = MarshallableObject.unwrap(finalizer);
+      this.transformer = transformer == null ? this.finalizer : MarshallableObject.unwrap(transformer);
+      this.origin = origin;
    }
 
    @ProtoField(6)
@@ -101,6 +110,11 @@ public class ReductionPublisherRequestCommand<K> extends BaseRpcCommand implemen
    @ProtoField(10)
    MarshallableObject<Function<?, ?>> getFinalizer() {
       return MarshallableObject.create(finalizer);
+   }
+
+   @ProtoField(11)
+   public JGroupsAddress getOrigin() {
+      return (JGroupsAddress) origin;
    }
 
    @Override

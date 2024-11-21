@@ -1,13 +1,13 @@
 package org.infinispan.reactive.publisher.impl.commands.batch;
 
 import java.util.List;
-import java.util.Set;
 import java.util.function.ObjIntConsumer;
 
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.commons.util.IntSet;
 import org.infinispan.marshall.protostream.impl.MarshallableArray;
 import org.infinispan.marshall.protostream.impl.MarshallableCollection;
+import org.infinispan.protostream.WrappedMessage;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
@@ -43,11 +43,11 @@ public class KeyPublisherResponse extends PublisherResponse {
    }
 
    @ProtoFactory
-   KeyPublisherResponse(MarshallableArray<Object> wrappedResults, Set<Integer> completedSegmentsSet,
-                        Set<Integer> lostSegmentsSet, boolean complete,
+   KeyPublisherResponse(MarshallableArray<Object> wrappedResults, WrappedMessage completedSegmentsWrapped,
+                        WrappedMessage lostSegmentsWrapped, boolean complete,
                         MarshallableCollection<PublisherHandler.SegmentResult> wrappedSegmentResults,
                         MarshallableArray<Object> keys) {
-      super(wrappedResults, completedSegmentsSet, lostSegmentsSet, complete, wrappedSegmentResults);
+      super(wrappedResults, completedSegmentsWrapped, lostSegmentsWrapped, complete, wrappedSegmentResults);
       this.extraObjects = null;
       this.extraSize = 0;
       this.keys = keys != null ? MarshallableArray.unwrap(keys, new Object[0]) :  new Object[0];
