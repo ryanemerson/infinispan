@@ -50,11 +50,11 @@ public class ClusteredGetCommand extends BaseRpcCommand implements SegmentSpecif
    private int topologyId = -1;
    private long flags;
 
-   public ClusteredGetCommand(Object key, ByteString cacheName, int segment, long flags) {
+   public ClusteredGetCommand(Object key, ByteString cacheName, Integer segment, long flags) {
       super(cacheName);
       this.key = key;
       this.isWrite = false;
-      if (segment < 0) {
+      if (segment != null && segment < 0) {
          throw new IllegalArgumentException("Segment must 0 or greater!");
       }
       this.segment = segment;
@@ -62,8 +62,8 @@ public class ClusteredGetCommand extends BaseRpcCommand implements SegmentSpecif
    }
 
    @ProtoFactory
-   ClusteredGetCommand(ByteString cacheName, int topologyId, MarshallableObject<?> wrappedKey, int segment, long flagsWithoutRemote) {
-      this(MarshallableObject.unwrap(wrappedKey), cacheName, segment, flagsWithoutRemote);
+   ClusteredGetCommand(ByteString cacheName, int topologyId, MarshallableObject<?> wrappedKey, Integer boxedSegment, long flagsWithoutRemote) {
+      this(MarshallableObject.unwrap(wrappedKey), cacheName, boxedSegment, flagsWithoutRemote);
       this.topologyId = topologyId;
    }
 
@@ -79,8 +79,12 @@ public class ClusteredGetCommand extends BaseRpcCommand implements SegmentSpecif
    }
 
    @Override
-   @ProtoField(number = 4, defaultValue = "-1")
    public int getSegment() {
+      return segment;
+   }
+
+   @ProtoField(number = 4, name = "segment")
+   Integer getBoxedSegment() {
       return segment;
    }
 
@@ -116,7 +120,7 @@ public class ClusteredGetCommand extends BaseRpcCommand implements SegmentSpecif
             }
          }
       }
-      GetCacheEntryCommand command = componentRegistry.getCommandsFactory().buildGetCacheEntryCommand(key, segment,
+      GetCacheEntryCommand command = componentRegistry.getCommandsFactory().buildGetCacheEntryCommand(key, segmentToUse,
             EnumUtil.mergeBitSets(flagBitSet, flags));
       command.setTopologyId(topologyId);
       InvocationContextFactory icf = componentRegistry.getInvocationContextFactory().running();
