@@ -32,13 +32,13 @@ public class VersionedPrepareCommand extends PrepareCommand {
    }
 
    @ProtoFactory
-   VersionedPrepareCommand(ByteString cacheName, GlobalTransaction globalTransaction, MarshallableCollection<WriteCommand> wrappedModifications,
+   VersionedPrepareCommand(int topologyId, ByteString cacheName, GlobalTransaction globalTransaction, MarshallableCollection<WriteCommand> wrappedModifications,
                            boolean onePhaseCommit, boolean retriedCommand, MarshallableMap<Object, IncrementableEntryVersion> wrappedVersionsSeen) {
-      super(cacheName, globalTransaction, wrappedModifications, onePhaseCommit, retriedCommand);
+      super(topologyId, cacheName, globalTransaction, wrappedModifications, onePhaseCommit, retriedCommand);
       this.versionsSeen = MarshallableMap.unwrap(wrappedVersionsSeen);
    }
 
-   @ProtoField(number = 6, name = "versionsSeen")
+   @ProtoField(number = 7, name = "versionsSeen")
    MarshallableMap<Object, IncrementableEntryVersion> getWrappedVersionsSeen() {
       return MarshallableMap.create(versionsSeen);
    }

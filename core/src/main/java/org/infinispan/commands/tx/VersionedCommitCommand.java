@@ -24,14 +24,14 @@ import org.infinispan.util.ByteString;
 public class VersionedCommitCommand extends CommitCommand {
    public static final byte COMMAND_ID = 27;
 
-   @ProtoField(number = 4)
+   @ProtoField(5)
    MarshallableMap<Object, IncrementableEntryVersion> updatedVersions;
 
    @ProtoFactory
-   VersionedCommitCommand(ByteString cacheName, GlobalTransaction globalTransaction,
+   VersionedCommitCommand(int topologyId, ByteString cacheName, GlobalTransaction globalTransaction,
                           MarshallableMap<Integer, IracMetadata> iracMetadataMap,
                           MarshallableMap<Object, IncrementableEntryVersion> updatedVersions) {
-      super(cacheName, globalTransaction, iracMetadataMap);
+      super(topologyId, cacheName, globalTransaction, iracMetadataMap);
       this.updatedVersions = updatedVersions;
    }
 

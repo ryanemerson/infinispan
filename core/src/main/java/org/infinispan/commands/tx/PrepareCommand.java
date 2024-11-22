@@ -71,32 +71,31 @@ public class PrepareCommand extends AbstractTransactionBoundaryCommand implement
    protected boolean retriedCommand;
 
    public PrepareCommand(ByteString cacheName, GlobalTransaction gtx, List<WriteCommand> commands, boolean onePhaseCommit) {
-      super(cacheName);
-      globalTx = gtx;
+      super(-1, cacheName, gtx);
       modifications = commands == null ? Collections.emptyList() : Collections.unmodifiableList(commands);
       this.onePhaseCommit = onePhaseCommit;
    }
 
    @ProtoFactory
-   PrepareCommand(ByteString cacheName, GlobalTransaction globalTransaction, MarshallableCollection<WriteCommand> wrappedModifications,
+   PrepareCommand(int topologyId, ByteString cacheName, GlobalTransaction globalTransaction, MarshallableCollection<WriteCommand> wrappedModifications,
                   boolean onePhaseCommit, boolean retriedCommand) {
-      super(cacheName, globalTransaction);
+      super(topologyId, cacheName, globalTransaction);
       this.modifications = MarshallableCollection.unwrapAsList(wrappedModifications);
       this.onePhaseCommit = onePhaseCommit;
       this.retriedCommand = retriedCommand;
    }
 
-   @ProtoField(number = 3, name = "modifications")
+   @ProtoField(number = 4, name = "modifications")
    MarshallableCollection<WriteCommand> getWrappedModifications() {
       return MarshallableCollection.create(modifications);
    }
 
-   @ProtoField(number = 4, defaultValue = "false")
+   @ProtoField(value = 5, defaultValue = "false")
    public boolean isOnePhaseCommit() {
       return onePhaseCommit;
    }
 
-   @ProtoField(number = 5, defaultValue = "false")
+   @ProtoField(value = 6, defaultValue = "false")
    public boolean isRetriedCommand() {
       return retriedCommand;
    }

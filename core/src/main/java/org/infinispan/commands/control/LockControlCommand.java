@@ -66,20 +66,20 @@ public class LockControlCommand extends AbstractTransactionBoundaryCommand imple
    }
 
    @ProtoFactory
-   LockControlCommand(ByteString cacheName, GlobalTransaction globalTransaction, MarshallableCollection<Object> wrappedKeys,
+   LockControlCommand(int topologyId, ByteString cacheName, GlobalTransaction globalTransaction, MarshallableCollection<Object> wrappedKeys,
                       boolean unlock, long flagsBitSetWithoutRemote) {
-      super(cacheName, globalTransaction);
+      super(topologyId, cacheName, globalTransaction);
       this.keys = MarshallableCollection.unwrapAsList(wrappedKeys);
       this.unlock = unlock;
       this.flags = flagsBitSetWithoutRemote;
    }
 
-   @ProtoField(number = 3, name = "keys")
+   @ProtoField(number = 4, name = "keys")
    MarshallableCollection<Object> getWrappedKeys() {
       return MarshallableCollection.create(keys);
    }
 
-   @ProtoField(number = 4, defaultValue = "false")
+   @ProtoField(number = 5, defaultValue = "false")
    public boolean isUnlock() {
       return unlock;
    }
@@ -89,7 +89,7 @@ public class LockControlCommand extends AbstractTransactionBoundaryCommand imple
       return flags;
    }
 
-   @ProtoField(number = 5, defaultValue = "0")
+   @ProtoField(number = 6, defaultValue = "0")
    long getFlagsBitSetWithoutRemote() {
       return FlagBitSets.copyWithoutRemotableFlags(flags);
    }

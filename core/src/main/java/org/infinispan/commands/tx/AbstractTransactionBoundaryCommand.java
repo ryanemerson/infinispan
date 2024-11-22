@@ -32,15 +32,21 @@ public abstract class AbstractTransactionBoundaryCommand implements TransactionB
    private int topologyId = -1;
 
    protected AbstractTransactionBoundaryCommand(ByteString cacheName) {
-      this.cacheName = cacheName;
+      this(-1, cacheName, null);
    }
 
    protected AbstractTransactionBoundaryCommand(ByteString cacheName, GlobalTransaction globalTx) {
+      this(-1, cacheName, globalTx);
+   }
+
+   protected AbstractTransactionBoundaryCommand(int topologyId, ByteString cacheName, GlobalTransaction globalTx) {
+      this.topologyId = topologyId;
       this.cacheName = cacheName;
       this.globalTx = globalTx;
    }
 
    @Override
+   @ProtoField(value = 1, defaultValue = "-1")
    public int getTopologyId() {
       return topologyId;
    }
@@ -51,13 +57,13 @@ public abstract class AbstractTransactionBoundaryCommand implements TransactionB
    }
 
    @Override
-   @ProtoField(number = 1)
+   @ProtoField(2)
    public ByteString getCacheName() {
       return cacheName;
    }
 
    @Override
-   @ProtoField(number = 2)
+   @ProtoField(3)
    public GlobalTransaction getGlobalTransaction() {
       return globalTx;
    }

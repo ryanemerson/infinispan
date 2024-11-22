@@ -32,17 +32,16 @@ public class CommitCommand extends AbstractTransactionBoundaryCommand {
    private Map<Integer, IracMetadata> iracMetadataMap;
 
    public CommitCommand(ByteString cacheName, GlobalTransaction globalTransaction) {
-      this(cacheName, globalTransaction, null);
+      super(cacheName, globalTransaction);
    }
 
    @ProtoFactory
-   CommitCommand(ByteString cacheName, GlobalTransaction globalTransaction, MarshallableMap<Integer, IracMetadata> iracMetadataMap) {
-      super(cacheName);
-      this.globalTx = globalTransaction;
+   CommitCommand(int topologyId, ByteString cacheName, GlobalTransaction globalTransaction, MarshallableMap<Integer, IracMetadata> iracMetadataMap) {
+      super(topologyId, cacheName, globalTransaction);
       this.iracMetadataMap = MarshallableMap.unwrap(iracMetadataMap);
    }
 
-   @ProtoField(3)
+   @ProtoField(4)
    MarshallableMap<Integer, IracMetadata> getIracMetadataMap() {
       return MarshallableMap.create(iracMetadataMap);
    }

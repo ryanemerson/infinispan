@@ -24,10 +24,13 @@ import org.infinispan.util.ByteString;
 public class RollbackCommand extends AbstractTransactionBoundaryCommand {
    public static final byte COMMAND_ID = 13;
 
-   @ProtoFactory
    public RollbackCommand(ByteString cacheName, GlobalTransaction globalTransaction) {
-      super(cacheName);
-      this.globalTx = globalTransaction;
+      super(-1, cacheName, globalTransaction);
+   }
+
+   @ProtoFactory
+   public RollbackCommand(int topologyId, ByteString cacheName, GlobalTransaction globalTransaction) {
+      super(topologyId, cacheName, globalTransaction);
    }
 
    @Override
