@@ -58,9 +58,11 @@ public class ClusteredGetCommand extends BaseClusteredReadCommand implements Seg
    }
 
    @ProtoFactory
-   ClusteredGetCommand(ByteString cacheName, int topologyId, long flagsWithoutRemote, MarshallableObject<?> wrappedKey, Integer boxedSegment) {
+   ClusteredGetCommand(ByteString cacheName, int topologyId, long flagsWithoutRemote, MarshallableObject<?> wrappedKey,
+                       Integer boxedSegment, boolean isWrite) {
       this(MarshallableObject.unwrap(wrappedKey), cacheName, boxedSegment, flagsWithoutRemote);
       this.topologyId = topologyId;
+      this.isWrite = isWrite;
    }
 
    @ProtoField(number = 4, name = "key")
@@ -76,6 +78,11 @@ public class ClusteredGetCommand extends BaseClusteredReadCommand implements Seg
    @ProtoField(number = 5, name = "segment")
    Integer getBoxedSegment() {
       return segment;
+   }
+
+   @ProtoField(number = 6, defaultValue = "false")
+   boolean getIsWrite() {
+      return isWrite;
    }
 
    /**
