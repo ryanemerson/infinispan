@@ -8,7 +8,7 @@ import org.infinispan.commands.Visitor;
 import org.infinispan.commands.remote.BaseRpcCommand;
 import org.infinispan.context.InvocationContext;
 import org.infinispan.factories.ComponentRegistry;
-import org.infinispan.protostream.WrappedMessage;
+import org.infinispan.marshall.protostream.impl.MarshallableObject;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.util.ByteString;
@@ -24,8 +24,8 @@ public class CustomCacheRpcCommand extends BaseRpcCommand implements VisitableCo
    final Object arg;
 
    @ProtoFactory
-   CustomCacheRpcCommand(ByteString cacheName, WrappedMessage arg) {
-      this(cacheName, arg.getValue());
+   CustomCacheRpcCommand(ByteString cacheName, MarshallableObject<?> arg) {
+      this(cacheName, MarshallableObject.unwrap(arg));
    }
 
    CustomCacheRpcCommand(ByteString cacheName, Object arg) {
@@ -34,8 +34,8 @@ public class CustomCacheRpcCommand extends BaseRpcCommand implements VisitableCo
    }
 
    @ProtoField(2)
-   WrappedMessage getArg() {
-      return new WrappedMessage(arg);
+   MarshallableObject<?> getArg() {
+      return MarshallableObject.create(arg);
    }
 
    @Override
