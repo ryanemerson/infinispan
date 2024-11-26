@@ -30,5 +30,5 @@ import org.infinispan.protostream.annotations.ProtoSchema;
       schemaPackageName = "org.infinispan.persistence.counters",
       service = false
 )
-interface PersistenceContextInitializer extends SerializationContextInitializer {
+public interface PersistenceContextInitializer extends SerializationContextInitializer {
 }
