@@ -62,7 +62,6 @@ public abstract class AbstractJBossMarshaller extends AbstractMarshaller impleme
       // Class resolver now set when marshaller/unmarshaller will be created
       baseCfg = new MarshallingConfiguration();
       baseCfg.setExceptionListener(new DebuggingExceptionListener());
-      baseCfg.setClassExternalizerFactory(new SerializeWithExtFactory());
       baseCfg.setInstanceCount(DEF_INSTANCE_COUNT);
       baseCfg.setClassCount(DEF_CLASS_COUNT);
       baseCfg.setVersion(3);

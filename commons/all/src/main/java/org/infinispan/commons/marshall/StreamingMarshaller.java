@@ -22,6 +22,7 @@ import net.jcip.annotations.ThreadSafe;
  */
 @ThreadSafe
 @Deprecated(forRemoval=true, since = "10.0")
+// TODO move to jboss-marshalling module as still required by tools and AbstractJBossMarshaller
 public interface StreamingMarshaller extends Marshaller {
 
    /**

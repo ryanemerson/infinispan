@@ -23,7 +23,7 @@ import org.jboss.marshalling.Unmarshaller;
 @SuppressWarnings("unused")
 public class JBossUserMarshaller extends JBossMarshaller {
 
-   public static final int USER_EXT_ID_MIN = AdvancedExternalizer.USER_EXT_ID_MIN;
+   public static final int USER_EXT_ID_MIN = 2500;
 
    private ClassToExternalizerMap externalExts;
 

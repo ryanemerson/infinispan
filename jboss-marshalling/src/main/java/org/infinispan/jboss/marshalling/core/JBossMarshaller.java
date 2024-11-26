@@ -1,11 +1,9 @@
 package org.infinispan.jboss.marshalling.core;
 
-import org.infinispan.commons.marshall.SerializeWith;
-import org.infinispan.commons.marshall.StreamingMarshaller;
 import org.infinispan.configuration.global.GlobalConfiguration;
 import org.infinispan.jboss.marshalling.commons.AbstractJBossMarshaller;
 import org.infinispan.jboss.marshalling.commons.DefaultContextClassResolver;
-import org.infinispan.jboss.marshalling.commons.SerializeWithExtFactory;
+import org.jboss.marshalling.AnnotationClassExternalizerFactory;
 import org.jboss.marshalling.ClassResolver;
 import org.jboss.marshalling.Externalize;
 import org.jboss.marshalling.ObjectTable;
@@ -26,7 +24,7 @@ import org.jboss.marshalling.ObjectTable;
  * @author Sanne Grinovero
  * @since 4.0
  */
-public class JBossMarshaller extends AbstractJBossMarshaller implements StreamingMarshaller {
+public class JBossMarshaller extends AbstractJBossMarshaller {
 
    GlobalConfiguration globalCfg;
    ObjectTable objectTable;
@@ -39,7 +37,7 @@ public class JBossMarshaller extends AbstractJBossMarshaller implements Streamin
    @Override
    public void start() {
       super.start();
-      baseCfg.setClassExternalizerFactory(new SerializeWithExtFactory());
+      baseCfg.setClassExternalizerFactory(new AnnotationClassExternalizerFactory());
       baseCfg.setObjectTable(objectTable);
 
       if (classResolver == null) {
@@ -60,8 +58,6 @@ public class JBossMarshaller extends AbstractJBossMarshaller implements Streamin
 
    @Override
    public boolean isMarshallableCandidate(Object o) {
-      return super.isMarshallableCandidate(o)
-            || o.getClass().getAnnotation(SerializeWith.class) != null
-            || o.getClass().getAnnotation(Externalize.class) != null;
+      return super.isMarshallableCandidate(o) || o.getClass().getAnnotation(Externalize.class) != null;
    }
 }
