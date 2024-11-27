@@ -15,9 +15,9 @@ import org.infinispan.distribution.ch.impl.ReplicatedConsistentHash;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.marshall.core.next.impl.GlobalContextInitializer;
 import org.infinispan.protostream.SerializationContextInitializer;
-import org.infinispan.protostream.annotations.AutoProtoSchemaBuilder;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.protostream.annotations.ProtoSchema;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.remoting.transport.Transport;
 import org.infinispan.remoting.transport.jgroups.JGroupsAddress;
@@ -181,7 +181,7 @@ public abstract class ControlledConsistentHashFactory<CH extends ConsistentHash>
       }
    }
 
-   @AutoProtoSchemaBuilder(
+   @ProtoSchema(
          dependsOn = {
                org.infinispan.marshall.persistence.impl.PersistenceContextInitializer.class,
                GlobalContextInitializer.class,
@@ -193,7 +193,9 @@ public abstract class ControlledConsistentHashFactory<CH extends ConsistentHash>
          },
          schemaFileName = "test.core.ControlledConsistentHashFactory.proto",
          schemaFilePath = "proto/generated",
-         schemaPackageName = "org.infinispan.test.core.ControlledConsistentHashFactory")
+         schemaPackageName = "org.infinispan.test.core.ControlledConsistentHashFactory",
+         service = false
+   )
    public interface SCI extends SerializationContextInitializer {
       ControlledConsistentHashFactory.SCI INSTANCE = new SCIImpl();
    }

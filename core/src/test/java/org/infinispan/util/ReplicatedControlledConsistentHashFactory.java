@@ -8,9 +8,9 @@ import java.util.Map;
 import org.infinispan.distribution.ch.ConsistentHashFactory;
 import org.infinispan.distribution.ch.impl.ReplicatedConsistentHash;
 import org.infinispan.protostream.SerializationContextInitializer;
-import org.infinispan.protostream.annotations.AutoProtoSchemaBuilder;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.protostream.annotations.ProtoSchema;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.remoting.transport.jgroups.JGroupsAddress;
 
@@ -90,7 +90,7 @@ public class ReplicatedControlledConsistentHashFactory implements ConsistentHash
       return firstSegmentOwners;
    }
 
-   @AutoProtoSchemaBuilder(
+   @ProtoSchema(
          className = "ReplicatedControlledConsistentHashFactorySciImpl",
          dependsOn = {
                org.infinispan.marshall.persistence.impl.PersistenceContextInitializer.class,
@@ -98,7 +98,9 @@ public class ReplicatedControlledConsistentHashFactory implements ConsistentHash
          includeClasses = ReplicatedControlledConsistentHashFactory.class,
          schemaFileName = "test.core.ReplicatedControlledConsistentHashFactory.proto",
          schemaFilePath = "proto/generated",
-         schemaPackageName = "org.infinispan.test.core.ReplicatedControlledConsistentHashFactory")
+         schemaPackageName = "org.infinispan.test.core.ReplicatedControlledConsistentHashFactory",
+         service = false
+   )
    public interface SCI extends SerializationContextInitializer {
       ReplicatedControlledConsistentHashFactory.SCI INSTANCE = new ReplicatedControlledConsistentHashFactorySciImpl();
    }

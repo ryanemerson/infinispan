@@ -15,8 +15,8 @@ import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.factories.ComponentRegistry;
 import org.infinispan.protostream.SerializationContextInitializer;
-import org.infinispan.protostream.annotations.AutoProtoSchemaBuilder;
 import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoSchema;
 import org.infinispan.test.fwk.InCacheMode;
 import org.reactivestreams.Publisher;
 import org.testng.annotations.Test;
@@ -74,11 +74,13 @@ public class PublisherManagerGetKeyStressTest extends GetAllCommandStressTest {
       }
    }
 
-   @AutoProtoSchemaBuilder(
+   @ProtoSchema(
          includeClasses = MapReducer.class,
          schemaFileName = "test.core.PublisherManagerGetKeyStressTest.proto",
          schemaFilePath = "proto/generated",
-         schemaPackageName = "org.infinispan.test.core.PublisherManagerGetKeyStressTest")
+         schemaPackageName = "org.infinispan.test.core.PublisherManagerGetKeyStressTest",
+         service = false
+   )
    interface PublisherManagerGetKeyStressTestSCI extends SerializationContextInitializer {
       SerializationContextInitializer INSTANCE = new PublisherManagerGetKeyStressTestSCIImpl();
    }

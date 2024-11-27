@@ -28,7 +28,7 @@ import org.infinispan.functional.Listeners.WriteListeners.WriteListener;
 import org.infinispan.functional.TestFunctionalInterfaces.SetConstantOnReadWrite;
 import org.infinispan.functional.TestFunctionalInterfaces.SetConstantOnWriteOnly;
 import org.infinispan.protostream.SerializationContextInitializer;
-import org.infinispan.protostream.annotations.AutoProtoSchemaBuilder;
+import org.infinispan.protostream.annotations.ProtoSchema;
 import org.infinispan.test.TestDataSCI;
 import org.testng.annotations.Test;
 
@@ -311,7 +311,7 @@ public class FunctionalListenersTest extends AbstractFunctionalTest {
       }
    }
 
-   @AutoProtoSchemaBuilder(
+   @ProtoSchema(
          dependsOn = TestDataSCI.class,
          includeClasses = {
                TestFunctionalInterfaces.SetConstantOnReadWrite.class,

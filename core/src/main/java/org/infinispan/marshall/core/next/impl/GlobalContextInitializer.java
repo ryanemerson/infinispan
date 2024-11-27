@@ -1,7 +1,7 @@
 package org.infinispan.marshall.core.next.impl;
 
 import org.infinispan.protostream.SerializationContextInitializer;
-import org.infinispan.protostream.annotations.AutoProtoSchemaBuilder;
+import org.infinispan.protostream.annotations.ProtoSchema;
 
 /**
  * Interface used to initialise the {@link org.infinispan.marshall.core.GlobalMarshaller}'s {@link
@@ -11,7 +11,7 @@ import org.infinispan.protostream.annotations.AutoProtoSchemaBuilder;
  * @author Ryan Emerson
  * @since 11.0
  */
-@AutoProtoSchemaBuilder(
+@ProtoSchema(
       dependsOn = {
             org.infinispan.commons.marshall.GlobalContextInitializer.class,
             org.infinispan.commons.marshall.PersistenceContextInitializer.class,
@@ -360,7 +360,9 @@ import org.infinispan.protostream.annotations.AutoProtoSchemaBuilder;
       },
       schemaFileName = "global.core.proto",
       schemaFilePath = "proto/generated",
-      schemaPackageName = GlobalContextInitializer.PACKAGE_NAME)
+      schemaPackageName = GlobalContextInitializer.PACKAGE_NAME,
+      service = false
+)
 public interface GlobalContextInitializer extends SerializationContextInitializer {
    String PACKAGE_NAME = "org.infinispan.global.core";
 

@@ -54,11 +54,11 @@ import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.marshall.core.next.impl.GlobalContextInitializer;
 import org.infinispan.marshall.protostream.impl.MarshallableObject;
 import org.infinispan.protostream.SerializationContextInitializer;
-import org.infinispan.protostream.annotations.AutoProtoSchemaBuilder;
 import org.infinispan.protostream.annotations.ProtoAdapter;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoName;
+import org.infinispan.protostream.annotations.ProtoSchema;
 import org.infinispan.protostream.types.java.arrays.AbstractArrayAdapter;
 import org.infinispan.test.MultipleCacheManagersTest;
 import org.infinispan.test.TestingUtil;
@@ -2296,7 +2296,7 @@ public abstract class BaseStreamTest extends MultipleCacheManagersTest {
       }
    }
 
-   @AutoProtoSchemaBuilder(
+   @ProtoSchema(
          dependsOn = GlobalContextInitializer.class,
          includeClasses = {
                ConcurrentHashMapAdapter.class,
@@ -2308,7 +2308,9 @@ public abstract class BaseStreamTest extends MultipleCacheManagersTest {
          },
          schemaFileName = "test.core.BaseStreamTest.proto",
          schemaFilePath = "proto/generated",
-         schemaPackageName = "org.infinispan.test.core.BaseStreamTest")
+         schemaPackageName = "org.infinispan.test.core.BaseStreamTest",
+         service = false
+   )
    public interface BaseStreamTestSCI extends SerializationContextInitializer {
       SerializationContextInitializer INSTANCE = new BaseStreamTestSCIImpl();
    }

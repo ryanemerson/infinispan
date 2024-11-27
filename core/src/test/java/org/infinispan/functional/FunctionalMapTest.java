@@ -58,9 +58,9 @@ import org.infinispan.functional.impl.ReadOnlyMapImpl;
 import org.infinispan.functional.impl.ReadWriteMapImpl;
 import org.infinispan.functional.impl.WriteOnlyMapImpl;
 import org.infinispan.protostream.SerializationContextInitializer;
-import org.infinispan.protostream.annotations.AutoProtoSchemaBuilder;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.protostream.annotations.ProtoSchema;
 import org.infinispan.test.CacheManagerCallable;
 import org.infinispan.test.TestDataSCI;
 import org.infinispan.test.fwk.TestCacheManagerFactory;
@@ -645,7 +645,7 @@ public class FunctionalMapTest extends AbstractFunctionalTest {
    }
 
 
-   @AutoProtoSchemaBuilder(
+   @ProtoSchema(
          dependsOn = TestDataSCI.class,
          includeClasses = {
                FunctionalMapTest.SetStringConstant.class,

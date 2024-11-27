@@ -3,9 +3,9 @@ package org.infinispan.remoting.rpc;
 import org.infinispan.marshall.core.next.impl.GlobalContextInitializer;
 import org.infinispan.marshall.persistence.impl.PersistenceContextInitializer;
 import org.infinispan.protostream.SerializationContextInitializer;
-import org.infinispan.protostream.annotations.AutoProtoSchemaBuilder;
+import org.infinispan.protostream.annotations.ProtoSchema;
 
-@AutoProtoSchemaBuilder(
+@ProtoSchema(
       dependsOn = {
             PersistenceContextInitializer.class,
             GlobalContextInitializer.class
@@ -17,7 +17,9 @@ import org.infinispan.protostream.annotations.AutoProtoSchemaBuilder;
       },
       schemaFileName = "test.core.RpcSCI.proto",
       schemaFilePath = "proto/generated",
-      schemaPackageName = "org.infinispan.test.core.RpcSCI")
+      schemaPackageName = "org.infinispan.test.core.RpcSCI",
+      service = false
+)
 interface RpcSCI extends SerializationContextInitializer {
    SerializationContextInitializer INSTANCE = new RpcSCIImpl();
 }

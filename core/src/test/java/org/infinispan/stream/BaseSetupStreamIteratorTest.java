@@ -173,7 +173,7 @@ public abstract class BaseSetupStreamIteratorTest extends MultipleCacheManagersT
       return returnMap;
    }
 
-   @ProtoSchema((
+   @ProtoSchema(
          dependsOn = GlobalContextInitializer.class,
          includeClasses = {
                BaseSetupStreamIteratorTest.HashMapAdapter.class,

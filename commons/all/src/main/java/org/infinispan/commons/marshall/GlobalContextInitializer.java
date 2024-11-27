@@ -1,7 +1,7 @@
 package org.infinispan.commons.marshall;
 
 import org.infinispan.protostream.SerializationContextInitializer;
-import org.infinispan.protostream.annotations.AutoProtoSchemaBuilder;
+import org.infinispan.protostream.annotations.ProtoSchema;
 import org.infinispan.protostream.types.java.CommonTypes;
 
 /**
@@ -11,7 +11,7 @@ import org.infinispan.protostream.types.java.CommonTypes;
  * @author Ryan Emerson
  * @since 10.0
  */
-@AutoProtoSchemaBuilder(
+@ProtoSchema(
       dependsOn = CommonTypes.class,
       includeClasses = {
             org.infinispan.commons.api.CacheContainerAdmin.AdminFlag.class,

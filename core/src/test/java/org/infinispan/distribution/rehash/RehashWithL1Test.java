@@ -12,8 +12,8 @@ import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.distribution.ch.impl.DefaultConsistentHash;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.protostream.SerializationContextInitializer;
-import org.infinispan.protostream.annotations.AutoProtoSchemaBuilder;
 import org.infinispan.protostream.annotations.ProtoName;
+import org.infinispan.protostream.annotations.ProtoSchema;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.test.MultipleCacheManagersTest;
 import org.infinispan.util.BaseControlledConsistentHashFactory;
@@ -110,11 +110,13 @@ public class RehashWithL1Test extends MultipleCacheManagersTest {
       }
    }
 
-   @AutoProtoSchemaBuilder(
+   @ProtoSchema(
          includeClasses = RehashWithL1Test.MyBaseControlledConsistentHashFactory.class,
          schemaFileName = "test.core.RehashWithL1Test.proto",
          schemaFilePath = "proto/generated",
-         schemaPackageName = "org.infinispan.test.core.RehashWithL1Test")
+         schemaPackageName = "org.infinispan.test.core.RehashWithL1Test",
+         service = false
+   )
    interface RehashWithL1TestSCI extends SerializationContextInitializer {
       SerializationContextInitializer INSTANCE = new RehashWithL1TestSCIImpl();
    }

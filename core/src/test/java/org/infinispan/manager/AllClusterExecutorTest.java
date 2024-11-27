@@ -23,7 +23,7 @@ import org.infinispan.commons.test.Exceptions;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.factories.KnownComponentNames;
 import org.infinispan.protostream.SerializationContextInitializer;
-import org.infinispan.protostream.annotations.AutoProtoSchemaBuilder;
+import org.infinispan.protostream.annotations.ProtoSchema;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.test.AbstractInfinispanTest;
 import org.infinispan.test.MultiCacheManagerCallable;
@@ -478,11 +478,13 @@ public class AllClusterExecutorTest extends AbstractInfinispanTest {
       return TestCacheManagerFactory.createCacheManager(AllClusterExecutorTestSCI.INSTANCE, cacheMode, false);
    }
 
-   @AutoProtoSchemaBuilder(
+   @ProtoSchema(
          includeClasses = TestClassLocal.class,
          schemaFileName = "test.core.AllClusterExecutorTest.proto",
          schemaFilePath = "proto/generated",
-         schemaPackageName = "org.infinispan.test.core.AllClusterExecutorTest")
+         schemaPackageName = "org.infinispan.test.core.AllClusterExecutorTest",
+         service = false
+   )
    public interface AllClusterExecutorTestSCI extends SerializationContextInitializer {
       SerializationContextInitializer INSTANCE = new AllClusterExecutorTestSCIImpl();
    }
