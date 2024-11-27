@@ -21,6 +21,7 @@ import org.infinispan.util.ByteString;
  * @since 5.0
  */
 @Scope(Scopes.GLOBAL)
+// TODO remove
 public interface ModuleCommandFactory {
 
    /**

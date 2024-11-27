@@ -7,7 +7,7 @@ package org.infinispan.commands.module;
  * @author Galder Zamarreño
  * @since 5.1
  */
-// TODO how to handle? Deprecate and explain no-op
+// TODO remove
 public interface ModuleCommandExtensions {
 
    ModuleCommandFactory getModuleCommandFactory();
