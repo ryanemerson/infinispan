@@ -7,11 +7,12 @@ import javax.transaction.xa.Xid;
 
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.commons.tx.XidImpl;
+import org.infinispan.marshall.protostream.impl.WrappedMessages;
+import org.infinispan.protostream.WrappedMessage;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.remoting.transport.Address;
-import org.infinispan.remoting.transport.jgroups.JGroupsAddress;
 
 
 /**
@@ -44,16 +45,20 @@ public class GlobalTransaction implements Cloneable {
    }
 
    @ProtoFactory
-   GlobalTransaction(long id, JGroupsAddress address, XidImpl xid, long internalId) {
+   GlobalTransaction(long id, WrappedMessage wrappedAddress, XidImpl xid, long internalId) {
       this.id = id;
-      this.addr = address;
+      this.addr = WrappedMessages.unwrap(wrappedAddress);
       this.xid = xid;
       this.internalId = internalId;
    }
 
-   @ProtoField(number = 1, javaType = JGroupsAddress.class)
    public Address getAddress() {
       return addr;
+   }
+
+   @ProtoField(value = 1, name = "address")
+   WrappedMessage getWrappedAddress() {
+      return WrappedMessages.orElseNull(addr);
    }
 
    @ProtoField(number = 2, defaultValue = "-1")
