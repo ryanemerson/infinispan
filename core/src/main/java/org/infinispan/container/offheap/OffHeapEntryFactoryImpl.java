@@ -587,10 +587,9 @@ public class OffHeapEntryFactoryImpl implements OffHeapEntryFactory {
          metadataSize += marshall(metadata).length;
       }
 
-      // TODO @wburns how to handle this correctly, +6 changes estimate to be equal to Externalizer based marshalling size
       // Can we benefit from the smaller payload by adjusting other things and using the old estimate?
       long internalMetadataSize = shouldWriteInternalMetadata(internalMetadata) ?
-                                  marshall(internalMetadata).length + 6:
+                                  marshall(internalMetadata).length + 4:
                                   0;
       return estimateSizeOverhead(totalSize + metadataSize + internalMetadataSize);
    }
