@@ -3,7 +3,6 @@ package org.infinispan.server.hotrod;
 import java.util.EnumSet;
 
 import org.infinispan.Cache;
-import org.infinispan.commons.marshall.AdvancedExternalizer;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
@@ -27,9 +26,6 @@ import org.infinispan.transaction.impl.TransactionOriginatorChecker;
 import net.jcip.annotations.GuardedBy;
 
 /**
- * Module lifecycle callbacks implementation that enables module specific {@link AdvancedExternalizer} implementations
- * to be registered.
- *
  * @author Galder Zamarreño
  * @since 5.0
  */
