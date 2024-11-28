@@ -117,7 +117,7 @@ public class PrimaryOwnerChangePessimistTxTest extends MultipleCacheManagersTest
    }
 
    private void nodeJoins() {
-      addClusterEnabledCacheManager(configuration(), new TransportFlags().withFD(true));
+      addClusterEnabledCacheManager(ControlledConsistentHashFactory.SCI.INSTANCE, configuration(), new TransportFlags().withFD(true));
       waitForClusterToForm();
    }
 
