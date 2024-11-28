@@ -5,6 +5,7 @@ import org.infinispan.protostream.annotations.ProtoAdapter;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 
+// TODO ProtoTypeId to reduce payload?
 @ProtoAdapter(Class.class)
 public class ClassAdapter {
 
