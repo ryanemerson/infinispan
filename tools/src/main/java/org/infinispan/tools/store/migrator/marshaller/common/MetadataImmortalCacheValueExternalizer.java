@@ -21,7 +21,7 @@ public class MetadataImmortalCacheValueExternalizer extends AbstractMigratorExte
    public MetadataImmortalCacheValue readObject(ObjectInput input) throws IOException, ClassNotFoundException {
       Object v = input.readObject();
       Metadata metadata = (Metadata) input.readObject();
-      return new MetadataImmortalCacheValue(v, null, metadata);
+      return new MetadataImmortalCacheValue(v, metadata);
    }
 
    @Override

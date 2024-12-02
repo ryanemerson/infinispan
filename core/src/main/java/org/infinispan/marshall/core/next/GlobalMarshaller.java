@@ -2,6 +2,8 @@ package org.infinispan.marshall.core.next;
 
 import static org.infinispan.util.logging.Log.CONTAINER;
 
+import java.io.IOException;
+
 import org.infinispan.commons.marshall.Marshaller;
 import org.infinispan.factories.GlobalComponentRegistry;
 import org.infinispan.marshall.protostream.impl.AbstractInternalProtoStreamMarshaller;
@@ -87,5 +89,13 @@ public class GlobalMarshaller extends AbstractInternalProtoStreamMarshaller {
       }
 
       return super.unwrapAndInit(o);
+   }
+
+   @Override
+   public Object objectFromByteBuffer(byte[] buf, int offset, int length) throws IOException {
+      var obj = super.objectFromByteBuffer(buf, offset, length);
+      if (obj.getClass().getPackage().getName().startsWith("org.infinispan.query") || obj.getClass().getPackage().getName().startsWith("org.apache.lucene"))
+         System.err.println("Unmarshall: " + obj);
+      return obj;
    }
 }

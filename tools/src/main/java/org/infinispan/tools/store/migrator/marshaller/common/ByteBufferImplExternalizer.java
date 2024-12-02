@@ -15,7 +15,7 @@ public class ByteBufferImplExternalizer extends AbstractMigratorExternalizer<Byt
       int length = UnsignedNumeric.readUnsignedInt(input);
       byte[] data = new byte[length];
       input.readFully(data, 0, length);
-      return new ByteBufferImpl(data, 0, length);
+      return ByteBufferImpl.create(data, 0, length);
    }
 
    @Override

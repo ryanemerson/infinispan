@@ -5,7 +5,6 @@ import java.util.Set;
 import org.infinispan.commons.marshall.AdvancedExternalizer;
 import org.infinispan.commons.util.Immutables;
 import org.infinispan.marshall.core.impl.ClassToExternalizerMap;
-import org.infinispan.marshall.exts.EnumExternalizer;
 import org.infinispan.marshall.exts.ThrowableExternalizer;
 
 final class InternalExternalizers {
@@ -21,7 +20,6 @@ final class InternalExternalizers {
       addInternalExternalizer(new Immutables.ImmutableMapWrapperExternalizer(), exts);
       addInternalExternalizer(new Immutables.ImmutableSetWrapperExternalizer(), exts);
       addInternalExternalizer(ThrowableExternalizer.INSTANCE, exts);
-      addInternalExternalizer(EnumExternalizer.INSTANCE, exts);
 
       return exts;
    }
