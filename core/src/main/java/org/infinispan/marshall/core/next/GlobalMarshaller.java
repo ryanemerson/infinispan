@@ -93,9 +93,6 @@ public class GlobalMarshaller extends AbstractInternalProtoStreamMarshaller {
 
    @Override
    public Object objectFromByteBuffer(byte[] buf, int offset, int length) throws IOException {
-      var obj = super.objectFromByteBuffer(buf, offset, length);
-      if (obj.getClass().getPackage().getName().startsWith("org.infinispan.query") || obj.getClass().getPackage().getName().startsWith("org.apache.lucene"))
-         System.err.println("Unmarshall: " + obj);
-      return obj;
+      return super.objectFromByteBuffer(buf, offset, length);
    }
 }

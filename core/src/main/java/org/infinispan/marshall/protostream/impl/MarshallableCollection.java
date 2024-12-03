@@ -1,9 +1,11 @@
 package org.infinispan.marshall.protostream.impl;
 
 import java.io.IOException;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Deque;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -30,6 +32,17 @@ import org.infinispan.protostream.descriptors.WireType;
  */
 @ProtoTypeId(ProtoStreamTypeIds.MARSHALLABLE_COLLECTION)
 public class MarshallableCollection<T> {
+
+   static final Set<?> EMPTY_SET = new HashSet<>();
+
+   /**
+    * This should be used when the empty set needs to be marshalled. We cannot use {@link java.util.Collections#EMPTY_SET}
+    * for this purpose as we cannot write a {@link org.infinispan.protostream.annotations.ProtoAdapter} for the underlying class.
+    */
+   @SuppressWarnings("unchecked")
+   public static <T> Set<T> emptySet() {
+      return (Set<T>) EMPTY_SET;
+   }
 
    /**
     * @param entries an Array to be wrapped as a {@link MarshallableCollection}.
@@ -68,6 +81,18 @@ public class MarshallableCollection<T> {
 
       Collection<T> collection = wrapper.get();
       return collection instanceof List ? (List<T>) collection : new ArrayList<>(collection);
+   }
+
+   /**
+    * @param wrapper the {@link MarshallableCollection} instance to unwrap.
+    * @return a {@link Deque} representation of the wrapped {@link Collection} or null if the provided wrapper does not exist.
+    */
+   public static <T> Deque<T> unwrapAsDeque(MarshallableCollection<T> wrapper) {
+      if (wrapper == null)
+         return null;
+
+      Collection<T> collection = wrapper.get();
+      return collection instanceof Deque ? (Deque<T>) collection : new ArrayDeque<>(collection);
    }
 
    /**
