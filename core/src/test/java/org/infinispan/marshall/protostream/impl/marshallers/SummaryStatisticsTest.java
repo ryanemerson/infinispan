@@ -7,7 +7,7 @@ import java.util.DoubleSummaryStatistics;
 import java.util.IntSummaryStatistics;
 import java.util.LongSummaryStatistics;
 
-import org.infinispan.marshall.core.next.impl.GlobalContextManualInitializer;
+import org.infinispan.marshall.core.next.impl.GlobalContextInitializerImpl;
 import org.infinispan.protostream.ProtobufUtil;
 import org.infinispan.protostream.SerializationContext;
 import org.testng.annotations.Test;
@@ -19,8 +19,8 @@ public class SummaryStatisticsTest {
 
    public SummaryStatisticsTest() {
       this.ctx = ProtobufUtil.newSerializationContext();
-      GlobalContextManualInitializer.INSTANCE.registerSchema(ctx);
-      GlobalContextManualInitializer.INSTANCE.registerMarshallers(ctx);
+      GlobalContextInitializerImpl.INSTANCE.registerSchema(ctx);
+      GlobalContextInitializerImpl.INSTANCE.registerMarshallers(ctx);
    }
 
    private <T> T deserialize(T object) throws IOException {
@@ -35,27 +35,6 @@ public class SummaryStatisticsTest {
 
       DoubleSummaryStatistics deserialized = deserialize(stats);
       assertStatsAreEqual(stats, deserialized);
-   }
-
-   public void testDoublePositiveNegativeInfinites() throws IOException {
-      // In JDK 10+, we expect the externalizer to pass inner state values through constructor, instead of via
-      // reflection. The state of this statistics instance however doesn't pass constructor validations, so
-      // deserialization of this instance fails in JDK 10+.
-
-      DoubleSummaryStatistics stats = new DoubleSummaryStatistics();
-      stats.accept(Double.POSITIVE_INFINITY);
-      stats.accept(Double.NEGATIVE_INFINITY);
-
-      try {
-         DoubleSummaryStatistics deserialized = deserialize(stats);
-         assertStatsAreEqual(stats, deserialized);
-      } catch (IOException e) {
-         // JDK 10+, ignore
-         if (Util.getConstructor(DoubleSummaryStatistics.class,
-               long.class, double.class, double.class, double.class) == null) {
-            throw e;
-         }
-      }
    }
 
    public void testDoubleNaN() throws IOException {

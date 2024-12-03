@@ -22,11 +22,10 @@ import org.infinispan.protostream.annotations.ProtoTypeId;
 @ProtoTypeId(ProtoStreamTypeIds.MULTIMAP_SUBLIST_FUNCTION)
 public final class SubListFunction<K, V> implements ListBucketBaseFunction<K, V, Collection<V>> {
 
-   @ProtoField(number = 1, defaultValue = "-1", name = "from_offset")
+   @ProtoField(number = 1, defaultValue = "-1")
    final long from;
 
-   // We cannot use "to" as a field name due to https://github.com/infinispan/protostream/issues/371
-   @ProtoField(number = 2, defaultValue = "-1", name = "to_offset")
+   @ProtoField(number = 2, defaultValue = "-1")
    final long to;
 
    @ProtoFactory

@@ -22,7 +22,6 @@ import org.infinispan.factories.impl.ComponentRef;
 import org.infinispan.factories.scopes.Scope;
 import org.infinispan.factories.scopes.Scopes;
 import org.infinispan.marshall.core.next.impl.GlobalContextInitializer;
-import org.infinispan.marshall.core.next.impl.GlobalContextManualInitializer;
 import org.infinispan.marshall.persistence.impl.PersistenceContextInitializer;
 import org.infinispan.protostream.BaseMarshaller;
 import org.infinispan.protostream.FileDescriptorSource;
@@ -67,7 +66,6 @@ public class SerializationContextRegistryImpl implements SerializationContextReg
       BaseMarshaller userObjectMarshaller = new MarshallableUserObject.Marshaller(messageName, userMarshaller.wired());
       update(GLOBAL, ctx ->
          ctx.addContextInitializer(GlobalContextInitializer.INSTANCE)
-               .addContextInitializer(GlobalContextManualInitializer.INSTANCE)
                .addContextInitializer(new CommonTypesSchema())
                .addContextInitializer(new CommonContainerTypesSchema())
                .addContextInitializer(new UserContextInitializerImpl())

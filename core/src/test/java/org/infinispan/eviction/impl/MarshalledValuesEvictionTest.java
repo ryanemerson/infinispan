@@ -108,12 +108,10 @@ public class MarshalledValuesEvictionTest extends SingleCacheManagerTest {
    }
 
    private static class ContextInitializer implements SerializationContextInitializer {
-      @Override
       public String getProtoFileName() {
          return EvictionPojo.class.getName();
       }
 
-      @Override
       public String getProtoFile() throws UncheckedIOException {
          return "message EvictionPojo {optional int32 i=1;}";
       }
