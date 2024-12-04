@@ -1,23 +1,23 @@
 package org.infinispan.multimap.impl;
 
+import org.infinispan.commons.marshall.ProtoStreamTypeIds;
+import org.infinispan.commons.util.Util;
+import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
+import org.infinispan.multimap.impl.internal.MultimapObjectWrapper;
+import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.protostream.annotations.ProtoTypeId;
+
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import org.infinispan.commons.marshall.ProtoStreamTypeIds;
-import org.infinispan.commons.util.Util;
-import org.infinispan.marshall.protostream.impl.MarshallableCollection;
-import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
-import org.infinispan.multimap.impl.internal.MultimapObjectWrapper;
-import org.infinispan.protostream.annotations.ProtoFactory;
-import org.infinispan.protostream.annotations.ProtoField;
-import org.infinispan.protostream.annotations.ProtoTypeId;
 
 /**
  * Bucket used to store ListMultimap values.
@@ -142,16 +142,16 @@ public class ListBucket<V> implements SortableBucket<V> {
       // from and to are - and to is smaller
       // example: from -1 > to -2 -> empty result
       if ((from > 0 && to > 0 && from > to) || (from < 0 && to < 0 && from > to)) {
-         return MarshallableCollection.emptyList();
+         return Collections.emptyList();
       }
 
       // index request
       if (from == to) {
          V element = index(from);
          if (element != null) {
-            return MarshallableCollection.singletonList(element);
+            return Collections.singletonList(element);
          }
-         return MarshallableCollection.emptyList();
+         return Collections.emptyList();
       }
 
       List<V> result = new ArrayList<>();

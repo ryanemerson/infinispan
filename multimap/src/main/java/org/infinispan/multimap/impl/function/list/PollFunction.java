@@ -1,11 +1,11 @@
 package org.infinispan.multimap.impl.function.list;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.functional.EntryView;
-import org.infinispan.marshall.protostream.impl.MarshallableCollection;
 import org.infinispan.multimap.impl.ListBucket;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
@@ -42,7 +42,7 @@ public final class PollFunction<K, V> implements ListBucketBaseFunction<K, V, Co
       if (existing.isPresent()) {
          if (count == 0) {
             // Do nothing and return an empty list
-            return MarshallableCollection.emptyList();
+            return List.of();
          }
 
          ListBucket.ListBucketResult<Collection<V>, V> result = existing.get().poll(first, count);

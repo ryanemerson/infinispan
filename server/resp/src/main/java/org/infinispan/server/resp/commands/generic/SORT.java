@@ -174,7 +174,7 @@ public class SORT extends RespCommand implements Resp3Command {
       }
 
       CompletionStage<Collection<byte[]>> cs = sortedCollection
-            .thenApply(res -> res.stream().map(ScoredValue::getValue).collect(Collectors.toList()));
+            .thenApply(res -> res.stream().map(ScoredValue::getValue).toList());
       return handler.stageToReturn(cs, ctx, ResponseWriter.ARRAY_BULK_STRING);
    }
 
