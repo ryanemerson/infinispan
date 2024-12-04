@@ -1,7 +1,6 @@
 package org.infinispan.server.resp.commands.cluster;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletionStage;
@@ -17,6 +16,7 @@ import org.infinispan.factories.impl.ComponentRef;
 import org.infinispan.manager.CacheManagerInfo;
 import org.infinispan.manager.ClusterExecutor;
 import org.infinispan.manager.EmbeddedCacheManager;
+import org.infinispan.marshall.protostream.impl.MarshallableCollection;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.security.actions.SecurityActions;
 import org.infinispan.server.core.transport.NettyTransport;
@@ -168,10 +168,9 @@ public class SLOTS extends RespCommand implements Resp3Command {
       // The last element is for additional metadata. For example, hostnames or something like that.
       NettyTransport transport = server.getTransport();
       if (transport != null) {
-         String host = transport.getHostName();
-         response.add(List.of(host));
+         response.add(MarshallableCollection.singletonList(transport.getHostName()));
       } else {
-         response.add(Collections.emptyList());
+         response.add(MarshallableCollection.emptyList());
       }
       return response;
    }

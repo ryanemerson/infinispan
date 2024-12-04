@@ -3,7 +3,6 @@ package org.infinispan.multimap.impl;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Deque;
 import java.util.Iterator;
 import java.util.List;
@@ -13,6 +12,7 @@ import java.util.stream.Stream;
 
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.commons.util.Util;
+import org.infinispan.marshall.protostream.impl.MarshallableCollection;
 import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
 import org.infinispan.multimap.impl.internal.MultimapObjectWrapper;
 import org.infinispan.protostream.annotations.ProtoFactory;
@@ -142,16 +142,16 @@ public class ListBucket<V> implements SortableBucket<V> {
       // from and to are - and to is smaller
       // example: from -1 > to -2 -> empty result
       if ((from > 0 && to > 0 && from > to) || (from < 0 && to < 0 && from > to)) {
-         return Collections.emptyList();
+         return MarshallableCollection.emptyList();
       }
 
       // index request
       if (from == to) {
          V element = index(from);
          if (element != null) {
-            return Collections.singletonList(element);
+            return MarshallableCollection.singletonList(element);
          }
-         return Collections.emptyList();
+         return MarshallableCollection.emptyList();
       }
 
       List<V> result = new ArrayList<>();

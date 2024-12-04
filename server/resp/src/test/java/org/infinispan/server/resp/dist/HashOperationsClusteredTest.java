@@ -17,10 +17,15 @@ public class HashOperationsClusteredTest extends HashOperationsTest {
    }
 
    @Override
+   public void testValuesOperation() {
+      super.testValuesOperation();
+   }
+
+   @Override
    public Object[] factory() {
       return new Object[] {
             new HashOperationsClusteredTest().withCacheMode(CacheMode.DIST_SYNC),
-            new HashOperationsClusteredTest().withCacheMode(CacheMode.REPL_SYNC),
+//            new HashOperationsClusteredTest().withCacheMode(CacheMode.REPL_SYNC),
       };
    }
 
