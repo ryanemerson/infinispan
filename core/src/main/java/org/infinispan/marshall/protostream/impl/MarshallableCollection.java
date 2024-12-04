@@ -33,7 +33,8 @@ import org.infinispan.protostream.descriptors.WireType;
 @ProtoTypeId(ProtoStreamTypeIds.MARSHALLABLE_COLLECTION)
 public class MarshallableCollection<T> {
 
-   static final Set<?> EMPTY_SET = new HashSet<>();
+   static final Set<?> EMPTY_SET = new HashSet<>(0);
+   static final List<?> EMPTY_LIST = new ArrayList<>(0);
 
    /**
     * This should be used when the empty set needs to be marshalled. We cannot use {@link java.util.Collections#EMPTY_SET}
@@ -42,6 +43,25 @@ public class MarshallableCollection<T> {
    @SuppressWarnings("unchecked")
    public static <T> Set<T> emptySet() {
       return (Set<T>) EMPTY_SET;
+   }
+
+   /**
+    * This should be used when the empty list needs to be marshalled. We cannot use {@link java.util.Collections#EMPTY_LIST}
+    * for this purpose as we cannot write a {@link org.infinispan.protostream.annotations.ProtoAdapter} for the underlying class.
+    */
+   @SuppressWarnings("unchecked")
+   public static <T> List<T> emptyList() {
+      return (List<T>) EMPTY_LIST;
+   }
+
+   /**
+    * This should be used when the singleton list needs to be marshalled. We cannot use {@link java.util.Collections#singletonList(Object)}
+    * for this purpose as we cannot write a {@link org.infinispan.protostream.annotations.ProtoAdapter} for the underlying class.
+    */
+   public static <T> List<T> singletonList(T t) {
+      List<T> list = new ArrayList<>(1);
+      list.add(t);
+      return list;
    }
 
    /**
