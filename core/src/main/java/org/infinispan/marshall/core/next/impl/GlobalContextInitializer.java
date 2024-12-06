@@ -13,7 +13,7 @@ import org.infinispan.protostream.annotations.ProtoSchema;
  */
 @ProtoSchema(
       dependsOn = {
-            org.infinispan.commons.marshall.GlobalContextInitializer.class,
+            org.infinispan.commons.GlobalContextInitializer.class,
             org.infinispan.commons.marshall.PersistenceContextInitializer.class,
             org.infinispan.marshall.persistence.impl.PersistenceContextInitializer.class
       },

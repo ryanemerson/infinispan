@@ -1,4 +1,4 @@
-package org.infinispan.commons.marshall;
+package org.infinispan.commons;
 
 import org.infinispan.protostream.SerializationContextInitializer;
 import org.infinispan.protostream.annotations.ProtoSchema;
@@ -30,5 +30,5 @@ import org.infinispan.protostream.types.java.CommonTypes;
       service = false
 )
 public interface GlobalContextInitializer extends SerializationContextInitializer {
-   org.infinispan.commons.marshall.GlobalContextInitializer INSTANCE = new GlobalContextInitializerImpl();
+   GlobalContextInitializer INSTANCE = new GlobalContextInitializerImpl();
 }

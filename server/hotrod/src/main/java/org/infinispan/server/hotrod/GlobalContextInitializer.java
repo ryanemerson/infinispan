@@ -5,7 +5,7 @@ import org.infinispan.protostream.annotations.ProtoSchema;
 
 @ProtoSchema(
       dependsOn = {
-            org.infinispan.commons.marshall.GlobalContextInitializer.class,
+            org.infinispan.commons.GlobalContextInitializer.class,
             org.infinispan.marshall.persistence.impl.PersistenceContextInitializer.class,
             org.infinispan.marshall.core.next.impl.GlobalContextInitializer.class,
             org.infinispan.query.remote.impl.persistence.PersistenceContextInitializer.class

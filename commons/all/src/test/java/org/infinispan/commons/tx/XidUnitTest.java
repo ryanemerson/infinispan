@@ -9,7 +9,7 @@ import javax.transaction.xa.Xid;
 
 import org.infinispan.commons.logging.Log;
 import org.infinispan.commons.logging.LogFactory;
-import org.infinispan.commons.marshall.GlobalContextInitializer;
+import org.infinispan.commons.GlobalContextInitializer;
 import org.infinispan.commons.util.Util;
 import org.infinispan.protostream.ProtobufUtil;
 import org.infinispan.protostream.SerializationContext;
