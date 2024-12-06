@@ -194,6 +194,7 @@ import org.infinispan.protostream.annotations.ProtoSchema;
             org.infinispan.marshall.protostream.impl.adapters.OptionalAdapter.class,
             org.infinispan.marshall.protostream.impl.adapters.collections.EmptyListAdapter.class,
             org.infinispan.marshall.protostream.impl.adapters.collections.EmptySetAdapter.class,
+            org.infinispan.marshall.protostream.impl.adapters.collections.ListOfAdapter.class,
             org.infinispan.marshall.protostream.impl.adapters.collections.SingletonListAdapter.class,
             org.infinispan.marshall.protostream.impl.MarshallableArray.class,
             org.infinispan.marshall.protostream.impl.MarshallableCollection.class,

@@ -1,11 +1,11 @@
 package org.infinispan.multimap.impl.function.sortedset;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Optional;
 
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.functional.EntryView;
-import org.infinispan.marshall.protostream.impl.MarshallableCollection;
 import org.infinispan.marshall.protostream.impl.MarshallableObject;
 import org.infinispan.multimap.impl.ScoredValue;
 import org.infinispan.multimap.impl.SortedSetBucket;
@@ -98,6 +98,6 @@ public class SubsetFunction<K, V, T> implements SortedSetBucketBaseFunction<K, V
          }
 
       }
-      return MarshallableCollection.emptySet();
+      return Collections.emptySet();
    }
 }

@@ -1,11 +1,11 @@
 package org.infinispan.multimap.impl.function.multimap;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Optional;
 
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.functional.EntryView;
-import org.infinispan.marshall.protostream.impl.MarshallableCollection;
 import org.infinispan.multimap.impl.Bucket;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
@@ -36,7 +36,7 @@ public final class GetFunction<K, V> implements BaseFunction<K, V, Collection<V>
       if (valuesOpt.isPresent()) {
          return supportsDuplicates ? entryView.find().get().toList() : entryView.find().get().toSet();
       } else {
-         return MarshallableCollection.emptySet();
+         return Collections.emptySet();
       }
    }
 }

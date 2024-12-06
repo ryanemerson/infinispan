@@ -2,11 +2,14 @@ package org.infinispan.marshall.protostream.impl.adapters;
 
 import java.util.IntSummaryStatistics;
 
+import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.protostream.annotations.ProtoAdapter;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.protostream.annotations.ProtoTypeId;
 
 @ProtoAdapter(IntSummaryStatistics.class)
+@ProtoTypeId(ProtoStreamTypeIds.ADAPTER_INT_SUMMARY_STATISTICS)
 public class IntSummaryStatisticsAdapter {
 
    @ProtoFactory

@@ -1,11 +1,11 @@
 package org.infinispan.multimap.impl.function.hmap;
 
+import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
 
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.functional.EntryView;
-import org.infinispan.marshall.protostream.impl.MarshallableCollection;
 import org.infinispan.multimap.impl.HashMapBucket;
 import org.infinispan.protostream.annotations.ProtoTypeId;
 
@@ -30,6 +30,6 @@ public class HashMapKeySetFunction<K, HK, HV> extends HashMapBucketBaseFunction<
       if (existing.isPresent()) {
          return existing.get().keySet();
       }
-      return MarshallableCollection.emptySet();
+      return Collections.emptySet();
    }
 }

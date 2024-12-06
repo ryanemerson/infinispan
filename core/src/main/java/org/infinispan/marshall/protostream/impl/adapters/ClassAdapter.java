@@ -1,12 +1,14 @@
 package org.infinispan.marshall.protostream.impl.adapters;
 
 import org.infinispan.commons.marshall.MarshallingException;
+import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.protostream.annotations.ProtoAdapter;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.protostream.annotations.ProtoTypeId;
 
-// TODO ProtoTypeId to reduce payload?
 @ProtoAdapter(Class.class)
+@ProtoTypeId(ProtoStreamTypeIds.ADAPTER_CLASS)
 public class ClassAdapter {
 
    @ProtoFactory
