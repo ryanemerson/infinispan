@@ -17,6 +17,6 @@ import org.infinispan.query.remote.client.FilterResult;
       schemaPackageName = "org.infinispan.query.remote.client",
       service = false
 )
-interface GlobalContextInitializer extends SerializationContextInitializer {
+public interface GlobalContextInitializer extends SerializationContextInitializer {
       GlobalContextInitializer INSTANCE = new GlobalContextInitializerImpl();
 }

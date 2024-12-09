@@ -69,7 +69,7 @@ public class IckleFilterAndConverter<K, V> extends AbstractKeyValueFilterConvert
    }
 
    @ProtoFactory
-   IckleFilterAndConverter(String queryString, MarshallableMap<String, Object> wrappedNamedParameters, Class<? extends Matcher> matcherImplClass) {
+   protected IckleFilterAndConverter(String queryString, MarshallableMap<String, Object> wrappedNamedParameters, Class<? extends Matcher> matcherImplClass) {
       this(queryString, MarshallableMap.unwrap(wrappedNamedParameters), matcherImplClass);
    }
 
@@ -79,12 +79,12 @@ public class IckleFilterAndConverter<K, V> extends AbstractKeyValueFilterConvert
    }
 
    @ProtoField(2)
-   MarshallableMap<String, Object> getWrappedNamedParameters() {
+   public MarshallableMap<String, Object> getWrappedNamedParameters() {
       return MarshallableMap.create(namedParameters);
    }
 
    @ProtoField(3)
-   Class<? extends Matcher> getMatcherImplClass() {
+   public Class<? extends Matcher> getMatcherImplClass() {
       return matcherImplClass;
    }
 

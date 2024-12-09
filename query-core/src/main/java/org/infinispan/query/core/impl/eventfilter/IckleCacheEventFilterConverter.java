@@ -21,12 +21,16 @@ import org.infinispan.protostream.annotations.ProtoTypeId;
 @Scope(Scopes.NONE)
 public class IckleCacheEventFilterConverter<K, V, C> extends AbstractCacheEventFilterConverter<K, V, C> implements IndexedFilter<K, V, C> {
 
-   @ProtoField(1)
    protected final IckleFilterAndConverter<K, V> filterAndConverter;
 
    @ProtoFactory
    public IckleCacheEventFilterConverter(IckleFilterAndConverter<K, V> filterAndConverter) {
       this.filterAndConverter = filterAndConverter;
+   }
+
+   @ProtoField(1)
+   public IckleFilterAndConverter<K, V> getFilterAndConverter() {
+      return filterAndConverter;
    }
 
    @Inject

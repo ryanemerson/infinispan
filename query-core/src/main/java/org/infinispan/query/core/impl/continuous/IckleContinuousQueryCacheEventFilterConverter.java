@@ -69,7 +69,7 @@ public class IckleContinuousQueryCacheEventFilterConverter<K, V, C> extends Abst
    }
 
    @ProtoFactory
-   IckleContinuousQueryCacheEventFilterConverter(String queryString, MarshallableMap<String, Object> wrappedNamedParameters,
+   protected IckleContinuousQueryCacheEventFilterConverter(String queryString, MarshallableMap<String, Object> wrappedNamedParameters,
                                                  Class<? extends Matcher> matcherImplClass) {
       this(queryString, MarshallableMap.unwrap(wrappedNamedParameters), matcherImplClass);
    }
@@ -80,12 +80,12 @@ public class IckleContinuousQueryCacheEventFilterConverter<K, V, C> extends Abst
    }
 
    @ProtoField(value = 2, name = "namedParameters")
-   MarshallableMap<String, Object> getWrappedNamedParameters() {
+   public MarshallableMap<String, Object> getWrappedNamedParameters() {
       return MarshallableMap.create(namedParameters);
    }
 
    @ProtoField(3)
-   Class<? extends Matcher> getMatcherImplClass() {
+   public Class<? extends Matcher> getMatcherImplClass() {
       return matcherImplClass;
    }
 
