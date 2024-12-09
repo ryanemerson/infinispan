@@ -8,7 +8,10 @@ import org.infinispan.protostream.annotations.ProtoSchema;
             org.infinispan.commons.marshall.PersistenceContextInitializer.class,
             org.infinispan.marshall.core.next.impl.GlobalContextInitializer.class
       },
-      includeClasses = org.infinispan.server.iteration.IterationFilter.class,
+      includeClasses = {
+            org.infinispan.server.core.transport.NettyTransportConnectionStats.ConnectionAdderTask.class,
+            org.infinispan.server.iteration.IterationFilter.class
+      },
       schemaFileName = "global.server.core.proto",
       schemaFilePath = "proto/generated",
       schemaPackageName = "org.infinispan.global.server.core",
