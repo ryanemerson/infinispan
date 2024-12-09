@@ -44,7 +44,7 @@ public class InvalidateCommand extends AbstractTopologyAffectedCommand implement
    }
 
    @ProtoFactory
-   InvalidateCommand(long flagsWithoutRemote, int topologyId, CommandInvocationId commandInvocationId,
+   protected InvalidateCommand(long flagsWithoutRemote, int topologyId, CommandInvocationId commandInvocationId,
                      MarshallableArray<Object> wrappedKeys) {
       super(flagsWithoutRemote, topologyId);
       this.keys = MarshallableArray.unwrap(wrappedKeys, new Object[0]);
@@ -52,7 +52,7 @@ public class InvalidateCommand extends AbstractTopologyAffectedCommand implement
    }
 
    @ProtoField(number = 3, name = "keys")
-   protected MarshallableArray<Object> getWrappedKeys() {
+   public MarshallableArray<Object> getWrappedKeys() {
       return MarshallableArray.create(keys);
    }
 
