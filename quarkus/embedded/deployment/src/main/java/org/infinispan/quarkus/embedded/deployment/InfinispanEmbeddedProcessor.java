@@ -3,14 +3,11 @@ package org.infinispan.quarkus.embedded.deployment;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.ServiceLoader;
 import java.util.Set;
 
-import org.infinispan.commons.marshall.AbstractExternalizer;
-import org.infinispan.commons.marshall.AdvancedExternalizer;
 import org.infinispan.configuration.cache.AbstractModuleConfigurationBuilder;
 import org.infinispan.configuration.cache.StoreConfiguration;
 import org.infinispan.configuration.cache.StoreConfigurationBuilder;
@@ -111,12 +108,6 @@ class InfinispanEmbeddedProcessor {
                 }
             }
         }
-
-        // We only register the app advanced externalizers as all of the Infinispan ones are explicitly defined
-        addReflectionForClass(AdvancedExternalizer.class, appOnlyIndex, reflectiveClass, Collections.emptySet());
-        // Due to the index not containing AbstractExternalizer it doesn't know that it implements AdvancedExternalizer
-        // thus we also have to include classes that extend AbstractExternalizer
-        addReflectionForClass(AbstractExternalizer.class, appOnlyIndex, reflectiveClass, Collections.emptySet());
 
         // Add optional SQL classes. These will only be included if the optional jars are present on the classpath and indexed by Jandex.
         addReflectionForName("org.infinispan.persistence.jdbc.common.configuration.ConnectionFactoryConfiguration", true, combinedIndex, reflectiveClass, true, false, excludedClasses);
