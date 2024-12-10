@@ -7,7 +7,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import org.infinispan.commons.marshall.AbstractExternalizer;
+import org.infinispan.tools.store.migrator.marshaller.common.AbstractExternalizer;
 import org.infinispan.commons.util.Util;
 
 import net.jcip.annotations.Immutable;

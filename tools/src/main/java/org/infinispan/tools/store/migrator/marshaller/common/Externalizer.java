@@ -1,4 +1,4 @@
-package org.infinispan.commons.marshall;
+package org.infinispan.tools.store.migrator.marshaller.common;
 
 import java.io.IOException;
 import java.io.ObjectInput;
@@ -75,12 +75,7 @@ import java.io.Serializable;
  *
  * @author Galder Zamarreño
  * @since 5.0
- * @deprecated since 10.0, will be removed in a future release. Please configure a {@link
- * org.infinispan.protostream.SerializationContextInitializer} and utilise ProtoStream annotations on Java objects instead, or
- * specify a custom {@link Marshaller} implementation via the SerializationConfiguration.
  */
-// TODO move to jboss-mar module
-@Deprecated(forRemoval=true, since = "10.0")
 public interface Externalizer<T> extends Serializable {
 
    /**

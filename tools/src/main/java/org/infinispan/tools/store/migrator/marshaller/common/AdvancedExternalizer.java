@@ -1,4 +1,4 @@
-package org.infinispan.commons.marshall;
+package org.infinispan.tools.store.migrator.marshaller.common;
 
 import java.util.Set;
 
@@ -41,12 +41,7 @@ import java.util.Set;
  *
  * @author Galder Zamarreño
  * @since 5.0
- * @deprecated since 10.0, will be removed in a future release. Please configure a {@link
- * org.infinispan.protostream.SerializationContextInitializer} and utilise ProtoStream annotations on Java objects instead, or
- * specify a custom {@link Marshaller} implementation via the SerializationConfiguration.
  */
-// TODO move to tools?
-@Deprecated(forRemoval=true, since = "10.0")
 public interface AdvancedExternalizer<T> extends Externalizer<T> {
 
    /**

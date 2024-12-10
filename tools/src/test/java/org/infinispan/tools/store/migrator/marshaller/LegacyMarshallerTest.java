@@ -9,7 +9,7 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.infinispan.commons.marshall.AdvancedExternalizer;
+import org.infinispan.tools.store.migrator.marshaller.common.AdvancedExternalizer;
 import org.infinispan.commons.marshall.StreamingMarshaller;
 import org.infinispan.test.AbstractInfinispanTest;
 import org.infinispan.tools.store.migrator.TestUtil;
