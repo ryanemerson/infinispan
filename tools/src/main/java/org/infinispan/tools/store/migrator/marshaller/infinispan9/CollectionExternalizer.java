@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
@@ -19,8 +18,8 @@ import org.infinispan.commons.marshall.MarshallUtil;
 import org.infinispan.commons.util.FastCopyHashMap;
 import org.infinispan.commons.util.Util;
 import org.infinispan.distribution.util.ReadOnlySegmentAwareCollection;
-import org.infinispan.tools.store.migrator.marshaller.common.Ids;
 import org.infinispan.tools.store.migrator.marshaller.common.AbstractMigratorExternalizer;
+import org.infinispan.tools.store.migrator.marshaller.common.Ids;
 
 public class CollectionExternalizer extends AbstractMigratorExternalizer<Collection> {
 
@@ -38,31 +37,8 @@ public class CollectionExternalizer extends AbstractMigratorExternalizer<Collect
    private static final int EMPTY_SET = 11;
    private static final int SYNCHRONIZED_LIST = 12;
 
-   private final Map<Class<?>, Integer> numbers = new HashMap<>(16);
-
    public CollectionExternalizer() {
-      numbers.put(ArrayList.class, ARRAY_LIST);
-      numbers.put(getPrivateArrayListClass(), ARRAY_LIST);
-      numbers.put(getPrivateArrayListSubListClass(), ARRAY_LIST);
-      numbers.put(getPrivateAbstractListRandomAccessSubListClass(), ARRAY_LIST);
-      numbers.put(getPrivateUnmodifiableListClass(), ARRAY_LIST);
-      numbers.put(getPrivateSynchronizedListClass(), SYNCHRONIZED_LIST);
-      numbers.put(getPrivateImmutableList12Class(), ARRAY_LIST);
-      numbers.put(getPrivateImmutableListNClass(), ARRAY_LIST);
-      numbers.put(LinkedList.class, LINKED_LIST);
-      numbers.put(getPrivateSingletonListClass(), SINGLETON_LIST);
-      numbers.put(getPrivateEmptyListClass(), EMPTY_LIST);
-      numbers.put(getPrivateEmptySetClass(), EMPTY_SET);
-      numbers.put(ArrayDeque.class, ARRAY_DEQUE);
-      numbers.put(HashSet.class, HASH_SET);
-      numbers.put(TreeSet.class, TREE_SET);
-      numbers.put(getPrivateSingletonSetClass(), SINGLETON_SET);
-      numbers.put(getPrivateSynchronizedSetClass(), SYNCHRONIZED_SET);
-      numbers.put(getPrivateUnmodifiableSetClass(), HASH_SET);
-      numbers.put(ReadOnlySegmentAwareCollection.class, READ_ONLY_SEGMENT_AWARE_COLLECTION);
-      numbers.put(FastCopyHashMap.KeySet.class, HASH_SET);
-      numbers.put(FastCopyHashMap.Values.class, ARRAY_LIST);
-      numbers.put(FastCopyHashMap.EntrySet.class, ENTRY_SET);
+      super(getClasses(), Ids.COLLECTIONS);
    }
 
    @Override
@@ -90,13 +66,7 @@ public class CollectionExternalizer extends AbstractMigratorExternalizer<Collect
       };
    }
 
-   @Override
-   public Integer getId() {
-      return Ids.COLLECTIONS;
-   }
-
-   @Override
-   public Set<Class<? extends Collection>> getTypeClasses() {
+   public static Set<Class<? extends Collection>> getClasses() {
       Set<Class<? extends Collection>> typeClasses = Util.asSet(ArrayList.class, LinkedList.class,
             HashSet.class, TreeSet.class,
             ArrayDeque.class,

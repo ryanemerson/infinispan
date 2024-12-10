@@ -2,9 +2,6 @@ package org.infinispan.tools.store.migrator.marshaller.common;
 
 import java.io.IOException;
 import java.io.ObjectInput;
-import java.io.ObjectOutput;
-import java.util.Collections;
-import java.util.Set;
 
 import org.infinispan.commons.io.UnsignedNumeric;
 import org.infinispan.container.entries.TransientCacheValue;
@@ -15,23 +12,10 @@ import org.infinispan.container.entries.TransientCacheValue;
  * @author Pedro Ruivo
  * @since 11.0
  */
-public class TransientCacheValueExternalizer implements AdvancedExternalizer<TransientCacheValue> {
+public class TransientCacheValueExternalizer extends AbstractMigratorExternalizer<TransientCacheValue> {
 
-   @Override
-   public Set<Class<? extends TransientCacheValue>> getTypeClasses() {
-      return Collections.singleton(TransientCacheValue.class);
-   }
-
-   @Override
-   public Integer getId() {
-      return Ids.TRANSIENT_VALUE;
-   }
-
-   @Override
-   public void writeObject(ObjectOutput output, TransientCacheValue icv) throws IOException {
-      output.writeObject(icv.getValue());
-      UnsignedNumeric.writeUnsignedLong(output, icv.getLastUsed());
-      output.writeLong(icv.getMaxIdle());
+   public TransientCacheValueExternalizer() {
+      super(TransientCacheValue.class, Ids.TRANSIENT_VALUE);
    }
 
    @Override
@@ -41,5 +25,4 @@ public class TransientCacheValueExternalizer implements AdvancedExternalizer<Tra
       long maxIdle = input.readLong();
       return new TransientCacheValue(value, maxIdle, lastUsed);
    }
-
 }

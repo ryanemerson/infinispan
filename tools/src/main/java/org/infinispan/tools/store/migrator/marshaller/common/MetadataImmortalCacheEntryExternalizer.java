@@ -2,8 +2,6 @@ package org.infinispan.tools.store.migrator.marshaller.common;
 
 import java.io.IOException;
 import java.io.ObjectInput;
-import java.util.Collections;
-import java.util.Set;
 
 import org.infinispan.container.entries.metadata.MetadataImmortalCacheEntry;
 import org.infinispan.metadata.Metadata;
@@ -16,14 +14,8 @@ import org.infinispan.metadata.Metadata;
  */
 public class MetadataImmortalCacheEntryExternalizer extends AbstractMigratorExternalizer<MetadataImmortalCacheEntry> {
 
-   @Override
-   public Set<Class<? extends MetadataImmortalCacheEntry>> getTypeClasses() {
-      return Collections.singleton(MetadataImmortalCacheEntry.class);
-   }
-
-   @Override
-   public Integer getId() {
-      return Ids.METADATA_IMMORTAL_ENTRY;
+   public MetadataImmortalCacheEntryExternalizer() {
+      super(MetadataImmortalCacheEntry.class, Ids.METADATA_IMMORTAL_ENTRY);
    }
 
    @Override

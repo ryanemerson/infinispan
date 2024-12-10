@@ -2,9 +2,6 @@ package org.infinispan.tools.store.migrator.marshaller.common;
 
 import java.io.IOException;
 import java.io.ObjectInput;
-import java.io.ObjectOutput;
-import java.util.Collections;
-import java.util.Set;
 
 import org.infinispan.commons.io.UnsignedNumeric;
 import org.infinispan.container.entries.MortalCacheEntry;
@@ -15,24 +12,10 @@ import org.infinispan.container.entries.MortalCacheEntry;
  * @author Pedro Ruivo
  * @since 11.0
  */
-public class MortalCacheEntryExternalizer implements AdvancedExternalizer<MortalCacheEntry> {
+public class MortalCacheEntryExternalizer extends AbstractMigratorExternalizer<MortalCacheEntry> {
 
-   @Override
-   public Set<Class<? extends MortalCacheEntry>> getTypeClasses() {
-      return Collections.singleton(MortalCacheEntry.class);
-   }
-
-   @Override
-   public Integer getId() {
-      return Ids.MORTAL_ENTRY;
-   }
-
-   @Override
-   public void writeObject(ObjectOutput output, MortalCacheEntry ice) throws IOException {
-      output.writeObject(ice.getKey());
-      output.writeObject(ice.getValue());
-      UnsignedNumeric.writeUnsignedLong(output, ice.getCreated());
-      output.writeLong(ice.getLifespan());
+   public MortalCacheEntryExternalizer() {
+      super(MortalCacheEntry.class, Ids.MORTAL_ENTRY);
    }
 
    @Override
@@ -43,5 +26,4 @@ public class MortalCacheEntryExternalizer implements AdvancedExternalizer<Mortal
       long lifespan = input.readLong();
       return new MortalCacheEntry(key, value, lifespan, created);
    }
-
 }

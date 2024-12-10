@@ -2,13 +2,11 @@ package org.infinispan.tools.store.migrator.marshaller.common;
 
 import java.io.IOException;
 import java.io.ObjectInput;
-import java.io.ObjectOutput;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-import org.infinispan.commons.util.Util;
 import org.infinispan.container.versioning.EntryVersion;
 import org.infinispan.metadata.EmbeddedMetadata;
 
@@ -21,40 +19,17 @@ public class EmbeddedMetadataExternalizer extends AbstractMigratorExternalizer<E
    private final Map<Class<?>, Integer> numbers = new HashMap<>(4);
 
    public EmbeddedMetadataExternalizer() {
+      super(
+            Set.of(
+                  EmbeddedMetadata.class, EmbeddedMetadata.EmbeddedExpirableMetadata.class,
+                  EmbeddedMetadata.EmbeddedLifespanExpirableMetadata.class, EmbeddedMetadata.EmbeddedMaxIdleExpirableMetadata.class
+            ),
+            Ids.EMBEDDED_METADATA
+      );
       numbers.put(EmbeddedMetadata.class, IMMORTAL);
       numbers.put(EmbeddedMetadata.EmbeddedExpirableMetadata.class, EXPIRABLE);
       numbers.put(EmbeddedMetadata.EmbeddedLifespanExpirableMetadata.class, LIFESPAN_EXPIRABLE);
       numbers.put(EmbeddedMetadata.EmbeddedMaxIdleExpirableMetadata.class, MAXIDLE_EXPIRABLE);
-   }
-
-   @Override
-   public Set<Class<? extends EmbeddedMetadata>> getTypeClasses() {
-      return Util.asSet(EmbeddedMetadata.class, EmbeddedMetadata.EmbeddedExpirableMetadata.class,
-            EmbeddedMetadata.EmbeddedLifespanExpirableMetadata.class, EmbeddedMetadata.EmbeddedMaxIdleExpirableMetadata.class);
-   }
-
-   @Override
-   public Integer getId() {
-      return Ids.EMBEDDED_METADATA;
-   }
-
-   @Override
-   public void writeObject(ObjectOutput output, EmbeddedMetadata object) throws IOException {
-      int number = numbers.getOrDefault(object.getClass(), -1);
-      output.write(number);
-      switch (number) {
-         case EXPIRABLE:
-            output.writeLong(object.lifespan());
-            output.writeLong(object.maxIdle());
-            break;
-         case LIFESPAN_EXPIRABLE:
-            output.writeLong(object.lifespan());
-            break;
-         case MAXIDLE_EXPIRABLE:
-            output.writeLong(object.maxIdle());
-            break;
-      }
-      output.writeObject(object.version());
    }
 
    @Override

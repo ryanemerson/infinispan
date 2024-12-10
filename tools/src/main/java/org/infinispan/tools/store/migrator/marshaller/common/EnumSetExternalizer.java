@@ -4,9 +4,7 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.util.AbstractSet;
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 import org.infinispan.commons.io.UnsignedNumeric;
@@ -24,19 +22,8 @@ public class EnumSetExternalizer extends AbstractMigratorExternalizer<Set> {
    private static final int MINI_ENUM_SET = 4; // IBM class
    private static final int HUGE_ENUM_SET = 5; // IBM class
 
-   private final Map<Class<?>, Integer> numbers = new HashMap<>(3);
-
    public EnumSetExternalizer() {
-      numbers.put(EnumSet.class, ENUM_SET);
-      addEnumSetClass(getRegularEnumSetClass(), REGULAR_ENUM_SET);
-      addEnumSetClass(getJumboEnumSetClass(), JUMBO_ENUM_SET);
-      addEnumSetClass(getMiniEnumSetClass(), MINI_ENUM_SET);
-      addEnumSetClass(getHugeEnumSetClass(), HUGE_ENUM_SET);
-   }
-
-   private void addEnumSetClass(Class<EnumSet> clazz, int index) {
-      if (clazz != null)
-         numbers.put(clazz, index);
+      super(getClasses(), Ids.ENUM_SET_ID);
    }
 
    @Override
@@ -65,13 +52,7 @@ public class EnumSetExternalizer extends AbstractMigratorExternalizer<Set> {
       return enumSet;
    }
 
-   @Override
-   public Integer getId() {
-      return Ids.ENUM_SET_ID;
-   }
-
-   @Override
-   public Set<Class<? extends Set>> getTypeClasses() {
+   public static Set<Class<? extends Set>> getClasses() {
       Set<Class<? extends Set>> set = new HashSet<Class<? extends Set>>();
       set.add(EnumSet.class);
       addEnumSetType(getRegularEnumSetClass(), set);
@@ -81,28 +62,28 @@ public class EnumSetExternalizer extends AbstractMigratorExternalizer<Set> {
       return set;
    }
 
-   private void addEnumSetType(Class<? extends Set> clazz, Set<Class<? extends Set>> typeSet) {
+   private static void addEnumSetType(Class<? extends Set> clazz, Set<Class<? extends Set>> typeSet) {
       if (clazz != null)
          typeSet.add(clazz);
    }
 
-   private Class<EnumSet> getJumboEnumSetClass() {
+   private static Class<EnumSet> getJumboEnumSetClass() {
       return getEnumSetClass("java.util.JumboEnumSet");
    }
 
-   private Class<EnumSet> getRegularEnumSetClass() {
+   private static Class<EnumSet> getRegularEnumSetClass() {
       return getEnumSetClass("java.util.RegularEnumSet");
    }
 
-   private Class<EnumSet> getMiniEnumSetClass() {
+   private static Class<EnumSet> getMiniEnumSetClass() {
       return getEnumSetClass("java.util.MiniEnumSet");
    }
 
-   private Class<EnumSet> getHugeEnumSetClass() {
+   private static Class<EnumSet> getHugeEnumSetClass() {
       return getEnumSetClass("java.util.HugeEnumSet");
    }
 
-   private Class<EnumSet> getEnumSetClass(String className) {
+   private static Class<EnumSet> getEnumSetClass(String className) {
       try {
          return Util.loadClassStrict(className, EnumSet.class.getClassLoader());
       } catch (ClassNotFoundException e) {

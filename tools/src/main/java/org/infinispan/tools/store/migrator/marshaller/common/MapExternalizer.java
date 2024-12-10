@@ -2,7 +2,6 @@ package org.infinispan.tools.store.migrator.marshaller.common;
 
 import java.io.IOException;
 import java.io.ObjectInput;
-import java.io.ObjectOutput;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -27,6 +26,7 @@ public class MapExternalizer extends AbstractMigratorExternalizer<Map> {
    private final Map<Class<?>, Integer> numbers = new HashMap<>(8);
 
    public MapExternalizer() {
+      super(getSupportedPrivateClasses(), Ids.MAPS);
       numbers.put(HashMap.class, HASHMAP);
       numbers.put(ReadOnlySegmentAwareMap.class, HASHMAP);
       numbers.put(TreeMap.class, TREEMAP);
@@ -36,30 +36,6 @@ public class MapExternalizer extends AbstractMigratorExternalizer<Map> {
       numbers.put(getPrivateEmptyMapClass(), EMPTYMAP);
       numbers.put(getPrivateImmutableMap1Class(), HASHMAP);
       numbers.put(getPrivateImmutableMapNClass(), HASHMAP);
-   }
-
-   @Override
-   public void writeObject(ObjectOutput output, Map map) throws IOException {
-      int number = numbers.getOrDefault(map.getClass(), -1);
-      output.write(number);
-      switch (number) {
-         case HASHMAP:
-         case TREEMAP:
-         case CONCURRENTHASHMAP:
-            MarshallUtil.marshallMap(map, output);
-            break;
-         case FASTCOPYHASHMAP:
-            //copy the map to avoid ConcurrentModificationException
-            MarshallUtil.marshallMap(((FastCopyHashMap<?, ?>) map).clone(), output);
-            break;
-         case SINGLETONMAP:
-            Map.Entry singleton = (Map.Entry) map.entrySet().iterator().next();
-            output.writeObject(singleton.getKey());
-            output.writeObject(singleton.getValue());
-            break;
-         default:
-            break;
-      }
    }
 
    @Override
@@ -83,20 +59,6 @@ public class MapExternalizer extends AbstractMigratorExternalizer<Map> {
       }
    }
 
-   @Override
-   public Integer getId() {
-      return Ids.MAPS;
-   }
-
-   @Override
-   public Set<Class<? extends Map>> getTypeClasses() {
-      Set<Class<? extends Map>> typeClasses = Util.asSet(
-            HashMap.class, TreeMap.class, FastCopyHashMap.class,
-            ReadOnlySegmentAwareMap.class, ConcurrentHashMap.class);
-      typeClasses.addAll(getSupportedPrivateClasses());
-      return typeClasses;
-   }
-
    /**
     * Returns an immutable Set that contains all of the private classes (e.g. java.util.Collections$EmptyMap) that
     * are supported by this Externalizer. This method is to be used by external sources if these private classes
@@ -105,6 +67,8 @@ public class MapExternalizer extends AbstractMigratorExternalizer<Map> {
     */
    public static Set<Class<? extends Map>> getSupportedPrivateClasses() {
       return Set.of(
+            HashMap.class, TreeMap.class, FastCopyHashMap.class,
+            ReadOnlySegmentAwareMap.class, ConcurrentHashMap.class,
             getPrivateSingletonMapClass(),
             getPrivateEmptyMapClass(),
             getPrivateImmutableMap1Class(),
