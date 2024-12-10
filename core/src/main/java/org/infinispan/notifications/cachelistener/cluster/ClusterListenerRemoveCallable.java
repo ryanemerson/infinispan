@@ -27,25 +27,16 @@ import org.infinispan.util.logging.LogFactory;
 public class ClusterListenerRemoveCallable implements Function<EmbeddedCacheManager, Void> {
    private static final Log log = LogFactory.getLog(ClusterListenerRemoveCallable.class);
 
-   @ProtoField(number = 1)
+   @ProtoField(1)
    final String cacheName;
 
-   // TODO marshall with ProtoStream directly IPROTO-137
+   @ProtoField(2)
    final UUID identifier;
 
+   @ProtoFactory
    public ClusterListenerRemoveCallable(String cacheName, UUID identifier) {
       this.cacheName = cacheName;
       this.identifier = identifier;
-   }
-
-   @ProtoFactory
-   ClusterListenerRemoveCallable(String cacheName, String identifier) {
-      this(cacheName, UUID.fromString(identifier));
-   }
-
-   @ProtoField(number = 2)
-   String getIdentifier() {
-      return identifier.toString();
    }
 
    @Override

@@ -15,6 +15,7 @@ import org.infinispan.protostream.annotations.ProtoSyntax;
 @ProtoSchema(
       allowNullFields = true,
       dependsOn = {
+            org.infinispan.protostream.types.java.CommonTypes.class,
             org.infinispan.commons.GlobalContextInitializer.class,
             org.infinispan.commons.marshall.PersistenceContextInitializer.class,
             org.infinispan.marshall.persistence.impl.PersistenceContextInitializer.class
