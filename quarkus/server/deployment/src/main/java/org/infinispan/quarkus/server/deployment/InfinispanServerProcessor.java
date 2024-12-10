@@ -2,14 +2,10 @@ package org.infinispan.quarkus.server.deployment;
 
 import java.lang.management.MemoryType;
 import java.lang.management.MemoryUsage;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
-import java.util.ServiceLoader;
 
 import org.infinispan.anchored.configuration.AnchoredKeysConfigurationBuilder;
-import org.infinispan.commands.module.ModuleCommandExtensions;
 import org.infinispan.commons.util.JVMMemoryInfoInfo;
 import org.infinispan.configuration.internal.PrivateGlobalConfigurationBuilder;
 import org.infinispan.counter.configuration.CounterManagerConfigurationBuilder;
@@ -47,7 +43,6 @@ import io.quarkus.deployment.builditem.nativeimage.NativeImageResourceBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.NativeImageSystemPropertyBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.RuntimeInitializedClassBuildItem;
-import io.quarkus.deployment.builditem.nativeimage.ServiceProviderBuildItem;
 
 class InfinispanServerProcessor {
    private static final String FEATURE_NAME = "infinispan-server";
@@ -80,17 +75,6 @@ class InfinispanServerProcessor {
             "infinispan-clustered-counter"
       )) {
          indexedDependencies.produce(new IndexDependencyBuildItem("org.infinispan", infinispanArtifact));
-      }
-   }
-
-   @BuildStep
-   void loadServices(BuildProducer<ServiceProviderBuildItem> serviceProvider) {
-      // Need to register all the module command extensions as service providers so they can be picked up at runtime
-      ServiceLoader<?> serviceLoader = ServiceLoader.load(ModuleCommandExtensions.class);
-      List<String> interfaceImplementations = new ArrayList<>();
-      serviceLoader.forEach(mmb -> interfaceImplementations.add(mmb.getClass().getName()));
-      if (!interfaceImplementations.isEmpty()) {
-         serviceProvider.produce(new ServiceProviderBuildItem(ModuleCommandExtensions.class.getName(), interfaceImplementations));
       }
    }
 
