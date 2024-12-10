@@ -99,7 +99,7 @@ public interface ReplicableCommand extends TracedCommand {
     *
     * @param output the stream.
     * @throws IOException if an error occurred during the I/O.
-    * @deprecated since 11.0 command objects should be marshalled directly by ProtoStream
+    * @deprecated since 16.0 command objects should be marshalled directly by ProtoStream
     */
    @Deprecated
    default void writeTo(ObjectOutput output) throws IOException {
@@ -112,7 +112,7 @@ public interface ReplicableCommand extends TracedCommand {
     * @param input the stream to read.
     * @throws IOException            if an error occurred during the I/O.
     * @throws ClassNotFoundException if it tries to load an undefined class.
-    * @deprecated since 11.0 command objects should be marshalled directly by ProtoStream
+    * @deprecated since 16.0 command objects should be marshalled directly by ProtoStream
     */
    @Deprecated
    default void readFrom(ObjectInput input) throws IOException, ClassNotFoundException {

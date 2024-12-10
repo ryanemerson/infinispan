@@ -28,7 +28,7 @@ import org.infinispan.protostream.descriptors.WireType;
  * entry.
  *
  * @author Ryan Emerson
- * @since 11.0
+ * @since 16.0
  */
 @ProtoTypeId(ProtoStreamTypeIds.MARSHALLABLE_COLLECTION)
 public class MarshallableCollection<T> {

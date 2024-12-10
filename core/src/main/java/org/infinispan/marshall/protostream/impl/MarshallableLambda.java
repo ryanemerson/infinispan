@@ -15,7 +15,7 @@ import org.infinispan.protostream.annotations.ProtoTypeId;
  * of a {@link SerializedLambda} object.
  *
  * @author Ryan Emerson
- * @since 11.0
+ * @since 16.0
  */
 @ProtoTypeId(ProtoStreamTypeIds.MARSHALLABLE_LAMBDA)
 public class MarshallableLambda {

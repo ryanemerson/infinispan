@@ -24,7 +24,7 @@ import org.infinispan.util.KeyValuePair;
  * implementation.
  *
  * @author Ryan Emerson
- * @since 11.0
+ * @since 16.0
  */
 // TODO merge with MarshallableMap
 // TODO replace List<KeyValuePair> with List<MarshallableObject<?>> for both keys & values

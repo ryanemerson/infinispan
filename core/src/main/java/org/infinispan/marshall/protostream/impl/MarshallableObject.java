@@ -17,7 +17,7 @@ import org.infinispan.protostream.annotations.ProtoTypeId;
  * users to provide custom implementations which must be handled by the configured user marshaller.
  *
  * @author Ryan Emerson
- * @since 11.0
+ * @since 16.0
  */
 @ProtoTypeId(ProtoStreamTypeIds.MARSHALLABLE_OBJECT)
 public class MarshallableObject<T> extends AbstractMarshallableWrapper<T> {

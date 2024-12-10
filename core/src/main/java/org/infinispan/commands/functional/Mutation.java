@@ -11,7 +11,7 @@ public interface Mutation<K, V, R> extends InjectableComponent {
 
    /**
     * @return Internal identifier used for purposes of marshalling
-    * @deprecated since 11.0 return value ignored.
+    * @deprecated since 16.0 return value ignored.
     */
    @Deprecated
    default byte type() {

@@ -6,7 +6,7 @@ import org.infinispan.protostream.WrappedMessage;
  * A utility class for common actions related to ProtoStream {@link WrappedMessage}.
  *
  * @author Ryan Emerson
- * @since 11.0
+ * @since 16.0
  */
 // TODO replace with MarshallableObject?
 public class WrappedMessages {

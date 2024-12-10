@@ -12,7 +12,7 @@ import org.infinispan.util.KeyValuePair;
  * A wrapper for Maps of user objects whose key/value type is unknown until runtime.
  *
  * @author Ryan Emerson
- * @since 11.0
+ * @since 16.0
  */
 @ProtoTypeId(ProtoStreamTypeIds.MARSHALLABLE_MAP)
 public class MarshallableMap<K, V> extends AbstractMarshallableMapWrapper<K, V> {

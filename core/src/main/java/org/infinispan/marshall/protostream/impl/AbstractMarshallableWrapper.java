@@ -21,7 +21,7 @@ import org.infinispan.protostream.descriptors.WireType;
  * implementation.
  *
  * @author Ryan Emerson
- * @since 11.0
+ * @since 16.0
  */
 abstract class AbstractMarshallableWrapper<T> {
 
