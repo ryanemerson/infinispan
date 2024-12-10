@@ -1,10 +1,12 @@
-package org.infinispan.commons.marshall;
+package org.infinispan.jboss.marshalling.commons;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.io.OutputStream;
+
+import org.infinispan.commons.marshall.Marshaller;
 
 import net.jcip.annotations.ThreadSafe;
 
@@ -21,8 +23,6 @@ import net.jcip.annotations.ThreadSafe;
  * @see Marshaller
  */
 @ThreadSafe
-@Deprecated(forRemoval=true, since = "10.0")
-// TODO move to jboss-marshalling module as still required by tools and AbstractJBossMarshaller
 public interface StreamingMarshaller extends Marshaller {
 
    /**

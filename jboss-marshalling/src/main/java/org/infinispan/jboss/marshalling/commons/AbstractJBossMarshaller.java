@@ -20,7 +20,6 @@ import org.infinispan.commons.io.LazyByteArrayOutputStream;
 import org.infinispan.commons.logging.Log;
 import org.infinispan.commons.logging.LogFactory;
 import org.infinispan.commons.marshall.AbstractMarshaller;
-import org.infinispan.commons.marshall.StreamingMarshaller;
 import org.jboss.marshalling.ExceptionListener;
 import org.jboss.marshalling.Marshalling;
 import org.jboss.marshalling.MarshallingConfiguration;

@@ -1723,7 +1723,7 @@ In order to use all the latest features, make sure you change the namespace decl
 * Class `org.infinispan.persistence.remote.wrapperEntryWrapper`.
 
 * Method `ObjectOutput startObjectOutput(OutputStream os, boolean isReentrant)` from class
-`org.infinispan.commons.marshall.StreamingMarshaller`.
+`org.infinispan.jboss.marshalling.commons.StreamingMarshaller`.
 
 * Method `CacheEntry getCacheEntry(Object key, EnumSet<Flag> explicitFlags, ClassLoader explicitClassLoader)` from class
 `org.infinispan.AdvancedCache`.
