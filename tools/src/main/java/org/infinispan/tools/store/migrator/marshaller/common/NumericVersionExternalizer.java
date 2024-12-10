@@ -6,7 +6,6 @@ import java.util.Collections;
 import java.util.Set;
 
 import org.infinispan.container.versioning.NumericVersion;
-import org.infinispan.marshall.core.Ids;
 
 public class NumericVersionExternalizer extends AbstractMigratorExternalizer<NumericVersion> {
    @Override

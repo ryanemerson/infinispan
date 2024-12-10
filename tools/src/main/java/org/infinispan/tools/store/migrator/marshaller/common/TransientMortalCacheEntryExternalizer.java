@@ -9,7 +9,6 @@ import java.util.Set;
 import org.infinispan.commons.io.UnsignedNumeric;
 import org.infinispan.commons.marshall.AdvancedExternalizer;
 import org.infinispan.container.entries.TransientMortalCacheEntry;
-import org.infinispan.marshall.core.Ids;
 
 /**
  * Externalizer for {@link TransientMortalCacheEntry}.

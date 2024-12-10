@@ -14,7 +14,6 @@ import org.infinispan.commons.marshall.MarshallUtil;
 import org.infinispan.commons.util.FastCopyHashMap;
 import org.infinispan.commons.util.Util;
 import org.infinispan.distribution.util.ReadOnlySegmentAwareMap;
-import org.infinispan.marshall.core.Ids;
 
 public class MapExternalizer extends AbstractMigratorExternalizer<Map> {
    private static final int HASHMAP = 0;

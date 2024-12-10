@@ -1,4 +1,4 @@
-package org.infinispan.commons.marshall;
+package org.infinispan.tools.store.migrator.marshaller;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -6,6 +6,9 @@ import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+
+import org.infinispan.commons.marshall.Externalizer;
+import org.infinispan.commons.marshall.Marshaller;
 
 /**
  * Indicate that this class should be serialized with an instance of the given {@link Externalizer} class.

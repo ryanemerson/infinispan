@@ -5,7 +5,6 @@ import java.io.ObjectInput;
 import java.util.Collections;
 import java.util.Set;
 
-import org.infinispan.marshall.core.Ids;
 import org.infinispan.util.KeyValuePair;
 
 public class KeyValuePairExternalizer extends AbstractMigratorExternalizer<KeyValuePair> {

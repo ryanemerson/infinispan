@@ -11,7 +11,6 @@ import java.util.Set;
 
 import org.infinispan.commons.io.UnsignedNumeric;
 import org.infinispan.commons.util.Util;
-import org.infinispan.marshall.core.Ids;
 
 import net.jcip.annotations.Immutable;
 

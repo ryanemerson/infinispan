@@ -7,7 +7,6 @@ import java.util.Set;
 
 import org.infinispan.commons.io.ByteBufferImpl;
 import org.infinispan.commons.io.UnsignedNumeric;
-import org.infinispan.commons.marshall.Ids;
 
 public class ByteBufferImplExternalizer extends AbstractMigratorExternalizer<ByteBufferImpl> {
    @Override

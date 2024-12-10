@@ -8,12 +8,12 @@ import java.util.stream.Collectors;
 
 import org.infinispan.commons.marshall.AdvancedExternalizer;
 import org.infinispan.commons.marshall.Marshaller;
-import org.infinispan.commons.util.Immutables;
 import org.infinispan.tools.store.migrator.marshaller.common.ByteBufferImplExternalizer;
 import org.infinispan.tools.store.migrator.marshaller.common.EmbeddedMetadataExternalizer;
 import org.infinispan.tools.store.migrator.marshaller.common.EnumSetExternalizer;
 import org.infinispan.tools.store.migrator.marshaller.common.ImmortalCacheEntryExternalizer;
 import org.infinispan.tools.store.migrator.marshaller.common.ImmortalCacheValueExternalizer;
+import org.infinispan.tools.store.migrator.marshaller.common.ImmutableMapWrapperExternalizer;
 import org.infinispan.tools.store.migrator.marshaller.common.InternalMetadataImplExternalizer;
 import org.infinispan.tools.store.migrator.marshaller.common.KeyValuePairExternalizer;
 import org.infinispan.tools.store.migrator.marshaller.common.MapExternalizer;
@@ -49,7 +49,7 @@ class ExternalizerTable {
       INTERNAL_EXTERNALIZERS.add(new CollectionExternalizer());
       INTERNAL_EXTERNALIZERS.add(new MapExternalizer());
       INTERNAL_EXTERNALIZERS.add(new EnumSetExternalizer());
-      INTERNAL_EXTERNALIZERS.add(new Immutables.ImmutableMapWrapperExternalizer());
+      INTERNAL_EXTERNALIZERS.add(new ImmutableMapWrapperExternalizer());
       INTERNAL_EXTERNALIZERS.add(new ByteBufferImplExternalizer());
       INTERNAL_EXTERNALIZERS.add(new NumericVersionExternalizer());
       INTERNAL_EXTERNALIZERS.add(new KeyValuePairExternalizer());

@@ -6,7 +6,6 @@ import java.util.Collections;
 import java.util.Set;
 
 import org.infinispan.container.versioning.SimpleClusteredVersion;
-import org.infinispan.marshall.core.Ids;
 
 public class SimpleClusteredVersionExternalizer extends AbstractMigratorExternalizer<SimpleClusteredVersion> {
 

@@ -6,7 +6,6 @@ import java.util.Set;
 
 import org.infinispan.commons.util.Util;
 import org.infinispan.container.entries.ImmortalCacheEntry;
-import org.infinispan.marshall.core.Ids;
 
 /**
  * Externalizer for {@link ImmortalCacheEntry}.

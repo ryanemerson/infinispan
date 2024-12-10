@@ -19,7 +19,7 @@ import org.infinispan.commons.marshall.MarshallUtil;
 import org.infinispan.commons.util.FastCopyHashMap;
 import org.infinispan.commons.util.Util;
 import org.infinispan.distribution.util.ReadOnlySegmentAwareCollection;
-import org.infinispan.marshall.core.Ids;
+import org.infinispan.tools.store.migrator.marshaller.common.Ids;
 import org.infinispan.tools.store.migrator.marshaller.common.AbstractMigratorExternalizer;
 
 public class CollectionExternalizer extends AbstractMigratorExternalizer<Collection> {

@@ -9,12 +9,12 @@ import org.infinispan.commons.CacheConfigurationException;
 import org.infinispan.commons.io.UnsignedNumeric;
 import org.infinispan.commons.marshall.AdvancedExternalizer;
 import org.infinispan.commons.marshall.StreamingMarshaller;
-import org.infinispan.commons.util.Immutables;
 import org.infinispan.tools.store.migrator.marshaller.common.ByteBufferImplExternalizer;
 import org.infinispan.tools.store.migrator.marshaller.common.EmbeddedMetadataExternalizer;
 import org.infinispan.tools.store.migrator.marshaller.common.EnumSetExternalizer;
 import org.infinispan.tools.store.migrator.marshaller.common.ImmortalCacheEntryExternalizer;
 import org.infinispan.tools.store.migrator.marshaller.common.ImmortalCacheValueExternalizer;
+import org.infinispan.tools.store.migrator.marshaller.common.ImmutableMapWrapperExternalizer;
 import org.infinispan.tools.store.migrator.marshaller.common.InternalMetadataImplExternalizer;
 import org.infinispan.tools.store.migrator.marshaller.common.KeyValuePairExternalizer;
 import org.infinispan.tools.store.migrator.marshaller.common.MapExternalizer;
@@ -141,7 +141,7 @@ class ExternalizerTable implements ObjectTable {
       addInternalExternalizer(new SingletonListExternalizer());
 
       addInternalExternalizer(new ImmutableListCopyExternalizer());
-      addInternalExternalizer(new Immutables.ImmutableMapWrapperExternalizer());
+      addInternalExternalizer(new ImmutableMapWrapperExternalizer());
       addInternalExternalizer(new ByteBufferImplExternalizer());
 
       addInternalExternalizer(new NumericVersionExternalizer());

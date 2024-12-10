@@ -1,7 +1,5 @@
 package org.infinispan.tools.store.migrator.marshaller;
 
-import org.infinispan.commons.marshall.SerializeFunctionWith;
-import org.infinispan.commons.marshall.SerializeWith;
 import org.jboss.marshalling.AnnotationClassExternalizerFactory;
 import org.jboss.marshalling.ClassExternalizerFactory;
 import org.jboss.marshalling.Externalizer;

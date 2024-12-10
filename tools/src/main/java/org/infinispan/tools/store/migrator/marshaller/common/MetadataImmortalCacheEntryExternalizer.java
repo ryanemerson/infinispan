@@ -6,7 +6,6 @@ import java.util.Collections;
 import java.util.Set;
 
 import org.infinispan.container.entries.metadata.MetadataImmortalCacheEntry;
-import org.infinispan.marshall.core.Ids;
 import org.infinispan.metadata.Metadata;
 
 /**

@@ -1,4 +1,4 @@
-package org.infinispan.commons.marshall;
+package org.infinispan.tools.store.migrator.marshaller.common;
 
 /**
  * Internal marshalling identifiers.

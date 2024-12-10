@@ -1,4 +1,4 @@
-package org.infinispan.marshall;
+package org.infinispan.tools.store.migrator.marshaller;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -7,7 +7,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.infinispan.commons.marshall.Ids;
+import org.infinispan.tools.store.migrator.marshaller.common.Ids;
 import org.infinispan.test.AbstractInfinispanTest;
 import org.testng.annotations.Test;
 
