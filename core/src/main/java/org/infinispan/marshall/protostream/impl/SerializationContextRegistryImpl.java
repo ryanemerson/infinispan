@@ -1,6 +1,6 @@
 package org.infinispan.marshall.protostream.impl;
 
-import static org.infinispan.marshall.core.next.impl.GlobalContextInitializer.getFqTypeName;
+import static org.infinispan.marshall.protostream.impl.GlobalContextInitializer.getFqTypeName;
 import static org.infinispan.marshall.protostream.impl.SerializationContextRegistry.MarshallerType.GLOBAL;
 import static org.infinispan.marshall.protostream.impl.SerializationContextRegistry.MarshallerType.PERSISTENCE;
 
@@ -21,7 +21,6 @@ import org.infinispan.factories.annotations.Start;
 import org.infinispan.factories.impl.ComponentRef;
 import org.infinispan.factories.scopes.Scope;
 import org.infinispan.factories.scopes.Scopes;
-import org.infinispan.marshall.core.next.impl.GlobalContextInitializer;
 import org.infinispan.marshall.persistence.impl.PersistenceContextInitializer;
 import org.infinispan.protostream.BaseMarshaller;
 import org.infinispan.protostream.FileDescriptorSource;

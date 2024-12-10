@@ -7,7 +7,7 @@ import org.infinispan.protostream.annotations.ProtoTypeId;
 
 /**
  * A wrapper for interface implementations which can either be marshalled by the {@link
- * org.infinispan.marshall.core.GlobalMarshaller} or the configured user marshaller if no internal marshaller exists for
+ * GlobalMarshaller} or the configured user marshaller if no internal marshaller exists for
  * the implementation. In such scenarios it's not possible to use {@link org.infinispan.protostream.WrappedMessage} as
  * it will ignore any configured user marshaller, and similarly, it's not possible to use {@link MarshallableUserObject}
  * as that exclusively utilises the user marshaller.

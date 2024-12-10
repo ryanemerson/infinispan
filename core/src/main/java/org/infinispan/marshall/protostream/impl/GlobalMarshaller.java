@@ -1,26 +1,24 @@
-package org.infinispan.marshall.core.next;
+package org.infinispan.marshall.protostream.impl;
 
 import static org.infinispan.util.logging.Log.CONTAINER;
 
 import java.io.IOException;
 
-import org.infinispan.commons.marshall.Marshaller;
 import org.infinispan.factories.GlobalComponentRegistry;
-import org.infinispan.marshall.protostream.impl.AbstractInternalProtoStreamMarshaller;
-import org.infinispan.marshall.protostream.impl.MarshallableLambda;
-import org.infinispan.marshall.protostream.impl.MarshallableThrowable;
-import org.infinispan.marshall.protostream.impl.SerializationContextRegistry;
+import org.infinispan.factories.annotations.Inject;
+import org.infinispan.factories.annotations.Stop;
 import org.infinispan.protostream.ImmutableSerializationContext;
 
 /**
  * A globally-scoped marshaller for cluster communication.
  *
  * @author Ryan Emerson
- * @since 11.0
+ * @since 16.0
  */
 // TODO add support for reusing instances similar to InstanceReusingAdvancedExternalizer?
 public class GlobalMarshaller extends AbstractInternalProtoStreamMarshaller {
 
+   @Inject
    GlobalComponentRegistry gcr;
 
    private ClassLoader classLoader;
@@ -29,18 +27,16 @@ public class GlobalMarshaller extends AbstractInternalProtoStreamMarshaller {
       super(CONTAINER);
    }
 
-   // TODO remove when DelegatingGlobalMarshaller no longer required
-   public void init(GlobalComponentRegistry gcr, SerializationContextRegistry ctxRegistry, Marshaller userMarshaller) {
-      this.gcr = gcr;
-      this.ctxRegistry = ctxRegistry;
-      this.userMarshaller = userMarshaller;
-      this.classLoader = gcr.getGlobalConfiguration().classLoader();
-   }
-
    @Override
    public void start() {
       super.start();
       classLoader = gcr.getGlobalConfiguration().classLoader();
+   }
+
+   @Override
+   @Stop() // Stop after transport to avoid send/receive and marshaller not being ready
+   public void stop() {
+      userMarshaller.stop();
    }
 
    @Override

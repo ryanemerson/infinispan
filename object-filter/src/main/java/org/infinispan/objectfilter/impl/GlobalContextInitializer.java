@@ -4,7 +4,7 @@ import org.infinispan.protostream.SerializationContextInitializer;
 import org.infinispan.protostream.annotations.ProtoSchema;
 
 @ProtoSchema(
-      dependsOn = org.infinispan.marshall.core.next.impl.GlobalContextInitializer.class,
+      dependsOn = org.infinispan.marshall.protostream.impl.GlobalContextInitializer.class,
       includeClasses = {
             FilterResultImpl.class,
             org.infinispan.objectfilter.impl.syntax.parser.IckleParsingResult.StatementType.class

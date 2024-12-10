@@ -1,15 +1,13 @@
 package org.infinispan.factories;
 
-import org.infinispan.commons.dataconversion.MediaType;
 import org.infinispan.commons.marshall.ImmutableProtoStreamMarshaller;
 import org.infinispan.commons.marshall.Marshaller;
 import org.infinispan.commons.marshall.StreamAwareMarshaller;
 import org.infinispan.factories.annotations.DefaultFactoryFor;
 import org.infinispan.factories.annotations.Inject;
 import org.infinispan.factories.impl.ComponentRef;
-import org.infinispan.marshall.core.GlobalMarshaller;
 import org.infinispan.marshall.core.impl.DelegatingUserMarshaller;
-import org.infinispan.marshall.core.proto.DelegatingGlobalMarshaller;
+import org.infinispan.marshall.protostream.impl.GlobalMarshaller;
 import org.infinispan.marshall.persistence.impl.PersistenceMarshallerImpl;
 import org.infinispan.marshall.protostream.impl.SerializationContextRegistry;
 
@@ -41,9 +39,7 @@ public class MarshallerFactory extends AbstractComponentFactory implements AutoI
          case KnownComponentNames.PERSISTENCE_MARSHALLER:
             return new PersistenceMarshallerImpl();
          case KnownComponentNames.INTERNAL_MARSHALLER:
-            org.infinispan.marshall.core.next.GlobalMarshaller newGm = new org.infinispan.marshall.core.next.GlobalMarshaller();
-            GlobalMarshaller oldGm = new GlobalMarshaller();
-            return new DelegatingGlobalMarshaller(newGm, oldGm, MediaType.APPLICATION_INFINISPAN_MARSHALLED);
+            return new GlobalMarshaller();
          case KnownComponentNames.USER_MARSHALLER:
             Marshaller marshaller = globalConfiguration.serialization().marshaller();
             if (marshaller != null) {

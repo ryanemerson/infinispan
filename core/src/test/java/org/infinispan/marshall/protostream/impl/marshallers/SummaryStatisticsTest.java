@@ -7,7 +7,7 @@ import java.util.DoubleSummaryStatistics;
 import java.util.IntSummaryStatistics;
 import java.util.LongSummaryStatistics;
 
-import org.infinispan.marshall.core.next.impl.GlobalContextInitializerImpl;
+import org.infinispan.marshall.protostream.impl.GlobalContextInitializerImpl;
 import org.infinispan.protostream.ProtobufUtil;
 import org.infinispan.protostream.SerializationContext;
 import org.testng.annotations.Test;

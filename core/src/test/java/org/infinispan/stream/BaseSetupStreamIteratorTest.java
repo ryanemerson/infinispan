@@ -21,7 +21,7 @@ import org.infinispan.distribution.ch.impl.DefaultConsistentHash;
 import org.infinispan.filter.CompositeKeyValueFilterConverter;
 import org.infinispan.filter.Converter;
 import org.infinispan.manager.EmbeddedCacheManager;
-import org.infinispan.marshall.core.next.impl.GlobalContextInitializer;
+import org.infinispan.marshall.protostream.impl.GlobalContextInitializer;
 import org.infinispan.metadata.Metadata;
 import org.infinispan.protostream.SerializationContextInitializer;
 import org.infinispan.protostream.annotations.ProtoAdapter;

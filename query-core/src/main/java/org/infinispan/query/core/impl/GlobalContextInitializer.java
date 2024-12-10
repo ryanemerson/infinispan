@@ -4,7 +4,7 @@ import org.infinispan.protostream.SerializationContextInitializer;
 import org.infinispan.protostream.annotations.ProtoSchema;
 
 @ProtoSchema(
-      dependsOn = org.infinispan.marshall.core.next.impl.GlobalContextInitializer.class,
+      dependsOn = org.infinispan.marshall.protostream.impl.GlobalContextInitializer.class,
       includeClasses = {
             org.infinispan.query.core.impl.EmbeddedQuery.DeleteFunction.class,
             org.infinispan.query.core.impl.continuous.ContinuousQueryResult.class,

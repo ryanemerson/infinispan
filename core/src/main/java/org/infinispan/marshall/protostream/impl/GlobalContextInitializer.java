@@ -1,15 +1,15 @@
-package org.infinispan.marshall.core.next.impl;
+package org.infinispan.marshall.protostream.impl;
 
 import org.infinispan.protostream.SerializationContextInitializer;
 import org.infinispan.protostream.annotations.ProtoSchema;
 
 /**
- * Interface used to initialise the {@link org.infinispan.marshall.core.GlobalMarshaller}'s {@link
+ * Interface used to initialise the {@link org.infinispan.marshall.protostream.impl.GlobalMarshaller}'s {@link
  * org.infinispan.protostream.SerializationContext} using the specified Pojos, Marshaller implementations and provided
  * .proto schemas.
  *
  * @author Ryan Emerson
- * @since 11.0
+ * @since 16.0
  */
 @ProtoSchema(
       dependsOn = {
@@ -373,9 +373,9 @@ import org.infinispan.protostream.annotations.ProtoSchema;
 public interface GlobalContextInitializer extends SerializationContextInitializer {
    String PACKAGE_NAME = "org.infinispan.global.core";
 
-   SerializationContextInitializer INSTANCE = new org.infinispan.marshall.core.next.impl.GlobalContextInitializerImpl();
+   SerializationContextInitializer INSTANCE = new org.infinispan.marshall.protostream.impl.GlobalContextInitializerImpl();
 
-   static String getFqTypeName(Class clazz) {
+   static String getFqTypeName(Class<?> clazz) {
       return PACKAGE_NAME + "." + clazz.getSimpleName();
    }
 }

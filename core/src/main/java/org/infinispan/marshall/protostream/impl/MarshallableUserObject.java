@@ -24,6 +24,7 @@ import org.infinispan.protostream.annotations.ProtoTypeId;
  * @author Ryan Emerson
  * @since 10.0
  */
+// TODO avoid use in commands?
 @ProtoTypeId(ProtoStreamTypeIds.MARSHALLABLE_USER_OBJECT)
 public class MarshallableUserObject<T> extends AbstractMarshallableWrapper<T> {
 

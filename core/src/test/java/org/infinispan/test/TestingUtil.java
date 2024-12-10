@@ -74,6 +74,7 @@ import org.infinispan.commons.util.IntSet;
 import org.infinispan.commons.util.IntSets;
 import org.infinispan.commons.util.Version;
 import org.infinispan.commons.util.concurrent.CompletableFutures;
+import org.infinispan.commons.util.concurrent.CompletionStages;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.configuration.global.GlobalConfiguration;
@@ -101,7 +102,6 @@ import org.infinispan.lifecycle.ComponentStatus;
 import org.infinispan.lifecycle.ModuleLifecycle;
 import org.infinispan.manager.CacheContainer;
 import org.infinispan.manager.EmbeddedCacheManager;
-import org.infinispan.marshall.core.proto.DelegatingGlobalMarshaller;
 import org.infinispan.marshall.persistence.impl.MarshalledEntryUtil;
 import org.infinispan.marshall.persistence.impl.PersistenceMarshallerImpl;
 import org.infinispan.metadata.EmbeddedMetadata;
@@ -142,7 +142,6 @@ import org.infinispan.statetransfer.StateTransferManagerImpl;
 import org.infinispan.topology.CacheTopology;
 import org.infinispan.transaction.impl.TransactionTable;
 import org.infinispan.util.DependencyGraph;
-import org.infinispan.commons.util.concurrent.CompletionStages;
 import org.infinispan.util.concurrent.locks.LockManager;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
@@ -1078,10 +1077,9 @@ public class TestingUtil {
       return extractComponentRegistry(cache).getComponent(LockManager.class);
    }
 
-   public static DelegatingGlobalMarshaller extractGlobalMarshaller(EmbeddedCacheManager cm) {
+   public static Marshaller extractGlobalMarshaller(EmbeddedCacheManager cm) {
       GlobalComponentRegistry gcr = extractGlobalComponentRegistry(cm);
-      DelegatingGlobalMarshaller dgm = (DelegatingGlobalMarshaller) gcr.getComponent(Marshaller.class, KnownComponentNames.INTERNAL_MARSHALLER);
-      return dgm;
+      return gcr.getComponent(Marshaller.class, KnownComponentNames.INTERNAL_MARSHALLER);
    }
 
    public static PersistenceMarshallerImpl extractPersistenceMarshaller(EmbeddedCacheManager cm) {

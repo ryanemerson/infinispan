@@ -6,7 +6,7 @@ import org.infinispan.protostream.annotations.ProtoSchema;
 @ProtoSchema(
       dependsOn = {
             org.infinispan.commons.marshall.PersistenceContextInitializer.class,
-            org.infinispan.marshall.core.next.impl.GlobalContextInitializer.class
+            org.infinispan.marshall.protostream.impl.GlobalContextInitializer.class
       },
       includeClasses = {
             org.infinispan.server.core.transport.NettyTransportConnectionStats.ConnectionAdderTask.class,

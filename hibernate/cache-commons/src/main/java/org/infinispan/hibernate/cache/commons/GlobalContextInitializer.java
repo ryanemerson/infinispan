@@ -6,7 +6,7 @@ import org.infinispan.protostream.annotations.ProtoSchema;
 @ProtoSchema(
       dependsOn = {
             org.infinispan.protostream.types.java.CommonTypes.class,
-            org.infinispan.marshall.core.next.impl.GlobalContextInitializer.class,
+            org.infinispan.marshall.protostream.impl.GlobalContextInitializer.class,
             org.infinispan.marshall.persistence.impl.PersistenceContextInitializer.class
       },
       includeClasses = {

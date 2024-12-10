@@ -1,6 +1,6 @@
 package org.infinispan.remoting.rpc;
 
-import org.infinispan.marshall.core.next.impl.GlobalContextInitializer;
+import org.infinispan.marshall.protostream.impl.GlobalContextInitializer;
 import org.infinispan.marshall.persistence.impl.PersistenceContextInitializer;
 import org.infinispan.protostream.SerializationContextInitializer;
 import org.infinispan.protostream.annotations.ProtoSchema;

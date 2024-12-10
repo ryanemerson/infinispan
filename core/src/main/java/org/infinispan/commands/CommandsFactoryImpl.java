@@ -82,10 +82,7 @@ import org.infinispan.commands.write.RemoveExpiredCommand;
 import org.infinispan.commands.write.ReplaceCommand;
 import org.infinispan.commands.write.ValueMatcher;
 import org.infinispan.commands.write.WriteCommand;
-import org.infinispan.commons.marshall.Externalizer;
-import org.infinispan.commons.marshall.LambdaExternalizer;
 import org.infinispan.commons.marshall.Marshaller;
-import org.infinispan.commons.marshall.SerializeFunctionWith;
 import org.infinispan.commons.tx.XidImpl;
 import org.infinispan.commons.util.EnumUtil;
 import org.infinispan.commons.util.IntSet;
@@ -111,7 +108,6 @@ import org.infinispan.functional.EntryView.WriteEntryView;
 import org.infinispan.functional.impl.Params;
 import org.infinispan.interceptors.locking.ClusteringDependentLogic;
 import org.infinispan.manager.EmbeddedCacheManager;
-import org.infinispan.marshall.core.proto.DelegatingGlobalMarshaller;
 import org.infinispan.metadata.Metadata;
 import org.infinispan.metadata.impl.PrivateMetadata;
 import org.infinispan.notifications.cachelistener.cluster.ClusterEvent;
@@ -520,7 +516,7 @@ public class CommandsFactoryImpl implements CommandsFactory {
    @Override
    public <K, V, T, R> ReadWriteKeyValueCommand<K, V, T, R> buildReadWriteKeyValueCommand(Object key, Object argument,
          BiFunction<T, ReadWriteEntryView<K, V>, R> f, int segment, Params params, DataConversion keyDataConversion, DataConversion valueDataConversion) {
-      return init(new ReadWriteKeyValueCommand<>(key, argument, f, segment, generateUUID(transactional), getValueMatcher(f),
+      return init(new ReadWriteKeyValueCommand<>(key, argument, f, segment, generateUUID(transactional), ValueMatcher.MATCH_ALWAYS,
             params, keyDataConversion, valueDataConversion));
    }
 
@@ -528,7 +524,7 @@ public class CommandsFactoryImpl implements CommandsFactory {
    public <K, V, R> ReadWriteKeyCommand<K, V, R> buildReadWriteKeyCommand(Object key,
          Function<ReadWriteEntryView<K, V>, R> f, int segment, Params params, DataConversion keyDataConversion,
          DataConversion valueDataConversion) {
-      return init(new ReadWriteKeyCommand<>(key, f, segment, generateUUID(transactional), getValueMatcher(f), params, keyDataConversion, valueDataConversion));
+      return init(new ReadWriteKeyCommand<>(key, f, segment, generateUUID(transactional), ValueMatcher.MATCH_ALWAYS, params, keyDataConversion, valueDataConversion));
    }
 
    @Override
@@ -544,13 +540,13 @@ public class CommandsFactoryImpl implements CommandsFactory {
    @Override
    public <K, V> WriteOnlyKeyCommand<K, V> buildWriteOnlyKeyCommand(
          Object key, Consumer<WriteEntryView<K, V>> f, int segment, Params params, DataConversion keyDataConversion, DataConversion valueDataConversion) {
-      return init(new WriteOnlyKeyCommand<>(key, f, segment, generateUUID(transactional), getValueMatcher(f), params, keyDataConversion, valueDataConversion));
+      return init(new WriteOnlyKeyCommand<>(key, f, segment, generateUUID(transactional), ValueMatcher.MATCH_ALWAYS, params, keyDataConversion, valueDataConversion));
    }
 
    @Override
    public <K, V, T> WriteOnlyKeyValueCommand<K, V, T> buildWriteOnlyKeyValueCommand(Object key, Object argument, BiConsumer<T, WriteEntryView<K, V>> f,
          int segment, Params params, DataConversion keyDataConversion, DataConversion valueDataConversion) {
-      return init(new WriteOnlyKeyValueCommand<>(key, argument, f, segment, generateUUID(transactional), getValueMatcher(f), params, keyDataConversion, valueDataConversion));
+      return init(new WriteOnlyKeyValueCommand<>(key, argument, f, segment, generateUUID(transactional), ValueMatcher.MATCH_ALWAYS, params, keyDataConversion, valueDataConversion));
    }
 
    @Override
@@ -584,18 +580,6 @@ public class CommandsFactoryImpl implements CommandsFactory {
    @Override
    public ExceptionAckCommand buildExceptionAckCommand(long id, Throwable throwable, int topologyId) {
       return new ExceptionAckCommand(cacheName, id, throwable, topologyId);
-   }
-
-   private ValueMatcher getValueMatcher(Object o) {
-      SerializeFunctionWith ann = o.getClass().getAnnotation(SerializeFunctionWith.class);
-      if (ann != null)
-         return ValueMatcher.valueOf(ann.valueMatcher().toString());
-
-      Externalizer ext = ((DelegatingGlobalMarshaller) marshaller).findExternalizerFor(o);
-      if (ext instanceof LambdaExternalizer)
-         return ValueMatcher.valueOf(((LambdaExternalizer) ext).valueMatcher(o).toString());
-
-      return ValueMatcher.MATCH_ALWAYS;
    }
 
    @Override

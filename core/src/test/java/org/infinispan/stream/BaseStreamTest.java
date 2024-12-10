@@ -51,7 +51,7 @@ import org.infinispan.container.entries.ImmortalCacheEntry;
 import org.infinispan.distribution.ch.KeyPartitioner;
 import org.infinispan.factories.ComponentRegistry;
 import org.infinispan.manager.EmbeddedCacheManager;
-import org.infinispan.marshall.core.next.impl.GlobalContextInitializer;
+import org.infinispan.marshall.protostream.impl.GlobalContextInitializer;
 import org.infinispan.marshall.protostream.impl.MarshallableObject;
 import org.infinispan.protostream.SerializationContextInitializer;
 import org.infinispan.protostream.annotations.ProtoAdapter;

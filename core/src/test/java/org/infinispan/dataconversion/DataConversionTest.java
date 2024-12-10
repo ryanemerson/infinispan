@@ -336,8 +336,8 @@ public class DataConversionTest extends AbstractInfinispanTest {
          @Override
          public void call() throws Exception {
             ComponentRegistry registry = ComponentRegistry.of(cm.getCache());
-//            testWith(DataConversion.DEFAULT_KEY, registry);
-//            testWith(DataConversion.DEFAULT_VALUE, registry);
+            testWith(DataConversion.DEFAULT_KEY, registry);
+            testWith(DataConversion.DEFAULT_VALUE, registry);
             testWith(DataConversion.IDENTITY_KEY, registry);
             testWith(DataConversion.IDENTITY_VALUE, registry);
 

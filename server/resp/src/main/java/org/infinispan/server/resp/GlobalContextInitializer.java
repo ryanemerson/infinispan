@@ -6,7 +6,7 @@ import org.infinispan.protostream.annotations.ProtoSchema;
 @ProtoSchema(
       dependsOn = {
             PersistenceContextInitializer.class,
-            org.infinispan.marshall.core.next.impl.GlobalContextInitializer.class,
+            org.infinispan.marshall.protostream.impl.GlobalContextInitializer.class,
             org.infinispan.server.core.GlobalContextInitializer.class,
       },
       includeClasses = {
