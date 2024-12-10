@@ -11,7 +11,6 @@ import org.infinispan.context.impl.FlagBitSets;
 import org.infinispan.interceptors.AsyncInterceptorChain;
 import org.infinispan.interceptors.impl.CallInterceptor;
 import org.infinispan.marshall.protostream.impl.MarshallableObject;
-import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
 import org.infinispan.metadata.Metadata;
 import org.infinispan.metadata.impl.PrivateMetadata;
 import org.infinispan.protostream.annotations.ProtoFactory;
@@ -55,18 +54,18 @@ public class IracPutKeyValueCommand extends AbstractDataWriteCommand implements 
 
    @ProtoFactory
    IracPutKeyValueCommand(MarshallableObject<?> wrappedKey, long flagsWithoutRemote, int topologyId, int segment,
-                          CommandInvocationId commandInvocationId, MarshallableUserObject<Object> wrappedValue,
+                          CommandInvocationId commandInvocationId, MarshallableObject<Object> wrappedValue,
                           MarshallableObject<Metadata> wrappedMetadata, boolean expiration, PrivateMetadata internalMetadata) {
       super(wrappedKey, FlagBitSets.IRAC_UPDATE, topologyId, segment, commandInvocationId);
-      this.value = MarshallableUserObject.unwrap(wrappedValue);
+      this.value = MarshallableObject.unwrap(wrappedValue);
       this.metadata = MarshallableObject.unwrap(wrappedMetadata);
       this.expiration = expiration;
       this.privateMetadata = internalMetadata;
    }
 
    @ProtoField(6)
-   MarshallableUserObject<Object> getWrappedValue() {
-      return MarshallableUserObject.create(value);
+   MarshallableObject<Object> getWrappedValue() {
+      return MarshallableObject.create(value);
    }
 
    @ProtoField(7)

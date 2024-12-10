@@ -8,9 +8,10 @@ import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.commons.util.IntSet;
 import org.infinispan.commons.util.IntSets;
 import org.infinispan.commons.util.Util;
+import org.infinispan.commons.util.concurrent.AggregateCompletionStage;
+import org.infinispan.commons.util.concurrent.CompletionStages;
 import org.infinispan.marshall.protostream.impl.MarshallableCollection;
 import org.infinispan.marshall.protostream.impl.MarshallableObject;
-import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
 import org.infinispan.metadata.Metadata;
 import org.infinispan.metadata.impl.IracMetadata;
 import org.infinispan.protostream.annotations.ProtoFactory;
@@ -18,8 +19,6 @@ import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoName;
 import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.util.ByteString;
-import org.infinispan.commons.util.concurrent.AggregateCompletionStage;
-import org.infinispan.commons.util.concurrent.CompletionStages;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 import org.infinispan.xsite.BackupReceiver;
@@ -118,16 +117,16 @@ public class IracPutManyRequest extends IracUpdateKeyRequest<IntSet> {
       final Object key;
 
       @ProtoField(1)
-      MarshallableUserObject<Object> getKey() {
-         return MarshallableUserObject.create(key);
+      MarshallableObject<Object> getKey() {
+         return MarshallableObject.create(key);
       }
 
       @ProtoField(2)
       final IracMetadata iracMetadata;
 
       @ProtoFactory
-      Remove(MarshallableUserObject<Object> key, IracMetadata iracMetadata) {
-         this(MarshallableUserObject.unwrap(key),  iracMetadata);
+      Remove(MarshallableObject<Object> key, IracMetadata iracMetadata) {
+         this(MarshallableObject.unwrap(key),  iracMetadata);
       }
 
       Remove(Object key, IracMetadata iracMetadata) {
@@ -154,8 +153,8 @@ public class IracPutManyRequest extends IracUpdateKeyRequest<IntSet> {
    public static final class Expire extends Remove {
 
       @ProtoFactory
-      Expire(MarshallableUserObject<Object> key, IracMetadata iracMetadata) {
-         this(MarshallableUserObject.unwrap(key),  iracMetadata);
+      Expire(MarshallableObject<Object> key, IracMetadata iracMetadata) {
+         this(MarshallableObject.unwrap(key),  iracMetadata);
       }
 
       private Expire(Object key, IracMetadata tombstone) {
@@ -190,13 +189,13 @@ public class IracPutManyRequest extends IracUpdateKeyRequest<IntSet> {
       }
 
       @ProtoFactory
-      Write(MarshallableUserObject<Object> key, IracMetadata iracMetadata, MarshallableUserObject<Object> value, MarshallableObject<Metadata> metadata) {
-         this (MarshallableUserObject.unwrap(key), iracMetadata, MarshallableUserObject.unwrap(value), MarshallableObject.unwrap(metadata));
+      Write(MarshallableObject<Object> key, IracMetadata iracMetadata, MarshallableObject<Object> value, MarshallableObject<Metadata> metadata) {
+         this (MarshallableObject.unwrap(key), iracMetadata, MarshallableObject.unwrap(value), MarshallableObject.unwrap(metadata));
       }
 
       @ProtoField(3)
-      MarshallableUserObject<Object> getValue() {
-         return MarshallableUserObject.create(value);
+      MarshallableObject<Object> getValue() {
+         return MarshallableObject.create(value);
       }
 
       @ProtoField(4)

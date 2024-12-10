@@ -3,7 +3,7 @@ package org.infinispan.xsite.commands.remote;
 import java.util.concurrent.CompletionStage;
 
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
-import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
+import org.infinispan.marshall.protostream.impl.MarshallableObject;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
@@ -28,13 +28,13 @@ public class IracTouchKeyRequest extends IracUpdateKeyRequest<Boolean> {
    }
 
    @ProtoFactory
-   IracTouchKeyRequest(ByteString cacheName, MarshallableUserObject<Object> key) {
-      this(cacheName, MarshallableUserObject.unwrap(key));
+   IracTouchKeyRequest(ByteString cacheName, MarshallableObject<Object> key) {
+      this(cacheName, MarshallableObject.unwrap(key));
    }
 
    @ProtoField(2)
-   MarshallableUserObject<Object> getKey() {
-      return MarshallableUserObject.create(key);
+   MarshallableObject<Object> getKey() {
+      return MarshallableObject.create(key);
    }
 
    @Override
