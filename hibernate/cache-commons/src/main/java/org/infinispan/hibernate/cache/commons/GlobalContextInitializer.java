@@ -2,8 +2,10 @@ package org.infinispan.hibernate.cache.commons;
 
 import org.infinispan.protostream.SerializationContextInitializer;
 import org.infinispan.protostream.annotations.ProtoSchema;
+import org.infinispan.protostream.annotations.ProtoSyntax;
 
 @ProtoSchema(
+      allowNullFields = true,
       dependsOn = {
             org.infinispan.protostream.types.java.CommonTypes.class,
             org.infinispan.marshall.protostream.impl.GlobalContextInitializer.class,
@@ -23,7 +25,8 @@ import org.infinispan.protostream.annotations.ProtoSchema;
       schemaFileName = "global.hibernate.commons.proto",
       schemaFilePath = "proto/generated",
       schemaPackageName = "org.infinispan.global.hibernate.commons",
-      service = false
+      service = false,
+      syntax = ProtoSyntax.PROTO3
 )
 interface GlobalContextInitializer extends SerializationContextInitializer {
 }

@@ -2,6 +2,7 @@ package org.infinispan.commons;
 
 import org.infinispan.protostream.SerializationContextInitializer;
 import org.infinispan.protostream.annotations.ProtoSchema;
+import org.infinispan.protostream.annotations.ProtoSyntax;
 import org.infinispan.protostream.types.java.CommonTypes;
 
 /**
@@ -27,7 +28,8 @@ import org.infinispan.protostream.types.java.CommonTypes;
       schemaFileName = "global.commons.proto",
       schemaFilePath = "proto/generated",
       schemaPackageName = "org.infinispan.global.commons",
-      service = false
+      service = false,
+      syntax = ProtoSyntax.PROTO3
 )
 public interface GlobalContextInitializer extends SerializationContextInitializer {
    GlobalContextInitializer INSTANCE = new GlobalContextInitializerImpl();

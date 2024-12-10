@@ -2,6 +2,7 @@ package org.infinispan.query.core.impl;
 
 import org.infinispan.protostream.SerializationContextInitializer;
 import org.infinispan.protostream.annotations.ProtoSchema;
+import org.infinispan.protostream.annotations.ProtoSyntax;
 
 @ProtoSchema(
       dependsOn = org.infinispan.marshall.protostream.impl.GlobalContextInitializer.class,
@@ -16,7 +17,8 @@ import org.infinispan.protostream.annotations.ProtoSchema;
       schemaFileName = "global.query.core.proto",
       schemaFilePath = "proto/generated",
       schemaPackageName = "org.infinispan.global.query.core",
-      service = false
+      service = false,
+      syntax = ProtoSyntax.PROTO3
 )
 public interface GlobalContextInitializer extends SerializationContextInitializer {
 }

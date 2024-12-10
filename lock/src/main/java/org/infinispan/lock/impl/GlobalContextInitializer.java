@@ -2,6 +2,7 @@ package org.infinispan.lock.impl;
 
 import org.infinispan.protostream.SerializationContextInitializer;
 import org.infinispan.protostream.annotations.ProtoSchema;
+import org.infinispan.protostream.annotations.ProtoSyntax;
 
 @ProtoSchema(
       dependsOn = org.infinispan.marshall.persistence.impl.PersistenceContextInitializer.class,
@@ -17,7 +18,8 @@ import org.infinispan.protostream.annotations.ProtoSchema;
       schemaFileName = "global.lock.proto",
       schemaFilePath = "proto/generated",
       schemaPackageName = "org.infinispan.global.lock",
-      service = false
+      service = false,
+      syntax = ProtoSyntax.PROTO3
 )
 interface GlobalContextInitializer extends SerializationContextInitializer {
 }

@@ -2,8 +2,10 @@ package org.infinispan.multimap.impl;
 
 import org.infinispan.protostream.SerializationContextInitializer;
 import org.infinispan.protostream.annotations.ProtoSchema;
+import org.infinispan.protostream.annotations.ProtoSyntax;
 
 @ProtoSchema(
+      allowNullFields = true,
       dependsOn = {
             org.infinispan.commons.GlobalContextInitializer.class,
             org.infinispan.marshall.protostream.impl.GlobalContextInitializer.class,
@@ -53,7 +55,8 @@ import org.infinispan.protostream.annotations.ProtoSchema;
       schemaFileName = "global.multimap.proto",
       schemaFilePath = "proto/generated",
       schemaPackageName = "org.infinispan.global.multimap",
-      service = false
+      service = false,
+      syntax = ProtoSyntax.PROTO3
 )
 interface GlobalContextInitializer extends SerializationContextInitializer {
 }

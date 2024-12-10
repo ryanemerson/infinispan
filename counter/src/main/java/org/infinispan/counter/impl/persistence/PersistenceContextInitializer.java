@@ -15,6 +15,7 @@ import org.infinispan.protostream.annotations.ProtoSchema;
  * @since 10.0
  */
 @ProtoSchema(
+      allowNullFields = true,
       dependsOn = {
          org.infinispan.marshall.persistence.impl.PersistenceContextInitializer.class,
          org.infinispan.commons.marshall.PersistenceContextInitializer.class,

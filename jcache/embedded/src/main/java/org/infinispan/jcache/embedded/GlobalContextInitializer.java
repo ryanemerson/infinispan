@@ -2,8 +2,10 @@ package org.infinispan.jcache.embedded;
 
 import org.infinispan.protostream.SerializationContextInitializer;
 import org.infinispan.protostream.annotations.ProtoSchema;
+import org.infinispan.protostream.annotations.ProtoSyntax;
 
 @ProtoSchema(
+      allowNullFields = true,
       dependsOn = {
             org.infinispan.marshall.protostream.impl.GlobalContextInitializer.class,
       },
@@ -24,7 +26,8 @@ import org.infinispan.protostream.annotations.ProtoSchema;
       schemaFileName = "global.jcache.embedded.proto",
       schemaFilePath = "proto/generated",
       schemaPackageName = "org.infinispan.global.jcache.embedded",
-      service = false
+      service = false,
+      syntax = ProtoSyntax.PROTO3
 )
 interface GlobalContextInitializer extends SerializationContextInitializer {
 }

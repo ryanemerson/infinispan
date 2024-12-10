@@ -2,6 +2,7 @@ package org.infinispan.tasks.impl;
 
 import org.infinispan.protostream.SerializationContextInitializer;
 import org.infinispan.protostream.annotations.ProtoSchema;
+import org.infinispan.protostream.annotations.ProtoSyntax;
 
 /**
  * @author Ryan Emerson
@@ -13,7 +14,8 @@ import org.infinispan.protostream.annotations.ProtoSchema;
       schemaFileName = "global.tasks.manager.proto",
       schemaFilePath = "proto/generated",
       schemaPackageName = "org.infinispan.global.tasks.manager",
-      service = false
+      service = false,
+      syntax = ProtoSyntax.PROTO3
 )
 interface GlobalContextInitializer extends SerializationContextInitializer {
 }

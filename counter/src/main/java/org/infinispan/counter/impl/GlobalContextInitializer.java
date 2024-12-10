@@ -2,8 +2,10 @@ package org.infinispan.counter.impl;
 
 import org.infinispan.protostream.SerializationContextInitializer;
 import org.infinispan.protostream.annotations.ProtoSchema;
+import org.infinispan.protostream.annotations.ProtoSyntax;
 
 @ProtoSchema(
+      allowNullFields = true,
       dependsOn = {
             org.infinispan.counter.api._private.PersistenceContextInitializer.class,
             org.infinispan.counter.impl.persistence.PersistenceContextInitializer.class
@@ -23,7 +25,8 @@ import org.infinispan.protostream.annotations.ProtoSchema;
       schemaFileName = "global.counters.proto",
       schemaFilePath = "proto/generated",
       schemaPackageName = "org.infinispan.global.counters",
-      service = false
+      service = false,
+      syntax = ProtoSyntax.PROTO3
 )
 interface GlobalContextInitializer extends SerializationContextInitializer {
 }

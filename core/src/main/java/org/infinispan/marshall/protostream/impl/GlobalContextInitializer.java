@@ -2,6 +2,7 @@ package org.infinispan.marshall.protostream.impl;
 
 import org.infinispan.protostream.SerializationContextInitializer;
 import org.infinispan.protostream.annotations.ProtoSchema;
+import org.infinispan.protostream.annotations.ProtoSyntax;
 
 /**
  * Interface used to initialise the {@link org.infinispan.marshall.protostream.impl.GlobalMarshaller}'s {@link
@@ -12,6 +13,7 @@ import org.infinispan.protostream.annotations.ProtoSchema;
  * @since 16.0
  */
 @ProtoSchema(
+      allowNullFields = true,
       dependsOn = {
             org.infinispan.commons.GlobalContextInitializer.class,
             org.infinispan.commons.marshall.PersistenceContextInitializer.class,
@@ -368,7 +370,8 @@ import org.infinispan.protostream.annotations.ProtoSchema;
       schemaFileName = "global.core.proto",
       schemaFilePath = "proto/generated",
       schemaPackageName = GlobalContextInitializer.PACKAGE_NAME,
-      service = false
+      service = false,
+      syntax = ProtoSyntax.PROTO3
 )
 public interface GlobalContextInitializer extends SerializationContextInitializer {
    String PACKAGE_NAME = "org.infinispan.global.core";
