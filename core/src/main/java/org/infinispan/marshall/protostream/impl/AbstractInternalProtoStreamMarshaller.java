@@ -99,10 +99,7 @@ public abstract class AbstractInternalProtoStreamMarshaller implements Marshalle
 
    @Override
    public Object objectFromByteBuffer(byte[] buf, int offset, int length) throws IOException {
-      // TODO remove debug var
-      Object o = unwrapAndInit(ProtobufUtil.fromWrappedByteArray(getSerializationContext(), buf, offset, length));
-//      System.err.println("!!!!!! UnMarshall: " + o.getClass().getName());
-      return o;
+      return unwrapAndInit(ProtobufUtil.fromWrappedByteArray(getSerializationContext(), buf, offset, length));
    }
 
    @Override
