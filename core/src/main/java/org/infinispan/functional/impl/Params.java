@@ -1,8 +1,5 @@
 package org.infinispan.functional.impl;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
 import java.util.Arrays;
 import java.util.List;
 
@@ -253,14 +250,5 @@ public final class Params {
       if (ExecutionMode.values().length > 4) throw new IllegalStateException();
       if (StatisticsMode.values().length > 2) throw new IllegalStateException();
       if (ReplicationMode.values().length > 2) throw new IllegalStateException();
-   }
-
-   public static void writeObject(ObjectOutput output, Params params) throws IOException {
-      // TODO replace all calls in command
-   }
-
-   public static Params readObject(ObjectInput input) throws IOException {
-      // TODO replace all calls in commands
-      return null;
    }
 }

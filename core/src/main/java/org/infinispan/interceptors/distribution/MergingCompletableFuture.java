@@ -26,7 +26,6 @@ class MergingCompletableFuture<T> extends CountDownCompletableFuture {
       return (f, rv) -> moveListItemsToFuture(rv, f, myOffset);
    }
 
-   // TODO handle by blindly returning whatever object there is? Or add isMap, IsCollection methods?
    static void moveListItemsToFuture(Object rv, MergingCompletableFuture<Object> f, int myOffset) {
       Collection<?> items;
       if (rv == null && f.results == null) {

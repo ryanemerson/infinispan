@@ -36,7 +36,6 @@ public class StateTransferGetTransactionsCommand extends AbstractStateTransferCo
 
    @Override
    public CompletionStage<List<TransactionInfo>> invokeAsync(ComponentRegistry registry) throws Throwable {
-      // TODO needs to handle collection return
       StateProvider stateProvider = registry.getStateTransferManager().getStateProvider();
       return stateProvider.getTransactionsForSegments(origin, topologyId, segments);
    }

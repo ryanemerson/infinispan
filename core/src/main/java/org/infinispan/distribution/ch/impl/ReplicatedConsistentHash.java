@@ -86,8 +86,6 @@ public class ReplicatedConsistentHash implements ConsistentHash {
       return primaryOwners;
    }
 
-//            output.writeObject(ch.capacityFactors);
-//         output.writeObject(ch.membersWithoutState);
    @ProtoField(3)
    MarshallableMap<Address, Float> capacityFactors() {
       return MarshallableMap.create(capacityFactors);

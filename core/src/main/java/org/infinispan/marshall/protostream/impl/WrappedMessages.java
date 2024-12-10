@@ -8,7 +8,6 @@ import org.infinispan.protostream.WrappedMessage;
  * @author Ryan Emerson
  * @since 16.0
  */
-// TODO replace with MarshallableObject?
 public class WrappedMessages {
 
    /**

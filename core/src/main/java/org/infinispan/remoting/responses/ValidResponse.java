@@ -25,7 +25,6 @@ public abstract class ValidResponse implements Response {
    @ProtoField(number = 2)
    protected MarshallableCollection<?> collection;
 
-   // TODO do we need MarshallableMap for this to handle internal types?
    @ProtoField(number = 3)
    protected MarshallableMap<?, ?> map;
 

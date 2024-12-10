@@ -32,8 +32,6 @@ public class TxState {
    @ProtoField(1)
    final GlobalTransaction globalTransaction;
 
-   // TODO @pruvio do we want to marshall this as a ProtoStream message or just a single byte?
-   // A single byte has a smaller payload, but is less idiomatic from a protobuf perspective as we don't capture the enum values
    @ProtoField(2)
    final Status status;
 

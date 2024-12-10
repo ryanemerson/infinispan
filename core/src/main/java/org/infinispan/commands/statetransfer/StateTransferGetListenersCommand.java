@@ -37,7 +37,6 @@ public class StateTransferGetListenersCommand extends BaseRpcCommand implements 
 
    @Override
    public CompletionStage<Collection<ClusterListenerReplicateCallable<Object, Object>>> invokeAsync(ComponentRegistry registry) throws Throwable {
-      // TODO needs to handle collection return
       StateProvider stateProvider = registry.getStateTransferManager().getStateProvider();
       Collection<ClusterListenerReplicateCallable<Object, Object>> listeners = stateProvider.getClusterListenersToInstall();
       return CompletableFuture.completedFuture(listeners);
