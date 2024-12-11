@@ -1,5 +1,6 @@
 package org.infinispan.multimap.impl.function.sortedset;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -31,7 +32,7 @@ public final class ScoreFunction<K, V> implements SortedSetBucketBaseFunction<K,
 
    @ProtoFactory
    ScoreFunction(MarshallableCollection<V> members) {
-      this.members = MarshallableCollection.unwrapAsList(members);
+      this.members = MarshallableCollection.unwrap(members, ArrayList::new);
    }
 
    @ProtoField(1)

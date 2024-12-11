@@ -51,7 +51,7 @@ public class IracTombstoneCheckRequest extends XSiteCacheRequest<IntSet> {
 
    @ProtoFactory
    IracTombstoneCheckRequest(ByteString cacheName, MarshallableCollection<Object> keys) {
-      this(cacheName, MarshallableCollection.unwrapAsList(keys));
+      this(cacheName, (List<Object>) MarshallableCollection.unwrap(keys, ArrayList::new));
    }
 
    @ProtoField(2)

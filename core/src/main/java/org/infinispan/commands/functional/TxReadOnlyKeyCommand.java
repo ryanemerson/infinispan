@@ -1,5 +1,6 @@
 package org.infinispan.commands.functional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
@@ -32,7 +33,7 @@ public class TxReadOnlyKeyCommand<K, V, R> extends ReadOnlyKeyCommand<K, V, R> {
                         DataConversion keyDataConversion, DataConversion valueDataConversion,
                         MarshallableCollection<Mutation<K, V, ?>> wrappedMutations) {
       super(wrappedKey, flagsWithoutRemote, topologyId, segment, wrappedFunction, params, keyDataConversion, valueDataConversion);
-      this.mutations = MarshallableCollection.unwrapAsList(wrappedMutations);
+      this.mutations = MarshallableCollection.unwrap(wrappedMutations, ArrayList::new);
    }
 
    @ProtoField(number = 9, name = "mutations")

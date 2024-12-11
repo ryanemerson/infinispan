@@ -3,6 +3,7 @@ package org.infinispan.server.hotrod.tx.table.functions;
 import static org.infinispan.server.hotrod.tx.table.Status.NO_TRANSACTION;
 import static org.infinispan.server.hotrod.tx.table.Status.OK;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.infinispan.commands.write.WriteCommand;
@@ -37,7 +38,7 @@ public class PreparingDecisionFunction extends TxFunction {
 
    @ProtoFactory
    PreparingDecisionFunction(MarshallableCollection<WriteCommand> wrappedModifications) {
-      this.modifications = MarshallableCollection.unwrapAsList(wrappedModifications);
+      this.modifications = MarshallableCollection.unwrap(wrappedModifications, ArrayList::new);
    }
 
    @ProtoField(value = 1, name = "modifications")

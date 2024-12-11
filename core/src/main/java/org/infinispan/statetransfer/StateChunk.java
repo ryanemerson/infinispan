@@ -1,5 +1,6 @@
 package org.infinispan.statetransfer;
 
+import java.util.ArrayList;
 import java.util.Collection;
 
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
@@ -41,7 +42,7 @@ public class StateChunk {
    StateChunk(int segmentId, boolean isLastChunk, MarshallableCollection<InternalCacheEntry<?, ?>> entries) {
       this.segmentId = segmentId;
       this.isLastChunk = isLastChunk;
-      this.cacheEntries = MarshallableCollection.unwrapAsList(entries);
+      this.cacheEntries = MarshallableCollection.unwrap(entries, ArrayList::new);
    }
 
    public StateChunk(int segmentId, Collection<InternalCacheEntry<?, ?>> cacheEntries, boolean isLastChunk) {

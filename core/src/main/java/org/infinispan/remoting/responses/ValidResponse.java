@@ -1,5 +1,6 @@
 package org.infinispan.remoting.responses;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -84,7 +85,7 @@ public abstract class ValidResponse implements Response {
    @SuppressWarnings("unchecked")
    public <T> List<T> getResponseList() {
       isReturnValueDisabledCheck();
-      return MarshallableCollection.unwrapAsList((MarshallableCollection<T>) collection);
+      return MarshallableCollection.unwrap((MarshallableCollection<T>) collection, ArrayList::new);
    }
 
    /**

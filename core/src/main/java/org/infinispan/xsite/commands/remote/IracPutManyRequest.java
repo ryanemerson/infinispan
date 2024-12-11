@@ -49,7 +49,7 @@ public class IracPutManyRequest extends IracUpdateKeyRequest<IntSet> {
    @ProtoFactory
    IracPutManyRequest(ByteString cacheName, MarshallableCollection<Update> updateList) {
       super(cacheName);
-      this.updateList = MarshallableCollection.unwrapAsList(updateList);
+      this.updateList = MarshallableCollection.unwrap(updateList, ArrayList::new);
    }
 
    @ProtoField(2)

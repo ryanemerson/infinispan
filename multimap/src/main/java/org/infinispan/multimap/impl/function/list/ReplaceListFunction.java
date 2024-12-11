@@ -36,7 +36,7 @@ public final class ReplaceListFunction<K, V> implements ListBucketBaseFunction<K
 
    @ProtoFactory
    ReplaceListFunction(MarshallableCollection<V> values) {
-      this.values = MarshallableCollection.unwrapAsDeque(values);
+      this.values = MarshallableCollection.unwrap(values, ArrayDeque::new);
    }
 
    @ProtoField(1)

@@ -1,5 +1,6 @@
 package org.infinispan.commands.remote;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -49,7 +50,7 @@ public class ClusteredGetAllCommand<K, V> extends BaseClusteredReadCommand {
    ClusteredGetAllCommand(ByteString cacheName, int topologyId, long flagsWithoutRemote, MarshallableCollection<?> wrappedKeys,
                           GlobalTransaction globalTransaction) {
       super(cacheName, topologyId, flagsWithoutRemote);
-      this.keys = MarshallableCollection.unwrapAsList(wrappedKeys);
+      this.keys = MarshallableCollection.unwrap(wrappedKeys, ArrayList::new);
       this.gtx = globalTransaction;
    }
 

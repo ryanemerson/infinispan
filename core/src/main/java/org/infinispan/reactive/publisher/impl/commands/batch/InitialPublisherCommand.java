@@ -1,5 +1,6 @@
 package org.infinispan.reactive.publisher.impl.commands.batch;
 
+import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Function;
@@ -65,8 +66,8 @@ public class InitialPublisherCommand<K, I, R> extends BaseRpcCommand implements 
       this.deliveryGuarantee = deliveryGuarantee;
       this.batchSize = batchSize;
       this.segments = WrappedMessages.unwrap(wrappedSegments);
-      this.keys = MarshallableCollection.unwrapAsSet(wrappedKeys);
-      this.excludedKeys = MarshallableCollection.unwrapAsSet(wrappedExcludedKeys);
+      this.keys = MarshallableCollection.unwrap(wrappedKeys, HashSet::new);
+      this.excludedKeys = MarshallableCollection.unwrap(wrappedExcludedKeys, HashSet::new);
       this.explicitFlags = explicitFlags;
       this.entryStream = entryStream;
       this.trackKeys = trackKeys;

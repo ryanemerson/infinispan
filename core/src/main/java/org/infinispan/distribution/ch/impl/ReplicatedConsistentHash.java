@@ -70,7 +70,7 @@ public class ReplicatedConsistentHash implements ConsistentHash {
       return new ReplicatedConsistentHash(
             (List<Address>)(List<?>) jGroupsMembers,
             MarshallableMap.unwrap(capacityFactors),
-            MarshallableCollection.unwrapAsList(membersWithoutState),
+            MarshallableCollection.unwrap(membersWithoutState, ArrayList::new),
             primaryOwners
       );
    }

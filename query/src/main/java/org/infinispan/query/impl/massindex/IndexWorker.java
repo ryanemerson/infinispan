@@ -48,7 +48,7 @@ public final class IndexWorker implements Function<EmbeddedCacheManager, Void> {
 
    @ProtoFactory
    IndexWorker(String cacheName, MarshallableCollection<Class<?>> indexedTypes, boolean skipIndex, MarshallableCollection<Object> keys) {
-      this(cacheName, MarshallableCollection.unwrap(indexedTypes), skipIndex, MarshallableCollection.unwrapAsSet(keys));
+      this(cacheName, MarshallableCollection.unwrap(indexedTypes), skipIndex, MarshallableCollection.unwrap(keys, HashSet::new));
    }
 
    @ProtoField(1)

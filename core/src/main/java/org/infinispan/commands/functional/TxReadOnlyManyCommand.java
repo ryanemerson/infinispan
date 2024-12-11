@@ -1,5 +1,6 @@
 package org.infinispan.commands.functional;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
@@ -44,7 +45,7 @@ public class TxReadOnlyManyCommand<K, V, R> extends ReadOnlyManyCommand<K, V, R>
       super(flagsWithoutRemote, topologyId, wrappedKeys, wrappedFunction, params, keyDataConversion, valueDataConversion);
       this.mutations = wrappedMutations == null ? null :
             wrappedMutations.get().stream()
-                  .map(MarshallableCollection::unwrapAsList)
+                  .map(mc -> MarshallableCollection.unwrap(mc, ArrayList::new))
                   .collect(Collectors.toList());
    }
 

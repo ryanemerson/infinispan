@@ -3,6 +3,7 @@ package org.infinispan.server.hotrod.tx.table;
 import static org.infinispan.server.hotrod.tx.table.Status.ACTIVE;
 import static org.infinispan.server.hotrod.tx.table.Status.PREPARING;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -63,7 +64,7 @@ public class TxState {
    @ProtoFactory
    TxState(GlobalTransaction globalTransaction, Status status, boolean recoverable, long timeout, long lastAccessTimeNs,
            MarshallableCollection<WriteCommand> wrappedModifications) {
-      this(globalTransaction, status, MarshallableCollection.unwrapAsList(wrappedModifications), recoverable, timeout, lastAccessTimeNs);
+      this(globalTransaction, status, MarshallableCollection.unwrap(wrappedModifications, ArrayList::new), recoverable, timeout, lastAccessTimeNs);
    }
 
    @ProtoField(value = 6, name = "modification")

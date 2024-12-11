@@ -1,5 +1,7 @@
 package org.infinispan.statetransfer;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -35,8 +37,8 @@ public class TransactionInfo {
       this(
             globalTransaction,
             topologyId,
-            MarshallableCollection.unwrapAsList(wrappedModifications),
-            MarshallableCollection.unwrapAsSet(wrappedKeys)
+            MarshallableCollection.unwrap(wrappedModifications, ArrayList::new),
+            (Set<Object>) MarshallableCollection.unwrap(wrappedKeys, HashSet::new)
       );
    }
 

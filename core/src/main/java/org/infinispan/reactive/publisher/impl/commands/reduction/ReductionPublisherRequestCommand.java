@@ -1,5 +1,6 @@
 package org.infinispan.reactive.publisher.impl.commands.reduction;
 
+import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Function;
@@ -77,8 +78,8 @@ public class ReductionPublisherRequestCommand<K> extends BaseRpcCommand implemen
       this.parallelStream = parallelStream;
       this.deliveryGuarantee = deliveryGuarantee;
       this.segments = WrappedMessages.unwrap(wrappedSegments);
-      this.keys = MarshallableCollection.unwrapAsSet(keys);
-      this.excludedKeys = MarshallableCollection.unwrapAsSet(excludedKeys);
+      this.keys = MarshallableCollection.unwrap(keys, HashSet::new);
+      this.excludedKeys = MarshallableCollection.unwrap(excludedKeys, HashSet::new);
       this.explicitFlags = explicitFlags;
       this.entryStream = entryStream;
       this.finalizer = MarshallableObject.unwrap(finalizer);

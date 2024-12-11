@@ -1,14 +1,10 @@
 package org.infinispan.marshall.protostream.impl;
 
 import java.io.IOException;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Deque;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.function.Function;
 
 import org.infinispan.commons.marshall.MarshallingException;
@@ -59,44 +55,6 @@ public class MarshallableCollection<T> {
       return wrapper == null ? null : wrapper.get();
    }
 
-   /**
-    * @param wrapper the {@link MarshallableCollection} instance to unwrap.
-    * @return a {@link List} representation of the wrapped {@link Collection} or null if the provided wrapper does not exist.
-    */
-   public static <T> List<T> unwrapAsList(MarshallableCollection<T> wrapper) {
-//      return unwrap(wrapper, c -> c instanceof List ? (List<T>) c : new ArrayList<>(c));
-      if (wrapper == null)
-         return null;
-
-      Collection<T> collection = wrapper.get();
-      return collection instanceof List ? (List<T>) collection : new ArrayList<>(collection);
-   }
-
-   /**
-    * @param wrapper the {@link MarshallableCollection} instance to unwrap.
-    * @return a {@link Deque} representation of the wrapped {@link Collection} or null if the provided wrapper does not exist.
-    */
-   public static <T> Deque<T> unwrapAsDeque(MarshallableCollection<T> wrapper) {
-      if (wrapper == null)
-         return null;
-
-      Collection<T> collection = wrapper.get();
-      return collection instanceof Deque ? (Deque<T>) collection : new ArrayDeque<>(collection);
-   }
-
-   /**
-    * @param wrapper the {@link MarshallableCollection} instance to unwrap.
-    * @return a {@link Set} representation of the wrapped {@link Collection} or null if the provided wrapper does not exist.
-    */
-   public static <T> Set<T> unwrapAsSet(MarshallableCollection<T> wrapper) {
-      if (wrapper == null)
-         return null;
-
-      Collection<T> collection = wrapper.get();
-      return collection instanceof Set ? (Set<T>) collection : new HashSet<>(collection);
-   }
-
-   // TODO replace unwrapAsList with this?
    public static <R extends Collection<T>, T> R unwrap(MarshallableCollection<T> wrapper, Function<Collection<T>, R> builder) {
       if (wrapper == null)
          return null;

@@ -1,5 +1,6 @@
 package org.infinispan.commands.tx;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -80,7 +81,7 @@ public class PrepareCommand extends AbstractTransactionBoundaryCommand implement
    PrepareCommand(int topologyId, ByteString cacheName, GlobalTransaction globalTransaction, MarshallableCollection<WriteCommand> wrappedModifications,
                   boolean onePhaseCommit, boolean retriedCommand) {
       super(topologyId, cacheName, globalTransaction);
-      this.modifications = MarshallableCollection.unwrapAsList(wrappedModifications);
+      this.modifications = MarshallableCollection.unwrap(wrappedModifications, ArrayList::new);
       this.onePhaseCommit = onePhaseCommit;
       this.retriedCommand = retriedCommand;
    }

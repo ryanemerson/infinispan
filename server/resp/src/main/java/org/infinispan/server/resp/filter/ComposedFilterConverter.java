@@ -1,5 +1,6 @@
 package org.infinispan.server.resp.filter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.infinispan.commons.dataconversion.MediaType;
@@ -33,7 +34,7 @@ public class ComposedFilterConverter<K, V, C> extends AbstractKeyValueFilterConv
 
    @ProtoFactory
    ComposedFilterConverter(MarshallableCollection<KeyValueFilterConverter<K, V, C>> filterConverters) {
-      this.filterConverters = MarshallableCollection.unwrapAsList(filterConverters);
+      this.filterConverters = MarshallableCollection.unwrap(filterConverters, ArrayList::new);
    }
 
    @ProtoField(1)

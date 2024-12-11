@@ -1,5 +1,6 @@
 package org.infinispan.commands.irac;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -43,7 +44,7 @@ public class IracTombstoneRemoteSiteCheckCommand extends BaseRpcCommand {
    @ProtoFactory
    IracTombstoneRemoteSiteCheckCommand(ByteString cacheName, MarshallableCollection<Object> wrappedKeys) {
       super(cacheName);
-      this.keys = MarshallableCollection.unwrapAsList(wrappedKeys);
+      this.keys = MarshallableCollection.unwrap(wrappedKeys, ArrayList::new);
    }
 
    @ProtoField(2)

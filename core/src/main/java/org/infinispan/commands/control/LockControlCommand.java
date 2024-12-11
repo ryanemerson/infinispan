@@ -69,7 +69,7 @@ public class LockControlCommand extends AbstractTransactionBoundaryCommand imple
    LockControlCommand(int topologyId, ByteString cacheName, GlobalTransaction globalTransaction, MarshallableCollection<Object> wrappedKeys,
                       boolean unlock, long flagsBitSetWithoutRemote) {
       super(topologyId, cacheName, globalTransaction);
-      this.keys = MarshallableCollection.unwrapAsList(wrappedKeys);
+      this.keys = MarshallableCollection.unwrap(wrappedKeys, ArrayList::new);
       this.unlock = unlock;
       this.flags = flagsBitSetWithoutRemote;
    }

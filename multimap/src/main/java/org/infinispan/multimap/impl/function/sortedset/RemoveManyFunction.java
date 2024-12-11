@@ -1,5 +1,6 @@
 package org.infinispan.multimap.impl.function.sortedset;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -49,7 +50,7 @@ public final class RemoveManyFunction<K, V, T> implements SortedSetBucketBaseFun
 
    @ProtoFactory
    RemoveManyFunction(boolean includeMin, boolean includeMax, SortedSetOperationType type, MarshallableCollection<T> values) {
-      this(MarshallableCollection.unwrapAsList(values), includeMin, includeMax, type);
+      this(MarshallableCollection.unwrap(values, ArrayList::new), includeMin, includeMax, type);
    }
 
    @ProtoField(4)

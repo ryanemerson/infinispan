@@ -1,5 +1,6 @@
 package org.infinispan.commands.functional;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.function.Function;
 
@@ -51,7 +52,7 @@ public class ReadOnlyManyCommand<K, V, R> extends AbstractTopologyAffectedComman
                        MarshallableObject<Function<ReadEntryView<K, V>, R>> wrappedFunction, Params params,
                        DataConversion keyDataConversion, DataConversion valueDataConversion) {
       super(flagsWithoutRemote, topologyId);
-      this.keys = MarshallableCollection.unwrapAsList(wrappedKeys);
+      this.keys = MarshallableCollection.unwrap(wrappedKeys, ArrayList::new);
       this.f = MarshallableObject.unwrap(wrappedFunction);
       this.params = params;
       this.keyDataConversion = keyDataConversion;

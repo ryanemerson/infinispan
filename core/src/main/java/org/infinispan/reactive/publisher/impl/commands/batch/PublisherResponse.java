@@ -1,5 +1,6 @@
 package org.infinispan.reactive.publisher.impl.commands.batch;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.ObjIntConsumer;
@@ -56,7 +57,7 @@ public class PublisherResponse {
       this.lostSegments = WrappedMessages.unwrap(lostSegmentsWrapped);
       this.complete = complete;
       this.size = results.length;
-      this.segmentResults = MarshallableCollection.unwrapAsList(wrappedSegmentResults);
+      this.segmentResults = MarshallableCollection.unwrap(wrappedSegmentResults, ArrayList::new);
    }
 
 
