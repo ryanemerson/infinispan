@@ -1,17 +1,14 @@
 package org.infinispan.notifications.cachelistener.cluster;
 
 import java.lang.annotation.Annotation;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import org.infinispan.Cache;
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
-import org.infinispan.commons.util.Util;
 import org.infinispan.encoding.DataConversion;
 import org.infinispan.factories.ComponentRegistry;
 import org.infinispan.manager.EmbeddedCacheManager;
@@ -45,77 +42,58 @@ public class ClusterListenerReplicateCallable<K, V> implements Function<Embedded
 
    private final CacheEventFilter<K, V> filter;
    private final CacheEventConverter<K, V, ?> converter;
-   private final UUID identifier;
 
-   // TODO marshall annotations and identifier with ProtoStream directly IPROTO-137
-   private volatile Set<Class<? extends Annotation>> filterAnnotations;
-   private volatile Set<String> filterAnnotationClassNames;
+   @ProtoField(1)
+   final UUID identifier;
 
-   @ProtoField(number = 1)
+   @ProtoField(2)
    final String cacheName;
 
-   @ProtoField(number = 2, javaType = JGroupsAddress.class)
+   @ProtoField(number = 3, javaType = JGroupsAddress.class)
    final Address origin;
 
-   @ProtoField(number = 3, defaultValue = "false")
+   @ProtoField(number = 4, defaultValue = "false")
    final boolean sync;
 
-   @ProtoField(number = 4)
+   @ProtoField(number = 5, collectionImplementation = HashSet.class)
+   final Set<Class<? extends Annotation>> filterAnnotations;
+
+   @ProtoField(number = 6)
    final DataConversion keyDataConversion;
 
-   @ProtoField(number = 5)
+   @ProtoField(number = 7)
    final DataConversion valueDataConversion;
 
-   @ProtoField(number = 6, defaultValue = "false")
+   @ProtoField(number = 8, defaultValue = "false")
    final boolean useStorageFormat;
-
-   private ClusterListenerReplicateCallable(CacheEventFilter<K, V> filter, CacheEventConverter<K, V, ?> converter,
-                                            UUID identifier, Set<Class<? extends Annotation>> filterAnnotations,
-                                            Set<String> filterAnnotationClassNames, String cacheName, Address origin, boolean sync,
-                                            DataConversion keyDataConversion, DataConversion valueDataConversion,
-                                            boolean useStorageFormat) {
-      this.filter = filter;
-      this.converter = converter;
-      this.filterAnnotations = filterAnnotations;
-      this.filterAnnotationClassNames = filterAnnotationClassNames;
-      this.identifier = identifier;
-      this.cacheName = cacheName;
-      this.origin = origin;
-      this.sync = sync;
-      this.keyDataConversion = keyDataConversion;
-      this.valueDataConversion = valueDataConversion;
-      this.useStorageFormat = useStorageFormat;
-   }
 
    public ClusterListenerReplicateCallable(String cacheName, UUID identifier, Address origin, CacheEventFilter<K, V> filter,
                                            CacheEventConverter<K, V, ?> converter, boolean sync,
                                            Set<Class<? extends Annotation>> filterAnnotations,
                                            DataConversion keyDataConversion, DataConversion valueDataConversion, boolean useStorageFormat) {
-      this(filter, converter, identifier, filterAnnotations, null, cacheName, origin, sync, keyDataConversion, valueDataConversion, useStorageFormat);
+      this.cacheName = cacheName;
+      this.identifier = identifier;
+      this.origin = origin;
+      this.filter = filter;
+      this.converter = converter;
+      this.sync = sync;
+      this.filterAnnotations = filterAnnotations;
+      this.keyDataConversion = keyDataConversion;
+      this.valueDataConversion = valueDataConversion;
+      this.useStorageFormat = useStorageFormat;
 
       if (log.isTraceEnabled())
          log.tracef("Created clustered listener replicate callable for: %s", filterAnnotations);
    }
 
    @ProtoFactory
-   ClusterListenerReplicateCallable(String cacheName, String identifier, JGroupsAddress origin, MarshallableObject<CacheEventFilter<K, V>> filter,
-                                    MarshallableObject<CacheEventConverter<K, V, ?>> converter, boolean sync,
-                                    Set<String> filterAnnotationClassNames, DataConversion keyDataConversion,
-                                    DataConversion valueDataConversion, boolean useStorageFormat) {
-      this(MarshallableObject.unwrap(filter), MarshallableObject.unwrap(converter), UUID.fromString(identifier), null,
-            filterAnnotationClassNames, cacheName, origin, sync, keyDataConversion, valueDataConversion, useStorageFormat);
-   }
-
-   @ProtoField(number = 7)
-   String getIdentifier() {
-      return identifier.toString();
-   }
-
-   @ProtoField(number = 8, collectionImplementation = HashSet.class)
-   Collection<String> getFilterAnnotationClassNames() {
-      if (filterAnnotationClassNames == null)
-         filterAnnotationClassNames = filterAnnotations.stream().map(Class::getName).collect(Collectors.toSet());
-      return filterAnnotationClassNames;
+   ClusterListenerReplicateCallable(UUID identifier, String cacheName, JGroupsAddress origin, boolean sync,
+                                    Set<Class<? extends Annotation>> filterAnnotations, DataConversion keyDataConversion,
+                                    DataConversion valueDataConversion, boolean useStorageFormat,
+                                    MarshallableObject<CacheEventFilter<K, V>> filter,
+                                    MarshallableObject<CacheEventConverter<K, V, ?>> converter) {
+      this(cacheName, identifier, origin, MarshallableObject.unwrap(filter), MarshallableObject.unwrap(converter), sync,
+            filterAnnotations, keyDataConversion, valueDataConversion, useStorageFormat);
    }
 
    @ProtoField(number = 9)
@@ -169,13 +147,6 @@ public class ClusterListenerReplicateCallable<K, V> implements Function<Embedded
                   RemoteClusterListener listener = new RemoteClusterListener(identifier, origin, cacheNotifier,
                         cacheManagerNotifier, eventManager, sync);
                   ListenerHolder listenerHolder = new ListenerHolder(listener, keyDataConversion, valueDataConversion, useStorageFormat);
-                  if (filterAnnotations == null) {
-                     filterAnnotations = new HashSet<>(filterAnnotationClassNames.size());
-                     ClassLoader classLoader = cacheManager.getCacheManagerConfiguration().classLoader();
-                     for (String clazz : filterAnnotationClassNames) {
-                        filterAnnotations.add(Util.loadClass(clazz, classLoader));
-                     }
-                  }
                   cacheNotifier.addFilteredListener(listenerHolder, filter, converter, filterAnnotations);
                   cacheManagerNotifier.addListener(listener);
                   // It is possible the member is now gone after registered, if so we have to remove just to be sure
