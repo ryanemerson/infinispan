@@ -24,7 +24,6 @@ public class UnsuccessfulResponse extends ValidResponse {
       super(object, collection, map, array);
    }
 
-   // TODO do we need to handle collection, maps and arrays?
    public static UnsuccessfulResponse create(Object value) {
       return value == null ? EMPTY : new UnsuccessfulResponse(new MarshallableObject<>(value), null, null, null);
    }
