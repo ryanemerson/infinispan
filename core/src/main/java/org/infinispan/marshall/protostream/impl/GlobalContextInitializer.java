@@ -129,7 +129,6 @@ import org.infinispan.protostream.annotations.ProtoSyntax;
             org.infinispan.container.entries.metadata.MetadataTransientMortalCacheValue.class,
             org.infinispan.container.versioning.irac.IracTombstoneInfo.class,
             org.infinispan.context.Flag.class,
-            org.infinispan.distribution.ch.impl.AbstractConsistentHash.SegmentOwnership.class,
             org.infinispan.distribution.ch.impl.DefaultConsistentHash.class,
             org.infinispan.distribution.ch.impl.DefaultConsistentHashFactory.class,
             org.infinispan.distribution.ch.impl.ReplicatedConsistentHash.class,

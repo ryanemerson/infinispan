@@ -4,13 +4,13 @@ import static org.infinispan.test.TestingUtil.extractGlobalComponent;
 import static org.testng.AssertJUnit.assertTrue;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.IntStream;
 
 import org.infinispan.Cache;
 import org.infinispan.distribution.ch.ConsistentHash;
-import org.infinispan.distribution.ch.impl.AbstractConsistentHash;
 import org.infinispan.distribution.ch.impl.DefaultConsistentHash;
 import org.infinispan.distribution.ch.impl.ReplicatedConsistentHash;
 import org.infinispan.manager.EmbeddedCacheManager;
@@ -56,12 +56,23 @@ public abstract class ControlledConsistentHashFactory<CH extends ConsistentHash>
       setOwnerIndexes(segmentOwners);
    }
 
-   @ProtoField(number = 2)
-   AbstractConsistentHash.SegmentOwnership[] getSegmentOwners() {
-      return Arrays.stream(ownerIndexes).map(AbstractConsistentHash.SegmentOwnership::new).toArray(AbstractConsistentHash.SegmentOwnership[]::new);
+   @ProtoField(2)
+   Integer[] getSegmentOwners() {
+      // Approximate final size of array
+      List<Integer> list = new ArrayList<>((ownerIndexes.length + 1) * ownerIndexes[0].length + 1);
+      int numOwners = ownerIndexes.length;
+      list.add(numOwners);
+
+      for (int i = 0; i < numOwners; i++) {
+         int[] ownerSegments = ownerIndexes[i];
+         list.add(ownerSegments.length);
+         for (int segment : ownerSegments)
+            list.add(segment);
+      }
+      return list.toArray(new Integer[0]);
    }
 
-   @ProtoField(number = 3)
+   @ProtoField(3)
    List<JGroupsAddress> getJGroupsMembers() {
       return (List<JGroupsAddress>)(List<?>) membersToUse;
    }
@@ -134,16 +145,28 @@ public abstract class ControlledConsistentHashFactory<CH extends ConsistentHash>
       this.membersToUse = membersToUse;
    }
 
+   static int[][] convertMarshalledOwnerIndexes(Integer[] ownerIndexes) {
+      int length = ownerIndexes[0];
+      int[][] indexes = new int[length][0];
+
+      int idx = 0;
+      int marshalledArrIdx = 1;
+      while (marshalledArrIdx < ownerIndexes.length) {
+         int size = ownerIndexes[marshalledArrIdx++];
+         int[] owners = new int[size];
+         for (int j = 0; j < size; j++) {
+            owners[j] = ownerIndexes[marshalledArrIdx++];
+         }
+         indexes[idx++] = owners;
+      }
+      return indexes;
+   }
+
    public static class Default extends ControlledConsistentHashFactory<DefaultConsistentHash> implements Serializable {
 
-      Default() {}
-
       @ProtoFactory
-      Default(int numSegments, AbstractConsistentHash.SegmentOwnership[] segmentOwners, List<JGroupsAddress> jGroupsMembers) {
-         super(new DefaultTrait(),
-               Arrays.stream(segmentOwners)
-                     .map(AbstractConsistentHash.SegmentOwnership::getIndexes)
-                     .toArray(int[][]::new));
+      Default(int numSegments, Integer[] segmentOwners, List<JGroupsAddress> jGroupsMembers) {
+         super(new DefaultTrait(), ControlledConsistentHashFactory.convertMarshalledOwnerIndexes(segmentOwners));
          this.membersToUse = (List<Address>) (List<?>) jGroupsMembers;
       }
 
@@ -162,8 +185,8 @@ public abstract class ControlledConsistentHashFactory<CH extends ConsistentHash>
    public static class Replicated extends ControlledConsistentHashFactory<ReplicatedConsistentHash> {
 
       @ProtoFactory
-      Replicated(int numSegments, AbstractConsistentHash.SegmentOwnership[] segmentOwners, List<JGroupsAddress> jGroupsMembers) {
-         this(segmentOwners[0].getIndexes());
+      Replicated(int numSegments, Integer[] segmentOwners, List<JGroupsAddress> jGroupsMembers) {
+         super(new ReplicatedTrait(), ControlledConsistentHashFactory.convertMarshalledOwnerIndexes(segmentOwners));
          this.membersToUse = (List<Address>) (List<?>) jGroupsMembers;
       }
 
