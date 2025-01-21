@@ -83,25 +83,28 @@ public class DefaultConsistentHash extends AbstractConsistentHash {
    }
 
    @ProtoFactory
-   DefaultConsistentHash(List<JGroupsAddress> jGroupsMembers, float[] capacityFactorsArray, int numOwners, SegmentOwnership[] segmentOwners) {
+   DefaultConsistentHash(List<JGroupsAddress> jGroupsMembers, float[] capacityFactorsArray, int numOwners, Integer[] segmentOwners) {
       super(segmentOwners.length, (List<Address>)(List<?>) jGroupsMembers, capacityFactorsArray);
       if (numOwners < 1)
          throw new IllegalArgumentException("The number of owners must be strictly positive");
 
       this.numOwners = numOwners;
 
-      int numSegments = segmentOwners.length;
-      this.segmentOwners = new List[numSegments];
-      for (int i = 0; i < numSegments; i++) {
-         int size = segmentOwners[i].indexes.length;
-         JGroupsAddress[] owners = new JGroupsAddress[size];
+      int segmentOwnersLength = segmentOwners[0];
+      this.segmentOwners = new List[segmentOwnersLength];
+
+      int idx = 0;
+      int marshalledArrIdx = 1;
+      while (marshalledArrIdx < segmentOwners.length) {
+         int size = segmentOwners[marshalledArrIdx++];
+         Address[] owners = new Address[size];
          for (int j = 0; j < size; j++) {
-            int ownerIndex = segmentOwners[i].indexes[j];
-            owners[j] = jGroupsMembers.get(ownerIndex);
+            int ownerIndex = segmentOwners[marshalledArrIdx++];
+            owners[j] = members.get(ownerIndex);
          }
-         this.segmentOwners[i] = Immutables.immutableListWrap(owners);
+         this.segmentOwners[idx++] = Immutables.immutableListWrap(owners);
       }
-      for (int i = 0; i < numSegments; i++) {
+      for (int i = 0; i < segmentOwnersLength; i++) {
          if (this.segmentOwners[i] == null || this.segmentOwners[i].isEmpty()) {
             throw new IllegalArgumentException("Segment owner list cannot be null or empty");
          }
@@ -125,13 +128,20 @@ public class DefaultConsistentHash extends AbstractConsistentHash {
    }
 
    @ProtoField(number = 4)
-   SegmentOwnership[] getSegmentOwners() {
-      SegmentOwnership[] segmentOwnership = new SegmentOwnership[segmentOwners.length];
+   Integer[] getSegmentOwners() {
+      // Approximate final size of array
+      List<Integer> ownersList = new ArrayList<>((segmentOwners.length + 1) * segmentOwners[0].size() + 1);
+      ownersList.add(segmentOwners.length);
+
+      // Avoid computing the identityHashCode for every ImmutableListCopy/Address
       HashMap<Address, Integer> memberIndexes = getMemberIndexMap(members);
-      for (int i = 0; i < segmentOwners.length; i++) {
-         segmentOwnership[i] = new SegmentOwnership(memberIndexes, segmentOwners[i]);
+      for (List<Address> owners : segmentOwners) {
+         ownersList.add(owners.size());
+         for (Address owner : owners) {
+            ownersList.add(memberIndexes.get(owner));
+         }
       }
-      return segmentOwnership;
+      return ownersList.toArray(new Integer[0]);
    }
 
    @Override
