@@ -33,11 +33,13 @@ import org.infinispan.util.logging.Log;
 @Scope(Scopes.GLOBAL)
 public abstract class AbstractInternalProtoStreamMarshaller implements Marshaller, StreamAwareMarshaller {
    private static final int PROTOSTREAM_DEFAULT_BUFFER_SIZE = 4096;
+   private static final BufferSizePredictor BUFFER_SIZE_PREDICTOR = new BufferPredictor();
 
    @Inject protected SerializationContextRegistry ctxRegistry;
    @Inject @ComponentName(KnownComponentNames.USER_MARSHALLER)
    ComponentRef<Marshaller> userMarshallerRef;
    protected Marshaller userMarshaller;
+   protected boolean skipUserMarshaller;
 
    protected Log log;
 
@@ -64,9 +66,9 @@ public abstract class AbstractInternalProtoStreamMarshaller implements Marshalle
       try {
          if (requiresWrapping(obj))
             obj = new MarshallableUserObject<>(obj);
-         int size = estimatedSize < 0 ? PROTOSTREAM_DEFAULT_BUFFER_SIZE : estimatedSize;
-         LazyByteArrayOutputStream baos = new LazyByteArrayOutputStream(size);
-         ProtobufUtil.toWrappedStream(getSerializationContext(), baos, obj, size);
+
+         LazyByteArrayOutputStream baos = new LazyByteArrayOutputStream(estimatedSize);
+         ProtobufUtil.toWrappedStream(getSerializationContext(), baos, obj);
          return baos;
       } catch (Throwable t) {
          log.cannotMarshall(obj.getClass(), t);
@@ -78,18 +80,25 @@ public abstract class AbstractInternalProtoStreamMarshaller implements Marshalle
 
    @Override
    public ByteBuffer objectToBuffer(Object o) {
-      LazyByteArrayOutputStream objectStream = objectToOutputStream(o, -1);
-      return ByteBufferImpl.create(objectStream.getRawBuffer(), 0, objectStream.size());
+      try (LazyByteArrayOutputStream objectStream = objectToOutputStream(o, PROTOSTREAM_DEFAULT_BUFFER_SIZE)) {
+         return ByteBufferImpl.create(objectStream.getRawBuffer(), 0, objectStream.size());
+      } catch (IOException e) {
+         throw new MarshallingException(e);
+      }
    }
 
    @Override
    public byte[] objectToByteBuffer(Object obj, int estimatedSize) {
-      return objectToOutputStream(obj, estimatedSize).getTrimmedBuffer();
+      try (LazyByteArrayOutputStream stream = objectToOutputStream(obj, estimatedSize)) {
+         return stream.getTrimmedBuffer();
+      } catch (IOException e) {
+         throw new MarshallingException(e);
+      }
    }
 
    @Override
    public byte[] objectToByteBuffer(Object obj) {
-      return objectToByteBuffer(obj, sizeEstimate(obj));
+      return objectToByteBuffer(obj, PROTOSTREAM_DEFAULT_BUFFER_SIZE);
    }
 
    @Override
@@ -104,15 +113,14 @@ public abstract class AbstractInternalProtoStreamMarshaller implements Marshalle
 
    @Override
    public BufferSizePredictor getBufferSizePredictor(Object o) {
-      // TODO if protobuf based, return estimate based upon schema
-      return userMarshaller.getBufferSizePredictor(o);
+      return !skipUserMarshaller ? userMarshaller.getBufferSizePredictor(o) : BUFFER_SIZE_PREDICTOR;
    }
 
    @Override
    public void writeObject(Object o, OutputStream out) throws IOException {
       if (requiresWrapping(o))
          o = new MarshallableUserObject<>(o);
-      ProtobufUtil.toWrappedStream(getSerializationContext(), out, o, PROTOSTREAM_DEFAULT_BUFFER_SIZE);
+      ProtobufUtil.toWrappedStream(getSerializationContext(), out, o);
    }
 
    @Override
@@ -134,7 +142,7 @@ public abstract class AbstractInternalProtoStreamMarshaller implements Marshalle
 
    @Override
    public int sizeEstimate(Object o) {
-      if (isMarshallableWithProtoStream(o))
+      if (skipUserMarshaller)
          return PROTOSTREAM_DEFAULT_BUFFER_SIZE;
 
       int userBytesEstimate = userMarshaller.getBufferSizePredictor(o.getClass()).nextSize(o);
@@ -147,7 +155,7 @@ public abstract class AbstractInternalProtoStreamMarshaller implements Marshalle
    }
 
    private boolean requiresWrapping(Object o) {
-      return !isMarshallableWithProtoStream(o);
+      return !skipUserMarshaller && !isMarshallableWithProtoStream(o);
    }
 
    protected boolean isMarshallableWithProtoStream(Object o) {
@@ -159,6 +167,18 @@ public abstract class AbstractInternalProtoStreamMarshaller implements Marshalle
          return userMarshaller.isMarshallable(o);
       } catch (Exception ignore) {
          return false;
+      }
+   }
+
+   static class BufferPredictor implements BufferSizePredictor {
+      @Override
+      public int nextSize(Object obj) {
+         return PROTOSTREAM_DEFAULT_BUFFER_SIZE;
+      }
+
+      @Override
+      public void recordSize(int previousSize) {
+         // no-op
       }
    }
 }
