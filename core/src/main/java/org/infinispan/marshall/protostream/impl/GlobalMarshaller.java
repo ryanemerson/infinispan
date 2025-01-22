@@ -4,9 +4,11 @@ import static org.infinispan.util.logging.Log.CONTAINER;
 
 import java.io.IOException;
 
+import org.infinispan.commons.marshall.ImmutableProtoStreamMarshaller;
 import org.infinispan.factories.GlobalComponentRegistry;
 import org.infinispan.factories.annotations.Inject;
 import org.infinispan.factories.annotations.Stop;
+import org.infinispan.marshall.core.impl.DelegatingUserMarshaller;
 import org.infinispan.protostream.ImmutableSerializationContext;
 
 /**
@@ -31,6 +33,7 @@ public class GlobalMarshaller extends AbstractInternalProtoStreamMarshaller {
    public void start() {
       super.start();
       classLoader = gcr.getGlobalConfiguration().classLoader();
+      skipUserMarshaller = ((DelegatingUserMarshaller) userMarshaller).getDelegate() instanceof ImmutableProtoStreamMarshaller;
    }
 
    @Override
