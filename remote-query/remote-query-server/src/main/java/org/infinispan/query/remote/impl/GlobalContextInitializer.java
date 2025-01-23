@@ -9,7 +9,8 @@ import org.infinispan.protostream.annotations.ProtoSyntax;
       dependsOn = {
             org.infinispan.marshall.protostream.impl.GlobalContextInitializer.class,
             org.infinispan.query.core.impl.GlobalContextInitializer.class,
-            org.infinispan.query.remote.client.impl.GlobalContextInitializer.class
+            org.infinispan.query.remote.client.impl.GlobalContextInitializer.class,
+            org.infinispan.query.remote.impl.persistence.PersistenceContextInitializer.class
       },
       includeClasses = {
             org.infinispan.query.remote.impl.filter.IckleBinaryProtobufFilterAndConverter.class,
