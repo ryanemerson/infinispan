@@ -19,7 +19,6 @@ import org.infinispan.notifications.cachelistener.event.CacheEntryEvent;
 import org.infinispan.notifications.cachelistener.filter.CacheEventConverter;
 import org.infinispan.notifications.cachelistener.filter.CacheEventFilter;
 import org.infinispan.notifications.cachelistener.filter.EventType;
-import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.server.resp.AclCategory;
 import org.infinispan.server.resp.Resp3Handler;
@@ -52,12 +51,10 @@ import io.netty.util.AttributeKey;
  * @see <a href="https://redis.io/commands/watch/>WATCH</a>
  * @since 15.0
  */
-@ProtoTypeId(ProtoStreamTypeIds.RESP_WATCH)
 public class WATCH extends RespCommand implements Resp3Command, TransactionResp3Command {
 
    static final AttributeKey<List<TxKeysListener>> WATCHER_KEY = AttributeKey.newInstance("watchers");
 
-   @ProtoFactory
    public WATCH() {
       super(-2, 1, -1, 1);
    }
