@@ -12,7 +12,6 @@ import org.infinispan.protostream.annotations.ProtoSyntax;
             org.infinispan.server.core.GlobalContextInitializer.class,
       },
       includeClasses = {
-            org.infinispan.server.resp.commands.tx.WATCH.class,
             org.infinispan.server.resp.commands.tx.WATCH.TxEventConverterEmpty.class,
             org.infinispan.server.resp.filter.ComposedFilterConverter.class,
             org.infinispan.server.resp.filter.EventListenerConverter.class,
