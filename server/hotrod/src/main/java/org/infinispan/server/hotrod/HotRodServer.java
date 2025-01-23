@@ -6,9 +6,7 @@ import static org.infinispan.commons.dataconversion.MediaType.APPLICATION_PROTOS
 import static org.infinispan.commons.dataconversion.MediaType.APPLICATION_UNKNOWN;
 import static org.infinispan.counter.EmbeddedCounterManagerFactory.asCounterManager;
 import static org.infinispan.factories.KnownComponentNames.NON_BLOCKING_EXECUTOR;
-import static org.infinispan.query.remote.client.ProtobufMetadataManagerConstants.PROTOBUF_METADATA_CACHE_NAME;
 
-import javax.security.auth.Subject;
 import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -21,10 +19,13 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 
+import javax.security.auth.Subject;
+
 import org.infinispan.AdvancedCache;
 import org.infinispan.Cache;
 import org.infinispan.commons.IllegalLifecycleStateException;
 import org.infinispan.commons.dataconversion.MediaType;
+import org.infinispan.commons.internal.InternalCacheNames;
 import org.infinispan.commons.logging.LogFactory;
 import org.infinispan.commons.marshall.Marshaller;
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
@@ -503,7 +504,7 @@ public class HotRodServer extends AbstractProtocolServer<HotRodServerConfigurati
       MediaType valueRequestType = header == null ? APPLICATION_UNKNOWN : header.getValueMediaType();
       if (header != null && HotRodVersion.HOTROD_28.isOlder(header.version)) {
          // Pre-2.8 clients always send protobuf payload to the metadata cache
-         if (header.cacheName.equals(PROTOBUF_METADATA_CACHE_NAME)) {
+         if (header.cacheName.equals(InternalCacheNames.PROTOBUF_METADATA_CACHE_NAME)) {
             keyRequestType = APPLICATION_PROTOSTREAM;
             valueRequestType = APPLICATION_PROTOSTREAM;
          } else {

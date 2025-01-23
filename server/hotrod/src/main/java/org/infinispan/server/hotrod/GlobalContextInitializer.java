@@ -10,7 +10,6 @@ import org.infinispan.protostream.annotations.ProtoSyntax;
             org.infinispan.commons.GlobalContextInitializer.class,
             org.infinispan.marshall.persistence.impl.PersistenceContextInitializer.class,
             org.infinispan.marshall.protostream.impl.GlobalContextInitializer.class,
-            org.infinispan.query.remote.impl.persistence.PersistenceContextInitializer.class
       },
       includeClasses = {
             CheckAddressTask.class,
