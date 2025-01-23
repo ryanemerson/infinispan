@@ -10,7 +10,9 @@ import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.remoting.transport.Address;
+import org.infinispan.remoting.transport.LocalModeAddress;
 import org.infinispan.remoting.transport.jgroups.JGroupsAddress;
+import org.infinispan.remoting.transport.jgroups.JGroupsAddressCache;
 
 /**
  * Represents an unique identified for non-transaction write commands.
@@ -26,21 +28,28 @@ import org.infinispan.remoting.transport.jgroups.JGroupsAddress;
  */
 @ProtoTypeId(ProtoStreamTypeIds.COMMAND_INVOCATION_ID)
 public final class CommandInvocationId {
-   public static final CommandInvocationId DUMMY_INVOCATION_ID = new CommandInvocationId(null, 0);
+   public static final CommandInvocationId DUMMY_INVOCATION_ID = new CommandInvocationId(null, 0, -1, -1);
 
    private static final AtomicLong nextId = new AtomicLong(0);
 
    private final Address address;
    private final long id;
+   private final long mostSignificantBits;
+   private final long leastSignificantBits;
 
-   private CommandInvocationId(Address address, long id) {
+   CommandInvocationId(Address address, long id, long mostSignificantBits, long leastSignificantBits) {
       this.address = address;
       this.id = id;
+      this.mostSignificantBits = mostSignificantBits;
+      this.leastSignificantBits = leastSignificantBits;
    }
 
    @ProtoFactory
-   CommandInvocationId(JGroupsAddress address, long id) {
-      this((Address) address, id);
+   CommandInvocationId(long id, long addressMostSignificantBits, long addressLeastSignificantBits) {
+      this.id = id;
+      this.address = JGroupsAddressCache.fromUUID(addressMostSignificantBits, addressLeastSignificantBits);
+      this.mostSignificantBits = addressMostSignificantBits;
+      this.leastSignificantBits = addressLeastSignificantBits;
    }
 
    @ProtoField(number = 1, defaultValue = "-1")
@@ -48,17 +57,31 @@ public final class CommandInvocationId {
       return id;
    }
 
-   @ProtoField(number = 2, name = "address", javaType = JGroupsAddress.class)
+   @ProtoField(number = 2, defaultValue = "-1")
+   long getAddressMostSignificantBits() {
+      return mostSignificantBits;
+   }
+
+   @ProtoField(number = 3, defaultValue = "-1")
+   long getAddressLeastSignificantBits() {
+      return leastSignificantBits;
+   }
+
    public Address getAddress() {
       return address;
    }
 
    public static CommandInvocationId generateId(Address address) {
-      return new CommandInvocationId(address, nextId.getAndIncrement());
-   }
+      if (address instanceof LocalModeAddress)
+         return new CommandInvocationId(address, nextId.getAndIncrement(), -1, -1);
 
-   public static CommandInvocationId generateIdFrom(CommandInvocationId commandInvocationId) {
-      return new CommandInvocationId(commandInvocationId.address, nextId.getAndIncrement());
+      if (!(address instanceof JGroupsAddress addr)) {
+         throw new IllegalArgumentException("Address must be a JGroupsAddress");
+      }
+      if (!(addr.getJGroupsAddress() instanceof org.jgroups.util.UUID uuidAddr)) {
+         throw new IllegalArgumentException("Address must be a org.jgroups.util.UUID");
+      }
+      return new CommandInvocationId(addr, nextId.getAndIncrement(), uuidAddr.getMostSignificantBits(), uuidAddr.getLeastSignificantBits());
    }
 
    @Override
