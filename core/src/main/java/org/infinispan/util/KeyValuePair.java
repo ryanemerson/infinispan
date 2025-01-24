@@ -15,33 +15,39 @@ import org.infinispan.protostream.annotations.ProtoTypeId;
  */
 @ProtoTypeId(ProtoStreamTypeIds.KEY_VALUE_PAIR)
 public class KeyValuePair<K,V> {
+   private final K key;
+   private final V value;
 
    public static <K, V> KeyValuePair<K, V> of(K key, V value) {
       return new KeyValuePair<>(key, value);
    }
 
-   @ProtoField(number = 1)
-   final MarshallableObject<K> key;
-
-   @ProtoField(number = 2)
-   final MarshallableObject<V> value;
-
-   @ProtoFactory
-   KeyValuePair(MarshallableObject<K> key, MarshallableObject<V> value) {
+   public KeyValuePair(K key, V value) {
       this.key = key;
       this.value = value;
    }
 
-   public KeyValuePair(K key, V value) {
-      this(MarshallableObject.create(key), MarshallableObject.create(value));
+   @ProtoFactory
+   KeyValuePair(MarshallableObject<K> wrappedKey, MarshallableObject<V> wrappedValue) {
+      this(MarshallableObject.unwrap(wrappedKey), MarshallableObject.unwrap(wrappedValue));
+   }
+
+   @ProtoField(value = 1, name = "key")
+   MarshallableObject<K> getWrappedKey() {
+      return MarshallableObject.create(key);
+   }
+
+   @ProtoField(value = 2, name = "value")
+   MarshallableObject<V> getWrappedValue() {
+      return MarshallableObject.create(value);
    }
 
    public K getKey() {
-      return MarshallableObject.unwrap(key);
+      return key;
    }
 
    public V getValue() {
-      return MarshallableObject.unwrap(value);
+      return value;
    }
 
    @Override
