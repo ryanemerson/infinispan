@@ -248,7 +248,6 @@ import org.infinispan.protostream.annotations.ProtoSyntax;
             org.infinispan.reactive.publisher.impl.commands.reduction.ReductionPublisherRequestCommand.class,
             org.infinispan.reactive.publisher.impl.commands.reduction.SegmentPublisherResult.class,
             org.infinispan.reactive.publisher.impl.PublisherHandler.SegmentResult.class,
-            org.infinispan.remoting.responses.BiasRevocationResponse.class,
             org.infinispan.remoting.responses.CacheNotFoundResponse.class,
             org.infinispan.remoting.responses.ExceptionResponse.class,
             org.infinispan.remoting.responses.PrepareResponse.class,
