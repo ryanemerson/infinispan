@@ -5,10 +5,7 @@ import java.util.Map;
 
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.container.versioning.IncrementableEntryVersion;
-import org.infinispan.marshall.protostream.impl.MarshallableArray;
-import org.infinispan.marshall.protostream.impl.MarshallableCollection;
 import org.infinispan.marshall.protostream.impl.MarshallableMap;
-import org.infinispan.marshall.protostream.impl.MarshallableObject;
 import org.infinispan.metadata.impl.IracMetadata;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
@@ -26,7 +23,7 @@ import org.infinispan.transaction.impl.WriteSkewHelper;
  * @since 11.0
  */
 @ProtoTypeId(ProtoStreamTypeIds.PREPARE_RESPONSE)
-public class PrepareResponse extends ValidResponse {
+public class PrepareResponse implements ValidResponse<Void> {
 
    private Map<Object, IncrementableEntryVersion> newWriteSkewVersions;
    private Map<Integer, IracMetadata> newIracMetadata;
@@ -40,32 +37,24 @@ public class PrepareResponse extends ValidResponse {
    }
 
    @ProtoFactory
-   PrepareResponse(MarshallableObject<?> object, MarshallableCollection<?> collection,
-                   MarshallableMap<?, ?> map, MarshallableArray<?> array, byte[] bytes,
-                   MarshallableMap<Object, IncrementableEntryVersion> newWriteSkewVersions,
-                   MarshallableMap<Integer, IracMetadata> newIracMetadata) {
-      super(null, null, map, null, null);
+   PrepareResponse(MarshallableMap<Object, IncrementableEntryVersion> newWriteSkewVersions,
+                   Map<Integer, IracMetadata> newIracMetadata) {
       this.newWriteSkewVersions = MarshallableMap.unwrap(newWriteSkewVersions);
-      this.newIracMetadata = MarshallableMap.unwrap(newIracMetadata);
+      this.newIracMetadata = newIracMetadata;
    }
 
-   @ProtoField(6)
+   @ProtoField(1)
    MarshallableMap<Object, IncrementableEntryVersion> getNewWriteSkewVersions() {
       return MarshallableMap.create(newWriteSkewVersions);
    }
 
-   @ProtoField(7)
-   MarshallableMap<Integer, IracMetadata> getNewIracMetadata() {
-      return MarshallableMap.create(newIracMetadata);
+   @ProtoField(2)
+   Map<Integer, IracMetadata> getNewIracMetadata() {
+      return newIracMetadata;
    }
 
    @Override
-   public boolean isSuccessful() {
-      return true;
-   }
-
-   @Override
-   public Object getResponseValue() {
+   public Void getResponseValue() {
       throw new UnsupportedOperationException();
    }
 
@@ -103,7 +92,6 @@ public class PrepareResponse extends ValidResponse {
          newWriteSkewVersions = new HashMap<>();
       }
       newWriteSkewVersions = WriteSkewHelper.mergeEntryVersions(newWriteSkewVersions, entryVersions);
-      this.map = MarshallableMap.create(newWriteSkewVersions);
       return newWriteSkewVersions;
    }
 }

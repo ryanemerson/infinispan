@@ -23,6 +23,7 @@ import org.infinispan.marshall.protostream.impl.MarshallableCollection;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
+import org.infinispan.remoting.responses.SuccessfulObjResponse;
 import org.infinispan.remoting.responses.ValidResponse;
 import org.infinispan.remoting.rpc.RpcManager;
 import org.infinispan.remoting.rpc.RpcOptions;
@@ -133,14 +134,13 @@ public class IracTombstoneCheckRequest extends XSiteCacheRequest<IntSet> {
 
       @Override
       protected Void withValidResponse(Address sender, ValidResponse response) {
-         Object rsp = response.getResponseValue();
-         assert rsp instanceof IntSet;
-         IntSet toKeep = (IntSet) rsp;
-
-         for (PrimitiveIterator.OfInt it = toKeep.iterator(); it.hasNext(); ) {
-            int localPosition = it.nextInt();
-            assert localPosition < keyIndexes.length;
-            globalToKeepIndexes.set(keyIndexes[localPosition]);
+         if (response instanceof SuccessfulObjResponse rsp) {
+            IntSet toKeep = (IntSet) rsp.getResponseValue();
+            for (PrimitiveIterator.OfInt it = toKeep.iterator(); it.hasNext(); ) {
+               int localPosition = it.nextInt();
+               assert localPosition < keyIndexes.length;
+               globalToKeepIndexes.set(keyIndexes[localPosition]);
+            }
          }
          return null;
       }

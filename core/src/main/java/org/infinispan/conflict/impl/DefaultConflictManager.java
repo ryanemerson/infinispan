@@ -60,7 +60,7 @@ import org.infinispan.factories.scopes.Scopes;
 import org.infinispan.interceptors.AsyncInterceptorChain;
 import org.infinispan.remoting.responses.CacheNotFoundResponse;
 import org.infinispan.remoting.responses.Response;
-import org.infinispan.remoting.responses.SuccessfulResponse;
+import org.infinispan.remoting.responses.SuccessfulObjResponse;
 import org.infinispan.remoting.responses.UnsureResponse;
 import org.infinispan.remoting.rpc.RpcManager;
 import org.infinispan.remoting.transport.Address;
@@ -432,9 +432,9 @@ public class DefaultConflictManager<K, V> implements InternalConflictManager<K, 
             for (Map.Entry<Address, Response> entry : responseMap.entrySet()) {
                if (log.isTraceEnabled()) log.tracef("%s received response %s from %s", this, entry.getValue(), entry.getKey());
                Response rsp = entry.getValue();
-               if (rsp instanceof SuccessfulResponse) {
+               if (rsp instanceof SuccessfulObjResponse<?> successfulRsp) {
                   synchronized (versionsMap) {
-                     versionsMap.put(entry.getKey(), ((SuccessfulResponse) rsp).getResponseObject());
+                     versionsMap.put(entry.getKey(), (InternalCacheValue<V>) successfulRsp.getResponseValue());
                   }
                } else if(rsp instanceof UnsureResponse) {
                   log.debugf("Received UnsureResponse, restarting request %s", this);

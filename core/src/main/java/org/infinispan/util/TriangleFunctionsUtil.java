@@ -56,7 +56,9 @@ public final class TriangleFunctionsUtil {
    }
 
    public static Map<Object, Object> mergeHashMap(ValidResponse response, Map<Object, Object> resultMap) {
-      return InfinispanCollections.mergeMaps(resultMap, response.getResponseMap());
+      //noinspection unchecked
+      Map<Object, Object> remoteMap = (Map<Object, Object>) response.getResponseValue();
+      return InfinispanCollections.mergeMaps(resultMap, remoteMap);
    }
 
    @SuppressWarnings("unused")
@@ -65,7 +67,8 @@ public final class TriangleFunctionsUtil {
    }
 
    public static List<Object> mergeList(ValidResponse response, List<Object> resultList) {
-      List<Object> list = (List<Object>) response.getResponseCollection();
+      //noinspection unchecked
+      List<Object> list = (List<Object>) response.getResponseValue();
       return InfinispanCollections.mergeLists(list, resultList);
    }
 

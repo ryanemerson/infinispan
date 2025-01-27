@@ -1,10 +1,6 @@
 package org.infinispan.remoting.responses;
 
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
-import org.infinispan.marshall.protostream.impl.MarshallableArray;
-import org.infinispan.marshall.protostream.impl.MarshallableCollection;
-import org.infinispan.marshall.protostream.impl.MarshallableMap;
-import org.infinispan.marshall.protostream.impl.MarshallableObject;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoTypeId;
 
@@ -16,12 +12,11 @@ import org.infinispan.protostream.annotations.ProtoTypeId;
  * @since 4.0
  */
 @ProtoTypeId(ProtoStreamTypeIds.UNSURE_RESPONSE)
-public class UnsureResponse extends ValidResponse {
+public class UnsureResponse implements ValidResponse<Void> {
    public static final UnsureResponse INSTANCE = new UnsureResponse();
 
    @ProtoFactory
-   static UnsureResponse protoFactory(MarshallableObject<?> object, MarshallableCollection<?> collection,
-                                      MarshallableMap<?, ?> map, MarshallableArray<?> array, byte[] bytes) {
+   static UnsureResponse protoFactory() {
       return INSTANCE;
    }
 
@@ -31,7 +26,7 @@ public class UnsureResponse extends ValidResponse {
    }
 
    @Override
-   protected boolean isReturnValueDisabled() {
-      return true;
+   public Void getResponseValue() {
+      throw new UnsupportedOperationException();
    }
 }

@@ -25,6 +25,7 @@ import org.infinispan.factories.impl.ComponentRef;
 import org.infinispan.factories.scopes.Scope;
 import org.infinispan.factories.scopes.Scopes;
 import org.infinispan.remoting.responses.Response;
+import org.infinispan.remoting.responses.SuccessfulCollectionResponse;
 import org.infinispan.remoting.responses.SuccessfulResponse;
 import org.infinispan.remoting.rpc.RpcManager;
 import org.infinispan.remoting.transport.Address;
@@ -238,7 +239,8 @@ public class RecoveryManagerImpl implements RecoveryManager {
             if (!isSuccessful(r)) {
                throw new CacheException("Could not fetch in doubt transactions: " + r);
             }
-            Collection<InDoubtTxInfo> infoInDoubtSet = ((SuccessfulResponse) r).getResponseCollection();
+            // noinspection unchecked
+            Collection<InDoubtTxInfo> infoInDoubtSet = ((SuccessfulCollectionResponse<InDoubtTxInfo>) r).getResponseValue();
             for (InDoubtTxInfo infoInDoubt : infoInDoubtSet) {
                InDoubtTxInfo inDoubtTxInfo = result.get(infoInDoubt.getXid());
                if (inDoubtTxInfo == null) {
@@ -337,7 +339,8 @@ public class RecoveryManagerImpl implements RecoveryManager {
          log.expectedJustOneResponse(responseMap);
          throw new CacheException("Expected response size is 1, received " + responseMap);
       }
-      return ((SuccessfulResponse) responseMap.get(where)).getResponseObject();
+      //noinspection rawtypes
+      return (String) ((SuccessfulResponse) responseMap.get(where)).getResponseValue();
    }
 
    @Override

@@ -1,11 +1,9 @@
 package org.infinispan.remoting.responses;
 
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
-import org.infinispan.marshall.protostream.impl.MarshallableArray;
-import org.infinispan.marshall.protostream.impl.MarshallableCollection;
-import org.infinispan.marshall.protostream.impl.MarshallableMap;
 import org.infinispan.marshall.protostream.impl.MarshallableObject;
 import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
 
 /**
@@ -15,17 +13,29 @@ import org.infinispan.protostream.annotations.ProtoTypeId;
  * @since 4.0
  */
 @ProtoTypeId(ProtoStreamTypeIds.UNSUCCESSFUL_RESPONSE)
-public class UnsuccessfulResponse extends ValidResponse {
-   public static final UnsuccessfulResponse EMPTY = new UnsuccessfulResponse(null, null, null, null, null);
+public class UnsuccessfulResponse<T> implements ValidResponse<T> {
+   public static final UnsuccessfulResponse<Object> EMPTY_RESPONSE = new UnsuccessfulResponse<>(null);
+
+   @ProtoField(1)
+   final MarshallableObject<T> object;
 
    @ProtoFactory
-   UnsuccessfulResponse(MarshallableObject<?> object, MarshallableCollection<?> collection,
-                        MarshallableMap<?, ?> map, MarshallableArray<?> array, byte[] bytes) {
-      super(object, collection, map, array, bytes);
+   @SuppressWarnings("unchecked")
+   static <T> UnsuccessfulResponse<T> protoFactory(MarshallableObject<T> object) {
+      return object == null ? (UnsuccessfulResponse<T>) EMPTY_RESPONSE : new UnsuccessfulResponse<>(object);
    }
 
-   public static UnsuccessfulResponse create(Object value) {
-      return value == null ? EMPTY : new UnsuccessfulResponse(new MarshallableObject<>(value), null, null, null, null);
+   UnsuccessfulResponse(T object) {
+      this.object = MarshallableObject.create(object);
+   }
+
+   UnsuccessfulResponse(MarshallableObject<T> object) {
+      this.object = object;
+   }
+
+   @Override
+   public T getResponseValue() {
+      return MarshallableObject.unwrap(object);
    }
 
    @Override

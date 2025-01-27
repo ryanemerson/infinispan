@@ -11,7 +11,7 @@ import org.infinispan.marshall.protostream.impl.MarshallableCollection;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
-import org.infinispan.remoting.responses.SuccessfulResponse;
+import org.infinispan.remoting.responses.SuccessfulCollectionResponse;
 import org.infinispan.remoting.responses.ValidResponse;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.remoting.transport.ResponseCollector;
@@ -107,8 +107,8 @@ public class CheckTransactionRpcCommand implements CacheRpcCommand {
 
       @Override
       protected Collection<GlobalTransaction> withValidResponse(Address sender, ValidResponse response) {
-         if (response instanceof SuccessfulResponse) {
-            return ((SuccessfulResponse) response).getResponseCollection();
+         if (response instanceof SuccessfulCollectionResponse<?> rsp) {
+            return (Collection<GlobalTransaction>) rsp.getResponseValue();
          } else {
             return Collections.emptyList();
          }

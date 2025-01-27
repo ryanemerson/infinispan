@@ -11,7 +11,7 @@ import org.infinispan.protostream.annotations.ProtoTypeId;
  * @since 6.0
  */
 @ProtoTypeId(ProtoStreamTypeIds.CACHE_NOT_FOUND_RESPONSE)
-public class CacheNotFoundResponse extends InvalidResponse {
+public class CacheNotFoundResponse implements InvalidResponse {
    public static final CacheNotFoundResponse INSTANCE = new CacheNotFoundResponse();
 
    private CacheNotFoundResponse() {

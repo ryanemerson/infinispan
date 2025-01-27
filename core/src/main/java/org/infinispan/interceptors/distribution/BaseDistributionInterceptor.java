@@ -23,7 +23,7 @@ import org.infinispan.commands.read.AbstractDataCommand;
 import org.infinispan.commands.read.GetAllCommand;
 import org.infinispan.commands.read.GetCacheEntryCommand;
 import org.infinispan.commands.read.GetKeyValueCommand;
-import org.infinispan.commands.remote.ClusteredGetAllCommand;
+import org.infinispan.commands.remote.BaseClusteredReadCommand;
 import org.infinispan.commands.remote.ClusteredGetCommand;
 import org.infinispan.commands.write.AbstractDataWriteCommand;
 import org.infinispan.commands.write.ClearCommand;
@@ -54,6 +54,7 @@ import org.infinispan.remoting.inboundhandler.DeliverOrder;
 import org.infinispan.remoting.responses.CacheNotFoundResponse;
 import org.infinispan.remoting.responses.ExceptionResponse;
 import org.infinispan.remoting.responses.Response;
+import org.infinispan.remoting.responses.SuccessfulArrayResponse;
 import org.infinispan.remoting.responses.SuccessfulResponse;
 import org.infinispan.remoting.responses.UnsureResponse;
 import org.infinispan.remoting.responses.ValidResponse;
@@ -160,7 +161,7 @@ public abstract class BaseDistributionInterceptor extends ClusteringInterceptor 
       return rpcManager.invokeCommandStaggered(info.readOwners(), getCommand, new RemoteGetSingleKeyCollector(),
                                                rpcManager.getSyncRpcOptions())
                        .thenAccept(response -> {
-                          InternalCacheValue<?> responseValue = response.getResponseObject();
+                          Object responseValue = response.getResponseValue();
                           if (responseValue == null) {
                              if (rvrl != null) {
                                 rvrl.remoteValueNotFound(key);
@@ -168,7 +169,7 @@ public abstract class BaseDistributionInterceptor extends ClusteringInterceptor 
                              wrapRemoteEntry(ctx, key, NullCacheEntry.getInstance(), isWrite);
                              return;
                           }
-                          InternalCacheEntry<?, ?> ice = responseValue.toInternalCacheEntry(key);
+                          InternalCacheEntry ice = ((InternalCacheValue) responseValue).toInternalCacheEntry(key);
                           if (rvrl != null) {
                              rvrl.remoteValueFound(ice);
                           }
@@ -471,7 +472,7 @@ public abstract class BaseDistributionInterceptor extends ClusteringInterceptor 
                System.arraycopy(values, 0, allFuture.results, destinationIndex, values.length);
                allFuture.countDown();
             } else {
-               allFuture.completeExceptionally(new IllegalStateException("Unexpected response " + response));
+               allFuture.completeExceptionally(new IllegalStateException("Unexpected response value " + responseValue));
             }
          } catch (Throwable t) {
             allFuture.completeExceptionally(t);
@@ -661,8 +662,10 @@ public abstract class BaseDistributionInterceptor extends ClusteringInterceptor 
          CompletionStage<SuccessfulResponse> rpc =
             rpcManager.invokeCommandStaggered(owners, remoteCommand, new RemoteGetSingleKeyCollector(),
                                               rpcManager.getSyncRpcOptions());
-         return asyncValue(rpc).thenApply(ctx, command, (rCtx, rCommand, response) ->
-               unwrapFunctionalResultOnOrigin(rCtx, rCommand.getKey(), ((SuccessfulResponse) response).getResponseObject()));
+         return asyncValue(rpc).thenApply(ctx, command, (rCtx, rCommand, response) -> {
+            Object responseValue = ((SuccessfulResponse) response).getResponseValue();
+            return unwrapFunctionalResultOnOrigin(rCtx, rCommand.getKey(), responseValue);
+         });
       } else {
          // This has LOCAL flags, just wrap NullCacheEntry and let the command run
          entryFactory.wrapExternalEntry(ctx, key, NullCacheEntry.getInstance(), true, false);
@@ -710,7 +713,7 @@ public abstract class BaseDistributionInterceptor extends ClusteringInterceptor 
             throw unexpected(primaryOwner, response);
          }
          // We expect only successful/unsuccessful responses, not unsure
-         return ((ValidResponse) response).getResponseObject();
+         return ((ValidResponse) response).getResponseValue();
       });
    }
 
@@ -792,7 +795,7 @@ public abstract class BaseDistributionInterceptor extends ClusteringInterceptor 
       public ReplicableCommand apply(Address target) {
          List<Object> targetKeys = requestedKeys.get(target);
          assert !targetKeys.isEmpty();
-         ClusteredGetAllCommand<?,?> getCommand = cf.buildClusteredGetAllCommand(targetKeys, flags, gtx);
+         BaseClusteredReadCommand getCommand = cf.buildClusteredGetAllCommand(targetKeys, flags, gtx);
          getCommand.setTopologyId(topologyId);
          return getCommand;
       }
@@ -843,10 +846,8 @@ public abstract class BaseDistributionInterceptor extends ClusteringInterceptor 
             }
          }
 
-         SuccessfulResponse successfulResponse = (SuccessfulResponse) response;
-         InternalCacheValue<?>[] values = successfulResponse.getResponseArray(new InternalCacheValue[0]);
-         if (values == null)
-            throw CompletableFutures.asCompletionException(new IllegalStateException("null response value"));
+         SuccessfulArrayResponse<InternalCacheValue<?>> rsp = (SuccessfulArrayResponse<InternalCacheValue<?>>) response;
+         InternalCacheValue<?>[] values = rsp.toArray(new InternalCacheValue[0]);
 
          List<Object> senderKeys = requestedKeys.get(sender);
          for (int i = 0; i < senderKeys.size(); ++i) {
@@ -866,11 +867,7 @@ public abstract class BaseDistributionInterceptor extends ClusteringInterceptor 
          }
          List<Object> senderKeys = requestedKeys.get(sender);
          for (Object key : senderKeys) {
-            Collection<Address> keyUnsureOwners = unsureOwners.get(key);
-            if (keyUnsureOwners == null) {
-               keyUnsureOwners = new ArrayList<>();
-               unsureOwners.put(key, keyUnsureOwners);
-            }
+            Collection<Address> keyUnsureOwners = unsureOwners.computeIfAbsent(key, k -> new ArrayList<>());
             keyUnsureOwners.add(sender);
          }
       }

@@ -13,7 +13,7 @@ import org.infinispan.protostream.annotations.ProtoTypeId;
  * @since 4.0
  */
 @ProtoTypeId(ProtoStreamTypeIds.EXCEPTION_RESPONSE)
-public class ExceptionResponse extends InvalidResponse {
+public class ExceptionResponse implements InvalidResponse {
 
    @ProtoField(number = 1)
    MarshallableThrowable exception;
