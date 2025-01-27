@@ -194,6 +194,7 @@ import org.infinispan.protostream.annotations.ProtoSyntax;
             org.infinispan.marshall.protostream.impl.adapters.DoubleSummaryStatisticsAdapter.class,
             org.infinispan.marshall.protostream.impl.adapters.IntSummaryStatisticsAdapter.class,
             org.infinispan.marshall.protostream.impl.adapters.LongSummaryStatisticsAdapter.class,
+            org.infinispan.marshall.protostream.impl.adapters.OptionalAdapter.class,
             org.infinispan.marshall.protostream.impl.adapters.collections.ArraysAsListAdapter.class,
             org.infinispan.marshall.protostream.impl.adapters.collections.EmptyListAdapter.class,
             org.infinispan.marshall.protostream.impl.adapters.collections.EmptySetAdapter.class,
