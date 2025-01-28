@@ -12,11 +12,11 @@ import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.commons.util.Util;
 import org.infinispan.protostream.ProtobufTagMarshaller;
 import org.infinispan.protostream.TagReader;
+import org.infinispan.protostream.TagWriter;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.protostream.annotations.impl.GeneratedMarshallerBase;
-import org.infinispan.protostream.descriptors.WireType;
 
 /**
  * A wrapper for collections of objects whose type is unknown until runtime. This is equivalent to utilising a
@@ -69,11 +69,16 @@ public class MarshallableCollection<T> {
    }
 
    @ProtoFactory
-   MarshallableCollection(List<byte[]> bytes) {
+   MarshallableCollection(int size, List<byte[]> bytes) {
       throw illegalState();
    }
 
-   @ProtoField(number = 1, collectionImplementation = ArrayList.class)
+   @ProtoField(1)
+   int getSize() {
+      throw illegalState();
+   }
+
+   @ProtoField(number = 2, collectionImplementation = ArrayList.class)
    List<byte[]> getBytes() {
       throw illegalState();
    }
@@ -99,15 +104,23 @@ public class MarshallableCollection<T> {
       public MarshallableCollection read(ReadContext ctx) throws IOException {
          final TagReader in = ctx.getReader();
          try {
-            ArrayList<Object> entries = new ArrayList<>();
+            int tag = in.readTag();
+            if (tag == 0)
+               return new MarshallableCollection<>(List.of());
+
+            if (tag != (1 << org.infinispan.protostream.descriptors.WireType.TAG_TYPE_NUM_BITS | org.infinispan.protostream.descriptors.WireType.WIRETYPE_VARINT))
+               throw new IllegalStateException("Unexpected tag: " + tag);
+
+            final int size = in.readInt32();
+            ArrayList<Object> entries = new ArrayList<>(size);
             boolean done = false;
             while (!done) {
-               final int tag = in.readTag();
+               tag = in.readTag();
                switch (tag) {
                   case 0:
                      done = true;
                      break;
-                  case 1 << 3 | WireType.WIRETYPE_LENGTH_DELIMITED: {
+                  case 2 << org.infinispan.protostream.descriptors.WireType.TAG_TYPE_NUM_BITS | org.infinispan.protostream.descriptors.WireType.WIRETYPE_LENGTH_DELIMITED: {
                      byte[] bytes = in.readByteArray();
                      Object entry = bytes.length == 0 ? null : marshaller.objectFromByteBuffer(bytes);
                      entries.add(entry);
@@ -128,11 +141,13 @@ public class MarshallableCollection<T> {
       public void write(WriteContext ctx, MarshallableCollection marshallableCollection) throws IOException {
          try {
             Collection<?> collection = marshallableCollection.get();
-            if (collection != null) {
+            if (collection != null && !collection.isEmpty()) {
+               TagWriter writer = ctx.getWriter();
+               writer.writeInt32(1, collection.size());
                for (Object entry : collection) {
                   // If entry is null, write an empty byte array so that the null value can be recreated on the receiver.
                   byte[] bytes = entry == null ? Util.EMPTY_BYTE_ARRAY : marshaller.objectToByteBuffer(entry);
-                  ctx.getWriter().writeBytes(1, bytes);
+                  writer.writeBytes(2, bytes);
                }
             }
          } catch (InterruptedException e) {
