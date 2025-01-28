@@ -45,9 +45,9 @@ public class SyncReplicatedConsistentHashFactory implements ConsistentHashFactor
                                                           List<Address> membersWithoutState) {
       int numSegments = dch.getNumSegments();
       List<Address> members = dch.getMembers();
-      int[] primaryOwners = new int[numSegments];
+      List<Integer> primaryOwners = new ArrayList<>(numSegments);
       for (int segment = 0; segment < numSegments; segment++) {
-         primaryOwners[segment] = members.indexOf(dch.locatePrimaryOwnerForSegment(segment));
+         primaryOwners.add(members.indexOf(dch.locatePrimaryOwnerForSegment(segment)));
       }
       return new ReplicatedConsistentHash(members, dch.getCapacityFactors(), membersWithoutState, primaryOwners);
    }

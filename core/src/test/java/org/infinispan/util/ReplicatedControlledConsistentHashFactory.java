@@ -26,10 +26,10 @@ public class ReplicatedControlledConsistentHashFactory implements ConsistentHash
    volatile List<JGroupsAddress> membersToUse;
 
    @ProtoField(number = 2)
-   int[] primaryOwnerIndices;
+   List<Integer> primaryOwnerIndices;
 
    @ProtoFactory
-   ReplicatedControlledConsistentHashFactory(List<JGroupsAddress> membersToUse, int[] primaryOwnerIndices) {
+   ReplicatedControlledConsistentHashFactory(List<JGroupsAddress> membersToUse, List<Integer> primaryOwnerIndices) {
       this.membersToUse = membersToUse;
       this.primaryOwnerIndices = primaryOwnerIndices;
    }
@@ -42,19 +42,24 @@ public class ReplicatedControlledConsistentHashFactory implements ConsistentHash
    }
 
    public void setOwnerIndexes(int primaryOwner1, int... otherPrimaryOwners) {
-      primaryOwnerIndices = concatOwners(primaryOwner1, otherPrimaryOwners);
+      if (otherPrimaryOwners == null || otherPrimaryOwners.length == 0) {
+         primaryOwnerIndices = new ArrayList<>(1);
+         primaryOwnerIndices.add(primaryOwner1);
+      } else {
+         primaryOwnerIndices.add(0, primaryOwner1);
+      }
    }
 
    @Override
    public ReplicatedConsistentHash create(int numOwners, int numSegments, List<Address> members, Map<Address, Float> capacityFactors) {
-      int[] thePrimaryOwners = new int[primaryOwnerIndices.length];
-      for (int i = 0; i < primaryOwnerIndices.length; i++) {
+      List<Integer> thePrimaryOwners = new ArrayList<>(primaryOwnerIndices.size());
+      for (int primaryOwnerIndex : primaryOwnerIndices) {
          if (membersToUse != null) {
-            int membersToUseIndex = Math.min(primaryOwnerIndices[i], membersToUse.size() - 1);
+            int membersToUseIndex = Math.min(primaryOwnerIndex, membersToUse.size() - 1);
             int membersIndex = members.indexOf(membersToUse.get(membersToUseIndex));
-            thePrimaryOwners[i] = membersIndex > 0 ? membersIndex : members.size() - 1;
+            thePrimaryOwners.add(membersIndex > 0 ? membersIndex : members.size() - 1);
          } else {
-            thePrimaryOwners[i] = Math.min(primaryOwnerIndices[i], members.size() - 1);
+            thePrimaryOwners.add(Math.min(primaryOwnerIndex, members.size() - 1));
          }
       }
       return new ReplicatedConsistentHash(members, thePrimaryOwners);
@@ -74,20 +79,6 @@ public class ReplicatedControlledConsistentHashFactory implements ConsistentHash
    @Override
    public ReplicatedConsistentHash union(ReplicatedConsistentHash ch1, ReplicatedConsistentHash ch2) {
       return ch1.union(ch2);
-   }
-
-   private int[] concatOwners(int head, int[] tail) {
-      int[] firstSegmentOwners;
-      if (tail == null || tail.length == 0) {
-         firstSegmentOwners = new int[]{head};
-      } else {
-         firstSegmentOwners = new int[tail.length + 1];
-         firstSegmentOwners[0] = head;
-         for (int i = 0; i < tail.length; i++) {
-            firstSegmentOwners[i + 1] = tail[i];
-         }
-      }
-      return firstSegmentOwners;
    }
 
    @ProtoSchema(

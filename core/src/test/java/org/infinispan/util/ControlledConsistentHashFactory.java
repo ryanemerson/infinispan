@@ -57,7 +57,7 @@ public abstract class ControlledConsistentHashFactory<CH extends ConsistentHash>
    }
 
    @ProtoField(2)
-   Integer[] getSegmentOwners() {
+   List<Integer> getSegmentOwners() {
       // Approximate final size of array
       List<Integer> list = new ArrayList<>((ownerIndexes.length + 1) * ownerIndexes[0].length + 1);
       int numOwners = ownerIndexes.length;
@@ -69,7 +69,7 @@ public abstract class ControlledConsistentHashFactory<CH extends ConsistentHash>
          for (int segment : ownerSegments)
             list.add(segment);
       }
-      return list.toArray(new Integer[0]);
+      return list;
    }
 
    @ProtoField(3)
@@ -145,17 +145,17 @@ public abstract class ControlledConsistentHashFactory<CH extends ConsistentHash>
       this.membersToUse = membersToUse;
    }
 
-   static int[][] convertMarshalledOwnerIndexes(Integer[] ownerIndexes) {
-      int length = ownerIndexes[0];
+   static int[][] convertMarshalledOwnerIndexes(List<Integer> ownerIndexes) {
+      int length = ownerIndexes.get(0);
       int[][] indexes = new int[length][0];
 
       int idx = 0;
       int marshalledArrIdx = 1;
-      while (marshalledArrIdx < ownerIndexes.length) {
-         int size = ownerIndexes[marshalledArrIdx++];
+      while (marshalledArrIdx < ownerIndexes.size()) {
+         int size = ownerIndexes.get(marshalledArrIdx++);
          int[] owners = new int[size];
          for (int j = 0; j < size; j++) {
-            owners[j] = ownerIndexes[marshalledArrIdx++];
+            owners[j] = ownerIndexes.get(marshalledArrIdx++);
          }
          indexes[idx++] = owners;
       }
@@ -165,7 +165,7 @@ public abstract class ControlledConsistentHashFactory<CH extends ConsistentHash>
    public static class Default extends ControlledConsistentHashFactory<DefaultConsistentHash> implements Serializable {
 
       @ProtoFactory
-      Default(int numSegments, Integer[] segmentOwners, List<JGroupsAddress> jGroupsMembers) {
+      Default(int numSegments, List<Integer> segmentOwners, List<JGroupsAddress> jGroupsMembers) {
          super(new DefaultTrait(), ControlledConsistentHashFactory.convertMarshalledOwnerIndexes(segmentOwners));
          this.membersToUse = (List<Address>) (List<?>) jGroupsMembers;
       }
@@ -185,7 +185,7 @@ public abstract class ControlledConsistentHashFactory<CH extends ConsistentHash>
    public static class Replicated extends ControlledConsistentHashFactory<ReplicatedConsistentHash> {
 
       @ProtoFactory
-      Replicated(int numSegments, Integer[] segmentOwners, List<JGroupsAddress> jGroupsMembers) {
+      Replicated(int numSegments, List<Integer> segmentOwners, List<JGroupsAddress> jGroupsMembers) {
          super(new ReplicatedTrait(), ControlledConsistentHashFactory.convertMarshalledOwnerIndexes(segmentOwners));
          this.membersToUse = (List<Address>) (List<?>) jGroupsMembers;
       }

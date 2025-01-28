@@ -83,23 +83,23 @@ public class DefaultConsistentHash extends AbstractConsistentHash {
    }
 
    @ProtoFactory
-   DefaultConsistentHash(List<JGroupsAddress> jGroupsMembers, float[] capacityFactorsArray, int numOwners, Integer[] segmentOwners) {
-      super(segmentOwners.length, (List<Address>)(List<?>) jGroupsMembers, capacityFactorsArray);
+   DefaultConsistentHash(List<JGroupsAddress> jGroupsMembers, List<Float> capacityFactorsList, int numOwners, List<Integer> segmentOwners) {
+      super(segmentOwners.size(), (List<Address>)(List<?>) jGroupsMembers, capacityFactorsList);
       if (numOwners < 1)
          throw new IllegalArgumentException("The number of owners must be strictly positive");
 
       this.numOwners = numOwners;
 
-      int segmentOwnersLength = segmentOwners[0];
+      int segmentOwnersLength = segmentOwners.get(0);
       this.segmentOwners = new List[segmentOwnersLength];
 
       int idx = 0;
       int marshalledArrIdx = 1;
-      while (marshalledArrIdx < segmentOwners.length) {
-         int size = segmentOwners[marshalledArrIdx++];
+      while (marshalledArrIdx < segmentOwners.size()) {
+         int size = segmentOwners.get(marshalledArrIdx++);
          Address[] owners = new Address[size];
          for (int j = 0; j < size; j++) {
-            int ownerIndex = segmentOwners[marshalledArrIdx++];
+            int ownerIndex = segmentOwners.get(marshalledArrIdx++);
             owners[j] = members.get(ownerIndex);
          }
          this.segmentOwners[idx++] = Immutables.immutableListWrap(owners);
@@ -117,8 +117,8 @@ public class DefaultConsistentHash extends AbstractConsistentHash {
       return (List<JGroupsAddress>)(List<?>) members;
    }
 
-   @ProtoField(number = 2, name = "capacityFactors")
-   float[] getCapacityFactorsArray() {
+   @ProtoField(value = 2, name = "capacityFactors")
+   List<Float> getCapacityFactorsList() {
       return capacityFactors;
    }
 
@@ -127,8 +127,8 @@ public class DefaultConsistentHash extends AbstractConsistentHash {
       return numOwners;
    }
 
-   @ProtoField(number = 4)
-   Integer[] getSegmentOwners() {
+   @ProtoField(4)
+   List<Integer> getSegmentOwners() {
       // Approximate final size of array
       List<Integer> ownersList = new ArrayList<>((segmentOwners.length + 1) * segmentOwners[0].size() + 1);
       ownersList.add(segmentOwners.length);
@@ -141,7 +141,7 @@ public class DefaultConsistentHash extends AbstractConsistentHash {
             ownersList.add(memberIndexes.get(owner));
          }
       }
-      return ownersList.toArray(new Integer[0]);
+      return ownersList;
    }
 
    @Override
