@@ -45,9 +45,6 @@ public class SerializationContextRegistryImpl implements SerializationContextReg
 
    @Start
    public void start() {
-      global.addContextInitializer(new CommonTypesSchema());
-      global.addContextInitializer(new CommonContainerTypesSchema());
-      global.addContextInitializer(new UserContextInitializerImpl());
       user.addContextInitializer(new CommonTypesSchema());
       user.addContextInitializer(new CommonContainerTypesSchema());
       user.addContextInitializer(new UserContextInitializerImpl());
