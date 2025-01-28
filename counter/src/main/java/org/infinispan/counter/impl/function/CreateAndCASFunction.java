@@ -23,10 +23,10 @@ import org.infinispan.protostream.annotations.ProtoTypeId;
 @ProtoTypeId(ProtoStreamTypeIds.COUNTER_FUNCTION_CREATE_AND_CAS)
 public class CreateAndCASFunction<K extends CounterKey> extends BaseCreateFunction<K, Object> {
 
-   @ProtoField(number = 2, defaultValue = "-1")
+   @ProtoField(number = 2, defaultValue = "0")
    final long expect;
 
-   @ProtoField(number = 3, defaultValue = "-1")
+   @ProtoField(number = 3, defaultValue = "0")
    final long value;
 
    @ProtoFactory

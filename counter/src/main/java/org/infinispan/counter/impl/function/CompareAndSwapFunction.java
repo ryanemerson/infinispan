@@ -29,10 +29,10 @@ public class CompareAndSwapFunction<K extends CounterKey> extends BaseFunction<K
 
    private static final Log log = LogFactory.getLog(CompareAndSwapFunction.class, Log.class);
 
-   @ProtoField(number = 1, defaultValue = "-1")
+   @ProtoField(number = 1, defaultValue = "0")
    final long expect;
 
-   @ProtoField(number = 2, defaultValue = "-1")
+   @ProtoField(number = 2, defaultValue = "0")
    final long value;
 
    @ProtoFactory

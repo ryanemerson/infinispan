@@ -23,7 +23,7 @@ import org.infinispan.protostream.annotations.ProtoTypeId;
 public final class SetFunction<K extends CounterKey> extends BaseFunction<K, Object> implements Serializable {
    private static final Log log = LogFactory.getLog(SetFunction.class, Log.class);
 
-   @ProtoField(number = 1, defaultValue = "-1")
+   @ProtoField(number = 1, defaultValue = "0")
    final long value;
 
    @ProtoFactory

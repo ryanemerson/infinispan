@@ -22,7 +22,7 @@ import org.infinispan.protostream.annotations.ProtoTypeId;
 @ProtoTypeId(ProtoStreamTypeIds.COUNTER_FUNCTION_CREATE_AND_ADD)
 public class CreateAndAddFunction<K extends CounterKey> extends BaseCreateFunction<K, CounterValue> {
 
-   @ProtoField(number = 2, defaultValue = "-1")
+   @ProtoField(number = 2, defaultValue = "0")
    final long delta;
 
    @ProtoFactory

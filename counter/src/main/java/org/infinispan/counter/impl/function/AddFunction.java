@@ -22,7 +22,7 @@ public final class AddFunction<K extends CounterKey> extends BaseFunction<K, Cou
 
    private static final Log log = LogFactory.getLog(AddFunction.class, Log.class);
 
-   @ProtoField(number = 1, defaultValue = "-1")
+   @ProtoField(number = 1, defaultValue = "0")
    final long delta;
 
    @ProtoFactory
