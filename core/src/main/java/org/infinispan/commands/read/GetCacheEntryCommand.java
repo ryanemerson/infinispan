@@ -2,6 +2,7 @@ package org.infinispan.commands.read;
 
 import static org.infinispan.commons.util.Util.toStr;
 
+import org.infinispan.commands.LocalCommand;
 import org.infinispan.commands.Visitor;
 import org.infinispan.context.InvocationContext;
 
@@ -12,7 +13,7 @@ import org.infinispan.context.InvocationContext;
  * @author Sanne Grinovero &lt;sanne@hibernate.org&gt; (C) 2014 Red Hat Inc.
  * @since 7.1
  */
-public final class GetCacheEntryCommand extends AbstractDataCommand {
+public final class GetCacheEntryCommand extends AbstractDataCommand implements LocalCommand {
 
    public static final byte COMMAND_ID = 45;
 
