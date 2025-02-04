@@ -7,7 +7,6 @@ import java.io.OutputStream;
 import org.infinispan.commons.dataconversion.MediaType;
 import org.infinispan.commons.io.ByteBuffer;
 import org.infinispan.commons.io.ByteBufferImpl;
-import org.infinispan.commons.io.LazyByteArrayOutputStream;
 import org.infinispan.commons.marshall.BufferSizePredictor;
 import org.infinispan.commons.marshall.Marshaller;
 import org.infinispan.commons.marshall.MarshallingException;
@@ -21,6 +20,7 @@ import org.infinispan.factories.scopes.Scope;
 import org.infinispan.factories.scopes.Scopes;
 import org.infinispan.protostream.ImmutableSerializationContext;
 import org.infinispan.protostream.ProtobufUtil;
+import org.infinispan.protostream.impl.LazyByteArrayOutputStream;
 import org.infinispan.util.logging.Log;
 
 /**
@@ -81,7 +81,7 @@ public abstract class AbstractInternalProtoStreamMarshaller implements Marshalle
    @Override
    public ByteBuffer objectToBuffer(Object o) {
       try (LazyByteArrayOutputStream objectStream = objectToOutputStream(o, PROTOSTREAM_DEFAULT_BUFFER_SIZE)) {
-         return ByteBufferImpl.create(objectStream.getRawBuffer(), 0, objectStream.size());
+         return ByteBufferImpl.create(objectStream.getRawBuffer(), 0, objectStream.getPosition());
       } catch (IOException e) {
          throw new MarshallingException(e);
       }
@@ -90,7 +90,7 @@ public abstract class AbstractInternalProtoStreamMarshaller implements Marshalle
    @Override
    public byte[] objectToByteBuffer(Object obj, int estimatedSize) {
       try (LazyByteArrayOutputStream stream = objectToOutputStream(obj, estimatedSize)) {
-         return stream.getTrimmedBuffer();
+         return stream.toByteArray();
       } catch (IOException e) {
          throw new MarshallingException(e);
       }
