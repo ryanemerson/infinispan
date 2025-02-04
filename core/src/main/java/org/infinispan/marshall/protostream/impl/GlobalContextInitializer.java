@@ -254,6 +254,7 @@ import org.infinispan.protostream.annotations.ProtoSyntax;
             org.infinispan.remoting.responses.SuccessfulArrayResponse.class,
             org.infinispan.remoting.responses.SuccessfulBytesResponse.class,
             org.infinispan.remoting.responses.SuccessfulCollectionResponse.class,
+            org.infinispan.remoting.responses.SuccessfulImmortalCacheValueResponse.class,
             org.infinispan.remoting.responses.SuccessfulMapResponse.class,
             org.infinispan.remoting.responses.SuccessfulObjResponse.class,
             org.infinispan.remoting.responses.UnsuccessfulResponse.class,

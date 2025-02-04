@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.Map;
 
 import org.infinispan.commons.util.IntSet;
+import org.infinispan.container.entries.ImmortalCacheValue;
 
 /**
  * A successful response
@@ -18,6 +19,9 @@ public interface SuccessfulResponse<T> extends ValidResponse<T> {
    static SuccessfulResponse<?> create(Object rv) {
       if (rv == null)
          return SUCCESSFUL_EMPTY_RESPONSE;
+
+      if (rv instanceof ImmortalCacheValue icv)
+         return new SuccessfulImmortalCacheValueResponse(icv);
 
       if (rv instanceof Collection<?> collection && !(rv instanceof IntSet))
          return new SuccessfulCollectionResponse<>(collection);
