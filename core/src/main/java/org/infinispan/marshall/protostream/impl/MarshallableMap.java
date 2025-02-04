@@ -1,11 +1,14 @@
 package org.infinispan.marshall.protostream.impl;
 
+import static org.infinispan.marshall.protostream.impl.GlobalContextInitializer.getFqTypeName;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.infinispan.commons.io.ByteBuffer;
 import org.infinispan.commons.marshall.MarshallingException;
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.commons.util.Util;
@@ -16,6 +19,8 @@ import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.protostream.annotations.impl.GeneratedMarshallerBase;
 import org.infinispan.protostream.descriptors.WireType;
+import org.infinispan.util.logging.Log;
+import org.infinispan.util.logging.LogFactory;
 
 /**
  * A wrapper for Maps of user objects whose key/value type is unknown until runtime.
@@ -25,6 +30,8 @@ import org.infinispan.protostream.descriptors.WireType;
  */
 @ProtoTypeId(ProtoStreamTypeIds.MARSHALLABLE_MAP)
 public class MarshallableMap<K, V> {
+
+   static final Log log = LogFactory.getLog(MarshallableMap.class);
 
    final Map<K, V> map;
 
@@ -48,7 +55,7 @@ public class MarshallableMap<K, V> {
    @ProtoFactory
    MarshallableMap(List<byte[]> keys, List<byte[]> values) {
       // no-op never actually used, as we override the default marshaller
-      throw illegalState();
+      throw log.marshallerNotOverridden(getClass().getName());
    }
 
    private MarshallableMap(Map<K, V> map) {
@@ -57,28 +64,25 @@ public class MarshallableMap<K, V> {
 
    @ProtoField(1)
    List<byte[]> getKeys() {
-      throw illegalState();
+      throw log.marshallerNotOverridden(getClass().getName());
    }
 
    @ProtoField(2)
    List<byte[]> getValues() {
-      throw illegalState();
+      throw log.marshallerNotOverridden(getClass().getName());
    }
 
    public Map<K, V> get() {
       return map;
    }
 
-   private IllegalStateException illegalState() {
-      return new IllegalStateException(this.getClass().getSimpleName() + " marshaller not overridden in SerializationContext");
-   }
 
    public static class Marshaller extends GeneratedMarshallerBase implements ProtobufTagMarshaller<MarshallableMap<?, ?>> {
       private final String typeName;
       private final org.infinispan.commons.marshall.Marshaller marshaller;
 
-      public Marshaller(String typeName, org.infinispan.commons.marshall.Marshaller marshaller) {
-         this.typeName = typeName;
+      public Marshaller(org.infinispan.commons.marshall.Marshaller marshaller) {
+         this.typeName = getFqTypeName(MarshallableMap.class);
          this.marshaller = marshaller;
       }
 
@@ -100,11 +104,11 @@ public class MarshallableMap<K, V> {
                case 0:
                   done = true;
                   break;
-               case 1 << 3 | WireType.WIRETYPE_LENGTH_DELIMITED: {
+               case 1 << WireType.TAG_TYPE_NUM_BITS | WireType.WIRETYPE_LENGTH_DELIMITED: {
                   keys.add(read(in));
                   break;
                }
-               case 2 << 3 | WireType.WIRETYPE_LENGTH_DELIMITED: {
+               case 2 << WireType.TAG_TYPE_NUM_BITS | WireType.WIRETYPE_LENGTH_DELIMITED: {
                   values.add(read(in));
                   break;
                }
@@ -150,8 +154,12 @@ public class MarshallableMap<K, V> {
       private void write(WriteContext ctx, int field, Object object) throws IOException {
          try {
             // If object is null, write an empty byte array so that the null value can be recreated on the receiver.
-            byte[] bytes = object == null ? Util.EMPTY_BYTE_ARRAY : marshaller.objectToByteBuffer(object);
-            ctx.getWriter().writeBytes(field, bytes);
+            if (object == null) {
+               ctx.getWriter().writeBytes(field, Util.EMPTY_BYTE_ARRAY);
+            } else {
+               ByteBuffer buf = marshaller.objectToBuffer(object);
+               ctx.getWriter().writeBytes(field, buf.getBuf(), buf.getOffset(), buf.getLength());
+            }
          } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new MarshallingException(e);

@@ -59,7 +59,7 @@ public abstract class AbstractInternalProtoStreamMarshaller implements Marshalle
       return userMarshaller;
    }
 
-   private LazyByteArrayOutputStream objectToOutputStream(Object obj, int estimatedSize) {
+   protected LazyByteArrayOutputStream objectToOutputStream(Object obj, int estimatedSize) {
       if (obj == null)
          return null;
 

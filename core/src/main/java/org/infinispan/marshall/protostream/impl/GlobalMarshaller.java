@@ -10,6 +10,7 @@ import org.infinispan.factories.annotations.Inject;
 import org.infinispan.factories.annotations.Stop;
 import org.infinispan.marshall.core.impl.DelegatingUserMarshaller;
 import org.infinispan.protostream.ImmutableSerializationContext;
+import org.infinispan.protostream.impl.LazyByteArrayOutputStream;
 
 /**
  * A globally-scoped marshaller for cluster communication.
@@ -64,19 +65,14 @@ public class GlobalMarshaller extends AbstractInternalProtoStreamMarshaller {
             super.isMarshallableWithProtoStream(o);
    }
 
-   @Override
-   public byte[] objectToByteBuffer(Object obj, int estimatedSize) {
-      if (obj == null)
-         return null;
-
+   protected LazyByteArrayOutputStream objectToOutputStream(Object obj, int estimatedSize) {
       Class<?> clazz = obj.getClass();
       if (clazz.isSynthetic()) {
          obj = MarshallableLambda.create(obj);
       } else if (obj instanceof Throwable && !isMarshallable(obj)) {
          obj = MarshallableThrowable.create((Throwable) obj);
       }
-
-      return super.objectToByteBuffer(obj, estimatedSize);
+      return super.objectToOutputStream(obj, estimatedSize);
    }
 
    @Override

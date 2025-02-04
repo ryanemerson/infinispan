@@ -1,6 +1,5 @@
 package org.infinispan.marshall.protostream.impl;
 
-import static org.infinispan.marshall.protostream.impl.GlobalContextInitializer.getFqTypeName;
 import static org.infinispan.marshall.protostream.impl.SerializationContextRegistry.MarshallerType.GLOBAL;
 import static org.infinispan.marshall.protostream.impl.SerializationContextRegistry.MarshallerType.PERSISTENCE;
 
@@ -66,10 +65,10 @@ public class SerializationContextRegistryImpl implements SerializationContextReg
                .addContextInitializer(new CommonContainerTypesSchema())
                .addContextInitializer(new UserContextInitializerImpl())
                .addMarshaller(userObjectMarshaller)
-               .addMarshaller(new MarshallableArray.Marshaller(getFqTypeName(MarshallableArray.class), globalMarshaller.wired()))
-               .addMarshaller(new MarshallableCollection.Marshaller(getFqTypeName(MarshallableCollection.class), globalMarshaller.wired()))
-               .addMarshaller(new MarshallableMap.Marshaller(getFqTypeName(MarshallableMap.class), globalMarshaller.wired()))
-               .addMarshaller(new MarshallableObject.Marshaller(getFqTypeName(MarshallableObject.class), globalMarshaller.wired()))
+               .addMarshaller(new MarshallableArray.Marshaller(globalMarshaller.wired()))
+               .addMarshaller(new MarshallableCollection.Marshaller(globalMarshaller.wired()))
+               .addMarshaller(new MarshallableMap.Marshaller(globalMarshaller.wired()))
+               .addMarshaller(new MarshallableObject.Marshaller(globalMarshaller.wired()))
       );
 
       update(PERSISTENCE, ctx -> ctx.addContextInitializer(PersistenceContextInitializer.INSTANCE)

@@ -1,9 +1,21 @@
 package org.infinispan.marshall.protostream.impl;
 
+import static org.infinispan.marshall.protostream.impl.GlobalContextInitializer.getFqTypeName;
+
+import java.io.IOException;
+
+import org.infinispan.commons.io.ByteBuffer;
+import org.infinispan.commons.marshall.MarshallingException;
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.metadata.Metadata;
+import org.infinispan.protostream.ProtobufTagMarshaller;
+import org.infinispan.protostream.TagReader;
+import org.infinispan.protostream.WrappedMessage;
 import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
+import org.infinispan.protostream.annotations.impl.GeneratedMarshallerBase;
+import org.infinispan.protostream.descriptors.WireType;
 
 /**
  * A wrapper for interface implementations which can either be marshalled by the {@link
@@ -22,7 +34,7 @@ import org.infinispan.protostream.annotations.ProtoTypeId;
 @ProtoTypeId(ProtoStreamTypeIds.MARSHALLABLE_OBJECT)
 public class MarshallableObject<T> extends AbstractMarshallableWrapper<T> {
 
-   static final MarshallableObject<?> EMPTY_INSTANCE = new MarshallableObject<>((Object) null);
+   static final MarshallableObject<?> EMPTY_INSTANCE = new MarshallableObject<>(null);
 
    /**
     * @param object the Object to be wrapped.
@@ -42,7 +54,7 @@ public class MarshallableObject<T> extends AbstractMarshallableWrapper<T> {
    }
 
    @ProtoFactory
-   MarshallableObject(byte[] bytes) {
+   MarshallableObject(byte[] bytes, WrappedMessage message) {
       super(bytes);
    }
 
@@ -50,20 +62,95 @@ public class MarshallableObject<T> extends AbstractMarshallableWrapper<T> {
       super(object);
    }
 
-   public static class Marshaller extends AbstractMarshallableWrapper.Marshaller {
+   @ProtoField(2)
+   WrappedMessage getMessage() {
+      throw log.marshallerNotOverridden(getClass().getName());
+   }
 
-      public Marshaller(String typeName, org.infinispan.commons.marshall.Marshaller userMarshaller) {
-         super(typeName, userMarshaller);
+   public static class Marshaller extends GeneratedMarshallerBase implements ProtobufTagMarshaller<MarshallableObject> {
+
+      private final String typeName;
+      private final org.infinispan.commons.marshall.Marshaller marshaller;
+
+      private org.infinispan.protostream.impl.BaseMarshallerDelegate<?> __md$2;
+
+      public Marshaller(org.infinispan.commons.marshall.Marshaller marshaller) {
+         this.typeName = getFqTypeName(MarshallableObject.class);
+         this.marshaller = marshaller;
       }
 
       @Override
-      MarshallableObject newWrapperInstance(Object o) {
-         return o == null ? EMPTY_INSTANCE : new MarshallableObject<>(o);
+      public String getTypeName() {
+         return typeName;
       }
 
       @Override
-      public Class getJavaClass() {
+      public Class<MarshallableObject> getJavaClass() {
          return MarshallableObject.class;
+      }
+
+      @Override
+      public MarshallableObject<?> read(ReadContext ctx) throws IOException {
+         final TagReader in = ctx.getReader();
+         try {
+            WrappedMessage message = null;
+            byte[] bytes = null;
+            boolean done = false;
+            while (!done) {
+               final int tag = in.readTag();
+               switch (tag) {
+                  case 0:
+                     done = true;
+                     break;
+                  case 1 << WireType.TAG_TYPE_NUM_BITS | WireType.WIRETYPE_LENGTH_DELIMITED: {
+                     bytes = in.readByteArray();
+                     break;
+                  }
+                  case (2 << WireType.TAG_TYPE_NUM_BITS | WireType.WIRETYPE_LENGTH_DELIMITED): {
+                     if (__md$2 == null) __md$2 = ((org.infinispan.protostream.impl.SerializationContextImpl) ctx.getSerializationContext()).getMarshallerDelegate(org.infinispan.protostream.WrappedMessage.class);
+                     int length = in.readUInt32();
+                     int oldLimit = in.pushLimit(length);
+                     message = (org.infinispan.protostream.WrappedMessage) readMessage(__md$2, ctx);
+                     in.checkLastTagWas(0);
+                     in.popLimit(oldLimit);
+                     break;
+                  }
+                  default: {
+                     if (!in.skipField(tag)) done = true;
+                  }
+               }
+            }
+            if (bytes == null && message == null)
+               return EMPTY_INSTANCE;
+
+            if (message != null)
+               return new MarshallableObject<>(message.getValue());
+
+            Object userObject = marshaller.objectFromByteBuffer(bytes);
+            return new MarshallableObject<>(userObject);
+         } catch (ClassNotFoundException e) {
+            throw new MarshallingException(e);
+         }
+      }
+
+      @Override
+      public void write(WriteContext ctx, MarshallableObject wrapper) throws IOException {
+         try {
+            Object object = wrapper.get();
+            if (object == null)
+               return;
+
+            if (!ctx.getSerializationContext().canMarshall(object)) {
+               ByteBuffer buf = marshaller.objectToBuffer(object);
+               ctx.getWriter().writeBytes(1, buf.getBuf(), buf.getOffset(), buf.getLength());
+            } else {
+               var m = ((org.infinispan.protostream.impl.SerializationContextImpl) ctx.getSerializationContext()).getMarshallerDelegate(WrappedMessage.class);
+               writeNestedMessage(m, ctx, 2, new WrappedMessage(object));
+            }
+         } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new MarshallingException(e);
+         }
       }
    }
 }

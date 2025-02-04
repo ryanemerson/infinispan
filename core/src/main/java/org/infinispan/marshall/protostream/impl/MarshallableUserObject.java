@@ -1,9 +1,16 @@
 package org.infinispan.marshall.protostream.impl;
 
+import java.io.IOException;
+
+import org.infinispan.commons.CacheException;
+import org.infinispan.commons.marshall.MarshallingException;
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.protostream.BaseMarshaller;
+import org.infinispan.protostream.ProtobufTagMarshaller;
+import org.infinispan.protostream.TagReader;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoTypeId;
+import org.infinispan.protostream.descriptors.WireType;
 
 /**
  * A wrapper message used by ProtoStream Marshallers to allow user objects to be marshalled/unmarshalled via the {@link
@@ -27,8 +34,6 @@ import org.infinispan.protostream.annotations.ProtoTypeId;
 // TODO avoid use in commands?
 @ProtoTypeId(ProtoStreamTypeIds.MARSHALLABLE_USER_OBJECT)
 public class MarshallableUserObject<T> extends AbstractMarshallableWrapper<T> {
-
-   static final MarshallableUserObject<?> EMPTY_INSTANCE = new MarshallableUserObject<>((Object) null);
 
    /**
     * @param wrapper the {@link MarshallableUserObject} instance to unwrap.
@@ -56,18 +61,64 @@ public class MarshallableUserObject<T> extends AbstractMarshallableWrapper<T> {
       super(object);
    }
 
-   public static class Marshaller extends AbstractMarshallableWrapper.Marshaller {
+   public static class Marshaller implements ProtobufTagMarshaller<MarshallableUserObject> {
+
+      private final String typeName;
+      private final org.infinispan.commons.marshall.Marshaller userMarshaller;
+
 
       public Marshaller(String typeName, org.infinispan.commons.marshall.Marshaller userMarshaller) {
-         super(typeName, userMarshaller);
+         this.typeName = typeName;
+         this.userMarshaller = userMarshaller;
       }
 
       @Override
-      MarshallableUserObject newWrapperInstance(Object o) {
-         return o == null ? EMPTY_INSTANCE : new MarshallableUserObject<>(o);
+      public Class<MarshallableUserObject> getJavaClass() { return MarshallableUserObject.class; }
+
+      @Override
+      public String getTypeName() { return typeName; }
+
+      @Override
+      public MarshallableUserObject read(ReadContext ctx) throws IOException {
+         TagReader in = ctx.getReader();
+         try {
+            byte[] bytes = null;
+            boolean done = false;
+            while (!done) {
+               final int tag = in.readTag();
+               switch (tag) {
+                  // end of message
+                  case 0:
+                     done = true;
+                     break;
+                  // field number 1
+                  case 1 << WireType.TAG_TYPE_NUM_BITS | WireType.WIRETYPE_LENGTH_DELIMITED: {
+                     bytes = in.readByteArray();
+                     break;
+                  }
+                  default: {
+                     if (!in.skipField(tag)) done = true;
+                  }
+               }
+            }
+            Object userObject = userMarshaller.objectFromByteBuffer(bytes);
+            return new MarshallableUserObject<>(userObject);
+         } catch (ClassNotFoundException e) {
+            throw new MarshallingException(e);
+         }
       }
 
       @Override
-      public Class getJavaClass() { return MarshallableUserObject.class; }
+      public void write(WriteContext ctx, MarshallableUserObject marshallableUserObject) throws IOException {
+         try {
+            Object userObject = marshallableUserObject.get();
+            byte[] bytes = userMarshaller.objectToByteBuffer(userObject);
+            // field number 1
+            ctx.getWriter().writeBytes(1, bytes);
+         } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new CacheException(e);
+         }
+      }
    }
 }
