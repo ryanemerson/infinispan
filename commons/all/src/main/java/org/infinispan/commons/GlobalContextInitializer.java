@@ -17,7 +17,6 @@ import org.infinispan.protostream.types.java.CommonTypes;
       dependsOn = CommonTypes.class,
       includeClasses = {
             org.infinispan.commons.api.CacheContainerAdmin.AdminFlag.class,
-            org.infinispan.commons.marshall.protostream.adapters.AtomicIntegerArrayAdapter.class,
             org.infinispan.commons.tx.XidImpl.class,
             org.infinispan.commons.util.ConcurrentSmallIntSet.class,
             org.infinispan.commons.util.EmptyIntSet.class,
