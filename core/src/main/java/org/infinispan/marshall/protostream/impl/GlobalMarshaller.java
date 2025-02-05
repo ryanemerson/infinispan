@@ -18,7 +18,6 @@ import org.infinispan.protostream.impl.LazyByteArrayOutputStream;
  * @author Ryan Emerson
  * @since 16.0
  */
-// TODO add support for reusing instances similar to InstanceReusingAdvancedExternalizer?
 public class GlobalMarshaller extends AbstractInternalProtoStreamMarshaller {
 
    @Inject
@@ -50,6 +49,10 @@ public class GlobalMarshaller extends AbstractInternalProtoStreamMarshaller {
 
    @Override
    public boolean isMarshallableWithProtoStream(Object o) {
+      return isMarshallableWithoutWrapping(o) || o.getClass().isSynthetic() || o instanceof Throwable;
+   }
+
+   public boolean isMarshallableWithoutWrapping(Object o) {
       return o instanceof String ||
             o instanceof Long ||
             o instanceof Integer ||
@@ -69,7 +72,7 @@ public class GlobalMarshaller extends AbstractInternalProtoStreamMarshaller {
       Class<?> clazz = obj.getClass();
       if (clazz.isSynthetic()) {
          obj = MarshallableLambda.create(obj);
-      } else if (obj instanceof Throwable && !isMarshallable(obj)) {
+      } else if (obj instanceof Throwable && !isMarshallableWithProtoStream(obj)) {
          obj = MarshallableThrowable.create((Throwable) obj);
       }
       return super.objectToOutputStream(obj, estimatedSize);

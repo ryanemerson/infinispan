@@ -71,7 +71,7 @@ public class MarshallableObject<T> extends AbstractMarshallableWrapper<T> {
       private final String typeName;
       private final GlobalMarshaller marshaller;
 
-      private org.infinispan.protostream.impl.BaseMarshallerDelegate<?> __md$2;
+      private volatile org.infinispan.protostream.impl.BaseMarshallerDelegate<WrappedMessage> delegate;
 
       public Marshaller(GlobalMarshaller marshaller) {
          this.typeName = getFqTypeName(MarshallableObject.class);
@@ -105,11 +105,11 @@ public class MarshallableObject<T> extends AbstractMarshallableWrapper<T> {
                   break;
                }
                case (2 << WireType.TAG_TYPE_NUM_BITS | WireType.WIRETYPE_LENGTH_DELIMITED): {
-                  if (__md$2 == null)
-                     __md$2 = ((org.infinispan.protostream.impl.SerializationContextImpl) ctx.getSerializationContext()).getMarshallerDelegate(org.infinispan.protostream.WrappedMessage.class);
+                  if (delegate == null)
+                     delegate = ((org.infinispan.protostream.impl.SerializationContextImpl) ctx.getSerializationContext()).getMarshallerDelegate(org.infinispan.protostream.WrappedMessage.class);
                   int length = in.readUInt32();
                   int oldLimit = in.pushLimit(length);
-                  message = (org.infinispan.protostream.WrappedMessage) readMessage(__md$2, ctx);
+                  message = readMessage(delegate, ctx);
                   in.checkLastTagWas(0);
                   in.popLimit(oldLimit);
                   break;
@@ -135,13 +135,13 @@ public class MarshallableObject<T> extends AbstractMarshallableWrapper<T> {
          if (object == null)
             return;
 
-         // TODO need a better way to make it clear that we need to check if wrapping required or not?
-         if (!marshaller.isMarshallableWithProtoStream(object)) {
+         if (!marshaller.isMarshallableWithoutWrapping(object)) {
             ByteBuffer buf = marshaller.objectToBuffer(object);
             ctx.getWriter().writeBytes(1, buf.getBuf(), buf.getOffset(), buf.getLength());
          } else {
-            var m = ((org.infinispan.protostream.impl.SerializationContextImpl) ctx.getSerializationContext()).getMarshallerDelegate(WrappedMessage.class);
-            writeNestedMessage(m, ctx, 2, new WrappedMessage(object));
+            if (delegate == null)
+               delegate = ((org.infinispan.protostream.impl.SerializationContextImpl) ctx.getSerializationContext()).getMarshallerDelegate(WrappedMessage.class);
+            writeNestedMessage(delegate, ctx, 2, new WrappedMessage(object));
          }
       }
    }
