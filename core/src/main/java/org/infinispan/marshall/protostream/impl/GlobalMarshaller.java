@@ -2,15 +2,13 @@ package org.infinispan.marshall.protostream.impl;
 
 import static org.infinispan.util.logging.Log.CONTAINER;
 
-import java.io.IOException;
-
+import org.infinispan.commons.io.ByteBuffer;
 import org.infinispan.commons.marshall.ImmutableProtoStreamMarshaller;
 import org.infinispan.factories.GlobalComponentRegistry;
 import org.infinispan.factories.annotations.Inject;
 import org.infinispan.factories.annotations.Stop;
 import org.infinispan.marshall.core.impl.DelegatingUserMarshaller;
 import org.infinispan.protostream.ImmutableSerializationContext;
-import org.infinispan.protostream.impl.LazyByteArrayOutputStream;
 
 /**
  * A globally-scoped marshaller for cluster communication.
@@ -68,14 +66,24 @@ public class GlobalMarshaller extends AbstractInternalProtoStreamMarshaller {
             super.isMarshallableWithProtoStream(o);
    }
 
-   protected LazyByteArrayOutputStream objectToOutputStream(Object obj, int estimatedSize) {
+   @Override
+   public ByteBuffer objectToBuffer(Object obj) {
+      return super.objectToBuffer(wrap(obj));
+   }
+
+   @Override
+   public byte[] objectToByteBuffer(Object obj, int estimatedSize) {
+      return super.objectToByteBuffer(wrap(obj), estimatedSize);
+   }
+
+   private Object wrap(Object obj) {
       Class<?> clazz = obj.getClass();
       if (clazz.isSynthetic()) {
          obj = MarshallableLambda.create(obj);
       } else if (obj instanceof Throwable && !isMarshallableWithProtoStream(obj)) {
          obj = MarshallableThrowable.create((Throwable) obj);
       }
-      return super.objectToOutputStream(obj, estimatedSize);
+      return obj;
    }
 
    @Override
@@ -87,10 +95,5 @@ public class GlobalMarshaller extends AbstractInternalProtoStreamMarshaller {
       }
 
       return super.unwrapAndInit(o);
-   }
-
-   @Override
-   public Object objectFromByteBuffer(byte[] buf, int offset, int length) throws IOException {
-      return super.objectFromByteBuffer(buf, offset, length);
    }
 }
