@@ -34,7 +34,7 @@ public class SerializationContextRegistryImpl implements SerializationContextReg
 
    @Inject GlobalConfiguration globalConfig;
    @Inject @ComponentName(KnownComponentNames.INTERNAL_MARSHALLER)
-   ComponentRef<Marshaller> globalMarshaller;
+   ComponentRef<GlobalMarshaller> globalMarshaller;
    @Inject @ComponentName(KnownComponentNames.USER_MARSHALLER)
    ComponentRef<Marshaller> userMarshaller;
 

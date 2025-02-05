@@ -5,7 +5,6 @@ import static org.infinispan.marshall.protostream.impl.GlobalContextInitializer.
 import java.io.IOException;
 
 import org.infinispan.commons.io.ByteBuffer;
-import org.infinispan.commons.marshall.MarshallingException;
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.metadata.Metadata;
 import org.infinispan.protostream.ProtobufTagMarshaller;
@@ -70,11 +69,11 @@ public class MarshallableObject<T> extends AbstractMarshallableWrapper<T> {
    public static class Marshaller extends GeneratedMarshallerBase implements ProtobufTagMarshaller<MarshallableObject> {
 
       private final String typeName;
-      private final org.infinispan.commons.marshall.Marshaller marshaller;
+      private final GlobalMarshaller marshaller;
 
       private org.infinispan.protostream.impl.BaseMarshallerDelegate<?> __md$2;
 
-      public Marshaller(org.infinispan.commons.marshall.Marshaller marshaller) {
+      public Marshaller(GlobalMarshaller marshaller) {
          this.typeName = getFqTypeName(MarshallableObject.class);
          this.marshaller = marshaller;
       }
@@ -92,64 +91,57 @@ public class MarshallableObject<T> extends AbstractMarshallableWrapper<T> {
       @Override
       public MarshallableObject<?> read(ReadContext ctx) throws IOException {
          final TagReader in = ctx.getReader();
-         try {
-            WrappedMessage message = null;
-            byte[] bytes = null;
-            boolean done = false;
-            while (!done) {
-               final int tag = in.readTag();
-               switch (tag) {
-                  case 0:
-                     done = true;
-                     break;
-                  case 1 << WireType.TAG_TYPE_NUM_BITS | WireType.WIRETYPE_LENGTH_DELIMITED: {
-                     bytes = in.readByteArray();
-                     break;
-                  }
-                  case (2 << WireType.TAG_TYPE_NUM_BITS | WireType.WIRETYPE_LENGTH_DELIMITED): {
-                     if (__md$2 == null) __md$2 = ((org.infinispan.protostream.impl.SerializationContextImpl) ctx.getSerializationContext()).getMarshallerDelegate(org.infinispan.protostream.WrappedMessage.class);
-                     int length = in.readUInt32();
-                     int oldLimit = in.pushLimit(length);
-                     message = (org.infinispan.protostream.WrappedMessage) readMessage(__md$2, ctx);
-                     in.checkLastTagWas(0);
-                     in.popLimit(oldLimit);
-                     break;
-                  }
-                  default: {
-                     if (!in.skipField(tag)) done = true;
-                  }
+         WrappedMessage message = null;
+         byte[] bytes = null;
+         boolean done = false;
+         while (!done) {
+            final int tag = in.readTag();
+            switch (tag) {
+               case 0:
+                  done = true;
+                  break;
+               case 1 << WireType.TAG_TYPE_NUM_BITS | WireType.WIRETYPE_LENGTH_DELIMITED: {
+                  bytes = in.readByteArray();
+                  break;
+               }
+               case (2 << WireType.TAG_TYPE_NUM_BITS | WireType.WIRETYPE_LENGTH_DELIMITED): {
+                  if (__md$2 == null)
+                     __md$2 = ((org.infinispan.protostream.impl.SerializationContextImpl) ctx.getSerializationContext()).getMarshallerDelegate(org.infinispan.protostream.WrappedMessage.class);
+                  int length = in.readUInt32();
+                  int oldLimit = in.pushLimit(length);
+                  message = (org.infinispan.protostream.WrappedMessage) readMessage(__md$2, ctx);
+                  in.checkLastTagWas(0);
+                  in.popLimit(oldLimit);
+                  break;
+               }
+               default: {
+                  if (!in.skipField(tag)) done = true;
                }
             }
-            if (bytes == null && message == null)
-               return EMPTY_INSTANCE;
-
-            if (message != null)
-               return new MarshallableObject<>(message.getValue());
-
-            Object userObject = marshaller.objectFromByteBuffer(bytes);
-            return new MarshallableObject<>(userObject);
-         } catch (ClassNotFoundException e) {
-            throw new MarshallingException(e);
          }
+         if (bytes == null && message == null)
+            return EMPTY_INSTANCE;
+
+         if (message != null)
+            return new MarshallableObject<>(message.getValue());
+
+         Object userObject = marshaller.objectFromByteBuffer(bytes);
+         return new MarshallableObject<>(userObject);
       }
 
       @Override
       public void write(WriteContext ctx, MarshallableObject wrapper) throws IOException {
-         try {
-            Object object = wrapper.get();
-            if (object == null)
-               return;
+         Object object = wrapper.get();
+         if (object == null)
+            return;
 
-            if (!ctx.getSerializationContext().canMarshall(object)) {
-               ByteBuffer buf = marshaller.objectToBuffer(object);
-               ctx.getWriter().writeBytes(1, buf.getBuf(), buf.getOffset(), buf.getLength());
-            } else {
-               var m = ((org.infinispan.protostream.impl.SerializationContextImpl) ctx.getSerializationContext()).getMarshallerDelegate(WrappedMessage.class);
-               writeNestedMessage(m, ctx, 2, new WrappedMessage(object));
-            }
-         } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new MarshallingException(e);
+         // TODO need a better way to make it clear that we need to check if wrapping required or not?
+         if (!marshaller.isMarshallableWithProtoStream(object)) {
+            ByteBuffer buf = marshaller.objectToBuffer(object);
+            ctx.getWriter().writeBytes(1, buf.getBuf(), buf.getOffset(), buf.getLength());
+         } else {
+            var m = ((org.infinispan.protostream.impl.SerializationContextImpl) ctx.getSerializationContext()).getMarshallerDelegate(WrappedMessage.class);
+            writeNestedMessage(m, ctx, 2, new WrappedMessage(object));
          }
       }
    }

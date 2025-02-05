@@ -49,7 +49,7 @@ public class GlobalMarshaller extends AbstractInternalProtoStreamMarshaller {
    }
 
    @Override
-   protected boolean isMarshallableWithProtoStream(Object o) {
+   public boolean isMarshallableWithProtoStream(Object o) {
       return o instanceof String ||
             o instanceof Long ||
             o instanceof Integer ||
