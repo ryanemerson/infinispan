@@ -22,7 +22,7 @@ import net.jcip.annotations.NotThreadSafe;
  * @since 13.0
  */
 @NotThreadSafe
-public final class LazyByteArrayOutputStream extends OutputStream {
+public final class LazyByteArrayOutputStream extends OutputStream implements org.infinispan.protostream.LazyByteArrayOutputStream {
    public static final int DEFAULT_SIZE = 32;
    /**
     * Default buffer size after which if more buffer capacity is needed the buffer will grow by 25% rather than 100%
@@ -105,7 +105,8 @@ public final class LazyByteArrayOutputStream extends OutputStream {
       count = newcount;
    }
 
-   private void ensureCapacity(int newcount) {
+   @Override
+   public void ensureCapacity(int newcount) {
       if (buf == null) {
          // Pretend we have half the default size so it's doubled
          buf = new byte[Math.max(DEFAULT_SIZE, newcount)];
@@ -114,14 +115,6 @@ public final class LazyByteArrayOutputStream extends OutputStream {
          System.arraycopy(buf, 0, newbuf, 0, count);
          buf = newbuf;
       }
-   }
-
-   /**
-    * Gets the highest internal buffer size after which if more capacity is needed the buffer will grow in 25%
-    * increments rather than 100%.
-    */
-   public final int getMaxDoublingSize() {
-      return maxDoublingSize;
    }
 
    /**
@@ -143,5 +136,15 @@ public final class LazyByteArrayOutputStream extends OutputStream {
     */
    public int size() {
       return count;
+   }
+
+   @Override
+   public int getPosition() {
+      return count;
+   }
+
+   @Override
+   public void setPosition(int position) {
+      this.count = position;
    }
 }
