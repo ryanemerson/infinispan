@@ -21,7 +21,7 @@ import org.infinispan.factories.scopes.Scope;
 import org.infinispan.factories.scopes.Scopes;
 import org.infinispan.protostream.ImmutableSerializationContext;
 import org.infinispan.protostream.ProtobufUtil;
-import org.infinispan.protostream.RawByteArrayOutputStream;
+import org.infinispan.protostream.impl.LazyByteArrayOutputStream;
 import org.infinispan.util.logging.Log;
 
 /**
@@ -59,9 +59,9 @@ public abstract class AbstractInternalProtoStreamMarshaller implements Marshalle
       return userMarshaller;
    }
 
-   protected RawByteArrayOutputStream objectToOutputStream(Object obj, int estimatedSize) {
+   protected LazyByteArrayOutputStream objectToOutputStream(Object obj, int estimatedSize) {
       try {
-         RawByteArrayOutputStream baos = new org.infinispan.commons.io.LazyByteArrayOutputStream(estimatedSize);
+         LazyByteArrayOutputStream baos = new LazyByteArrayOutputStream(estimatedSize);
          ProtobufUtil.toWrappedStream(getSerializationContext(), baos, obj);
          return baos;
       } catch (Throwable t) {
@@ -85,7 +85,7 @@ public abstract class AbstractInternalProtoStreamMarshaller implements Marshalle
          // Add the additional bytes required by the object wrapper to the estimate
          estimatedSize = AbstractMarshallableWrapper.size(estimatedSize);
       }
-      try (RawByteArrayOutputStream objectStream = objectToOutputStream(obj, estimatedSize)) {
+      try (LazyByteArrayOutputStream objectStream = objectToOutputStream(obj, estimatedSize)) {
          int length = objectStream.getPosition();
          ByteBuffer buf = ByteBufferImpl.create(objectStream.getRawBuffer(), 0, length);
          sizePredictor.recordSize(length);
@@ -106,7 +106,7 @@ public abstract class AbstractInternalProtoStreamMarshaller implements Marshalle
          estimatedSize = AbstractMarshallableWrapper.size(estimatedSize);
       }
       BufferSizePredictor sizePredictor = marshallableTypeHints.getBufferSizePredictor(obj);
-      try (RawByteArrayOutputStream objectStream = objectToOutputStream(obj, estimatedSize)) {
+      try (LazyByteArrayOutputStream objectStream = objectToOutputStream(obj, estimatedSize)) {
          byte[] bytes = objectStream.toByteArray();
          sizePredictor.recordSize(bytes.length);
          return bytes;

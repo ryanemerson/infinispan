@@ -22,7 +22,7 @@ import net.jcip.annotations.NotThreadSafe;
  * @since 13.0
  */
 @NotThreadSafe
-public final class LazyByteArrayOutputStream extends OutputStream implements org.infinispan.protostream.RawByteArrayOutputStream {
+public final class LazyByteArrayOutputStream extends OutputStream implements org.infinispan.protostream.LazyByteArrayOutputStream {
    public static final int DEFAULT_SIZE = 32;
    /**
     * Default buffer size after which if more buffer capacity is needed the buffer will grow by 25% rather than 100%
