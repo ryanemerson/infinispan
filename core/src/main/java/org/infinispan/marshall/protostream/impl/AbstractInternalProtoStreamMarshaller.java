@@ -21,7 +21,8 @@ import org.infinispan.factories.scopes.Scope;
 import org.infinispan.factories.scopes.Scopes;
 import org.infinispan.protostream.ImmutableSerializationContext;
 import org.infinispan.protostream.ProtobufUtil;
-import org.infinispan.protostream.impl.LazyByteArrayOutputStream;
+import org.infinispan.protostream.RawByteArrayOutputStream;
+import org.infinispan.protostream.impl.RawByteArrayOutputStreamImpl;
 import org.infinispan.util.logging.Log;
 
 /**
@@ -59,11 +60,11 @@ public abstract class AbstractInternalProtoStreamMarshaller implements Marshalle
       return userMarshaller;
    }
 
-   protected LazyByteArrayOutputStream objectToOutputStream(Object obj, int estimatedSize) {
+   protected RawByteArrayOutputStream objectToOutputStream(Object obj, int estimatedSize) {
       try {
-         LazyByteArrayOutputStream baos = new LazyByteArrayOutputStream(estimatedSize);
-         ProtobufUtil.toWrappedStream(getSerializationContext(), baos, obj);
-         return baos;
+         RawByteArrayOutputStream os = new RawByteArrayOutputStreamImpl(estimatedSize);
+         ProtobufUtil.toWrappedStream(getSerializationContext(), os, obj);
+         return os;
       } catch (Throwable t) {
          log.cannotMarshall(obj.getClass(), t);
          if (t instanceof MarshallingException)
@@ -85,9 +86,9 @@ public abstract class AbstractInternalProtoStreamMarshaller implements Marshalle
          // Add the additional bytes required by the object wrapper to the estimate
          estimatedSize = AbstractMarshallableWrapper.size(estimatedSize);
       }
-      try (LazyByteArrayOutputStream objectStream = objectToOutputStream(obj, estimatedSize)) {
-         int length = objectStream.getPosition();
-         ByteBuffer buf = ByteBufferImpl.create(objectStream.getRawBuffer(), 0, length);
+      try (RawByteArrayOutputStream os = objectToOutputStream(obj, estimatedSize)) {
+         int length = os.getPosition();
+         ByteBuffer buf = ByteBufferImpl.create(os.getRawBuffer(), 0, length);
          sizePredictor.recordSize(length);
          return buf;
       } catch (IOException e) {
@@ -106,7 +107,7 @@ public abstract class AbstractInternalProtoStreamMarshaller implements Marshalle
          estimatedSize = AbstractMarshallableWrapper.size(estimatedSize);
       }
       BufferSizePredictor sizePredictor = marshallableTypeHints.getBufferSizePredictor(obj);
-      try (LazyByteArrayOutputStream objectStream = objectToOutputStream(obj, estimatedSize)) {
+      try (RawByteArrayOutputStream objectStream = objectToOutputStream(obj, estimatedSize)) {
          byte[] bytes = objectStream.toByteArray();
          sizePredictor.recordSize(bytes.length);
          return bytes;
