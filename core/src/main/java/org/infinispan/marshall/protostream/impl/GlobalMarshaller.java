@@ -68,6 +68,7 @@ public class GlobalMarshaller extends AbstractInternalProtoStreamMarshaller {
 
    @Override
    public ByteBuffer objectToBuffer(Object obj) {
+
       return super.objectToBuffer(wrap(obj));
    }
 
@@ -80,7 +81,7 @@ public class GlobalMarshaller extends AbstractInternalProtoStreamMarshaller {
       Class<?> clazz = obj.getClass();
       if (clazz.isSynthetic()) {
          obj = MarshallableLambda.create(obj);
-      } else if (obj instanceof Throwable && !isMarshallableWithProtoStream(obj)) {
+      } else if (obj instanceof Throwable && !isMarshallableWithoutWrapping(obj)) {
          obj = MarshallableThrowable.create((Throwable) obj);
       }
       return obj;
