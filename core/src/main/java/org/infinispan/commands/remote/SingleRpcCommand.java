@@ -25,6 +25,7 @@ import org.infinispan.util.logging.LogFactory;
  *
  * @author Mircea.Markus@jboss.com
  */
+// TODO remove along with TypeID
 @ProtoTypeId(ProtoStreamTypeIds.SINGLE_RPC_COMMAND)
 public class SingleRpcCommand extends BaseRpcCommand {
 
@@ -36,6 +37,9 @@ public class SingleRpcCommand extends BaseRpcCommand {
    public SingleRpcCommand(ByteString cacheName, VisitableCommand command) {
       super(cacheName);
       this.command = command;
+      if (!(command instanceof CacheRpcCommand)) {
+         System.out.println("--CMD=" + command.getClass().getName());
+      }
    }
 
    @ProtoFactory

@@ -71,8 +71,8 @@ public class GlobalInboundInvocationHandler implements InboundInvocationHandler 
       try {
          if (command instanceof HeartBeatCommand) {
             reply.reply(null);
-         } else if (command instanceof CacheRpcCommand) {
-            handleCacheRpcCommand(origin, (CacheRpcCommand) command, reply, order);
+         } else if (command instanceof CacheRpcCommand rpcCmd && rpcCmd.getCacheName() != null) {
+            handleCacheRpcCommand(origin, rpcCmd, reply, order);
          } else {
             handleReplicableCommand(origin, command, reply, order);
          }

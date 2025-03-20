@@ -13,33 +13,37 @@ import org.infinispan.functional.impl.Params;
 import org.infinispan.marshall.protostream.impl.MarshallableMap;
 import org.infinispan.metadata.impl.PrivateMetadata;
 import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.util.ByteString;
 import org.infinispan.util.concurrent.locks.RemoteLockCommand;
 
 public abstract class AbstractWriteManyCommand<K, V> implements WriteCommand, FunctionalCommand<K, V>, RemoteLockCommand {
 
    @ProtoField(1)
-   final CommandInvocationId commandInvocationId;
+   ByteString cacheName;
 
    @ProtoField(2)
-   boolean forwarded = false;
+   final CommandInvocationId commandInvocationId;
 
    @ProtoField(3)
-   int topologyId = -1;
+   boolean forwarded = false;
 
    @ProtoField(4)
+   int topologyId = -1;
+
+   @ProtoField(5)
    Params params;
    // TODO: this is used for the non-modifying read-write commands. Move required flags to Params
    // and make sure that ClusteringDependentLogic checks them.
-   @ProtoField(5)
+   @ProtoField(6)
    long flags;
 
-   @ProtoField(6)
+   @ProtoField(7)
    DataConversion keyDataConversion;
 
-   @ProtoField(7)
+   @ProtoField(8)
    DataConversion valueDataConversion;
 
-   @ProtoField(8)
+   @ProtoField(9)
    MarshallableMap<Object, PrivateMetadata> getInternalMetadata() {
       return MarshallableMap.create(internalMetadataMap);
    }
@@ -60,11 +64,12 @@ public abstract class AbstractWriteManyCommand<K, V> implements WriteCommand, Fu
    }
 
    // ProtoFactory constructor
-   protected AbstractWriteManyCommand(CommandInvocationId commandInvocationId, boolean forwarded, int topologyId,
+   protected AbstractWriteManyCommand(ByteString cacheName, CommandInvocationId commandInvocationId, boolean forwarded, int topologyId,
                                       Params params, long flags, DataConversion keyDataConversion,
                                       DataConversion valueDataConversion, MarshallableMap<Object, PrivateMetadata> internalMetadataMap) {
       this(commandInvocationId, forwarded, topologyId, params, flags, keyDataConversion, valueDataConversion,
             MarshallableMap.unwrap(internalMetadataMap));
+      this.cacheName = cacheName;
    }
 
    protected AbstractWriteManyCommand(CommandInvocationId commandInvocationId,
