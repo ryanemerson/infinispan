@@ -87,7 +87,7 @@ class MockLocalTopologyManager implements LocalTopologyManager {
       Map<String, CacheStatusResponse> caches = status.getCacheJoinInfo() != null ?
                                                 singletonMap(cacheName, status) :
                                                 Collections.emptyMap();
-      return CompletableFuture.completedFuture(new ManagerStatusResponse(caches, true));
+      return CompletableFuture.completedFuture(new ManagerStatusResponse(caches, true, false, ManagerVersion.INSTANCE));
    }
 
    @Override

@@ -113,4 +113,8 @@ public interface ClusterTopologyManager {
    void setInitialCacheTopologyId(String cacheName, int topologyId);
 
    ClusterManagerStatus getStatus();
+
+   boolean isMixedCluster();
+
+   ManagerVersion getOldestServerVersion();
 }

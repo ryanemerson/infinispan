@@ -401,7 +401,8 @@ public class LocalTopologyManagerImpl implements LocalTopologyManager, GlobalSta
          }
 
          log.debugf("Sending cluster status response for view %d", viewId);
-         return new ManagerStatusResponse(caches, gcr.getClusterTopologyManager().isRebalancingEnabled());
+         var ctm = gcr.getClusterTopologyManager();
+         return new ManagerStatusResponse(caches, ctm.isRebalancingEnabled(), ctm.isMixedCluster(), ManagerVersion.INSTANCE);
       });
    }
 

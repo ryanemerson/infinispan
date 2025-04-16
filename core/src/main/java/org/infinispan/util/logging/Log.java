@@ -1162,9 +1162,9 @@ public interface Log extends BasicLogger {
    @Message(value = "Rebalance phase %s confirmed for cache %s on node %s, topology id = %d", id = 328)
    void rebalancePhaseConfirmedOnNode(CacheTopology.Phase phase, String cacheName, Address node, int topologyId);
 
-   @LogMessage(level = WARN)
-   @Message(value = "Unable to read rebalancing status from coordinator %s", id = 329)
-   void errorReadingRebalancingStatus(Address coordinator, @Cause Throwable t);
+//   @LogMessage(level = WARN)
+//   @Message(value = "Unable to read rebalancing status from coordinator %s", id = 329)
+//   void errorReadingRebalancingStatus(Address coordinator, @Cause Throwable t);
 
 //   @LogMessage(level = WARN)
 //   @Message(value = "Distributed task failed at %s. The task is failing over to be executed at %s", id = 330)
@@ -2390,4 +2390,8 @@ public interface Log extends BasicLogger {
 
    @Message(value = "%s marshaller implementation not overridden in SerializationContext", id = 704)
    IllegalStateException marshallerNotOverridden(String className);
+
+   @LogMessage(level = WARN)
+   @Message(value = "Unable to read manager status from coordinator %s", id = 705)
+   void errorReadingManagerStatus(Address coordinator, @Cause Throwable t);
 }

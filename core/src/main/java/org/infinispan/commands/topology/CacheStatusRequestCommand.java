@@ -10,6 +10,7 @@ import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.topology.ManagerStatusResponse;
+import org.infinispan.topology.ManagerVersion;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 
@@ -36,7 +37,7 @@ public class CacheStatusRequestCommand extends AbstractCacheControlCommand {
    public CompletionStage<?> invokeAsync(GlobalComponentRegistry gcr) throws Throwable {
       if (!gcr.isLocalTopologyManagerRunning()) {
          log.debug("Reply with empty status request because topology manager not running");
-         return CompletableFuture.completedFuture(new ManagerStatusResponse(Collections.emptyMap(), true));
+         return CompletableFuture.completedFuture(new ManagerStatusResponse(Collections.emptyMap(), true, true, ManagerVersion.INSTANCE));
       }
 
       return gcr.getLocalTopologyManager()

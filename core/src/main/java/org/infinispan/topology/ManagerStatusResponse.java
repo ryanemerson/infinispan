@@ -12,5 +12,5 @@ import org.infinispan.protostream.annotations.ProtoTypeId;
  */
 @Proto
 @ProtoTypeId(ProtoStreamTypeIds.MANAGER_STATUS_RESPONSE)
-public record ManagerStatusResponse(Map<String, CacheStatusResponse> caches, boolean rebalancingEnabled) {
+public record ManagerStatusResponse(Map<String, CacheStatusResponse> caches, boolean rebalancingEnabled, boolean mixedCluster, ManagerVersion oldestClusterMember) {
 }
