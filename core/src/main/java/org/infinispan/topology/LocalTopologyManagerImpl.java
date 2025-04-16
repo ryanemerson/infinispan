@@ -103,7 +103,7 @@ public class LocalTopologyManagerImpl implements LocalTopologyManager, GlobalSta
    @Inject PersistentUUIDManager persistentUUIDManager;
    @Inject EventLogManager eventLogManager;
    @Inject CacheManagerNotifier cacheManagerNotifier;
-   // Not used directly, but we have to start the ClusterTopologyManager before sending the join request
+   // We have to start the ClusterTopologyManager before sending the join request
    @Inject ClusterTopologyManager clusterTopologyManager;
 
    private TopologyManagementHelper helper;
@@ -401,8 +401,8 @@ public class LocalTopologyManagerImpl implements LocalTopologyManager, GlobalSta
          }
 
          log.debugf("Sending cluster status response for view %d", viewId);
-         var ctm = gcr.getClusterTopologyManager();
-         return new ManagerStatusResponse(caches, ctm.isRebalancingEnabled(), ctm.isMixedCluster(), ManagerVersion.INSTANCE);
+         var ctm = clusterTopologyManager;
+         return new ManagerStatusResponse(caches, ctm.isRebalancingEnabled(), ctm.isMixedCluster(), ctm.getVersion());
       });
    }
 

@@ -116,5 +116,7 @@ public interface ClusterTopologyManager {
 
    boolean isMixedCluster();
 
-   ManagerVersion getOldestServerVersion();
+   ManagerVersion getVersion();
+
+   ManagerVersion getOldestClusterMember();
 }

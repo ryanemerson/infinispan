@@ -136,6 +136,7 @@ public class ClusterTopologyManagerImpl implements ClusterTopologyManager, Globa
    private final AtomicReference<ManagerVersion> oldestClusterMember = new AtomicReference<>();
    @GuardedBy("updateLock")
    private volatile boolean mixedVersionCluster = false;
+   private ManagerVersion version = ManagerVersion.INSTANCE;
 
    // The global rebalancing status
    // Initial state is NOT_RECOVERED, changing after reading from the local state or retrieving from the coordinator.
@@ -198,7 +199,7 @@ public class ClusterTopologyManagerImpl implements ClusterTopologyManager, Globa
                          // TODO How best to handle the mixedCluster status here? Currently we err on the side of caution
                          // and set to true as that prevents incompatible commands potentially being sent
                          log.errorReadingManagerStatus(coordinator, throwable);
-                         return CompletableFuture.completedFuture(new ManagerStatusResponse(null, true,  true, ManagerVersion.INSTANCE));
+                         return CompletableFuture.completedFuture(new ManagerStatusResponse(null, true,  true, version));
                       }
                       // Assume any timeout is because the coordinator doesn't have a CommandAwareRpcDispatcher yet
                       // (possible with ForkChannels or JGroupsChannelLookup and shouldConnect = false), and retry.
@@ -705,8 +706,16 @@ public class ClusterTopologyManagerImpl implements ClusterTopologyManager, Globa
       return mixedVersionCluster;
    }
 
+   public ManagerVersion getVersion() {
+      return version;
+   }
+
+   void setVersion(ManagerVersion version) {
+      this.version = version;
+   }
+
    @Override
-   public ManagerVersion getOldestServerVersion() {
+   public ManagerVersion getOldestClusterMember() {
       return oldestClusterMember.get();
    }
 

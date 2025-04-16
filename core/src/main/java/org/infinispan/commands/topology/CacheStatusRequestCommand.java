@@ -37,7 +37,8 @@ public class CacheStatusRequestCommand extends AbstractCacheControlCommand {
    public CompletionStage<?> invokeAsync(GlobalComponentRegistry gcr) throws Throwable {
       if (!gcr.isLocalTopologyManagerRunning()) {
          log.debug("Reply with empty status request because topology manager not running");
-         return CompletableFuture.completedFuture(new ManagerStatusResponse(Collections.emptyMap(), true, true, ManagerVersion.INSTANCE));
+         var version = gcr.getClusterTopologyManager().getVersion();
+         return CompletableFuture.completedFuture(new ManagerStatusResponse(Collections.emptyMap(), true, true, version));
       }
 
       return gcr.getLocalTopologyManager()
