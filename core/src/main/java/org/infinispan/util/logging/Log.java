@@ -18,7 +18,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-import org.infinispan.commands.UnsupportedCommandException;
+import org.infinispan.upgrade.UnsupportedException;
 import org.infinispan.commons.CacheConfigurationException;
 import org.infinispan.commons.CacheException;
 import org.infinispan.commons.CacheListenerException;
@@ -50,7 +50,7 @@ import org.infinispan.remoting.transport.Address;
 import org.infinispan.remoting.transport.jgroups.SuspectException;
 import org.infinispan.topology.CacheJoinException;
 import org.infinispan.topology.CacheTopology;
-import org.infinispan.topology.ManagerVersion;
+import org.infinispan.upgrade.ManagerVersion;
 import org.infinispan.topology.MissingMembersException;
 import org.infinispan.transaction.WriteSkewException;
 import org.infinispan.transaction.impl.LocalTransaction;
@@ -2398,5 +2398,5 @@ public interface Log extends BasicLogger {
    void errorReadingManagerStatus(Address coordinator, @Cause Throwable t);
 
    @Message(value = "Command '%s' not yet supported by all cluster members, requires version '%s'")
-   UnsupportedCommandException commandNotYeySupportedByAllClusterMembers(String command, ManagerVersion version);
+   UnsupportedException commandNotYeySupportedByAllClusterMembers(String command, ManagerVersion version);
 }

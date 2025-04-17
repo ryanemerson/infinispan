@@ -207,7 +207,7 @@ public class ClusterTopologyManagerImplTest extends AbstractInfinispanTest {
       runConcurrently(
             ctm::start,
             () -> transport.expectCommand(ManagerStatusCommand.class)
-                  .singleResponse(A, SuccessfulResponse.create(new ManagerStatusResponse(null, true, true, ctm.getVersion()))));
+                  .singleResponse(A, SuccessfulResponse.create(new ManagerStatusResponse(null, true, ctm.getVersion()))));
 
       // Wait for the initial view update in CTMI to finish
       eventuallyEquals(ClusterTopologyManager.ClusterManagerStatus.REGULAR_MEMBER, ctm::getStatus);

@@ -18,6 +18,7 @@ import org.infinispan.partitionhandling.AvailabilityMode;
 import org.infinispan.partitionhandling.impl.PartitionHandlingManager;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.commons.util.concurrent.CompletableFutures;
+import org.infinispan.upgrade.ManagerVersion;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 
@@ -87,7 +88,7 @@ class MockLocalTopologyManager implements LocalTopologyManager {
       Map<String, CacheStatusResponse> caches = status.getCacheJoinInfo() != null ?
                                                 singletonMap(cacheName, status) :
                                                 Collections.emptyMap();
-      return CompletableFuture.completedFuture(new ManagerStatusResponse(caches, true, false, ManagerVersion.INSTANCE));
+      return CompletableFuture.completedFuture(new ManagerStatusResponse(caches, true, ManagerVersion.INSTANCE));
    }
 
    @Override

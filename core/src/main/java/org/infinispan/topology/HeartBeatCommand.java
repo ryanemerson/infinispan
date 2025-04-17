@@ -1,5 +1,6 @@
 package org.infinispan.topology;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
 import org.infinispan.commands.GlobalRpcCommand;
@@ -27,7 +28,7 @@ public class HeartBeatCommand implements GlobalRpcCommand {
 
    @Override
    public CompletionStage<?> invokeAsync(GlobalComponentRegistry globalComponentRegistry) throws Throwable {
-      return CompletableFutures.completedNull();
+      return CompletableFuture.completedFuture(globalComponentRegistry.getClusterTopologyManager().getVersion());
    }
 
    @Override

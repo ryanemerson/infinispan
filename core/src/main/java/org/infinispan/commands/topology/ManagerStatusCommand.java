@@ -24,8 +24,9 @@ public class ManagerStatusCommand extends AbstractCacheControlCommand {
    @Override
    public CompletionStage<ManagerStatusResponse> invokeAsync(GlobalComponentRegistry gcr) throws Throwable {
       var ctm = gcr.getClusterTopologyManager();
+
       return CompletableFuture.completedFuture(
-            new ManagerStatusResponse(null, ctm.isRebalancingEnabled(), ctm.isMixedCluster(), ctm.getOldestMember())
+            new ManagerStatusResponse(null, ctm.isRebalancingEnabled(), ctm.getOldestMember())
       );
    }
 }

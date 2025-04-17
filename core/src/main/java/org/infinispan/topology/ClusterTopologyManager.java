@@ -7,6 +7,7 @@ import org.infinispan.factories.scopes.Scope;
 import org.infinispan.factories.scopes.Scopes;
 import org.infinispan.partitionhandling.AvailabilityMode;
 import org.infinispan.remoting.transport.Address;
+import org.infinispan.upgrade.ManagerVersion;
 
 /**
  * Maintains the topology for all the caches in the cluster.

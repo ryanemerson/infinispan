@@ -1,4 +1,4 @@
-package org.infinispan.topology;
+package org.infinispan.upgrade;
 
 import java.util.Objects;
 

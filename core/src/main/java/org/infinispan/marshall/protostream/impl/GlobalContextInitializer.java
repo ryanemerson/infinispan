@@ -3,6 +3,7 @@ package org.infinispan.marshall.protostream.impl;
 import org.infinispan.protostream.SerializationContextInitializer;
 import org.infinispan.protostream.annotations.ProtoSchema;
 import org.infinispan.protostream.annotations.ProtoSyntax;
+import org.infinispan.upgrade.ManagerVersion;
 
 /**
  * Interface used to initialise the {@link org.infinispan.marshall.protostream.impl.GlobalMarshaller}'s {@link
@@ -341,7 +342,7 @@ import org.infinispan.protostream.annotations.ProtoSyntax;
             org.infinispan.topology.CacheTopology.Phase.class,
             org.infinispan.topology.HeartBeatCommand.class,
             org.infinispan.topology.ManagerStatusResponse.class,
-            org.infinispan.topology.ManagerVersion.class,
+            ManagerVersion.class,
             org.infinispan.topology.PersistentUUID.class,
             org.infinispan.topology.RebalancingStatus.class,
             org.infinispan.transaction.xa.GlobalTransaction.class,

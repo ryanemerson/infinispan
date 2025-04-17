@@ -61,6 +61,7 @@ import org.infinispan.factories.annotations.ComponentName;
 import org.infinispan.factories.annotations.Inject;
 import org.infinispan.factories.annotations.Start;
 import org.infinispan.factories.annotations.Stop;
+import org.infinispan.factories.impl.ComponentRef;
 import org.infinispan.factories.scopes.Scope;
 import org.infinispan.factories.scopes.Scopes;
 import org.infinispan.jmx.CacheManagerJmxRegistration;
@@ -187,7 +188,7 @@ public class JGroupsTransport implements Transport {
    @Inject protected CacheManagerJmxRegistration jmxRegistration;
    @Inject protected JGroupsMetricsManager metricsManager;
    @Inject InfinispanTelemetry telemetry;
-   @Inject ClusterTopologyManager clusterTopologyManager;
+   @Inject ComponentRef<ClusterTopologyManager> clusterTopologyManager;
 
    private final Lock viewUpdateLock = new ReentrantLock();
    private final Condition viewUpdateCondition = viewUpdateLock.newCondition();
@@ -234,11 +235,6 @@ public class JGroupsTransport implements Transport {
    public JGroupsTransport() {
       this.probeHandler = new ThreadPoolProbeHandler();
       this.unreachableSites = new ConcurrentHashMap<>();
-   }
-
-   private void checkCommandCompatibility(ReplicableCommand cmd) {
-      if (clusterTopologyManager.isMixedCluster() && clusterTopologyManager.getOldestMember().lessThan(cmd.supportedSince()))
-         throw log.commandNotYeySupportedByAllClusterMembers(cmd.getClass().getSimpleName(), cmd.supportedSince());
    }
 
    @Override
@@ -312,6 +308,12 @@ public class JGroupsTransport implements Transport {
          logCommand(command, targets);
          sendCommand(targets, command, Request.NO_REQUEST_ID, deliverOrder, true);
       }
+   }
+
+   private void checkCommandCompatibility(ReplicableCommand cmd) {
+      var ctm = clusterTopologyManager.running();
+      if (ctm.isMixedCluster() && ctm.getOldestMember().lessThan(cmd.supportedSince()))
+         throw log.commandNotYeySupportedByAllClusterMembers(cmd.getClass().getSimpleName(), cmd.supportedSince());
    }
 
    @Override

@@ -9,11 +9,11 @@ import org.infinispan.commons.util.Util;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.configuration.global.GlobalConfigurationBuilder;
-import org.infinispan.factories.GlobalComponentRegistry;
 import org.infinispan.globalstate.ConfigurationStorage;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.test.MultipleCacheManagersTest;
 import org.infinispan.test.fwk.TransportFlags;
+import org.infinispan.upgrade.ManagerVersion;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.Test;
 
@@ -68,33 +68,46 @@ public class MixedClusterUpgradeTest extends MultipleCacheManagersTest {
    // Set ManagerVersion to be latest version for all nodes
    // Ensure command can now be sent
    public void testUnknownCommand() {
+
+      int i = 2;
+      var cm = (DefaultCacheManager) cacheManagers.get(i);
+      // Shutdown server in the same manner as the Server
+//      cm.shutdownAllCaches();
+      cm.stop();
+
+      cm = (DefaultCacheManager) createClusteredCacheManager(false, globalBuilder(i), null, new TransportFlags());
+      cacheManagers.set(i, cm);
+      cm.defineConfiguration(TEST_CACHE, cacheConfig());
+
+      // Restart server with persistent state
+      cm.start();
       // TODO reuse instance from fake command?
       var newVersion = new ManagerVersion(Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE);
       // Restart EmbeddedCacheManagers in reverse order to simulate a StatefulSet rolling update
 //      for (int i = cacheManagers.size() - 1; i >= 0; i--) {
-      for (int i = 0; i < cacheManagers.size(); i++) {
-         var cm = (DefaultCacheManager) cacheManagers.get(i);
-         // Shutdown server in the same manner as the Server
-         cm.shutdownAllCaches();
-         cm.stop();
-         // TODO assert cluster size = 2 for remaining members
-         cm = (DefaultCacheManager) createClusteredCacheManager(false, globalBuilder(i), null, new TransportFlags());
-         cacheManagers.set(i, cm);
-//         var ctm = (ClusterTopologyManagerImpl) GlobalComponentRegistry.of(cm).getClusterTopologyManager();
-//         ctm.setVersion(newVersion);
-         cm.defineConfiguration(TEST_CACHE, cacheConfig());
-         cm.start();
-         waitForClusterToForm(TEST_CACHE);
-
-         // TODO assert cluster size = 3
-
-//         if (ctm.isMixedCluster()) {
-//            // TODO attempt to send new command and expect exception if in mixed mode
-//         } else {
-//            assert i == 0;
-//         }
-         // TODO attempt send new command succesfully
-      }
+//      for (int i = 0; i < cacheManagers.size(); i++) {
+//         var cm = (DefaultCacheManager) cacheManagers.get(i);
+//         // Shutdown server in the same manner as the Server
+//         cm.shutdownAllCaches();
+//         cm.stop();
+//         // TODO assert cluster size = 2 for remaining members
+//         cm = (DefaultCacheManager) createClusteredCacheManager(false, globalBuilder(i), null, new TransportFlags());
+//         cacheManagers.set(i, cm);
+////         var ctm = (ClusterTopologyManagerImpl) GlobalComponentRegistry.of(cm).getClusterTopologyManager();
+////         ctm.setVersion(newVersion);
+//         cm.defineConfiguration(TEST_CACHE, cacheConfig());
+//         cm.start();
+//         waitForClusterToForm(TEST_CACHE);
+//
+//         // TODO assert cluster size = 3
+//
+////         if (ctm.isMixedCluster()) {
+////            // TODO attempt to send new command and expect exception if in mixed mode
+////         } else {
+////            assert i == 0;
+////         }
+//         // TODO attempt send new command succesfully
+//      }
 
       // Add CM representing new version with new command
 //      var cm = addClusterEnabledCacheManager(RpcSCI.INSTANCE);

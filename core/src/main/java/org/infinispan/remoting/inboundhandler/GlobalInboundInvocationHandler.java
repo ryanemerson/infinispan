@@ -70,7 +70,7 @@ public class GlobalInboundInvocationHandler implements InboundInvocationHandler 
       command.setOrigin(origin);
       try {
          if (command instanceof HeartBeatCommand) {
-            reply.reply(null);
+            reply.reply(SuccessfulResponse.create(globalComponentRegistry.getClusterTopologyManager().getVersion()));
          } else if (command instanceof CacheRpcCommand) {
             handleCacheRpcCommand(origin, (CacheRpcCommand) command, reply, order);
          } else {

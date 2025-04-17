@@ -10,7 +10,8 @@ import org.infinispan.commons.util.concurrent.CompletableFutures;
 import org.infinispan.factories.ComponentRegistry;
 import org.infinispan.factories.GlobalComponentRegistry;
 import org.infinispan.remoting.transport.Address;
-import org.infinispan.topology.ManagerVersion;
+import org.infinispan.upgrade.ManagerVersion;
+import org.infinispan.upgrade.VersionAwareComponent;
 
 /**
  * The core of the command-based cache framework.  Commands correspond to specific areas of functionality in the cache,
@@ -20,7 +21,7 @@ import org.infinispan.topology.ManagerVersion;
  * @author Manik Surtani
  * @since 4.0
  */
-public interface ReplicableCommand extends TracedCommand {
+public interface ReplicableCommand extends VersionAwareComponent, TracedCommand {
 
    /**
     * Invoke the command asynchronously.

@@ -5,6 +5,7 @@ import java.util.Map;
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.protostream.annotations.Proto;
 import org.infinispan.protostream.annotations.ProtoTypeId;
+import org.infinispan.upgrade.ManagerVersion;
 
 /**
  * @author Dan Berindei
@@ -12,5 +13,5 @@ import org.infinispan.protostream.annotations.ProtoTypeId;
  */
 @Proto
 @ProtoTypeId(ProtoStreamTypeIds.MANAGER_STATUS_RESPONSE)
-public record ManagerStatusResponse(Map<String, CacheStatusResponse> caches, boolean rebalancingEnabled, boolean mixedCluster, ManagerVersion oldestClusterMember) {
+public record ManagerStatusResponse(Map<String, CacheStatusResponse> caches, boolean rebalancingEnabled, ManagerVersion oldestClusterMember) {
 }
