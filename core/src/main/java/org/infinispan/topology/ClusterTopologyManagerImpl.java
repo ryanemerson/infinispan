@@ -715,7 +715,7 @@ public class ClusterTopologyManagerImpl implements ClusterTopologyManager, Globa
    }
 
    @Override
-   public ManagerVersion getOldestClusterMember() {
+   public ManagerVersion getOldestMember() {
       return oldestClusterMember.get();
    }
 

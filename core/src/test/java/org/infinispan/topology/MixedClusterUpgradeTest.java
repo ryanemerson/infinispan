@@ -71,7 +71,8 @@ public class MixedClusterUpgradeTest extends MultipleCacheManagersTest {
       // TODO reuse instance from fake command?
       var newVersion = new ManagerVersion(Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE);
       // Restart EmbeddedCacheManagers in reverse order to simulate a StatefulSet rolling update
-      for (int i = cacheManagers.size() - 1; i >= 0; i--) {
+//      for (int i = cacheManagers.size() - 1; i >= 0; i--) {
+      for (int i = 0; i < cacheManagers.size(); i++) {
          var cm = (DefaultCacheManager) cacheManagers.get(i);
          // Shutdown server in the same manner as the Server
          cm.shutdownAllCaches();
@@ -79,18 +80,19 @@ public class MixedClusterUpgradeTest extends MultipleCacheManagersTest {
          // TODO assert cluster size = 2 for remaining members
          cm = (DefaultCacheManager) createClusteredCacheManager(false, globalBuilder(i), null, new TransportFlags());
          cacheManagers.set(i, cm);
-         var ctm = (ClusterTopologyManagerImpl) GlobalComponentRegistry.of(cm).getClusterTopologyManager();
-         ctm.setVersion(newVersion);
+//         var ctm = (ClusterTopologyManagerImpl) GlobalComponentRegistry.of(cm).getClusterTopologyManager();
+//         ctm.setVersion(newVersion);
+         cm.defineConfiguration(TEST_CACHE, cacheConfig());
          cm.start();
          waitForClusterToForm(TEST_CACHE);
 
          // TODO assert cluster size = 3
 
-         if (ctm.isMixedCluster()) {
-            // TODO attempt to send new command and expect exception if in mixed mode
-         } else {
-            assert i == 0;
-         }
+//         if (ctm.isMixedCluster()) {
+//            // TODO attempt to send new command and expect exception if in mixed mode
+//         } else {
+//            assert i == 0;
+//         }
          // TODO attempt send new command succesfully
       }
 

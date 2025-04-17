@@ -95,6 +95,7 @@ import org.infinispan.remoting.transport.impl.XSiteResponseImpl;
 import org.infinispan.remoting.transport.raft.RaftManager;
 import org.infinispan.telemetry.InfinispanSpan;
 import org.infinispan.telemetry.InfinispanTelemetry;
+import org.infinispan.topology.ClusterTopologyManager;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 import org.infinispan.xsite.XSiteBackup;
@@ -186,6 +187,7 @@ public class JGroupsTransport implements Transport {
    @Inject protected CacheManagerJmxRegistration jmxRegistration;
    @Inject protected JGroupsMetricsManager metricsManager;
    @Inject InfinispanTelemetry telemetry;
+   @Inject ClusterTopologyManager clusterTopologyManager;
 
    private final Lock viewUpdateLock = new ReentrantLock();
    private final Condition viewUpdateCondition = viewUpdateLock.newCondition();
@@ -234,6 +236,11 @@ public class JGroupsTransport implements Transport {
       this.unreachableSites = new ConcurrentHashMap<>();
    }
 
+   private void checkCommandCompatibility(ReplicableCommand cmd) {
+      if (clusterTopologyManager.isMixedCluster() && clusterTopologyManager.getOldestMember().lessThan(cmd.supportedSince()))
+         throw log.commandNotYeySupportedByAllClusterMembers(cmd.getClass().getSimpleName(), cmd.supportedSince());
+   }
+
    @Override
    public CompletableFuture<Map<Address, Response>> invokeRemotelyAsync(Collection<Address> recipients,
                                                                         ReplicableCommand command,
@@ -272,6 +279,7 @@ public class JGroupsTransport implements Transport {
          return EMPTY_RESPONSES_FUTURE;
       }
 
+      checkCommandCompatibility(command);
       if (mode.isAsynchronous()) {
          // Asynchronous RPC. Send the message, but don't wait for responses.
          return performAsyncRemoteInvocation(recipients, command, deliverOrder, broadcast, singleTarget);
@@ -289,12 +297,14 @@ public class JGroupsTransport implements Transport {
             log.tracef("%s not sending command to self: %s", address, command);
          return;
       }
+      checkCommandCompatibility(command);
       logCommand(command, destination);
       sendCommand(destination, command, Request.NO_REQUEST_ID, deliverOrder, true, true);
    }
 
    @Override
    public void sendToMany(Collection<Address> targets, ReplicableCommand command, DeliverOrder deliverOrder) {
+      checkCommandCompatibility(command);
       if (targets == null) {
          logCommand(command, "all");
          sendCommandToAll(command, Request.NO_REQUEST_ID, deliverOrder);
@@ -311,6 +321,8 @@ public class JGroupsTransport implements Transport {
          // fail fast if we have thread handling a SITE_UNREACHABLE event.
          return new SiteUnreachableXSiteResponse<>(backup, timeService);
       }
+
+      // TODO how to keep track of xsite node versions?
       Address recipient = JGroupsAddressCache.fromJGroupsAddress(new SiteMaster(backup.getSiteName()));
       long requestId = requests.newRequestId();
       logRequest(requestId, rpcCommand, recipient, "backup");

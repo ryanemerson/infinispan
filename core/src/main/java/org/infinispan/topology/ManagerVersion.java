@@ -11,6 +11,7 @@ import org.infinispan.protostream.annotations.ProtoTypeId;
 @ProtoTypeId(ProtoStreamTypeIds.MANAGER_VERSION)
 public record ManagerVersion(int major, int minor, int patch) implements Comparable<ManagerVersion> {
 
+   public static final ManagerVersion SIXTEEN = new ManagerVersion(16, 0, 0);
    public static final ManagerVersion INSTANCE;
 
    static {
@@ -18,6 +19,10 @@ public record ManagerVersion(int major, int minor, int patch) implements Compara
       int minor = Integer.parseInt(Version.getMinor());
       int patch = Integer.parseInt(Version.getMinor());
       INSTANCE = new ManagerVersion(major, minor, patch);
+   }
+
+   public boolean lessThan(ManagerVersion other) {
+      return compareTo(other) < 0;
    }
 
    @Override
@@ -37,5 +42,10 @@ public record ManagerVersion(int major, int minor, int patch) implements Compara
    @Override
    public int hashCode() {
       return Objects.hash(major, minor, patch);
+   }
+
+   @Override
+   public String toString() {
+      return String.format("%d.%d.%d", major, minor, patch);
    }
 }

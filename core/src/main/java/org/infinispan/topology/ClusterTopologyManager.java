@@ -118,5 +118,5 @@ public interface ClusterTopologyManager {
 
    ManagerVersion getVersion();
 
-   ManagerVersion getOldestClusterMember();
+   ManagerVersion getOldestMember();
 }
