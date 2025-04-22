@@ -8,7 +8,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.IntStream;
 
 import org.infinispan.Cache;
-import org.infinispan.commands.topology.ManagerStatusCommand;
+import org.infinispan.commands.cluster.ClusterRequestJoinCommand;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.configuration.global.GlobalConfigurationBuilder;
@@ -89,7 +89,7 @@ public class ClusterTopologyViewChangesTest extends MultipleCacheManagersTest {
 
       // Replace to block on the first status request command to retrieve the global status.
       Mocks.blockInboundGlobalCommand(findCoordinator(), checkPoint, rpc -> {
-         if (rpc instanceof ManagerStatusCommand) {
+         if (rpc instanceof ClusterRequestJoinCommand) {
             return onlyOnce.getAndSet(false);
          }
          return false;

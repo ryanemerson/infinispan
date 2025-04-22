@@ -9,6 +9,8 @@ import org.infinispan.protostream.annotations.ProtoTypeId;
 
 @Proto
 @ProtoTypeId(ProtoStreamTypeIds.MANAGER_VERSION)
+// TODO use byte?
+// TODO rename to NodeVersion?
 public record ManagerVersion(int major, int minor, int patch) implements Comparable<ManagerVersion> {
 
    public static final ManagerVersion SIXTEEN = new ManagerVersion(16, 0, 0);

@@ -30,9 +30,10 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
 
 import org.infinispan.commands.ReplicableCommand;
+import org.infinispan.commands.cluster.ClusterBroadcastJoinCommand;
+import org.infinispan.commands.cluster.ClusterRequestJoinCommand;
 import org.infinispan.commands.topology.CacheShutdownCommand;
 import org.infinispan.commands.topology.CacheStatusRequestCommand;
-import org.infinispan.commands.topology.ManagerStatusCommand;
 import org.infinispan.commands.topology.RebalanceStartCommand;
 import org.infinispan.commands.topology.TopologyUpdateCommand;
 import org.infinispan.commands.topology.TopologyUpdateStableCommand;
@@ -69,14 +70,11 @@ import org.infinispan.partitionhandling.impl.LostDataCheck;
 import org.infinispan.partitionhandling.impl.PreferAvailabilityStrategy;
 import org.infinispan.partitionhandling.impl.PreferConsistencyStrategy;
 import org.infinispan.remoting.inboundhandler.DeliverOrder;
-import org.infinispan.remoting.responses.Response;
-import org.infinispan.remoting.responses.SuccessfulResponse;
 import org.infinispan.remoting.responses.ValidResponse;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.remoting.transport.ResponseCollectors;
 import org.infinispan.remoting.transport.Transport;
 import org.infinispan.remoting.transport.ValidResponseCollector;
-import org.infinispan.remoting.transport.impl.MapResponseCollector;
 import org.infinispan.remoting.transport.impl.VoidResponseCollector;
 import org.infinispan.statetransfer.RebalanceType;
 import org.infinispan.upgrade.ManagerVersion;
@@ -135,6 +133,8 @@ public class ClusterTopologyManagerImpl implements ClusterTopologyManager, Globa
    private ClusterManagerStatus clusterManagerStatus = ClusterManagerStatus.INITIALIZING;
    @GuardedBy("updateLock")
    private final ConcurrentMap<String, ClusterCacheStatus> cacheStatusMap = new ConcurrentHashMap<>();
+   @GuardedBy("updateLock")
+   private final ConcurrentMap<Address, ManagerVersion> nodeVersions = new ConcurrentHashMap<>();
    private final AtomicInteger recoveryAttemptCount = new AtomicInteger();
    private final AtomicReference<ManagerVersion> oldestClusterMember = new AtomicReference<>();
 
@@ -170,6 +170,8 @@ public class ClusterTopologyManagerImpl implements ClusterTopologyManager, Globa
 
    @Start
    public void start() {
+      nodeVersions.put(transport.getAddress(), getManagerVersion());
+
       helper = new TopologyManagementHelper(gcr);
       joinViewFuture = new ConditionFuture<>(timeoutScheduledExecutor);
       actionSequencer = new ActionSequencer(nonBlockingExecutor, true, timeService);
@@ -179,28 +181,45 @@ public class ClusterTopologyManagerImpl implements ClusterTopologyManager, Globa
       // The listener already missed the initial view
       handleClusterView(false, transport.getViewId());
 
-      ManagerStatusResponse status = join(obtainInitialStatusFromCoordinator(INITIAL_CONNECTION_ATTEMPTS));
-      globalRebalancingEnabled.set(GlobalRebalanceStatus.fromBoolean(status.rebalancingEnabled()));
-      oldestClusterMember.set(status.oldestClusterMember());
-      mixedVersionCluster = status.oldestClusterMember().lessThan(getVersion());
+      ClusterStatusResponse status = join(obtainInitialStatusFromCoordinator(INITIAL_CONNECTION_ATTEMPTS));
+      acquireUpdateLock();
+      try {
+         globalRebalancingEnabled.set(GlobalRebalanceStatus.fromBoolean(status.isRebalancingEnabled()));
+         this.nodeVersions.putAll(status.nodeVersions);
+         updateNodeVersionMeta();
+      } finally {
+         releaseUpdateLock();
+      }
    }
 
-   private CompletionStage<ManagerStatusResponse> obtainInitialStatusFromCoordinator(int attempts) {
-      if (transport.isCoordinator()) {
-         return CompletableFuture.completedFuture(new ManagerStatusResponse(null, isRebalancingEnabled(), getVersion()));
+   private void updateNodeVersionMeta() {
+      var distinctVersions = nodeVersions.values().stream()
+            .distinct()
+            .sorted()
+            .toList();
+      if (!distinctVersions.isEmpty()) {
+         mixedVersionCluster = distinctVersions.size() > 1;
+         oldestClusterMember.set(distinctVersions.get(0));
       }
-      ReplicableCommand command = new ManagerStatusCommand();
+   }
+
+   private CompletionStage<ClusterStatusResponse> obtainInitialStatusFromCoordinator(int attempts) {
+      if (transport.isCoordinator()) {
+         return CompletableFuture.completedFuture(new ClusterStatusResponse(isRebalancingEnabled(), getNodeVersions()));
+      }
+      ReplicableCommand command = new ClusterRequestJoinCommand(getManagerVersion());
       Address coordinator = transport.getCoordinator();
       return helper.executeOnCoordinator(transport, command, getGlobalTimeout() / INITIAL_CONNECTION_ATTEMPTS)
                    .handle((managerStatus, throwable) -> {
                       if (throwable == null)
-                         return CompletableFuture.completedFuture((ManagerStatusResponse) managerStatus);
+                         return CompletableFuture.completedFuture((ClusterStatusResponse) managerStatus);
 
                       if (attempts == 1 || !(CompletableFutures.extractException(throwable) instanceof TimeoutException)) {
                          // TODO How best to handle the mixedCluster status here? Currently we err on the side of caution
                          // and return the oldest supported version to prevent incompatible commands potentially being sent
+                         // by this node
                          log.errorReadingManagerStatus(coordinator, throwable);
-                         return CompletableFuture.completedFuture(new ManagerStatusResponse(null, true,  ManagerVersion.SIXTEEN));
+                         return CompletableFuture.completedFuture(new ClusterStatusResponse(true,  Map.of(coordinator, ManagerVersion.SIXTEEN));
                       }
                       // Assume any timeout is because the coordinator doesn't have a CommandAwareRpcDispatcher yet
                       // (possible with ForkChannels or JGroupsChannelLookup and shouldConnect = false), and retry.
@@ -236,6 +255,50 @@ public class ClusterTopologyManagerImpl implements ClusterTopologyManager, Globa
    @Override
    public ClusterManagerStatus getStatus() {
       return clusterManagerStatus;
+   }
+
+   @Override
+   public Map<Address, ManagerVersion> getNodeVersions() {
+      return nodeVersions;
+   }
+
+   @Override
+   public CompletionStage<ClusterStatusResponse> initiateNodeJoin(Address address, ManagerVersion version) throws Exception {
+      // TODO do we need to use orderOnManager here?
+
+      // TODO
+      // 1. Broadcast ClusterStatusResponse all members except joiner
+      // 2. Send response to joiner
+      acquireUpdateLock();
+      try {
+         // Update local records
+         handleNodeJoin(address, version);
+
+         var command = new ClusterBroadcastJoinCommand(address, version);
+         var targets = new HashSet<>(transport.getMembers());
+         targets.remove(address);
+         targets.remove(transport.getAddress());
+
+         // TODO how to handle failures here? Need a retry mechanism?
+         // Broadcast ClusterStatusResponse all members except joiner
+         return transport.invokeCommand(targets, command, VoidResponseCollector.ignoreLeavers(), DeliverOrder.NONE, getGlobalTimeout(), MILLISECONDS)
+               .thenApply(ignore -> {
+                  return new ClusterStatusResponse(isRebalancingEnabled(), nodeVersions);
+               });
+      } finally {
+         releaseUpdateLock();
+      }
+   }
+
+   @Override
+   public CompletionStage<Void> handleNodeJoin(Address address, ManagerVersion version) {
+      acquireUpdateLock();
+      try {
+         this.nodeVersions.put(address, version);
+         updateNodeVersionMeta();
+      } finally {
+         releaseUpdateLock();
+      }
    }
 
    @Override
@@ -450,19 +513,7 @@ public class ClusterTopologyManagerImpl implements ClusterTopologyManager, Globa
 
                // If we have recovered the cluster status, we rebalance the caches to include minor partitions
                // If we processed a regular view, we prune members that left.
-               return updateCacheMembers(newViewId)
-                     .thenAccept(versionMap -> {
-                        // TODO why does versionMap only contain a single value?
-                        var distinctVersions = versionMap.values().stream()
-                              .map(r -> (ManagerVersion) ((ValidResponse) r).getResponseValue())
-                              .distinct()
-                              .sorted()
-                              .toList();
-                        if (!distinctVersions.isEmpty()) {
-                           mixedVersionCluster = distinctVersions.size() > 1;
-                           oldestClusterMember.set(distinctVersions.iterator().next());
-                        }
-                     });
+               return updateCacheMembers(newViewId);
             }
          } catch (Throwable t) {
             log.viewHandlingError(newViewId, t);
@@ -655,12 +706,12 @@ public class ClusterTopologyManagerImpl implements ClusterTopologyManager, Globa
       });
    }
 
-   private CompletionStage<Map<Address, Response>> updateCacheMembers(int viewId) {
+   private CompletionStage<Void> updateCacheMembers(int viewId) {
       // Confirm that view's members are all available first, so in a network split scenario
       // we can enter degraded mode without starting a rebalance first
       // We don't really need to run on the view handling executor because ClusterCacheStatus
       // has its own synchronization
-      return confirmMembersAvailable().whenComplete((responses, throwable) -> {
+      return confirmMembersAvailable().whenComplete((ignored, throwable) -> {
          if (throwable == null) {
             try {
                int newViewId = transport.getViewId();
@@ -682,8 +733,7 @@ public class ClusterTopologyManagerImpl implements ClusterTopologyManager, Globa
       });
    }
 
-   // TODO we can't use this to detect new members as we're using expectedMembers to determine who the command is sent to :(
-   private CompletionStage<Map<Address, Response>> confirmMembersAvailable() {
+   private CompletionStage<Void> confirmMembersAvailable() {
       try {
          Set<Address> expectedMembers = new HashSet<>();
          for (ClusterCacheStatus cacheStatus : cacheStatusMap.values()) {
@@ -691,7 +741,7 @@ public class ClusterTopologyManagerImpl implements ClusterTopologyManager, Globa
          }
          expectedMembers.retainAll(transport.getMembers());
          return transport.invokeCommandOnAll(expectedMembers, HeartBeatCommand.INSTANCE,
-                                             MapResponseCollector.validOnly(),
+                                             VoidResponseCollector.validOnly(),
                                              DeliverOrder.NONE, getGlobalTimeout() / CLUSTER_RECOVERY_ATTEMPTS,
                                              MILLISECONDS);
       } catch (Exception e) {
@@ -721,7 +771,7 @@ public class ClusterTopologyManagerImpl implements ClusterTopologyManager, Globa
    }
 
    @Override
-   public ManagerVersion getVersion() {
+   public ManagerVersion getManagerVersion() {
       return ManagerVersion.INSTANCE;
    }
 

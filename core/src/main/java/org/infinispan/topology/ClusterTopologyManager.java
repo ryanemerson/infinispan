@@ -1,6 +1,7 @@
 package org.infinispan.topology;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletionStage;
 
 import org.infinispan.factories.scopes.Scope;
@@ -33,6 +34,18 @@ public interface ClusterTopologyManager {
          return this == COORDINATOR || this == RECOVERING_CLUSTER;
       }
    }
+
+   CompletionStage<ClusterStatusResponse> initiateNodeJoin(Address address, ManagerVersion version) throws Exception;
+
+   CompletionStage<Void> handleNodeJoin(Address address, ManagerVersion version) throws Exception;
+
+   boolean isMixedCluster();
+
+   ManagerVersion getManagerVersion();
+
+   ManagerVersion getOldestMember();
+
+   Map<Address, ManagerVersion> getNodeVersions();
 
    /**
     * Returns the list of nodes that joined the cache with the given {@code cacheName} if the current
@@ -114,10 +127,4 @@ public interface ClusterTopologyManager {
    void setInitialCacheTopologyId(String cacheName, int topologyId);
 
    ClusterManagerStatus getStatus();
-
-   boolean isMixedCluster();
-
-   ManagerVersion getVersion();
-
-   ManagerVersion getOldestMember();
 }

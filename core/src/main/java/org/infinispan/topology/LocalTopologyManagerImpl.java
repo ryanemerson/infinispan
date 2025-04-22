@@ -401,7 +401,7 @@ public class LocalTopologyManagerImpl implements LocalTopologyManager, GlobalSta
          }
 
          log.debugf("Sending cluster status response for view %d", viewId);
-         return new ManagerStatusResponse(caches, clusterTopologyManager.isRebalancingEnabled(), clusterTopologyManager.getVersion());
+         return new ManagerStatusResponse(caches, clusterTopologyManager.isRebalancingEnabled(), clusterTopologyManager.getManagerVersion());
       });
    }
 

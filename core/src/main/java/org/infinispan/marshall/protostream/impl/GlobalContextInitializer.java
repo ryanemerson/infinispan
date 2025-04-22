@@ -1,9 +1,9 @@
 package org.infinispan.marshall.protostream.impl;
 
+import org.infinispan.commands.cluster.ClusterRequestJoinCommand;
 import org.infinispan.protostream.SerializationContextInitializer;
 import org.infinispan.protostream.annotations.ProtoSchema;
 import org.infinispan.protostream.annotations.ProtoSyntax;
-import org.infinispan.upgrade.ManagerVersion;
 
 /**
  * Interface used to initialise the {@link org.infinispan.marshall.protostream.impl.GlobalMarshaller}'s {@link
@@ -31,6 +31,8 @@ import org.infinispan.upgrade.ManagerVersion;
             org.infinispan.cache.impl.KeyFunctionEncoder.class,
             org.infinispan.commands.CommandInvocationId.class,
             org.infinispan.commands.control.LockControlCommand.class,
+            org.infinispan.commands.cluster.ClusterBroadcastJoinCommand.class,
+            org.infinispan.commands.cluster.ClusterRequestJoinCommand.class,
             org.infinispan.commands.irac.IracCleanupKeysCommand.class,
             org.infinispan.commands.irac.IracMetadataRequestCommand.class,
             org.infinispan.commands.irac.IracPrimaryPendingKeyCheckCommand.class,
@@ -79,7 +81,6 @@ import org.infinispan.upgrade.ManagerVersion;
             org.infinispan.commands.topology.CacheShutdownCommand.class,
             org.infinispan.commands.topology.CacheShutdownRequestCommand.class,
             org.infinispan.commands.topology.CacheStatusRequestCommand.class,
-            org.infinispan.commands.topology.ManagerStatusCommand.class,
             org.infinispan.commands.topology.RebalancePhaseConfirmCommand.class,
             org.infinispan.commands.topology.RebalancePolicyUpdateCommand.class,
             org.infinispan.commands.topology.RebalanceStartCommand.class,
@@ -342,12 +343,12 @@ import org.infinispan.upgrade.ManagerVersion;
             org.infinispan.topology.CacheTopology.Phase.class,
             org.infinispan.topology.HeartBeatCommand.class,
             org.infinispan.topology.ManagerStatusResponse.class,
-            ManagerVersion.class,
             org.infinispan.topology.PersistentUUID.class,
             org.infinispan.topology.RebalancingStatus.class,
             org.infinispan.transaction.xa.GlobalTransaction.class,
             org.infinispan.transaction.xa.recovery.InDoubtTxInfo.class,
             org.infinispan.transaction.WriteSkewException.class,
+            org.infinispan.upgrade.ManagerVersion.class,
             org.infinispan.util.KeyValuePair.class,
             org.infinispan.xsite.events.XSiteEvent.class,
             org.infinispan.xsite.events.XSiteEventType.class,

@@ -107,8 +107,8 @@ public class MixedClusterTest extends MultipleCacheManagersTest {
       System.out.println(remoteResponses);
    }
 
-   private ClusterTopologyManagerImpl ctm(EmbeddedCacheManager cm) {
-      return TestingUtil.extractGlobalComponent(cm, ClusterTopologyManagerImpl.class);
+   private ClusterTopologyManager ctm(EmbeddedCacheManager cm) {
+      return TestingUtil.extractGlobalComponent(cm, ClusterTopologyManager.class);
    }
 
    static class VersionedClusterTopologyManager extends ClusterTopologyManagerImpl {
@@ -120,7 +120,7 @@ public class MixedClusterTest extends MultipleCacheManagersTest {
       }
 
       @Override
-      public ManagerVersion getVersion() {
+      public ManagerVersion getManagerVersion() {
          return version;
       }
    }

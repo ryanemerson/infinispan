@@ -16,7 +16,7 @@ public abstract class AbstractCacheControlCommand implements GlobalRpcCommand {
 
    protected transient Address origin;
 
-   AbstractCacheControlCommand() {
+   protected AbstractCacheControlCommand() {
       this(null);
    }
 

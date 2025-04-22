@@ -13,5 +13,6 @@ import org.infinispan.upgrade.ManagerVersion;
  */
 @Proto
 @ProtoTypeId(ProtoStreamTypeIds.MANAGER_STATUS_RESPONSE)
+// TODO remove isRebalancingEnabled?
 public record ManagerStatusResponse(Map<String, CacheStatusResponse> caches, boolean rebalancingEnabled, ManagerVersion oldestClusterMember) {
 }
