@@ -6,11 +6,11 @@ import static org.testng.Assert.assertTrue;
 import java.util.Arrays;
 import java.util.List;
 
-import org.infinispan.distribution.TestAddress;
 import org.infinispan.distribution.ch.impl.OwnershipStatistics;
 import org.infinispan.distribution.ch.impl.ReplicatedConsistentHash;
 import org.infinispan.distribution.ch.impl.ReplicatedConsistentHashFactory;
 import org.infinispan.remoting.transport.Address;
+import org.infinispan.remoting.transport.jgroups.JGroupsTopologyAwareAddress;
 import org.testng.annotations.Test;
 
 /**
@@ -24,11 +24,11 @@ public class ReplicatedConsistentHashFactoryTest {
    public void test1() {
       int[] testSegments = { 1, 2, 4, 8, 16, 31, 32, 33, 67, 128};
 
-      ReplicatedConsistentHashFactory factory = ReplicatedConsistentHashFactory.getInstance();
-      Address A = new TestAddress(0, "A");
-      Address B = new TestAddress(1, "B");
-      Address C = new TestAddress(2, "C");
-      Address D = new TestAddress(3, "D");
+       ReplicatedConsistentHashFactory factory = ReplicatedConsistentHashFactory.getInstance();
+      Address A = JGroupsTopologyAwareAddress.random("A");
+      Address B = JGroupsTopologyAwareAddress.random("B");
+      Address C = JGroupsTopologyAwareAddress.random("C");
+      Address D = JGroupsTopologyAwareAddress.random("D");
       List<Address> a = Arrays.asList(A);
       List<Address> ab = Arrays.asList(A, B);
       List<Address> abc = Arrays.asList(A, B, C);
