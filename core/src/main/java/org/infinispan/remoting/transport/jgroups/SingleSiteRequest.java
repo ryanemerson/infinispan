@@ -11,7 +11,6 @@ import org.infinispan.remoting.responses.Response;
 import org.infinispan.remoting.transport.AbstractRequest;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.remoting.transport.ResponseCollector;
-import org.infinispan.remoting.transport.SiteAddress;
 import org.infinispan.remoting.transport.impl.RequestRepository;
 
 /**
@@ -64,7 +63,7 @@ public class SingleSiteRequest<T> extends AbstractRequest<T> {
 
    public void sitesUnreachable(String unreachableSite) {
       if (site.equals(unreachableSite)) {
-         receiveResponse(new SiteAddress(site), CacheNotFoundResponse.INSTANCE);
+         receiveResponse(new JGroupsTopologyAwareAddress(JGroupsTopologyAwareAddress.randomUUID(null, site, null, null)), CacheNotFoundResponse.INSTANCE);
       }
    }
 }
