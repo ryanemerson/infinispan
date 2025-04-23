@@ -25,6 +25,11 @@ public class JGroupsTopologyAwareAddress extends JGroupsAddress implements Topol
 
    public static final JGroupsTopologyAwareAddress LOCAL = new JGroupsTopologyAwareAddress(ExtendedUUID.randomUUID());
 
+   public static JGroupsAddress random() {
+      var uuid = randomUUID(null, null, null, null);
+      return new JGroupsTopologyAwareAddress(uuid);
+   }
+
    public static ExtendedUUID randomUUID(String name, String siteId, String rackId, String machineId) {
       ExtendedUUID uuid = ExtendedUUID.randomUUID(name);
       if (name != null) {
