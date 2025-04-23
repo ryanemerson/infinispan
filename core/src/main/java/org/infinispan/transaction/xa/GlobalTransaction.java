@@ -35,21 +35,28 @@ public class GlobalTransaction implements Cloneable {
    private Address addr;
    private int hash_code = -1;  // in the worst case, hashCode() returns 0, then increases, so we're safe here
    private boolean remote = false;
+   private final boolean clientTx;
    private volatile XidImpl xid = null;
    private volatile long internalId = -1;
 
    public GlobalTransaction(Address addr, boolean remote) {
+      this(addr, remote, false);
+   }
+
+   public GlobalTransaction(Address addr, boolean remote, boolean clientTx) {
       this.id = sid.incrementAndGet();
       this.addr = addr;
       this.remote = remote;
+      this.clientTx = clientTx;
    }
 
    @ProtoFactory
-   GlobalTransaction(long id, WrappedMessage wrappedAddress, XidImpl xid, long internalId) {
+   GlobalTransaction(long id, WrappedMessage wrappedAddress, XidImpl xid, long internalId, boolean clientTransaction) {
       this.id = id;
       this.addr = WrappedMessages.unwrap(wrappedAddress);
       this.xid = xid;
       this.internalId = internalId;
+      this.clientTx = clientTransaction;
    }
 
    public Address getAddress() {
@@ -74,6 +81,11 @@ public class GlobalTransaction implements Cloneable {
    @ProtoField(4)
    public long getInternalId() {
       return internalId;
+   }
+
+   @ProtoField(5)
+   public boolean isClientTransaction() {
+      return clientTx;
    }
 
    public boolean isRemote() {
