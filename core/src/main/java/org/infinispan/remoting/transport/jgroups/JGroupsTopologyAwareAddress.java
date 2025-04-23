@@ -23,6 +23,8 @@ public class JGroupsTopologyAwareAddress extends JGroupsAddress implements Topol
    private static final byte[] RACK_KEY = Util.stringToBytes("rack-id");
    private static final byte[] MACHINE_KEY = Util.stringToBytes("machine-id");
 
+   public static final JGroupsTopologyAwareAddress LOCAL = new JGroupsTopologyAwareAddress(ExtendedUUID.randomUUID());
+
    public static ExtendedUUID randomUUID(String name, String siteId, String rackId, String machineId) {
       ExtendedUUID uuid = ExtendedUUID.randomUUID(name);
       if (name != null) {
