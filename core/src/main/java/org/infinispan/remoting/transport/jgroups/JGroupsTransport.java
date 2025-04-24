@@ -1,6 +1,6 @@
 package org.infinispan.remoting.transport.jgroups;
 
-import static org.infinispan.remoting.transport.jgroups.JGroupsAddressCache.fromJGroupsAddress;
+import static org.infinispan.remoting.transport.jgroups.JGroupsAddressCache.fromJGroupsTopologyAwareAddress;
 import static org.infinispan.util.logging.Log.CLUSTER;
 import static org.infinispan.util.logging.Log.CONTAINER;
 import static org.infinispan.util.logging.Log.XSITE;
@@ -307,7 +307,7 @@ public class JGroupsTransport implements Transport {
          // fail fast if we have thread handling a SITE_UNREACHABLE event.
          return new SiteUnreachableXSiteResponse<>(backup, timeService);
       }
-      Address recipient = JGroupsAddressCache.fromJGroupsAddress(new SiteMaster(backup.getSiteName()));
+      Address recipient = JGroupsAddressCache.fromJGroupsTopologyAwareAddress(new SiteMaster(backup.getSiteName()));
       long requestId = requests.newRequestId();
       logRequest(requestId, rpcCommand, recipient, "backup");
       SingleSiteRequest<ValidResponse> request =
@@ -667,12 +667,12 @@ public class JGroupsTransport implements Transport {
       // The first view is installed before returning from JChannel.connect
       // So we need to set the local address here
       if (address == null) {
-         org.jgroups.Address jgroupsAddress = channel.getAddress();
-         this.address = fromJGroupsAddress(jgroupsAddress);
+         org.jgroups.Address JGroupsTopologyAwareAddress = channel.getAddress();
+         this.address = fromJGroupsTopologyAwareAddress(JGroupsTopologyAwareAddress);
          if (log.isTraceEnabled()) {
-            String uuid = (jgroupsAddress instanceof org.jgroups.util.UUID) ?
-                  ((org.jgroups.util.UUID) jgroupsAddress).toStringLong() : "N/A";
-            log.tracef("Local address %s, uuid %s", jgroupsAddress, uuid);
+            String uuid = (JGroupsTopologyAwareAddress instanceof org.jgroups.util.UUID) ?
+                  ((org.jgroups.util.UUID) JGroupsTopologyAwareAddress).toStringLong() : "N/A";
+            log.tracef("Local address %s, uuid %s", JGroupsTopologyAwareAddress, uuid);
          }
       }
       if (installIfFirst && clusterView.getViewId() != ClusterView.INITIAL_VIEW_ID) {
@@ -686,7 +686,7 @@ public class JGroupsTransport implements Transport {
          subGroups = new ArrayList<>();
          List<View> jgroupsSubGroups = ((MergeView) newView).getSubgroups();
          for (View group : jgroupsSubGroups) {
-            subGroups.add(fromJGroupsAddressList(group.getMembers()));
+            subGroups.add(fromJGroupsTopologyAwareAddressList(group.getMembers()));
          }
       } else {
          if (!(channel instanceof ForkChannel)) {
@@ -695,7 +695,7 @@ public class JGroupsTransport implements Transport {
          subGroups = Collections.emptyList();
       }
       long viewId = newView.getViewId().getId();
-      List<Address> members = fromJGroupsAddressList(newView.getMembers());
+      List<Address> members = fromJGroupsTopologyAwareAddressList(newView.getMembers());
       if (members.isEmpty()) {
          return;
       }
@@ -757,9 +757,9 @@ public class JGroupsTransport implements Transport {
       JGroupsAddressCache.pruneAddressCache();
    }
 
-   private static List<Address> fromJGroupsAddressList(List<org.jgroups.Address> list) {
+   private static List<Address> fromJGroupsTopologyAwareAddressList(List<org.jgroups.Address> list) {
       return list.stream()
-            .map(JGroupsAddressCache::fromJGroupsAddress)
+            .map(JGroupsAddressCache::fromJGroupsTopologyAwareAddress)
             .toList();
    }
 
@@ -876,7 +876,7 @@ public class JGroupsTransport implements Transport {
       return findRelay2()
             .map(RELAY2::siteMasters)
             .map(addresses -> addresses.stream()
-                  .map(JGroupsAddressCache::fromJGroupsAddress)
+                  .map(JGroupsAddressCache::fromJGroupsTopologyAwareAddress)
                   .collect(Collectors.toList()))
             .orElse(Collections.emptyList());
    }
@@ -1086,7 +1086,7 @@ public class JGroupsTransport implements Transport {
       if (checkView && !clusterView.contains(target))
          return;
 
-      Message message = new BytesMessage(toJGroupsAddress(target));
+      Message message = new BytesMessage(toJGroupsTopologyAwareAddress(target));
       marshallRequest(message, command, requestId);
       setMessageFlags(message, deliverOrder, noRelay);
 
@@ -1097,7 +1097,7 @@ public class JGroupsTransport implements Transport {
       }
    }
 
-   private static org.jgroups.Address toJGroupsAddress(Address address) {
+   private static org.jgroups.Address toJGroupsTopologyAwareAddress(Address address) {
       return ((JGroupsTopologyAwareAddress) address).getJGroupsAddress();
    }
 
@@ -1317,7 +1317,7 @@ public class JGroupsTransport implements Transport {
          if (address.equals(this.address))
             continue;
 
-         copy.dest(toJGroupsAddress(address));
+         copy.dest(toJGroupsTopologyAwareAddress(address));
          send(copy);
 
          metricsManager.recordMessageSent(address, copy.size(), requestId == Request.NO_REQUEST_ID);
@@ -1439,7 +1439,7 @@ public class JGroupsTransport implements Transport {
          }
          if (org.jgroups.util.Util.isFlagSet(flags, Message.Flag.NO_RELAY)) {
             assert command instanceof ReplicableCommand;
-            invocationHandler.handleFromCluster(fromJGroupsAddress(src), (ReplicableCommand) command, reply, deliverOrder);
+            invocationHandler.handleFromCluster(fromJGroupsTopologyAwareAddress(src), (ReplicableCommand) command, reply, deliverOrder);
          } else {
             assert src instanceof SiteAddress;
             assert command instanceof XSiteRequest;
@@ -1466,7 +1466,7 @@ public class JGroupsTransport implements Transport {
          }
          if (log.isTraceEnabled())
             log.tracef("%s received response for request %d from %s: %s", getAddress(), requestId, src, response);
-         Address address = fromJGroupsAddress(src);
+         Address address = fromJGroupsTopologyAwareAddress(src);
          requests.addResponse(requestId, address, response);
       } catch (Throwable t) {
          CLUSTER.errorProcessingResponse(requestId, src, t);

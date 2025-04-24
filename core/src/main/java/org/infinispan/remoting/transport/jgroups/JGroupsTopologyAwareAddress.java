@@ -74,10 +74,10 @@ public class JGroupsTopologyAwareAddress implements TopologyAwareAddress {
       try (DataInputStream in = new DataInputStream(new ByteArrayInputStream(bytes))) {
          // Note: Use org.jgroups.Address, not the concrete UUID class.
          // Otherwise applications that only use local caches would have to bundle the JGroups jar,
-         // because the verifier needs to check the arguments of fromJGroupsAddress
+         // because the verifier needs to check the arguments of fromJGroupsTopologyAwareAddress
          // even if this method is never called.
          org.jgroups.Address address = org.jgroups.util.Util.readAddress(in);
-         return (JGroupsTopologyAwareAddress) JGroupsAddressCache.fromJGroupsAddress(address);
+         return (JGroupsTopologyAwareAddress) JGroupsAddressCache.fromJGroupsTopologyAwareAddress(address);
       } catch (ClassNotFoundException e) {
          throw new MarshallingException(e);
       }

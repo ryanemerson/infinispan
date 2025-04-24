@@ -12,7 +12,7 @@ import org.infinispan.distribution.ch.ConsistentHash;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.partitionhandling.BaseStatefulPartitionHandlingTest;
 import org.infinispan.partitionhandling.PartitionHandling;
-import org.infinispan.remoting.transport.jgroups.JGroupsAddress;
+import org.infinispan.remoting.transport.jgroups.JGroupsTopologyAwareAddress;
 import org.infinispan.test.TestingUtil;
 import org.infinispan.topology.MissingMembersException;
 import org.infinispan.topology.PersistentUUID;
@@ -27,7 +27,7 @@ public class NodeRestartPartitionHandlingTest extends BaseStatefulPartitionHandl
    }
 
    public void testRestartDuringNetworkPartition() throws Throwable {
-      Map<JGroupsAddress, PersistentUUID> addressMappings = createInitialCluster();
+      Map<JGroupsTopologyAwareAddress, PersistentUUID> addressMappings = createInitialCluster();
       ConsistentHash oldConsistentHash = advancedCache(0, CACHE_NAME).getDistributionManager().getWriteConsistentHash();
 
       for (int i = 0; i < numMembersInCluster; i++) {

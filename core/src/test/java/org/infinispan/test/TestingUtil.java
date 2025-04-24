@@ -132,7 +132,7 @@ import org.infinispan.remoting.inboundhandler.PerCacheInboundInvocationHandler;
 import org.infinispan.remoting.transport.AbstractDelegatingTransport;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.remoting.transport.Transport;
-import org.infinispan.remoting.transport.jgroups.JGroupsAddress;
+import org.infinispan.remoting.transport.jgroups.JGroupsTopologyAwareAddress;
 import org.infinispan.remoting.transport.jgroups.JGroupsTransport;
 import org.infinispan.security.AuthorizationPermission;
 import org.infinispan.security.GroupPrincipal;
@@ -271,7 +271,7 @@ public class TestingUtil {
    }
 
    public static void installNewView(Stream<Address> members, Function<EmbeddedCacheManager, JChannel> channelRetriever, EmbeddedCacheManager... where) {
-      List<org.jgroups.Address> viewMembers = members.map(a -> ((JGroupsAddress) a).getJGroupsAddress()).collect(Collectors.toList());
+      List<org.jgroups.Address> viewMembers = members.map(a -> ((JGroupsTopologyAwareAddress) a).getJGroupsAddress()).collect(Collectors.toList());
 
       List<View> previousViews = new ArrayList<>(where.length);
       // Compute the merge digest, without it nodes would request the retransmission of all messages

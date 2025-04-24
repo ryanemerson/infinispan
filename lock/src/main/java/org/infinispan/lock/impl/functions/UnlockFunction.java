@@ -17,7 +17,7 @@ import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.remoting.transport.Address;
-import org.infinispan.remoting.transport.jgroups.JGroupsAddress;
+import org.infinispan.remoting.transport.jgroups.JGroupsTopologyAwareAddress;
 
 /**
  * Function that allows to unlock the lock, if it's not already released.
@@ -53,7 +53,7 @@ public class UnlockFunction implements Function<EntryView.ReadWriteEntryView<Clu
    }
 
    @ProtoFactory
-   UnlockFunction(String requestId, Stream<JGroupsAddress> requesters) {
+   UnlockFunction(String requestId, Stream<JGroupsTopologyAwareAddress> requesters) {
       this(requestId, requesters.collect(Collectors.toSet()));
    }
 
@@ -63,8 +63,8 @@ public class UnlockFunction implements Function<EntryView.ReadWriteEntryView<Clu
    }
 
    @ProtoField(2)
-   Stream<JGroupsAddress> getRequesters() {
-      return requesters.stream().map(JGroupsAddress.class::cast);
+   Stream<JGroupsTopologyAwareAddress> getRequesters() {
+      return requesters.stream().map(JGroupsTopologyAwareAddress.class::cast);
    }
 
    @Override

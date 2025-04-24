@@ -1,5 +1,6 @@
 package org.infinispan.marshall.persistence.impl;
 
+import org.infinispan.container.entries.JGroupsAddress;
 import org.infinispan.container.entries.RemoteMetadata;
 import org.infinispan.container.versioning.NumericVersion;
 import org.infinispan.container.versioning.SimpleClusteredVersion;
@@ -7,16 +8,16 @@ import org.infinispan.container.versioning.irac.IracEntryVersion;
 import org.infinispan.container.versioning.irac.TopologyIracVersion;
 import org.infinispan.functional.impl.MetaParamsInternalMetadata;
 import org.infinispan.marshall.protostream.impl.MarshallableUserObject;
+import org.infinispan.marshall.protostream.impl.adapters.SubjectAdapter;
 import org.infinispan.metadata.EmbeddedMetadata;
 import org.infinispan.metadata.impl.IracMetadata;
 import org.infinispan.metadata.impl.PrivateMetadata;
 import org.infinispan.protostream.SerializationContextInitializer;
 import org.infinispan.protostream.annotations.ProtoSchema;
 import org.infinispan.protostream.annotations.ProtoSyntax;
-import org.infinispan.remoting.transport.jgroups.JGroupsAddress;
+import org.infinispan.remoting.transport.jgroups.JGroupsTopologyAwareAddress;
 import org.infinispan.security.AuthorizationPermission;
 import org.infinispan.security.impl.CacheRoleImpl;
-import org.infinispan.marshall.protostream.impl.adapters.SubjectAdapter;
 import org.infinispan.security.mappers.ClusterRoleMapper;
 import org.infinispan.util.ByteString;
 import org.infinispan.util.logging.events.EventLogCategory;
@@ -43,6 +44,7 @@ import org.infinispan.util.logging.events.EventLogLevel;
             EventLogCategory.class,
             EventLogLevel.class,
             JGroupsAddress.class,
+            JGroupsTopologyAwareAddress.class,
             MarshalledValueImpl.class,
             MetaParamsInternalMetadata.class,
             NumericVersion.class,

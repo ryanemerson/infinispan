@@ -13,7 +13,7 @@ import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.remoting.transport.Address;
-import org.infinispan.remoting.transport.jgroups.JGroupsAddress;
+import org.infinispan.remoting.transport.jgroups.JGroupsTopologyAwareAddress;
 
 /**
  * IsLocked function that allows to know if a lock is already acquired. It returns {@link Boolean#TRUE} when the lock is
@@ -38,11 +38,11 @@ public class IsLocked implements Function<EntryView.ReadWriteEntryView<Clustered
    }
 
    @ProtoFactory
-   IsLocked(JGroupsAddress requestor) {
+   IsLocked(JGroupsTopologyAwareAddress requestor) {
       this((Address) requestor);
    }
 
-   @ProtoField(value = 1, javaType = JGroupsAddress.class)
+   @ProtoField(value = 1, javaType = JGroupsTopologyAwareAddress.class)
    Address getRequestor() {
       return requestor;
    }
