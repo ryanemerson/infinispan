@@ -8,7 +8,7 @@ import org.infinispan.distribution.ch.ConsistentHash;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.remoting.transport.Transport;
-import org.infinispan.remoting.transport.jgroups.JGroupsAddress;
+import org.infinispan.remoting.transport.jgroups.JGroupsTopologyAwareAddress;
 import org.infinispan.security.actions.SecurityActions;
 import org.infinispan.server.resp.AclCategory;
 import org.infinispan.server.resp.RespCommand;
@@ -53,14 +53,14 @@ public class CLUSTER extends FamilyCommand {
 
    public static int findPort(Address address) {
       int port = 0;
-      if (address instanceof JGroupsAddress jAddress && jAddress.getJGroupsAddress() instanceof IpAddress) {
+      if (address instanceof JGroupsTopologyAwareAddress jAddress && jAddress.getJGroupsAddress() instanceof IpAddress) {
          port = ((IpAddress) jAddress.getJGroupsAddress()).getPort();
       }
       return port;
    }
 
    public static String getOnlyIp(Address address) {
-      if (address instanceof JGroupsAddress jAddress && jAddress.getJGroupsAddress() instanceof IpAddress) {
+      if (address instanceof JGroupsTopologyAwareAddress jAddress && jAddress.getJGroupsAddress() instanceof IpAddress) {
          return ((IpAddress) jAddress.getJGroupsAddress()).getIpAddress().getHostAddress();
       }
       return address.toString();

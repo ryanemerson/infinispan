@@ -7,7 +7,7 @@ import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.remoting.transport.Address;
-import org.infinispan.remoting.transport.jgroups.JGroupsAddress;
+import org.infinispan.remoting.transport.jgroups.JGroupsTopologyAwareAddress;
 
 /**
  * Lock object inside the cache. Holds the lock owner, the lock request id and the status of the lock.
@@ -30,7 +30,7 @@ public class ClusteredLockValue {
    }
 
    @ProtoFactory
-   ClusteredLockValue(String requestId, JGroupsAddress owner, ClusteredLockState state) {
+   ClusteredLockValue(String requestId, JGroupsTopologyAwareAddress owner, ClusteredLockState state) {
       this(requestId, (Address) owner, state);
    }
 
@@ -39,7 +39,7 @@ public class ClusteredLockValue {
       return requestId;
    }
 
-   @ProtoField(value = 2, javaType = JGroupsAddress.class)
+   @ProtoField(value = 2, javaType = JGroupsTopologyAwareAddress.class)
    public Address getOwner() {
       return owner;
    }

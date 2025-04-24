@@ -21,7 +21,7 @@ import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoSchema;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.remoting.transport.Transport;
-import org.infinispan.remoting.transport.jgroups.JGroupsAddress;
+import org.infinispan.remoting.transport.jgroups.JGroupsTopologyAwareAddress;
 import org.infinispan.test.TestDataSCI;
 import org.infinispan.topology.ClusterTopologyManager;
 
@@ -73,8 +73,8 @@ public abstract class ControlledConsistentHashFactory<CH extends ConsistentHash>
    }
 
    @ProtoField(3)
-   List<JGroupsAddress> getJGroupsMembers() {
-      return (List<JGroupsAddress>)(List<?>) membersToUse;
+   List<JGroupsTopologyAwareAddress> getJGroupsMembers() {
+      return (List<JGroupsTopologyAwareAddress>)(List<?>) membersToUse;
    }
 
    public void setOwnerIndexes(int primaryOwnerIndex, int... backupOwnerIndexes) {
@@ -165,7 +165,7 @@ public abstract class ControlledConsistentHashFactory<CH extends ConsistentHash>
    public static class Default extends ControlledConsistentHashFactory<DefaultConsistentHash> implements Serializable {
 
       @ProtoFactory
-      Default(int numSegments, List<Integer> segmentOwners, List<JGroupsAddress> jGroupsMembers) {
+      Default(int numSegments, List<Integer> segmentOwners, List<JGroupsTopologyAwareAddress> jGroupsMembers) {
          super(new DefaultTrait(), ControlledConsistentHashFactory.convertMarshalledOwnerIndexes(segmentOwners));
          this.membersToUse = (List<Address>) (List<?>) jGroupsMembers;
       }
@@ -185,7 +185,7 @@ public abstract class ControlledConsistentHashFactory<CH extends ConsistentHash>
    public static class Replicated extends ControlledConsistentHashFactory<ReplicatedConsistentHash> {
 
       @ProtoFactory
-      Replicated(int numSegments, List<Integer> segmentOwners, List<JGroupsAddress> jGroupsMembers) {
+      Replicated(int numSegments, List<Integer> segmentOwners, List<JGroupsTopologyAwareAddress> jGroupsMembers) {
          super(new ReplicatedTrait(), ControlledConsistentHashFactory.convertMarshalledOwnerIndexes(segmentOwners));
          this.membersToUse = (List<Address>) (List<?>) jGroupsMembers;
       }

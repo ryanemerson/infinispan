@@ -12,7 +12,7 @@ import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoSchema;
 import org.infinispan.remoting.transport.Address;
-import org.infinispan.remoting.transport.jgroups.JGroupsAddress;
+import org.infinispan.remoting.transport.jgroups.JGroupsTopologyAwareAddress;
 
 /**
  * ConsistentHashFactory implementation that allows the user to control who the owners are.
@@ -23,13 +23,13 @@ import org.infinispan.remoting.transport.jgroups.JGroupsAddress;
 public class ReplicatedControlledConsistentHashFactory implements ConsistentHashFactory<ReplicatedConsistentHash>, Serializable {
 
    @ProtoField(1)
-   volatile List<JGroupsAddress> membersToUse;
+   volatile List<JGroupsTopologyAwareAddress> membersToUse;
 
    @ProtoField(2)
    List<Integer> primaryOwnerIndices;
 
    @ProtoFactory
-   ReplicatedControlledConsistentHashFactory(List<JGroupsAddress> membersToUse, List<Integer> primaryOwnerIndices) {
+   ReplicatedControlledConsistentHashFactory(List<JGroupsTopologyAwareAddress> membersToUse, List<Integer> primaryOwnerIndices) {
       this.membersToUse = membersToUse;
       this.primaryOwnerIndices = primaryOwnerIndices;
    }

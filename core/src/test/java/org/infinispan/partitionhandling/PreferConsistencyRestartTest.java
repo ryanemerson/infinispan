@@ -20,7 +20,7 @@ import org.infinispan.distribution.LocalizedCacheTopology;
 import org.infinispan.distribution.MagicKey;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.remoting.transport.Address;
-import org.infinispan.remoting.transport.jgroups.JGroupsAddress;
+import org.infinispan.remoting.transport.jgroups.JGroupsTopologyAwareAddress;
 import org.infinispan.test.TestingUtil;
 import org.infinispan.topology.ClusterTopologyManager;
 import org.infinispan.topology.LocalTopologyManager;
@@ -40,7 +40,7 @@ public class PreferConsistencyRestartTest extends BaseStatefulPartitionHandlingT
    }
 
    public void testOnlyFreshNodeLeftDuringDegraded() throws Exception {
-      Map<JGroupsAddress, PersistentUUID> addressMappings = createInitialCluster();
+      Map<JGroupsTopologyAwareAddress, PersistentUUID> addressMappings = createInitialCluster();
 
       checkData();
 
@@ -83,7 +83,7 @@ public class PreferConsistencyRestartTest extends BaseStatefulPartitionHandlingT
       // Check restart. Add new extraneous node.
       PersistentUUID uuid = TestingUtil.extractGlobalComponent(manager(0), LocalTopologyManager.class)
             .getPersistentUUID();
-      addressMappings.put((JGroupsAddress) manager(0).getAddress(), uuid);
+      addressMappings.put((JGroupsTopologyAwareAddress) manager(0).getAddress(), uuid);
       checkPersistentUUIDMatch(addressMappings);
    }
 
@@ -141,7 +141,7 @@ public class PreferConsistencyRestartTest extends BaseStatefulPartitionHandlingT
    }
 
    public void testCoordinatorChangesWhileDegraded() throws Exception {
-      Map<JGroupsAddress, PersistentUUID> addressMappings = createInitialCluster();
+      Map<JGroupsTopologyAwareAddress, PersistentUUID> addressMappings = createInitialCluster();
 
       // Operate directly on the default cache.
       // Since it is created by default, it could cause the node fail to start.
@@ -185,7 +185,7 @@ public class PreferConsistencyRestartTest extends BaseStatefulPartitionHandlingT
    }
 
    public void testCrashBeforeRecover() throws Exception {
-      Map<JGroupsAddress, PersistentUUID> addressMappings = createInitialCluster();
+      Map<JGroupsTopologyAwareAddress, PersistentUUID> addressMappings = createInitialCluster();
 
       checkData();
 

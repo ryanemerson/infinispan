@@ -43,7 +43,7 @@ import org.infinispan.remoting.rpc.RpcOptions;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.remoting.transport.Transport;
 import org.infinispan.remoting.transport.impl.MapResponseCollector;
-import org.infinispan.remoting.transport.jgroups.JGroupsAddress;
+import org.infinispan.remoting.transport.jgroups.JGroupsTopologyAwareAddress;
 import org.infinispan.remoting.transport.jgroups.JGroupsTransport;
 import org.infinispan.statetransfer.StateTransferInterceptor;
 import org.infinispan.test.MultipleCacheManagersTest;
@@ -259,7 +259,7 @@ public class RemoteGetFailureTest extends MultipleCacheManagersTest {
       JChannel channel = transport.getChannel();
 
       org.jgroups.Address[] members = Stream.of(cachesInView)
-                                            .map(c -> ((JGroupsAddress) address(c)).getJGroupsAddress())
+                                            .map(c -> ((JGroupsTopologyAwareAddress) address(c)).getJGroupsAddress())
                                             .toArray(org.jgroups.Address[]::new);
       View view = View.create(members[0], transport.getViewId() + 1, members);
       ((GMS) channel.getProtocolStack().findProtocol(GMS.class)).installView(view);

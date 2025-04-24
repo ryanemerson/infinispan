@@ -22,7 +22,7 @@ import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.context.Flag;
 import org.infinispan.manager.EmbeddedCacheManager;
-import org.infinispan.remoting.transport.jgroups.JGroupsAddress;
+import org.infinispan.remoting.transport.jgroups.JGroupsTopologyAwareAddress;
 import org.infinispan.tasks.TaskContext;
 import org.infinispan.test.AbstractInfinispanTest;
 import org.infinispan.test.MultiCacheManagerCallable;
@@ -92,10 +92,10 @@ public class ClusteredScriptingTest extends AbstractInfinispanTest {
             loadScript(scriptingManager, "/distExec1.js");
             waitForNoRebalance(cache1, cache2);
 
-            CompletionStage<ArrayList<JGroupsAddress>> resultsFuture = scriptingManager.runScript("distExec1.js", new TaskContext().cache(cache1));
-            ArrayList<JGroupsAddress> results = CompletionStages.join(resultsFuture);
+            CompletionStage<ArrayList<JGroupsTopologyAwareAddress>> resultsFuture = scriptingManager.runScript("distExec1.js", new TaskContext().cache(cache1));
+            ArrayList<JGroupsTopologyAwareAddress> results = CompletionStages.join(resultsFuture);
             assertEquals(2, results.size());
-            assertThat(results).containsExactlyInAnyOrder((JGroupsAddress) cms[0].getAddress(), (JGroupsAddress) cms[1].getAddress());
+            assertThat(results).containsExactlyInAnyOrder((JGroupsTopologyAwareAddress) cms[0].getAddress(), (JGroupsTopologyAwareAddress) cms[1].getAddress());
          }
       });
    }
@@ -117,12 +117,12 @@ public class ClusteredScriptingTest extends AbstractInfinispanTest {
             loadScript(scriptingManager, "/distExec.js");
             waitForNoRebalance(cache1, cache2);
 
-            CompletionStage<ArrayList<JGroupsAddress>> resultsFuture = scriptingManager.runScript("distExec.js",
+            CompletionStage<ArrayList<JGroupsTopologyAwareAddress>> resultsFuture = scriptingManager.runScript("distExec.js",
                   new TaskContext().cache(cache1).addParameter("a", "value"));
 
-            ArrayList<JGroupsAddress> results = CompletionStages.join(resultsFuture);
+            ArrayList<JGroupsTopologyAwareAddress> results = CompletionStages.join(resultsFuture);
             assertEquals(2, results.size());
-            assertThat(results).containsExactlyInAnyOrder((JGroupsAddress) cms[0].getAddress(), (JGroupsAddress) cms[1].getAddress());
+            assertThat(results).containsExactlyInAnyOrder((JGroupsTopologyAwareAddress) cms[0].getAddress(), (JGroupsTopologyAwareAddress) cms[1].getAddress());
 
             assertEquals("value", cache1.get("a"));
             assertEquals("value", cache2.get("a"));

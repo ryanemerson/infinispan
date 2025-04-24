@@ -8,7 +8,9 @@ import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.remoting.transport.Address;
-import org.infinispan.remoting.transport.jgroups.JGroupsAddress;
+import org.infinispan.remoting.transport.jgroups.JGroupsTopologyAwareAddress;
+import org.jgroups.util.ExtendedUUID;
+import org.jgroups.util.UUID;
 
 /**
  * This is a metadata type used by scattered cache during state transfer. The address points to node which has last
@@ -22,20 +24,30 @@ import org.infinispan.remoting.transport.jgroups.JGroupsAddress;
 public class RemoteMetadata implements Metadata {
    private final JGroupsAddress address;
    private final SimpleClusteredVersion version;
+   private final JGroupsTopologyAwareAddress topologyAwareAddress;
 
    public RemoteMetadata(Address address, EntryVersion version) {
-      this((JGroupsAddress) address, (SimpleClusteredVersion) version);
+      this(null, (SimpleClusteredVersion) version, (JGroupsTopologyAwareAddress) address);
    }
 
    @ProtoFactory
-   RemoteMetadata(JGroupsAddress address, SimpleClusteredVersion version) {
-      this.address = address;
+   RemoteMetadata(JGroupsAddress address, SimpleClusteredVersion version, JGroupsTopologyAwareAddress topologyAwareAddress) {
+      this.address = null;
       this.version = version;
+      assert address != null || topologyAwareAddress != null;
+      if (address != null) {
+         // Address should always be UUID based as Anchored keys only supported with Replicated cache modes
+         var uuid = (UUID) address.address;
+         this.topologyAwareAddress = new JGroupsTopologyAwareAddress(new ExtendedUUID(uuid.getMostSignificantBits(), uuid.getLeastSignificantBits()));
+      } else {
+         this.topologyAwareAddress = topologyAwareAddress;
+      }
    }
 
    @ProtoField(number = 1, javaType = JGroupsAddress.class)
    public Address getAddress() {
-      return address;
+      assert address == null;
+      return null;
    }
 
    @Override
@@ -52,6 +64,11 @@ public class RemoteMetadata implements Metadata {
    @ProtoField(number = 2, javaType = SimpleClusteredVersion.class)
    public EntryVersion version() {
       return version;
+   }
+
+   @ProtoField(number = 3, javaType = JGroupsTopologyAwareAddress.class)
+   public Address getTopologyAwareAddress() {
+      return topologyAwareAddress;
    }
 
    @Override

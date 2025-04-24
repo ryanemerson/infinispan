@@ -9,7 +9,7 @@ import org.jgroups.util.NameCache;
 import org.jgroups.util.UUID;
 
 /**
- * Cache JGroupsAddress instances
+ * Cache JGroupsTopologyAwareAddress instances
  *
  * @author Dan Berindei
  * @since 7.0
@@ -18,19 +18,19 @@ public class JGroupsAddressCache {
    private static final ConcurrentMap<Address, JGroupsTopologyAwareAddress> addressCache =
          new ConcurrentHashMap<>();
 
-   public static org.infinispan.remoting.transport.Address fromJGroupsAddress(Address jgroupsAddress) {
+   public static org.infinispan.remoting.transport.Address fromJGroupsTopologyAwareAddress(Address JGroupsTopologyAwareAddress) {
       // New entries are rarely added after startup, but computeIfAbsent synchronizes every time
-      JGroupsTopologyAwareAddress ispnAddress = addressCache.get(jgroupsAddress);
+      JGroupsTopologyAwareAddress ispnAddress = addressCache.get(JGroupsTopologyAwareAddress);
       if (ispnAddress != null) {
          return ispnAddress;
       }
-      return addressCache.computeIfAbsent(jgroupsAddress, ignore -> {
-         if (jgroupsAddress instanceof ExtendedUUID) {
-            return new JGroupsTopologyAwareAddress((ExtendedUUID) jgroupsAddress);
-         } else if (jgroupsAddress instanceof UUID uuid) {
+      return addressCache.computeIfAbsent(JGroupsTopologyAwareAddress, ignore -> {
+         if (JGroupsTopologyAwareAddress instanceof ExtendedUUID) {
+            return new JGroupsTopologyAwareAddress((ExtendedUUID) JGroupsTopologyAwareAddress);
+         } else if (JGroupsTopologyAwareAddress instanceof UUID uuid) {
             return new JGroupsTopologyAwareAddress(new ExtendedUUID(uuid.getMostSignificantBits(), uuid.getLeastSignificantBits()));
          } else {
-            throw new IllegalStateException("Unexpected address type: " + jgroupsAddress.getClass().getName());
+            throw new IllegalStateException("Unexpected address type: " + JGroupsTopologyAwareAddress.getClass().getName());
          }
       });
    }

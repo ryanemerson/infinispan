@@ -9,7 +9,7 @@ import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.remoting.transport.Address;
-import org.infinispan.remoting.transport.jgroups.JGroupsAddress;
+import org.infinispan.remoting.transport.jgroups.JGroupsTopologyAwareAddress;
 
 /**
  * A TopDocs with an array with keys of each result.
@@ -38,7 +38,7 @@ public final class NodeTopDocs {
    }
 
    @ProtoFactory
-   NodeTopDocs(JGroupsAddress address, WrappedMessage topDocs, int totalHitCount, boolean countIsExact, MarshallableArray<Object> keys,
+   NodeTopDocs(JGroupsTopologyAwareAddress address, WrappedMessage topDocs, int totalHitCount, boolean countIsExact, MarshallableArray<Object> keys,
                MarshallableArray<Object> projections) {
       this(
             address, WrappedMessages.unwrap(topDocs), totalHitCount, countIsExact,
@@ -47,7 +47,7 @@ public final class NodeTopDocs {
       );
    }
 
-   @ProtoField(value = 1, javaType = JGroupsAddress.class)
+   @ProtoField(value = 1, javaType = JGroupsTopologyAwareAddress.class)
    Address getAddress() {
       return address;
    }

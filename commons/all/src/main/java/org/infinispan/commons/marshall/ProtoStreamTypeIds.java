@@ -33,7 +33,7 @@ public interface ProtoStreamTypeIds {
    int EMBEDDED_MAX_IDLE_METADATA = 7;
    int NUMERIC_VERSION = 8;
    int SIMPLE_CLUSTERED_VERSION = 9;
-//   int JGROUPS_ADDRESS = 10;
+   int JGROUPS_ADDRESS = 10;
    int PROTOBUF_VALUE_WRAPPER = 11;
    int MEDIA_TYPE = 12;
    int PRIVATE_METADATA = 13;
