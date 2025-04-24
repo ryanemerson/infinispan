@@ -1,11 +1,18 @@
 package org.infinispan.remoting.transport.jgroups;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 
+import org.infinispan.commons.marshall.MarshallingException;
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
+import org.infinispan.remoting.transport.Address;
 import org.infinispan.remoting.transport.TopologyAwareAddress;
 import org.jgroups.util.ExtendedUUID;
 import org.jgroups.util.NameCache;
@@ -18,12 +25,22 @@ import org.jgroups.util.Util;
  * @since 5.0
  */
 @ProtoTypeId(ProtoStreamTypeIds.JGROUPS_TOPOLOGY_AWARE_ADDRESS)
-public class JGroupsTopologyAwareAddress extends JGroupsAddress implements TopologyAwareAddress {
+public class JGroupsTopologyAwareAddress implements TopologyAwareAddress {
    private static final byte[] SITE_KEY = Util.stringToBytes("site-id");
    private static final byte[] RACK_KEY = Util.stringToBytes("rack-id");
    private static final byte[] MACHINE_KEY = Util.stringToBytes("machine-id");
 
    public static final JGroupsTopologyAwareAddress LOCAL = new JGroupsTopologyAwareAddress(ExtendedUUID.randomUUID());
+
+   protected final org.jgroups.Address address;
+   private final int hashCode;
+   private volatile byte[] bytes;
+
+   public static JGroupsTopologyAwareAddress from(Address address) {
+      if (address instanceof JGroupsTopologyAwareAddress addr)
+         return new JGroupsTopologyAwareAddress(addr.topologyAddress());
+      throw new IllegalArgumentException("Address " + address + " is not a JGroupsTopologyAwareAddress");
+   }
 
    public static JGroupsTopologyAwareAddress random() {
       var uuid = randomUUID(null, null, null, null);
@@ -54,11 +71,35 @@ public class JGroupsTopologyAwareAddress extends JGroupsAddress implements Topol
 
    @ProtoFactory
    static JGroupsTopologyAwareAddress protoFactory(byte[] bytes) throws IOException {
-      return (JGroupsTopologyAwareAddress) JGroupsAddress.protoFactory(bytes);
+      try (DataInputStream in = new DataInputStream(new ByteArrayInputStream(bytes))) {
+         // Note: Use org.jgroups.Address, not the concrete UUID class.
+         // Otherwise applications that only use local caches would have to bundle the JGroups jar,
+         // because the verifier needs to check the arguments of fromJGroupsAddress
+         // even if this method is never called.
+         org.jgroups.Address address = org.jgroups.util.Util.readAddress(in);
+         return (JGroupsTopologyAwareAddress) JGroupsAddressCache.fromJGroupsAddress(address);
+      } catch (ClassNotFoundException e) {
+         throw new MarshallingException(e);
+      }
    }
 
    public JGroupsTopologyAwareAddress(ExtendedUUID address) {
-      super(address);
+      if (address == null)
+         throw new IllegalArgumentException("Address shall not be null");
+      this.address = address;
+      this.hashCode = address.hashCode();
+   }
+
+   @ProtoField(1)
+   byte[] getBytes() throws IOException {
+      if (bytes == null) {
+         try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
+              DataOutputStream out = new DataOutputStream(baos)) {
+            org.jgroups.util.Util.writeAddress(address, out);
+            bytes = baos.toByteArray();
+         }
+      }
+      return bytes;
    }
 
    @Override
@@ -133,5 +174,35 @@ public class JGroupsTopologyAwareAddress extends JGroupsAddress implements Topol
 
    private ExtendedUUID topologyAddress() {
       return (ExtendedUUID) address;
+   }
+
+   @Override
+   public boolean equals(final Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+
+      JGroupsTopologyAwareAddress that = (JGroupsTopologyAwareAddress) o;
+
+      return hashCode == that.hashCode && address.equals(that.address);
+   }
+
+   @Override
+   public int hashCode() {
+      return hashCode;
+   }
+
+   @Override
+   public String toString() {
+      return String.valueOf(address);
+   }
+
+   public org.jgroups.Address getJGroupsAddress() {
+      return address;
+   }
+
+   @Override
+   public int compareTo(Address o) {
+      JGroupsTopologyAwareAddress oa = (JGroupsTopologyAwareAddress) o;
+      return address.compareTo(oa.address);
    }
 }

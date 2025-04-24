@@ -23,13 +23,12 @@ import org.infinispan.remoting.responses.ValidResponse;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.remoting.transport.impl.MapResponseCollector;
 import org.infinispan.remoting.transport.impl.SingleResponseCollector;
-import org.infinispan.remoting.transport.jgroups.JGroupsAddress;
+import org.infinispan.remoting.transport.jgroups.JGroupsTopologyAwareAddress;
 import org.infinispan.remoting.transport.jgroups.SuspectException;
 import org.infinispan.test.MultipleCacheManagersTest;
 import org.infinispan.test.TestingUtil;
 import org.infinispan.topology.CacheTopology;
 import org.jgroups.util.NameCache;
-import org.jgroups.util.UUID;
 import org.testng.annotations.Test;
 
 /**
@@ -38,7 +37,7 @@ import org.testng.annotations.Test;
  */
 @Test(groups = "functional", testName = "remoting.rpc.RpcManagerTest")
 public class RpcManagerTest extends MultipleCacheManagersTest {
-   private static final JGroupsAddress SUSPECT = new JGroupsAddress(UUID.randomUUID());
+   private static final JGroupsTopologyAwareAddress SUSPECT = JGroupsTopologyAwareAddress.random();
 
    @Override
    protected void createCacheManagers() throws Throwable {

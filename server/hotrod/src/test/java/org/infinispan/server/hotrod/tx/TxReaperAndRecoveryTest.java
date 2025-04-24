@@ -34,7 +34,7 @@ import org.infinispan.remoting.rpc.RpcManager;
 import org.infinispan.remoting.rpc.RpcOptions;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.remoting.transport.ResponseCollector;
-import org.infinispan.remoting.transport.jgroups.JGroupsAddress;
+import org.infinispan.remoting.transport.jgroups.JGroupsTopologyAwareAddress;
 import org.infinispan.server.hotrod.HotRodMultiNodeTest;
 import org.infinispan.server.hotrod.counter.response.RecoveryTestResponse;
 import org.infinispan.server.hotrod.test.TestResponse;
@@ -80,7 +80,7 @@ public class TxReaperAndRecoveryTest extends HotRodMultiNodeTest {
 
    private static Address newAddress() {
       //test address isn't serializable and we just need an address that doesn't belong to the cluster (simulates a leaver)
-      return new JGroupsAddress(org.jgroups.util.UUID.randomUUID());
+      return JGroupsTopologyAwareAddress.random();
    }
 
    @BeforeClass(alwaysRun = true)

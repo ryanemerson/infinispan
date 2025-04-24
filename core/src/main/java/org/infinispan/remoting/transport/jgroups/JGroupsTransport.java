@@ -353,7 +353,7 @@ public class JGroupsTransport implements Transport {
          if (addr.isEmpty()) {
             return Collections.emptyList();
          }
-         physicalAddress = new JGroupsAddress(addr.get());
+         physicalAddress = new PhysicalAddress(addr.get());
       }
       return Collections.singletonList(physicalAddress);
    }
@@ -372,7 +372,7 @@ public class JGroupsTransport implements Transport {
             .map(this::findPhysicalAddress)
             .filter(Optional::isPresent)
             .map(Optional::get)
-            .map(JGroupsAddress::new)
+            .map(PhysicalAddress::new)
             .collect(Collectors.toList());
    }
 

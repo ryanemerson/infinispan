@@ -4,8 +4,7 @@ import java.util.List;
 import java.util.Random;
 
 import org.infinispan.remoting.transport.Address;
-import org.infinispan.remoting.transport.jgroups.JGroupsAddress;
-import org.jgroups.util.UUID;
+import org.infinispan.remoting.transport.jgroups.JGroupsTopologyAwareAddress;
 
 public class Generator {
 
@@ -40,6 +39,6 @@ public class Generator {
    }
 
    public static Address generateAddress() {
-      return new JGroupsAddress(UUID.randomUUID());
+      return JGroupsTopologyAwareAddress.random();
    }
 }
