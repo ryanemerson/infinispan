@@ -2,6 +2,7 @@ package org.infinispan.distribution.ch.impl;
 
 import static org.infinispan.distribution.ch.impl.AbstractConsistentHash.STATE_CAPACITY_FACTOR;
 import static org.infinispan.distribution.ch.impl.AbstractConsistentHash.STATE_CAPACITY_FACTORS;
+import static org.infinispan.distribution.ch.impl.AbstractConsistentHash.parseMember;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -24,7 +25,6 @@ import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.remoting.transport.jgroups.JGroupsTopologyAwareAddress;
-import org.infinispan.topology.PersistentUUID;
 
 /**
  * Special implementation of {@link org.infinispan.distribution.ch.ConsistentHash} for replicated caches.
@@ -167,8 +167,7 @@ public class ReplicatedConsistentHash implements ConsistentHash {
       int numMembers = Integer.parseInt(property);
       List<Address> members = new ArrayList<>(numMembers);
       for (int i = 0; i < numMembers; i++) {
-         PersistentUUID uuid = PersistentUUID.fromString(state.getProperty(String.format(memberPropertyFormat, i)));
-         members.add(uuid);
+         members.add(parseMember(state, memberPropertyFormat, i));
       }
       return members;
    }

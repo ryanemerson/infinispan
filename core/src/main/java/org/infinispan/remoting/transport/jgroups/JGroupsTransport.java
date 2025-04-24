@@ -1,7 +1,8 @@
 package org.infinispan.remoting.transport.jgroups;
 
-import static org.infinispan.remoting.transport.jgroups.JGroupsAddressCache.fromJGroupsTopologyAwareAddress;
+import static org.infinispan.remoting.transport.jgroups.JGroupsAddressCache.fromJGroupsAddress;
 import static org.infinispan.util.logging.Log.CLUSTER;
+import static org.infinispan.util.logging.Log.CONFIG;
 import static org.infinispan.util.logging.Log.CONTAINER;
 import static org.infinispan.util.logging.Log.XSITE;
 
@@ -21,6 +22,7 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentHashMap;
@@ -63,6 +65,9 @@ import org.infinispan.factories.annotations.Start;
 import org.infinispan.factories.annotations.Stop;
 import org.infinispan.factories.scopes.Scope;
 import org.infinispan.factories.scopes.Scopes;
+import org.infinispan.globalstate.GlobalStateManager;
+import org.infinispan.globalstate.GlobalStateProvider;
+import org.infinispan.globalstate.ScopedPersistentState;
 import org.infinispan.jmx.CacheManagerJmxRegistration;
 import org.infinispan.jmx.ObjectNameKeys;
 import org.infinispan.notifications.cachemanagerlistener.CacheManagerNotifier;
@@ -143,7 +148,7 @@ import org.jgroups.util.SocketFactory;
  */
 @Scope(Scopes.GLOBAL)
 @JGroupsProtocolComponent("JGroupsMetricsMetadata")
-public class JGroupsTransport implements Transport {
+public class JGroupsTransport implements GlobalStateProvider, Transport {
    public static final String CONFIGURATION_STRING = "configurationString";
    public static final String CONFIGURATION_XML = "configurationXml";
    public static final String CONFIGURATION_FILE = "configurationFile";
@@ -183,6 +188,7 @@ public class JGroupsTransport implements Transport {
    @Inject protected CacheManagerJmxRegistration jmxRegistration;
    @Inject protected JGroupsMetricsManager metricsManager;
    @Inject InfinispanTelemetry telemetry;
+   @Inject GlobalStateManager globalStateManager;
 
    private final Lock viewUpdateLock = new ReentrantLock();
    private final Condition viewUpdateCondition = viewUpdateLock.newCondition();
@@ -201,6 +207,7 @@ public class JGroupsTransport implements Transport {
    private final Map<String, SiteUnreachableReason> unreachableSites;
    private String localSite;
    private volatile RaftManager raftManager = EmptyRaftManager.INSTANCE;
+   private UUID uuid;
 
    // ------------------------------------------------------------------------------------------------------------------
    // Lifecycle and setup stuff
@@ -307,7 +314,7 @@ public class JGroupsTransport implements Transport {
          // fail fast if we have thread handling a SITE_UNREACHABLE event.
          return new SiteUnreachableXSiteResponse<>(backup, timeService);
       }
-      Address recipient = JGroupsAddressCache.fromJGroupsTopologyAwareAddress(new SiteMaster(backup.getSiteName()));
+      Address recipient = JGroupsAddressCache.fromJGroupsAddress(new SiteMaster(backup.getSiteName()));
       long requestId = requests.newRequestId();
       logRequest(requestId, rpcCommand, recipient, "backup");
       SingleSiteRequest<ValidResponse> request =
@@ -401,11 +408,37 @@ public class JGroupsTransport implements Transport {
       return channel.getName();
    }
 
+   @Override
+   public void prepareForPersist(ScopedPersistentState state) {
+      if (uuid != null)
+         state.setProperty("uuid", uuid.toString());
+   }
+
+   @Override
+   public void prepareForRestore(ScopedPersistentState state) {
+      if (!state.containsProperty("uuid")) {
+         throw CONFIG.invalidPersistentState(ScopedPersistentState.GLOBAL_SCOPE);
+      }
+      uuid = UUID.fromString(state.getProperty("uuid"));
+   }
+
+   // This must be invoked before GlobalStateManagerImpl.start
+   @Start
+   public void preStart() {
+      if (globalStateManager != null)
+         globalStateManager.registerStateProvider(this);
+   }
+
    @Start
    @Override
    public void start() {
       if (running)
          throw new IllegalStateException("Two or more cache managers are using the same JGroupsTransport instance");
+
+      if (uuid == null) {
+         uuid = UUID.randomUUID();
+         globalStateManager.writeGlobalState();
+      }
 
       probeHandler.updateThreadPool(nonBlockingExecutor);
       props = TypedProperties.toTypedProperties(configuration.transport().properties());
@@ -441,11 +474,7 @@ public class JGroupsTransport implements Transport {
       // NOTE: total order needs to deliver own messages. the invokeRemotely method has a total order boolean
       //       that when it is false, it discard our own messages, maintaining the property needed
       channel.setDiscardOwnMessages(false);
-
-      // if we have a TopologyAwareConsistentHash, we need to set our own address generator in JGroups
-      if (transportCfg.hasTopologyInfo()) {
-         channel.addAddressGenerator(channelCallbacks);
-      }
+      channel.addAddressGenerator(channelCallbacks);
       initRaftManager();
    }
 
@@ -667,12 +696,12 @@ public class JGroupsTransport implements Transport {
       // The first view is installed before returning from JChannel.connect
       // So we need to set the local address here
       if (address == null) {
-         org.jgroups.Address JGroupsTopologyAwareAddress = channel.getAddress();
-         this.address = fromJGroupsTopologyAwareAddress(JGroupsTopologyAwareAddress);
+         org.jgroups.Address jgroupsAddress = channel.getAddress();
+         this.address = fromJGroupsAddress(jgroupsAddress);
          if (log.isTraceEnabled()) {
-            String uuid = (JGroupsTopologyAwareAddress instanceof org.jgroups.util.UUID) ?
-                  ((org.jgroups.util.UUID) JGroupsTopologyAwareAddress).toStringLong() : "N/A";
-            log.tracef("Local address %s, uuid %s", JGroupsTopologyAwareAddress, uuid);
+            String uuid = (jgroupsAddress instanceof org.jgroups.util.UUID) ?
+                  ((org.jgroups.util.UUID) jgroupsAddress).toStringLong() : "N/A";
+            log.tracef("Local address %s, uuid %s", jgroupsAddress, uuid);
          }
       }
       if (installIfFirst && clusterView.getViewId() != ClusterView.INITIAL_VIEW_ID) {
@@ -759,7 +788,7 @@ public class JGroupsTransport implements Transport {
 
    private static List<Address> fromJGroupsTopologyAwareAddressList(List<org.jgroups.Address> list) {
       return list.stream()
-            .map(JGroupsAddressCache::fromJGroupsTopologyAwareAddress)
+            .map(JGroupsAddressCache::fromJGroupsAddress)
             .toList();
    }
 
@@ -876,7 +905,7 @@ public class JGroupsTransport implements Transport {
       return findRelay2()
             .map(RELAY2::siteMasters)
             .map(addresses -> addresses.stream()
-                  .map(JGroupsAddressCache::fromJGroupsTopologyAwareAddress)
+                  .map(JGroupsAddressCache::fromJGroupsAddress)
                   .collect(Collectors.toList()))
             .orElse(Collections.emptyList());
    }
@@ -1439,7 +1468,7 @@ public class JGroupsTransport implements Transport {
          }
          if (org.jgroups.util.Util.isFlagSet(flags, Message.Flag.NO_RELAY)) {
             assert command instanceof ReplicableCommand;
-            invocationHandler.handleFromCluster(fromJGroupsTopologyAwareAddress(src), (ReplicableCommand) command, reply, deliverOrder);
+            invocationHandler.handleFromCluster(fromJGroupsAddress(src), (ReplicableCommand) command, reply, deliverOrder);
          } else {
             assert src instanceof SiteAddress;
             assert command instanceof XSiteRequest;
@@ -1466,7 +1495,7 @@ public class JGroupsTransport implements Transport {
          }
          if (log.isTraceEnabled())
             log.tracef("%s received response for request %d from %s: %s", getAddress(), requestId, src, response);
-         Address address = fromJGroupsTopologyAwareAddress(src);
+         Address address = fromJGroupsAddress(src);
          requests.addResponse(requestId, address, response);
       } catch (Throwable t) {
          CLUSTER.errorProcessingResponse(requestId, src, t);
@@ -1575,13 +1604,14 @@ public class JGroupsTransport implements Transport {
 
       @Override
       public org.jgroups.Address generateAddress() {
-         var transportCfg = configuration.transport();
-         return JGroupsTopologyAwareAddress.randomUUID(channel.getName(), transportCfg.siteId(), transportCfg.rackId(),
-                     transportCfg.machineId());
+         return generateAddress(channel.getName());
       }
 
       @Override
       public org.jgroups.Address generateAddress(String name) {
+         if (uuid != null)
+            return new ExtendedUUID(uuid.getMostSignificantBits(), uuid.getLeastSignificantBits());
+
          var transportCfg = configuration.transport();
          return JGroupsTopologyAwareAddress.randomUUID(name, transportCfg.siteId(), transportCfg.rackId(),
                transportCfg.machineId());

@@ -5,12 +5,14 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.UnaryOperator;
 
 import org.infinispan.distribution.ch.ConsistentHash;
 import org.infinispan.globalstate.ScopedPersistentState;
 import org.infinispan.remoting.transport.Address;
-import org.infinispan.topology.PersistentUUID;
+import org.infinispan.remoting.transport.jgroups.JGroupsTopologyAwareAddress;
+import org.jgroups.util.ExtendedUUID;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
@@ -61,10 +63,15 @@ public abstract class AbstractConsistentHash implements ConsistentHash {
       int numMembers = Integer.parseInt(state.getProperty(ConsistentHashPersistenceConstants.STATE_MEMBERS));
       List<Address> members = new ArrayList<>(numMembers);
       for(int i = 0; i < numMembers; i++) {
-         PersistentUUID uuid = PersistentUUID.fromString(state.getProperty(String.format(ConsistentHashPersistenceConstants.STATE_MEMBER, i)));
-         members.add(uuid);
+         members.add(parseMember(state, ConsistentHashPersistenceConstants.STATE_MEMBER, i));
       }
       return members;
+   }
+
+   protected static JGroupsTopologyAwareAddress parseMember(ScopedPersistentState state, String property, int i) {
+      // TODO aren't we losing TopologyAware information here?
+      UUID uuid = UUID.fromString(state.getProperty(String.format(property, i)));
+      return new JGroupsTopologyAwareAddress(new ExtendedUUID(uuid.getMostSignificantBits(), uuid.getLeastSignificantBits()));
    }
 
    protected static List<Float> parseCapacityFactors(ScopedPersistentState state) {

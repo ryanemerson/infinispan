@@ -18,7 +18,6 @@ import org.infinispan.globalstate.ScopedPersistentState;
 import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.remoting.transport.jgroups.JGroupsTopologyAwareAddress;
-import org.infinispan.topology.PersistentUUID;
 import org.jgroups.util.UUID;
 
 /**
@@ -314,9 +313,6 @@ public class SyncConsistentHashFactory implements ConsistentHashFactory<DefaultC
             } else {
                key[0] = address.hashCode();
             }
-         } else if (address instanceof PersistentUUID persistentUUID) {
-            key[0] = persistentUUID.getLeastSignificantBits();
-            key[1] = persistentUUID.getMostSignificantBits();
          } else {
             key[0] = address.hashCode();
          }

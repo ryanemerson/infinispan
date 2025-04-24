@@ -7,6 +7,7 @@ import org.infinispan.factories.scopes.Scopes;
 import org.infinispan.partitionhandling.AvailabilityMode;
 import org.infinispan.partitionhandling.impl.PartitionHandlingManager;
 import org.infinispan.remoting.transport.Address;
+import org.infinispan.remoting.transport.jgroups.JGroupsTopologyAwareAddress;
 
 /**
  * Runs on every node and handles the communication with the {@link ClusterTopologyManager}.
@@ -117,7 +118,13 @@ public interface LocalTopologyManager {
     * Returns the local UUID of this node. If global state persistence is enabled, this UUID will be saved and reused
     * across restarts
     */
-   PersistentUUID getPersistentUUID();
+   @Deprecated(since = "16.0", forRemoval = true)
+   default PersistentUUID getPersistentUUID() {
+      var a = getAddress().getExtendedUUID();
+      return new PersistentUUID(a.getMostSignificantBits(), a.getLeastSignificantBits());
+   }
+
+   JGroupsTopologyAwareAddress getAddress();
 
    /**
     * Initiates a cluster-wide cache shutdown for the specified cache

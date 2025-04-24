@@ -555,15 +555,13 @@ public class ClusterTopologyManagerImpl implements ClusterTopologyManager, Globa
          if (partitionHandling != null && partitionHandling != PartitionHandling.ALLOW_READ_WRITES) {
             availabilityStrategy = new PreferConsistencyStrategy(eventLogManager, persistentUUIDManager, lostDataCheck);
          } else {
-            availabilityStrategy = new PreferAvailabilityStrategy(eventLogManager, persistentUUIDManager,
-                                                                  lostDataCheck);
+            availabilityStrategy = new PreferAvailabilityStrategy(eventLogManager, lostDataCheck);
          }
          Optional<GlobalStateManager> globalStateManager = gcr.getOptionalComponent(GlobalStateManager.class);
          Optional<ScopedPersistentState> persistedState =
                globalStateManager.flatMap(gsm -> gsm.readScopedState(cacheName));
          return new ClusterCacheStatus(cacheManager, gcr, cacheName, availabilityStrategy, RebalanceType.from(cacheMode),
-                                       this, transport,
-                                       persistentUUIDManager, eventLogManager, persistedState, resolveConflictsOnMerge);
+                                       this, transport, eventLogManager, persistedState, resolveConflictsOnMerge);
       });
    }
 

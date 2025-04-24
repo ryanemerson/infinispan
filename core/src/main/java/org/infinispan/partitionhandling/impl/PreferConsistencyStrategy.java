@@ -54,6 +54,7 @@ public class PreferConsistencyStrategy implements AvailabilityStrategy {
             return cf == null || cf == 0f;
          });
 
+         // TODO how to perform these checks without PersistentUUIDManager?
          // Nodes might be joining back with different addresses, we utilize the persistent UUID to verify.
          ConsistentHash ch = stableTopology.getCurrentCH().remapAddresses(persistentUUIDManager.addressToPersistentUUID());
          List<Address> membersUuid = currentMembers.stream()
@@ -265,7 +266,7 @@ public class PreferConsistencyStrategy implements AvailabilityStrategy {
             ConsistentHash conflictHash = context.calculateConflictHash(preferredHash, distinctHashes, expectedMembers);
 
             mergedTopology = new CacheTopology(++maxTopologyId, maxRebalanceId + 1, conflictHash, null,
-                  CacheTopology.Phase.CONFLICT_RESOLUTION, actualMembers, persistentUUIDManager.mapAddresses(actualMembers));
+                  CacheTopology.Phase.CONFLICT_RESOLUTION, actualMembers);
 
             // Update the currentTopology and try to resolve conflicts
             context.updateTopologiesAfterMerge(mergedTopology, maxStableTopology, mergedAvailabilityMode);
@@ -277,8 +278,7 @@ public class PreferConsistencyStrategy implements AvailabilityStrategy {
          actualMembers.retainAll(mergedTopology.getMembers());
          mergedTopology = new CacheTopology(maxTopologyId + 1, mergedTopology.getRebalanceId(),
                                             mergedTopology.getCurrentCH(), null,
-                                            CacheTopology.Phase.NO_REBALANCE, actualMembers,
-                                            persistentUUIDManager.mapAddresses(actualMembers));
+                                            CacheTopology.Phase.NO_REBALANCE, actualMembers);
       }
 
       context.updateTopologiesAfterMerge(mergedTopology, maxStableTopology, mergedAvailabilityMode);

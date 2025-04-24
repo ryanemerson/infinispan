@@ -103,8 +103,7 @@ public class PreferAvailabilityStrategyTest extends AbstractInfinispanTest {
       persistentUUIDManager.addPersistentAddressMapping(C, persistentUUID(C));
       persistentUUIDManager.addPersistentAddressMapping(D, persistentUUID(D));
 
-      strategy = new PreferAvailabilityStrategy(eventLogManager, persistentUUIDManager,
-                                                ClusterTopologyManagerImpl::distLostDataCheck);
+      strategy = new PreferAvailabilityStrategy(eventLogManager, ClusterTopologyManagerImpl::distLostDataCheck);
    }
 
    @AfterMethod(alwaysRun = true)

@@ -53,8 +53,8 @@ public class ClusterTopologyManagerImplTest extends AbstractInfinispanTest {
    private final ExecutorService executor = Executors.newFixedThreadPool(2, getTestThreadFactory("Executor"));
    private final ExecutorService scheduledExecutor = Executors.newSingleThreadScheduledExecutor(getTestThreadFactory("Executor"));
 
-   private static final Address A = JGroupsTopologyAwareAddress.random("A");
-   private static final Address B = JGroupsTopologyAwareAddress.random("B");
+   private static final JGroupsTopologyAwareAddress A = JGroupsTopologyAwareAddress.random("A");
+   private static final JGroupsTopologyAwareAddress B = JGroupsTopologyAwareAddress.random("B");
    private final ConsistentHashFactory<?> replicatedChf = new ReplicatedConsistentHashFactory();
    // The persistent UUIDs are different, the rest of the join info is the same
    private final CacheJoinInfo joinInfoA = makeJoinInfo();
@@ -62,7 +62,7 @@ public class ClusterTopologyManagerImplTest extends AbstractInfinispanTest {
 
    private CacheJoinInfo makeJoinInfo() {
       return new CacheJoinInfo(replicatedChf, 16, 1, 1000,
-            CacheMode.REPL_SYNC, 1.0f, PersistentUUID.randomUUID(), Optional.empty());
+            CacheMode.REPL_SYNC, 1.0f, A, Optional.empty());
    }
 
    /**
@@ -186,17 +186,12 @@ public class ClusterTopologyManagerImplTest extends AbstractInfinispanTest {
       ConsistentHash pendingCH = replicatedChf.create(joinInfoA.getNumOwners(),
                                                       joinInfoA.getNumSegments(), asList(A, B), null);
       CacheTopology initialTopology = new CacheTopology(4, 2, stableCH, pendingCH,
-                                                        CacheTopology.Phase.READ_NEW_WRITE_ALL, asList(A, B),
-                                                        asList(joinInfoA.getPersistentUUID(),
-                                                               joinInfoB.getPersistentUUID()));
+                                                        CacheTopology.Phase.READ_NEW_WRITE_ALL, asList(A, B));
       CacheTopology stableTopology = new CacheTopology(1, 1, stableCH, null,
-                                                       CacheTopology.Phase.NO_REBALANCE, singletonList(A),
-                                                       singletonList(joinInfoA.getPersistentUUID()));
+                                                       CacheTopology.Phase.NO_REBALANCE, singletonList(A));
       ltm.init(joinInfoA, initialTopology, stableTopology, AvailabilityMode.AVAILABLE);
       // Normally LocalTopologyManagerImpl.start()/doHandleTopologyUpdate() registers the persistent UUIDs
       // TODO Write test with asymmetric caches leaving the PersistentUUIDManager cache incomplete
-      persistentUUIDManager.addPersistentAddressMapping(A, joinInfoA.getPersistentUUID());
-      persistentUUIDManager.addPersistentAddressMapping(B, joinInfoB.getPersistentUUID());
 
       // Component under test: ClusterTopologyManagerImpl on the new coordinator (B)
       ClusterTopologyManagerImpl ctm = new ClusterTopologyManagerImpl();

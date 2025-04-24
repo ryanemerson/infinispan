@@ -16,7 +16,6 @@ import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.remoting.transport.jgroups.JGroupsTopologyAwareAddress;
 import org.infinispan.topology.CacheTopology;
-import org.infinispan.topology.PersistentUUID;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 
@@ -47,9 +46,6 @@ public class TopologyUpdateCommand extends AbstractCacheControlCommand {
    @ProtoField(5)
    final List<JGroupsTopologyAwareAddress> actualMembers;
 
-   @ProtoField(6)
-   final List<PersistentUUID> persistentUUIDs;
-
    @ProtoField(7)
    final AvailabilityMode availabilityMode;
 
@@ -65,14 +61,12 @@ public class TopologyUpdateCommand extends AbstractCacheControlCommand {
    @ProtoFactory
    TopologyUpdateCommand(String cacheName, WrappedMessage currentCH, WrappedMessage pendingCH,
                          CacheTopology.Phase phase, List<JGroupsTopologyAwareAddress> actualMembers,
-                         List<PersistentUUID> persistentUUIDs, AvailabilityMode availabilityMode,
-                         int rebalanceId, int topologyId, int viewId) {
+                         AvailabilityMode availabilityMode, int rebalanceId, int topologyId, int viewId) {
       this.cacheName = cacheName;
       this.currentCH = currentCH;
       this.pendingCH = pendingCH;
       this.phase = phase;
       this.actualMembers = actualMembers;
-      this.persistentUUIDs = persistentUUIDs;
       this.availabilityMode = availabilityMode;
       this.rebalanceId = rebalanceId;
       this.topologyId = topologyId;
@@ -90,7 +84,6 @@ public class TopologyUpdateCommand extends AbstractCacheControlCommand {
       this.phase = cacheTopology.getPhase();
       this.availabilityMode = availabilityMode;
       this.actualMembers = (List<JGroupsTopologyAwareAddress>)(List<?>) cacheTopology.getActualMembers();
-      this.persistentUUIDs = cacheTopology.getMembersPersistentUUIDs();
       this.viewId = viewId;
    }
 
@@ -102,7 +95,7 @@ public class TopologyUpdateCommand extends AbstractCacheControlCommand {
       }
 
       CacheTopology topology = new CacheTopology(topologyId, rebalanceId, getCurrentCH(), getPendingCH(), phase,
-            (List<Address>)(List<?>) actualMembers, persistentUUIDs);
+            (List<Address>)(List<?>) actualMembers);
       return gcr.getLocalTopologyManager()
             .handleTopologyUpdate(cacheName, topology, availabilityMode, viewId, origin);
    }
@@ -140,7 +133,6 @@ public class TopologyUpdateCommand extends AbstractCacheControlCommand {
             ", pendingCH=" + getPendingCH() +
             ", phase=" + phase +
             ", actualMembers=" + actualMembers +
-            ", persistentUUIDs=" + persistentUUIDs +
             ", availabilityMode=" + availabilityMode +
             ", rebalanceId=" + rebalanceId +
             ", topologyId=" + topologyId +

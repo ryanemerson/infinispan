@@ -13,7 +13,6 @@ import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.remoting.transport.jgroups.JGroupsTopologyAwareAddress;
 import org.infinispan.topology.CacheTopology;
-import org.infinispan.topology.PersistentUUID;
 
 /**
  * The coordinator is starting a rebalance operation.
@@ -37,28 +36,24 @@ public class RebalanceStartCommand extends AbstractCacheControlCommand {
    final CacheTopology.Phase phase;
 
    @ProtoField(5)
-   final List<PersistentUUID> persistentUUIDs;
-
-   @ProtoField(6)
    final int rebalanceId;
 
-   @ProtoField(7)
+   @ProtoField(6)
    final int topologyId;
 
-   @ProtoField(8)
+   @ProtoField(7)
    final int viewId;
 
    private List<Address> actualMembers;
 
    @ProtoFactory
    RebalanceStartCommand(String cacheName, WrappedMessage currentCH, WrappedMessage pendingCH,
-                                CacheTopology.Phase phase, List<PersistentUUID> persistentUUIDs,
+                                CacheTopology.Phase phase,
                                 int rebalanceId, int topologyId, int viewId, List<JGroupsTopologyAwareAddress> actualMembers) {
       this.cacheName = cacheName;
       this.currentCH = currentCH;
       this.pendingCH = pendingCH;
       this.phase = phase;
-      this.persistentUUIDs = persistentUUIDs;
       this.rebalanceId = rebalanceId;
       this.topologyId = topologyId;
       this.viewId = viewId;
@@ -74,18 +69,17 @@ public class RebalanceStartCommand extends AbstractCacheControlCommand {
       this.pendingCH = new WrappedMessage(cacheTopology.getPendingCH());
       this.phase = cacheTopology.getPhase();
       this.actualMembers = cacheTopology.getActualMembers();
-      this.persistentUUIDs = cacheTopology.getMembersPersistentUUIDs();
       this.viewId = viewId;
    }
 
    @Override
    public CompletionStage<?> invokeAsync(GlobalComponentRegistry gcr) throws Throwable {
-      CacheTopology topology = new CacheTopology(topologyId, rebalanceId, getCurrentCH(), getPendingCH(), phase, actualMembers, persistentUUIDs);
+      CacheTopology topology = new CacheTopology(topologyId, rebalanceId, getCurrentCH(), getPendingCH(), phase, actualMembers);
       return gcr.getLocalTopologyManager()
             .handleRebalance(cacheName, topology, viewId, origin);
    }
 
-   @ProtoField(9)
+   @ProtoField(8)
    List<JGroupsTopologyAwareAddress> getActualMembers() {
       return (List<JGroupsTopologyAwareAddress>)(List<?>) actualMembers;
    }
@@ -119,7 +113,6 @@ public class RebalanceStartCommand extends AbstractCacheControlCommand {
             ", pendingCH=" + getPendingCH() +
             ", phase=" + phase +
             ", actualMembers=" + actualMembers +
-            ", persistentUUIDs=" + persistentUUIDs +
             ", rebalanceId=" + rebalanceId +
             ", topologyId=" + topologyId +
             ", viewId=" + viewId +

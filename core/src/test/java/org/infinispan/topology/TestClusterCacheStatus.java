@@ -183,8 +183,7 @@ public class TestClusterCacheStatus {
       topology = new CacheTopology(topology.getTopologyId() + topologyIdDelta,
                                    topology.getRebalanceId() + rebalanceIdDelta,
                                    topology.getCurrentCH(), topology.getPendingCH(), topology.getUnionCH(),
-                                   topology.getPhase(), topology.getActualMembers(),
-                                   topology.getMembersPersistentUUIDs());
+                                   topology.getPhase(), topology.getActualMembers());
    }
 
    public void incrementStableIds(int topologyIdDelta, int rebalanceIdDelta) {
@@ -194,8 +193,7 @@ public class TestClusterCacheStatus {
       stableTopology = new CacheTopology(stableTopology.getTopologyId() + topologyIdDelta,
                                          stableTopology.getRebalanceId() + rebalanceIdDelta,
                                          stableTopology.getCurrentCH(), null, null,
-                                         stableTopology.getPhase(), stableTopology.getActualMembers(),
-                                         stableTopology.getMembersPersistentUUIDs());
+                                         stableTopology.getPhase(), stableTopology.getActualMembers());
    }
 
    public void incrementIds() {
@@ -213,8 +211,7 @@ public class TestClusterCacheStatus {
       }
       topology = new CacheTopology(newTopologyId, newRebalanceId,
                                    topology.getCurrentCH(), topology.getPendingCH(), topology.getUnionCH(),
-                                   topology.getPhase(), topology.getActualMembers(),
-                                   topology.getMembersPersistentUUIDs());
+                                   topology.getPhase(), topology.getActualMembers());
    }
 
    public void updateActualMembers(Address... actualMembers) {

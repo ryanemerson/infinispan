@@ -12,6 +12,7 @@ import org.infinispan.factories.scopes.Scopes;
 import org.infinispan.partitionhandling.AvailabilityMode;
 import org.infinispan.partitionhandling.impl.PartitionHandlingManager;
 import org.infinispan.remoting.transport.Address;
+import org.infinispan.remoting.transport.jgroups.JGroupsTopologyAwareAddress;
 import org.infinispan.test.TestingUtil;
 import org.infinispan.topology.CacheJoinInfo;
 import org.infinispan.topology.CacheTopology;
@@ -19,7 +20,6 @@ import org.infinispan.topology.CacheTopologyHandler;
 import org.infinispan.topology.LocalTopologyManager;
 import org.infinispan.topology.LocalTopologyManagerImpl;
 import org.infinispan.topology.ManagerStatusResponse;
-import org.infinispan.topology.PersistentUUID;
 import org.infinispan.topology.RebalancingStatus;
 import org.infinispan.util.logging.events.EventLogManager;
 
@@ -175,8 +175,8 @@ public abstract class AbstractControlledLocalTopologyManager implements LocalTop
    }
 
    @Override
-   public PersistentUUID getPersistentUUID() {
-      return delegate.getPersistentUUID();
+   public JGroupsTopologyAwareAddress getAddress() {
+      return delegate.getAddress();
    }
 
    @Override

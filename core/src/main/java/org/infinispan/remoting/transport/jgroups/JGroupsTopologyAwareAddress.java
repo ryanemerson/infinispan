@@ -32,7 +32,7 @@ public class JGroupsTopologyAwareAddress implements TopologyAwareAddress {
 
    public static final JGroupsTopologyAwareAddress LOCAL = new JGroupsTopologyAwareAddress(ExtendedUUID.randomUUID());
 
-   protected final org.jgroups.Address address;
+   protected final ExtendedUUID address;
    private final int hashCode;
    private volatile byte[] bytes;
 
@@ -77,7 +77,7 @@ public class JGroupsTopologyAwareAddress implements TopologyAwareAddress {
          // because the verifier needs to check the arguments of fromJGroupsTopologyAwareAddress
          // even if this method is never called.
          org.jgroups.Address address = org.jgroups.util.Util.readAddress(in);
-         return (JGroupsTopologyAwareAddress) JGroupsAddressCache.fromJGroupsTopologyAwareAddress(address);
+         return (JGroupsTopologyAwareAddress) JGroupsAddressCache.fromJGroupsAddress(address);
       } catch (ClassNotFoundException e) {
          throw new MarshallingException(e);
       }
@@ -197,6 +197,10 @@ public class JGroupsTopologyAwareAddress implements TopologyAwareAddress {
    }
 
    public org.jgroups.Address getJGroupsAddress() {
+      return address;
+   }
+
+   public ExtendedUUID getExtendedUUID() {
       return address;
    }
 

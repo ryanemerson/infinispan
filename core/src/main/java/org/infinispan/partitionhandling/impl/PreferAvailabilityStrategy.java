@@ -16,7 +16,6 @@ import org.infinispan.partitionhandling.AvailabilityMode;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.topology.CacheStatusResponse;
 import org.infinispan.topology.CacheTopology;
-import org.infinispan.topology.PersistentUUIDManager;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 import org.infinispan.util.logging.events.EventLogCategory;
@@ -26,12 +25,10 @@ public class PreferAvailabilityStrategy implements AvailabilityStrategy {
    private static final Log log = LogFactory.getLog(PreferAvailabilityStrategy.class);
 
    private final EventLogManager eventLogManager;
-   private final PersistentUUIDManager persistentUUIDManager;
    private final LostDataCheck lostDataCheck;
 
-   public PreferAvailabilityStrategy(EventLogManager eventLogManager, PersistentUUIDManager persistentUUIDManager, LostDataCheck lostDataCheck) {
+   public PreferAvailabilityStrategy(EventLogManager eventLogManager, LostDataCheck lostDataCheck) {
       this.eventLogManager = eventLogManager;
-      this.persistentUUIDManager = persistentUUIDManager;
       this.lostDataCheck = lostDataCheck;
    }
 
@@ -125,8 +122,7 @@ public class PreferAvailabilityStrategy implements AvailabilityStrategy {
                                                           p.topology.getRebalanceId() + 1,
                                                           p.readCH, null, null,
                                                           CacheTopology.Phase.NO_REBALANCE,
-                                                          survivingMembers,
-                                                          persistentUUIDManager.mapAddresses(survivingMembers));
+                                                          survivingMembers);
 
          context.updateTopologiesAfterMerge(mergedTopology, p.stableTopology, null);
 
@@ -189,8 +185,7 @@ public class PreferAvailabilityStrategy implements AvailabilityStrategy {
          // And the union of all distinct consistent hashes as the source
          ConsistentHash conflictHash = context.calculateConflictHash(preferredPartition.readCH, distinctHashes, actualMembers);
          mergedTopology = new CacheTopology(mergeTopologyId, mergeRebalanceId, conflictHash,
-                                            null, CacheTopology.Phase.CONFLICT_RESOLUTION,
-                                            actualMembers, persistentUUIDManager.mapAddresses(actualMembers));
+                                            null, CacheTopology.Phase.CONFLICT_RESOLUTION, actualMembers);
       } else {
          actualMembers.retainAll(preferredPartition.readCH.getMembers());
 
@@ -203,8 +198,7 @@ public class PreferAvailabilityStrategy implements AvailabilityStrategy {
          // Cancel any pending rebalance and only use the read CH,
          // because we don't recover the rebalance confirmation status (yet).
          mergedTopology = new CacheTopology(mergeTopologyId, mergeRebalanceId, preferredPartition.readCH, null,
-                                            CacheTopology.Phase.NO_REBALANCE, actualMembers,
-                                            persistentUUIDManager.mapAddresses(actualMembers));
+                                            CacheTopology.Phase.NO_REBALANCE, actualMembers);
       }
 
       context.updateTopologiesAfterMerge(mergedTopology, preferredPartition.stableTopology, null);
