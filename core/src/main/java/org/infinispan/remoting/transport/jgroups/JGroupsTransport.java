@@ -1098,7 +1098,7 @@ public class JGroupsTransport implements Transport {
    }
 
    private static org.jgroups.Address toJGroupsAddress(Address address) {
-      return ((JGroupsAddress) address).getJGroupsAddress();
+      return ((JGroupsTopologyAwareAddress) address).getJGroupsAddress();
    }
 
    private void marshallRequest(Message message, Object command, long requestId) {
@@ -1419,7 +1419,7 @@ public class JGroupsTransport implements Transport {
                                long requestId) {
       try {
          DeliverOrder deliverOrder = decodeDeliverMode(flags);
-         if (src.equals(((JGroupsAddress) getAddress()).getJGroupsAddress())) {
+         if (src.equals(((JGroupsTopologyAwareAddress) getAddress()).getJGroupsAddress())) {
             // DISCARD ignores the DONT_LOOPBACK flag, see https://issues.jboss.org/browse/JGRP-2205
             if (log.isTraceEnabled())
                log.tracef("Ignoring request %d from self without total order", requestId);

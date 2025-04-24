@@ -23,7 +23,7 @@ class PhysicalAddress implements Address {
 
    @Override
    public int compareTo(Address o) {
-      return address.compareTo(((JGroupsAddress) o).address);
+      return address.compareTo(((PhysicalAddress) o).address);
    }
 
    @Override

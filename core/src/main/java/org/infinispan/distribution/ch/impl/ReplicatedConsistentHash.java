@@ -23,7 +23,7 @@ import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.remoting.transport.Address;
-import org.infinispan.remoting.transport.jgroups.JGroupsAddress;
+import org.infinispan.remoting.transport.jgroups.JGroupsTopologyAwareAddress;
 import org.infinispan.topology.PersistentUUID;
 
 /**
@@ -64,7 +64,7 @@ public class ReplicatedConsistentHash implements ConsistentHash {
    }
 
    @ProtoFactory
-   static ReplicatedConsistentHash protoFactory(List<JGroupsAddress> jGroupsMembers, List<Integer> primaryOwners,
+   static ReplicatedConsistentHash protoFactory(List<JGroupsTopologyAwareAddress> jGroupsMembers, List<Integer> primaryOwners,
                                                 MarshallableMap<Address, Float> capacityFactors,
                                                 MarshallableList<Address> membersWithoutState) {
       return new ReplicatedConsistentHash(
@@ -76,8 +76,8 @@ public class ReplicatedConsistentHash implements ConsistentHash {
    }
 
    @ProtoField(1)
-   List<JGroupsAddress> getJGroupsMembers() {
-      return (List<JGroupsAddress>)(List<?>) members;
+   List<JGroupsTopologyAwareAddress> getJGroupsMembers() {
+      return (List<JGroupsTopologyAwareAddress>)(List<?>) members;
    }
 
    @ProtoField(2)

@@ -11,7 +11,7 @@ import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.remoting.transport.Address;
-import org.infinispan.remoting.transport.jgroups.JGroupsAddress;
+import org.infinispan.remoting.transport.jgroups.JGroupsTopologyAwareAddress;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 
@@ -80,7 +80,7 @@ public class CacheTopology {
    @ProtoFactory
    CacheTopology(int topologyId, int rebalanceId, boolean restoredFromState, Phase phase, List<PersistentUUID> membersPersistentUUIDs,
                  MarshallableObject<ConsistentHash> wrappedCurrentCH, MarshallableObject<ConsistentHash> wrappedPendingCH,
-                 MarshallableObject<ConsistentHash> wrappedUnionCH, List<JGroupsAddress> jGroupsMembers) {
+                 MarshallableObject<ConsistentHash> wrappedUnionCH, List<JGroupsTopologyAwareAddress> jGroupsMembers) {
       this.topologyId = topologyId;
       this.rebalanceId = rebalanceId;
       this.restoredFromState = restoredFromState;
@@ -136,8 +136,8 @@ public class CacheTopology {
    }
 
    @ProtoField(9)
-   List<JGroupsAddress> getJGroupsMembers() {
-      return (List<JGroupsAddress>)(List<?>) actualMembers;
+   List<JGroupsTopologyAwareAddress> getJGroupsMembers() {
+      return (List<JGroupsTopologyAwareAddress>)(List<?>) actualMembers;
    }
 
    /**

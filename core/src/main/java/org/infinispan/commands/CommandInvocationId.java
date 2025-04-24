@@ -10,7 +10,7 @@ import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.remoting.transport.Address;
-import org.infinispan.remoting.transport.jgroups.JGroupsAddress;
+import org.infinispan.remoting.transport.jgroups.JGroupsTopologyAwareAddress;
 
 /**
  * Represents an unique identified for non-transaction write commands.
@@ -39,7 +39,7 @@ public final class CommandInvocationId {
    }
 
    @ProtoFactory
-   CommandInvocationId(JGroupsAddress address, long id) {
+   CommandInvocationId(JGroupsTopologyAwareAddress address, long id) {
       this((Address) address, id);
    }
 
@@ -48,7 +48,7 @@ public final class CommandInvocationId {
       return id;
    }
 
-   @ProtoField(number = 2, name = "address", javaType = JGroupsAddress.class)
+   @ProtoField(number = 2, name = "address", javaType = JGroupsTopologyAwareAddress.class)
    public Address getAddress() {
       return address;
    }
