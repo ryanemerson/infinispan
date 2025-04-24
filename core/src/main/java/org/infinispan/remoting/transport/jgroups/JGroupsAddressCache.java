@@ -6,6 +6,7 @@ import java.util.concurrent.ConcurrentMap;
 import org.jgroups.Address;
 import org.jgroups.util.ExtendedUUID;
 import org.jgroups.util.NameCache;
+import org.jgroups.util.UUID;
 
 /**
  * Cache JGroupsAddress instances
@@ -14,20 +15,22 @@ import org.jgroups.util.NameCache;
  * @since 7.0
  */
 public class JGroupsAddressCache {
-   private static final ConcurrentMap<Address, JGroupsAddress> addressCache =
+   private static final ConcurrentMap<Address, JGroupsTopologyAwareAddress> addressCache =
          new ConcurrentHashMap<>();
 
    public static org.infinispan.remoting.transport.Address fromJGroupsAddress(Address jgroupsAddress) {
-      // New entries are rarely added added after startup, but computeIfAbsent synchronizes every time
-      JGroupsAddress ispnAddress = addressCache.get(jgroupsAddress);
+      // New entries are rarely added after startup, but computeIfAbsent synchronizes every time
+      JGroupsTopologyAwareAddress ispnAddress = addressCache.get(jgroupsAddress);
       if (ispnAddress != null) {
          return ispnAddress;
       }
-      return addressCache.computeIfAbsent(jgroupsAddress, uuid -> {
+      return addressCache.computeIfAbsent(jgroupsAddress, ignore -> {
          if (jgroupsAddress instanceof ExtendedUUID) {
             return new JGroupsTopologyAwareAddress((ExtendedUUID) jgroupsAddress);
+         } else if (jgroupsAddress instanceof UUID uuid) {
+            return new JGroupsTopologyAwareAddress(new ExtendedUUID(uuid.getMostSignificantBits(), uuid.getLeastSignificantBits()));
          } else {
-            return new JGroupsAddress(jgroupsAddress);
+            throw new IllegalStateException("Unexpected address type: " + jgroupsAddress.getClass().getName());
          }
       });
    }

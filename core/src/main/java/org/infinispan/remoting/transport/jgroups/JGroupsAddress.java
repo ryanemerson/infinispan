@@ -7,7 +7,6 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 
 import org.infinispan.commons.marshall.MarshallingException;
-import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
@@ -19,7 +18,7 @@ import org.infinispan.remoting.transport.Address;
  * @author Manik Surtani
  * @since 4.0
  */
-@ProtoTypeId(ProtoStreamTypeIds.JGROUPS_ADDRESS)
+@ProtoTypeId(10)
 public class JGroupsAddress implements Address {
 
    protected final org.jgroups.Address address;
