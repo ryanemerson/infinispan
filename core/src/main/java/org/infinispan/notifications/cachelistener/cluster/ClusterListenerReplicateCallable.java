@@ -22,7 +22,7 @@ import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.remoting.transport.Address;
-import org.infinispan.remoting.transport.jgroups.JGroupsAddress;
+import org.infinispan.remoting.transport.jgroups.JGroupsTopologyAwareAddress;
 import org.infinispan.security.actions.SecurityActions;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
@@ -49,7 +49,7 @@ public class ClusterListenerReplicateCallable<K, V> implements Function<Embedded
    @ProtoField(2)
    final String cacheName;
 
-   @ProtoField(number = 3, javaType = JGroupsAddress.class)
+   @ProtoField(number = 3, javaType = JGroupsTopologyAwareAddress.class)
    final Address origin;
 
    @ProtoField(4)
@@ -87,7 +87,7 @@ public class ClusterListenerReplicateCallable<K, V> implements Function<Embedded
    }
 
    @ProtoFactory
-   static <K, V> ClusterListenerReplicateCallable<K, V> protoFactory(UUID identifier, String cacheName, JGroupsAddress origin, boolean sync,
+   static <K, V> ClusterListenerReplicateCallable<K, V> protoFactory(UUID identifier, String cacheName, JGroupsTopologyAwareAddress origin, boolean sync,
                                                         Set<Class<? extends Annotation>> filterAnnotations, DataConversion keyDataConversion,
                                                         DataConversion valueDataConversion, boolean useStorageFormat,
                                                         MarshallableObject<CacheEventFilter<K, V>> filter,

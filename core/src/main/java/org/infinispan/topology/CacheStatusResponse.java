@@ -9,7 +9,7 @@ import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.remoting.transport.Address;
-import org.infinispan.remoting.transport.jgroups.JGroupsAddress;
+import org.infinispan.remoting.transport.jgroups.JGroupsTopologyAwareAddress;
 
 /**
 * @author Dan Berindei
@@ -45,13 +45,13 @@ public class CacheStatusResponse implements Serializable {
 
    @ProtoFactory
    static CacheStatusResponse create(CacheJoinInfo cacheJoinInfo, CacheTopology cacheTopology, CacheTopology stableTopology,
-                              AvailabilityMode availabilityMode, List<JGroupsAddress> current) {
+                              AvailabilityMode availabilityMode, List<JGroupsTopologyAwareAddress> current) {
       return new CacheStatusResponse(cacheJoinInfo, cacheTopology, stableTopology, availabilityMode, (List<Address>)(List<?>) current);
    }
 
    @ProtoField(5)
-   List<JGroupsAddress> getCurrent() {
-      return (List<JGroupsAddress>)(List<?>) current;
+   List<JGroupsTopologyAwareAddress> getCurrent() {
+      return (List<JGroupsTopologyAwareAddress>)(List<?>) current;
    }
 
    public static CacheStatusResponse empty() {

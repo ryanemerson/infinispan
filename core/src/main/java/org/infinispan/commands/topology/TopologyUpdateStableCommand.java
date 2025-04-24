@@ -11,7 +11,7 @@ import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.remoting.transport.Address;
-import org.infinispan.remoting.transport.jgroups.JGroupsAddress;
+import org.infinispan.remoting.transport.jgroups.JGroupsTopologyAwareAddress;
 import org.infinispan.topology.CacheTopology;
 import org.infinispan.topology.PersistentUUID;
 
@@ -51,13 +51,13 @@ public class TopologyUpdateStableCommand extends AbstractCacheControlCommand {
    final boolean topologyRestored;
 
    @ProtoField(9)
-   List<JGroupsAddress> getActualMembers() {
-      return (List<JGroupsAddress>)(List<?>) actualMembers;
+   List<JGroupsTopologyAwareAddress> getActualMembers() {
+      return (List<JGroupsTopologyAwareAddress>)(List<?>) actualMembers;
    }
 
    @ProtoFactory
    TopologyUpdateStableCommand(String cacheName, List<PersistentUUID> persistentUUIDs, int rebalanceId, int topologyId,
-                               int viewId, WrappedMessage currentCH, WrappedMessage pendingCH, List<JGroupsAddress> actualMembers,
+                               int viewId, WrappedMessage currentCH, WrappedMessage pendingCH, List<JGroupsTopologyAwareAddress> actualMembers,
                                boolean topologyRestored) {
       this.currentCH = currentCH;
       this.pendingCH = pendingCH;

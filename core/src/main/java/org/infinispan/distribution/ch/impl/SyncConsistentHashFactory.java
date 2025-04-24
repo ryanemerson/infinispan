@@ -18,7 +18,7 @@ import org.infinispan.globalstate.ScopedPersistentState;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.remoting.transport.Address;
-import org.infinispan.remoting.transport.jgroups.JGroupsAddress;
+import org.infinispan.remoting.transport.jgroups.JGroupsTopologyAwareAddress;
 import org.infinispan.topology.PersistentUUID;
 import org.jgroups.util.UUID;
 
@@ -306,8 +306,8 @@ public class SyncConsistentHashFactory implements ConsistentHashFactory<DefaultC
          // 64-bit hashes from 32-bit hashes have a non-negligible chance of collision,
          // so we try to get all 128 bits from UUID addresses
          long[] key = new long[2];
-         if (address instanceof JGroupsAddress) {
-            org.jgroups.Address jGroupsAddress = ((JGroupsAddress) address).getJGroupsAddress();
+         if (address instanceof JGroupsTopologyAwareAddress) {
+            org.jgroups.Address jGroupsAddress = ((JGroupsTopologyAwareAddress) address).getJGroupsAddress();
             if (jGroupsAddress instanceof UUID) {
                key[0] = ((UUID) jGroupsAddress).getLeastSignificantBits();
                key[1] = ((UUID) jGroupsAddress).getMostSignificantBits();

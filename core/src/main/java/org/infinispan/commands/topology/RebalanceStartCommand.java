@@ -11,7 +11,7 @@ import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.remoting.transport.Address;
-import org.infinispan.remoting.transport.jgroups.JGroupsAddress;
+import org.infinispan.remoting.transport.jgroups.JGroupsTopologyAwareAddress;
 import org.infinispan.topology.CacheTopology;
 import org.infinispan.topology.PersistentUUID;
 
@@ -53,7 +53,7 @@ public class RebalanceStartCommand extends AbstractCacheControlCommand {
    @ProtoFactory
    RebalanceStartCommand(String cacheName, WrappedMessage currentCH, WrappedMessage pendingCH,
                                 CacheTopology.Phase phase, List<PersistentUUID> persistentUUIDs,
-                                int rebalanceId, int topologyId, int viewId, List<JGroupsAddress> actualMembers) {
+                                int rebalanceId, int topologyId, int viewId, List<JGroupsTopologyAwareAddress> actualMembers) {
       this.cacheName = cacheName;
       this.currentCH = currentCH;
       this.pendingCH = pendingCH;
@@ -86,8 +86,8 @@ public class RebalanceStartCommand extends AbstractCacheControlCommand {
    }
 
    @ProtoField(9)
-   List<JGroupsAddress> getActualMembers() {
-      return (List<JGroupsAddress>)(List<?>) actualMembers;
+   List<JGroupsTopologyAwareAddress> getActualMembers() {
+      return (List<JGroupsTopologyAwareAddress>)(List<?>) actualMembers;
    }
 
    public String getCacheName() {

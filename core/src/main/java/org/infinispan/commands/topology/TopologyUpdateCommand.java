@@ -14,7 +14,7 @@ import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.remoting.transport.Address;
-import org.infinispan.remoting.transport.jgroups.JGroupsAddress;
+import org.infinispan.remoting.transport.jgroups.JGroupsTopologyAwareAddress;
 import org.infinispan.topology.CacheTopology;
 import org.infinispan.topology.PersistentUUID;
 import org.infinispan.util.logging.Log;
@@ -45,7 +45,7 @@ public class TopologyUpdateCommand extends AbstractCacheControlCommand {
    final CacheTopology.Phase phase;
 
    @ProtoField(5)
-   final List<JGroupsAddress> actualMembers;
+   final List<JGroupsTopologyAwareAddress> actualMembers;
 
    @ProtoField(6)
    final List<PersistentUUID> persistentUUIDs;
@@ -64,7 +64,7 @@ public class TopologyUpdateCommand extends AbstractCacheControlCommand {
 
    @ProtoFactory
    TopologyUpdateCommand(String cacheName, WrappedMessage currentCH, WrappedMessage pendingCH,
-                         CacheTopology.Phase phase, List<JGroupsAddress> actualMembers,
+                         CacheTopology.Phase phase, List<JGroupsTopologyAwareAddress> actualMembers,
                          List<PersistentUUID> persistentUUIDs, AvailabilityMode availabilityMode,
                          int rebalanceId, int topologyId, int viewId) {
       this.cacheName = cacheName;
@@ -89,7 +89,7 @@ public class TopologyUpdateCommand extends AbstractCacheControlCommand {
       this.pendingCH = new WrappedMessage(cacheTopology.getPendingCH());
       this.phase = cacheTopology.getPhase();
       this.availabilityMode = availabilityMode;
-      this.actualMembers = (List<JGroupsAddress>)(List<?>) cacheTopology.getActualMembers();
+      this.actualMembers = (List<JGroupsTopologyAwareAddress>)(List<?>) cacheTopology.getActualMembers();
       this.persistentUUIDs = cacheTopology.getMembersPersistentUUIDs();
       this.viewId = viewId;
    }
