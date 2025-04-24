@@ -4,17 +4,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertTrue;
 
-import java.util.Map;
+import java.util.List;
 
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.distribution.ch.ConsistentHash;
 import org.infinispan.factories.GlobalComponentRegistry;
 import org.infinispan.manager.DefaultCacheManager;
-import org.infinispan.remoting.transport.jgroups.JGroupsTopologyAwareAddress;
+import org.infinispan.remoting.transport.Address;
 import org.infinispan.test.TestingUtil;
 import org.infinispan.topology.LocalTopologyManager;
-import org.infinispan.topology.PersistentUUID;
 import org.testng.annotations.Test;
 
 @Test(testName = "globalstate.ThreeNodeDistGlobalStateRestartTest", groups = "functional")
@@ -67,7 +66,7 @@ public class ThreeNodeDistGlobalStateRestartTest extends AbstractGlobalStateRest
    }
 
    public void testDisableRebalanceRestartEnableRebalance() throws Throwable {
-      Map<JGroupsTopologyAwareAddress, PersistentUUID> addressMappings = createInitialCluster();
+      List<Address> addresses = createInitialCluster();
       ConsistentHash oldConsistentHash = advancedCache(0, CACHE_NAME).getDistributionManager().getWriteConsistentHash();
 
       GlobalComponentRegistry.of(manager(0)).getLocalTopologyManager().setRebalancingEnabled(false);
@@ -93,7 +92,7 @@ public class ThreeNodeDistGlobalStateRestartTest extends AbstractGlobalStateRest
       // Last missing.
       cache(getClusterSize() - 1, CACHE_NAME);
 
-      assertHealthyCluster(addressMappings, oldConsistentHash);
+      assertHealthyCluster(addresses, oldConsistentHash);
       assertTrue(GlobalComponentRegistry.of(manager(0)).getLocalTopologyManager().isRebalancingEnabled());
    }
 

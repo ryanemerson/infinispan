@@ -144,7 +144,7 @@ public class RpcManagerTest extends MultipleCacheManagersTest {
                                                                              newMembers, null);
          CacheTopology suspectTopology =
             new CacheTopology(initialTopology.getTopologyId(), initialTopology.getRebalanceId(), newCH, null, null,
-                              CacheTopology.Phase.NO_REBALANCE, newCH.getMembers(), null);
+                              CacheTopology.Phase.NO_REBALANCE, newCH.getMembers());
          distributionManager.setCacheTopology(suspectTopology);
 
          command.setTopologyId(rpcManager0.getTopologyId());

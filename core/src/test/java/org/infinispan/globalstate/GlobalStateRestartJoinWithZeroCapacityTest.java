@@ -14,8 +14,8 @@ import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.configuration.global.GlobalConfigurationBuilder;
 import org.infinispan.manager.EmbeddedCacheManager;
+import org.infinispan.remoting.transport.jgroups.JGroupsTopologyAwareAddress;
 import org.infinispan.test.MultipleCacheManagersTest;
-import org.infinispan.topology.PersistentUUID;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.Test;
 
@@ -28,8 +28,8 @@ import org.testng.annotations.Test;
 @Test(groups = "functional", testName = "globalstate.GlobalStateRestartJoinWithZeroCapacityTest")
 public class GlobalStateRestartJoinWithZeroCapacityTest extends MultipleCacheManagersTest {
    private static final String CACHE_NAME = "testCache";
-   private static final String MEMBER_0 = PersistentUUID.randomUUID().toString();
-   private static final String MEMBER_1 = PersistentUUID.randomUUID().toString();
+   private static final String MEMBER_0 = JGroupsTopologyAwareAddress.random().getUUIDString();
+   private static final String MEMBER_1 = JGroupsTopologyAwareAddress.random().getUUIDString();
 
    @Override
    protected void createCacheManagers() throws Throwable {

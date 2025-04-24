@@ -39,32 +39,27 @@ public class CacheTopology {
    private final ConsistentHash unionCH;
    private final Phase phase;
    private final List<Address> actualMembers;
-   // The persistent UUID of each actual member
-   private final List<PersistentUUID> persistentUUIDs;
 
    public CacheTopology(int topologyId, int rebalanceId, ConsistentHash currentCH, ConsistentHash pendingCH,
-                        Phase phase, List<Address> actualMembers, List<PersistentUUID> persistentUUIDs) {
-      this(topologyId, rebalanceId, currentCH, pendingCH, null, phase, actualMembers, persistentUUIDs);
+                        Phase phase, List<Address> actualMembers) {
+      this(topologyId, rebalanceId, currentCH, pendingCH, null, phase, actualMembers);
    }
 
    public CacheTopology(int topologyId, int rebalanceId, boolean restoredTopology, ConsistentHash currentCH, ConsistentHash pendingCH,
-                        Phase phase, List<Address> actualMembers, List<PersistentUUID> persistentUUIDs) {
-      this(topologyId, rebalanceId, restoredTopology, currentCH, pendingCH, null, phase, actualMembers, persistentUUIDs);
+                        Phase phase, List<Address> actualMembers) {
+      this(topologyId, rebalanceId, restoredTopology, currentCH, pendingCH, null, phase, actualMembers);
    }
 
    public CacheTopology(int topologyId, int rebalanceId, ConsistentHash currentCH, ConsistentHash pendingCH,
-                        ConsistentHash unionCH, Phase phase, List<Address> actualMembers, List<PersistentUUID> persistentUUIDs) {
-      this(topologyId, rebalanceId, false, currentCH, pendingCH, unionCH, phase, actualMembers, persistentUUIDs);
+                        ConsistentHash unionCH, Phase phase, List<Address> actualMembers) {
+      this(topologyId, rebalanceId, false, currentCH, pendingCH, unionCH, phase, actualMembers);
    }
 
    public CacheTopology(int topologyId, int rebalanceId, boolean restoredTopology, ConsistentHash currentCH, ConsistentHash pendingCH,
-                        ConsistentHash unionCH, Phase phase, List<Address> actualMembers, List<PersistentUUID> persistentUUIDs) {
+                        ConsistentHash unionCH, Phase phase, List<Address> actualMembers) {
       if (pendingCH != null && !pendingCH.getMembers().containsAll(currentCH.getMembers())) {
          throw new IllegalArgumentException("A cache topology's pending consistent hash must " +
                "contain all the current consistent hash's members: currentCH=" + currentCH + ", pendingCH=" + pendingCH);
-      }
-      if (persistentUUIDs != null && persistentUUIDs.size() != actualMembers.size()) {
-         throw new IllegalArgumentException("There must be one persistent UUID for each actual member");
       }
       this.topologyId = topologyId;
       this.rebalanceId = rebalanceId;
@@ -73,12 +68,11 @@ public class CacheTopology {
       this.unionCH = unionCH;
       this.phase = phase;
       this.actualMembers = actualMembers;
-      this.persistentUUIDs = persistentUUIDs;
       this.restoredFromState = restoredTopology;
    }
 
    @ProtoFactory
-   CacheTopology(int topologyId, int rebalanceId, boolean restoredFromState, Phase phase, List<PersistentUUID> membersPersistentUUIDs,
+   CacheTopology(int topologyId, int rebalanceId, boolean restoredFromState, Phase phase,
                  MarshallableObject<ConsistentHash> wrappedCurrentCH, MarshallableObject<ConsistentHash> wrappedPendingCH,
                  MarshallableObject<ConsistentHash> wrappedUnionCH, List<JGroupsTopologyAwareAddress> jGroupsMembers) {
       this.topologyId = topologyId;
@@ -88,7 +82,6 @@ public class CacheTopology {
       this.pendingCH = MarshallableObject.unwrap(wrappedPendingCH);
       this.unionCH = MarshallableObject.unwrap(wrappedUnionCH);
       this.phase = phase;
-      this.persistentUUIDs = membersPersistentUUIDs;
       this.actualMembers = (List<Address>)(List<?>) jGroupsMembers;
    }
 
@@ -115,27 +108,22 @@ public class CacheTopology {
       return phase;
    }
 
-   @ProtoField(5)
-   public List<PersistentUUID> getMembersPersistentUUIDs() {
-      return persistentUUIDs;
-   }
-
-   @ProtoField(number = 6, name = "currentCH")
+   @ProtoField(number = 5, name = "currentCH")
    MarshallableObject<ConsistentHash> getWrappedCurrentCH() {
       return MarshallableObject.create(currentCH);
    }
 
-   @ProtoField(number = 7, name = "pendingCH")
+   @ProtoField(number = 6, name = "pendingCH")
    MarshallableObject<ConsistentHash> getWrappedPendingCH() {
       return MarshallableObject.create(pendingCH);
    }
 
-   @ProtoField(number = 8, name = "unionCH")
+   @ProtoField(number = 7, name = "unionCH")
    MarshallableObject<ConsistentHash> getWrappedUnionCH() {
       return MarshallableObject.create(unionCH);
    }
 
-   @ProtoField(9)
+   @ProtoField(8)
    List<JGroupsTopologyAwareAddress> getJGroupsMembers() {
       return (List<JGroupsTopologyAwareAddress>)(List<?>) actualMembers;
    }
@@ -275,7 +263,6 @@ public class CacheTopology {
             ", pendingCH=" + pendingCH +
             ", unionCH=" + unionCH +
             ", actualMembers=" + actualMembers +
-            ", persistentUUIDs=" + persistentUUIDs +
             '}';
    }
 

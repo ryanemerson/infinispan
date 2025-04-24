@@ -53,9 +53,6 @@ import org.infinispan.remoting.transport.Address;
 import org.infinispan.remoting.transport.jgroups.JGroupsTopologyAwareAddress;
 import org.infinispan.test.TestingUtil;
 import org.infinispan.topology.CacheTopology;
-import org.infinispan.topology.PersistentUUID;
-import org.infinispan.topology.PersistentUUIDManager;
-import org.infinispan.topology.PersistentUUIDManagerImpl;
 import org.infinispan.transaction.impl.TransactionOriginatorChecker;
 import org.infinispan.transaction.impl.TransactionTable;
 import org.infinispan.util.ByteString;
@@ -85,11 +82,6 @@ public class StateProviderTest {
    private static final Address E = JGroupsTopologyAwareAddress.random("E");
    private static final Address F = JGroupsTopologyAwareAddress.random("F");
    private static final Address G = JGroupsTopologyAwareAddress.random("G");
-
-   private static final PersistentUUIDManager persistentUUIDManager = new PersistentUUIDManagerImpl();
-   static {
-      Arrays.asList(A, B, C, D, E, F, G).forEach(address -> persistentUUIDManager.addPersistentAddressMapping(address, PersistentUUID.randomUUID()));
-   }
 
    private Configuration configuration;
 
@@ -169,8 +161,7 @@ public class StateProviderTest {
       when(transactionTable.getRemoteTransactions()).thenReturn(Collections.emptyList());
 
       CacheTopology simpleTopology = new CacheTopology(1, 1, ch1, ch1, ch1,
-                                                       CacheTopology.Phase.READ_OLD_WRITE_ALL, ch1.getMembers(),
-                                                       persistentUUIDManager.mapAddresses(ch1.getMembers()));
+                                                       CacheTopology.Phase.READ_OLD_WRITE_ALL, ch1.getMembers());
       this.cacheTopology = new LocalizedCacheTopology(CacheMode.DIST_SYNC, simpleTopology, keyPartitioner, A, true);
       stateProvider.onTopologyUpdate(this.cacheTopology, false);
 
@@ -208,8 +199,7 @@ public class StateProviderTest {
 
       log.debug("ch2: " + ch2);
       simpleTopology = new CacheTopology(2, 1, ch2, ch2, ch2, CacheTopology.Phase.READ_OLD_WRITE_ALL,
-                                                      ch2.getMembers(),
-                                                      persistentUUIDManager.mapAddresses(ch2.getMembers()));
+                                                      ch2.getMembers());
       this.cacheTopology = new LocalizedCacheTopology(CacheMode.DIST_SYNC, simpleTopology, keyPartitioner, A, true);
       stateProvider.onTopologyUpdate(this.cacheTopology, true);
 
@@ -273,8 +263,7 @@ public class StateProviderTest {
       when(transactionTable.getRemoteTransactions()).thenReturn(Collections.emptyList());
 
       CacheTopology simpleTopology = new CacheTopology(1, 1, ch1, ch1, ch1, CacheTopology.Phase.READ_OLD_WRITE_ALL,
-                                                      ch1.getMembers(),
-                                                      persistentUUIDManager.mapAddresses(ch1.getMembers()));
+                                                      ch1.getMembers());
       this.cacheTopology = new LocalizedCacheTopology(CacheMode.DIST_SYNC, simpleTopology, keyPartitioner, A, true);
       stateProvider.onTopologyUpdate(this.cacheTopology, false);
 
@@ -309,8 +298,7 @@ public class StateProviderTest {
       // TestingUtil.sleepThread(15000);
       log.debug("ch2: " + ch2);
       simpleTopology = new CacheTopology(2, 1, ch2, ch2, ch2, CacheTopology.Phase.READ_OLD_WRITE_ALL,
-                                                      ch2.getMembers(),
-                                                      persistentUUIDManager.mapAddresses(ch2.getMembers()));
+                                                      ch2.getMembers());
       this.cacheTopology = new LocalizedCacheTopology(CacheMode.DIST_SYNC, simpleTopology, keyPartitioner, A, true);
       stateProvider.onTopologyUpdate(this.cacheTopology, false);
 

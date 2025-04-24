@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.function.UnaryOperator;
 
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
@@ -19,7 +20,7 @@ import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.remoting.transport.jgroups.JGroupsTopologyAwareAddress;
-import org.infinispan.topology.PersistentUUID;
+import org.jgroups.util.ExtendedUUID;
 
 import net.jcip.annotations.Immutable;
 
@@ -75,8 +76,9 @@ public class DefaultConsistentHash extends AbstractConsistentHash {
          int segmentOwnerCount = Integer.parseInt(state.getProperty(String.format(STATE_SEGMENT_OWNER_COUNT, i)));
          segmentOwners[i] = new ArrayList<>();
          for (int j = 0; j < segmentOwnerCount; j++) {
-            PersistentUUID uuid = PersistentUUID.fromString(state.getProperty(String.format(STATE_SEGMENT_OWNER, i, j)));
-            segmentOwners[i].add(uuid);
+            var uuid = UUID.fromString(state.getProperty(String.format(STATE_SEGMENT_OWNER, i, j)));
+            var address = new JGroupsTopologyAwareAddress(new ExtendedUUID(uuid.getMostSignificantBits(), uuid.getLeastSignificantBits()));
+            segmentOwners[i].add(address);
          }
       }
       this.hashCode = hashCodeInternal();
@@ -315,8 +317,8 @@ public class DefaultConsistentHash extends AbstractConsistentHash {
          List<Address> segmentOwnerAddresses = segmentOwners[i];
          state.setProperty(String.format(STATE_SEGMENT_OWNER_COUNT, i), segmentOwnerAddresses.size());
          for(int j = 0; j < segmentOwnerAddresses.size(); j++) {
-            state.setProperty(String.format(STATE_SEGMENT_OWNER, i, j),
-                  segmentOwnerAddresses.get(j).toString());
+            JGroupsTopologyAwareAddress a = (JGroupsTopologyAwareAddress) segmentOwnerAddresses.get(j);
+            state.setProperty(String.format(STATE_SEGMENT_OWNER, i, j), a.getUUIDString());
          }
       }
    }

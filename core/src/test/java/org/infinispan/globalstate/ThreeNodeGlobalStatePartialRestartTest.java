@@ -5,7 +5,7 @@ import static org.testng.AssertJUnit.assertEquals;
 
 import java.io.File;
 import java.util.Arrays;
-import java.util.Map;
+import java.util.List;
 
 import org.infinispan.Cache;
 import org.infinispan.commons.test.Exceptions;
@@ -15,11 +15,9 @@ import org.infinispan.configuration.cache.StoreConfigurationBuilder;
 import org.infinispan.distribution.ch.ConsistentHash;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.partitionhandling.PartitionHandling;
-import org.infinispan.remoting.transport.jgroups.JGroupsTopologyAwareAddress;
+import org.infinispan.remoting.transport.Address;
 import org.infinispan.test.TestingUtil;
 import org.infinispan.topology.MissingMembersException;
-import org.infinispan.topology.PersistentUUID;
-import org.infinispan.topology.PersistentUUIDManager;
 import org.testng.annotations.Test;
 
 @Test(testName = "globalstate.ThreeNodeGlobalStatePartialRestartTest", groups = "functional")
@@ -51,7 +49,7 @@ public class ThreeNodeGlobalStatePartialRestartTest extends AbstractGlobalStateR
    }
 
    public void testClusterDelayedJoiners() throws Exception {
-      Map<JGroupsTopologyAwareAddress, PersistentUUID> addressMappings = createInitialCluster();
+      List<Address> addresses = createInitialCluster();
 
       ConsistentHash oldConsistentHash = advancedCache(0, CACHE_NAME).getDistributionManager().getWriteConsistentHash();
 
@@ -82,17 +80,15 @@ public class ThreeNodeGlobalStatePartialRestartTest extends AbstractGlobalStateR
       // Healthy cluster
       waitForClusterToForm(CACHE_NAME);
 
-      checkClusterRestartedCorrectly(addressMappings);
+      checkClusterRestartedCorrectly(addresses);
       checkData();
 
-      ConsistentHash newConsistentHash =
-            advancedCache(0, CACHE_NAME).getDistributionManager().getWriteConsistentHash();
-      PersistentUUIDManager persistentUUIDManager = TestingUtil.extractGlobalComponent(manager(0), PersistentUUIDManager.class);
-      assertEquivalent(addressMappings, oldConsistentHash, newConsistentHash, persistentUUIDManager);
+      ConsistentHash newConsistentHash = advancedCache(0, CACHE_NAME).getDistributionManager().getWriteConsistentHash();
+      assertEquivalent(oldConsistentHash, newConsistentHash);
    }
 
    public void testConnectAndDisconnectDuringRestart() throws Exception {
-      Map<JGroupsTopologyAwareAddress, PersistentUUID> addressMappings = createInitialCluster();
+      List<Address> addresses = createInitialCluster();
 
       ConsistentHash oldConsistentHash = advancedCache(0, CACHE_NAME).getDistributionManager().getWriteConsistentHash();
 
@@ -139,17 +135,15 @@ public class ThreeNodeGlobalStatePartialRestartTest extends AbstractGlobalStateR
       // Healthy cluster
       waitForClusterToForm(CACHE_NAME);
 
-      checkClusterRestartedCorrectly(addressMappings);
+      checkClusterRestartedCorrectly(addresses);
       checkData();
 
-      ConsistentHash newConsistentHash =
-          advancedCache(0, CACHE_NAME).getDistributionManager().getWriteConsistentHash();
-      PersistentUUIDManager persistentUUIDManager = TestingUtil.extractGlobalComponent(manager(0), PersistentUUIDManager.class);
-      assertEquivalent(addressMappings, oldConsistentHash, newConsistentHash, persistentUUIDManager);
+      ConsistentHash newConsistentHash = advancedCache(0, CACHE_NAME).getDistributionManager().getWriteConsistentHash();
+      assertEquivalent(oldConsistentHash, newConsistentHash);
    }
 
    public void testClusterWithRestartsDuringPartitioning() throws Exception {
-      Map<JGroupsTopologyAwareAddress, PersistentUUID> addressMappings = createInitialCluster();
+      List<Address> addresses = createInitialCluster();
 
       ConsistentHash oldConsistentHash = advancedCache(0, CACHE_NAME).getDistributionManager().getWriteConsistentHash();
 
@@ -195,13 +189,11 @@ public class ThreeNodeGlobalStatePartialRestartTest extends AbstractGlobalStateR
       // Healthy cluster
       waitForClusterToForm(CACHE_NAME);
 
-      checkClusterRestartedCorrectly(addressMappings);
+      checkClusterRestartedCorrectly(addresses);
       checkData();
 
-      ConsistentHash newConsistentHash =
-            advancedCache(0, CACHE_NAME).getDistributionManager().getWriteConsistentHash();
-      PersistentUUIDManager persistentUUIDManager = TestingUtil.extractGlobalComponent(manager(0), PersistentUUIDManager.class);
-      assertEquivalent(addressMappings, oldConsistentHash, newConsistentHash, persistentUUIDManager);
+      ConsistentHash newConsistentHash = advancedCache(0, CACHE_NAME).getDistributionManager().getWriteConsistentHash();
+      assertEquivalent(oldConsistentHash, newConsistentHash);
    }
 
    private void assertOperationsFail() {

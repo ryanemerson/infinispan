@@ -6,6 +6,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.UUID;
 
 import org.infinispan.commons.marshall.MarshallingException;
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
@@ -32,15 +33,9 @@ public class JGroupsTopologyAwareAddress implements TopologyAwareAddress {
 
    public static final JGroupsTopologyAwareAddress LOCAL = new JGroupsTopologyAwareAddress(ExtendedUUID.randomUUID());
 
-   protected final org.jgroups.Address address;
+   protected final ExtendedUUID address;
    private final int hashCode;
    private volatile byte[] bytes;
-
-   public static JGroupsTopologyAwareAddress from(Address address) {
-      if (address instanceof JGroupsTopologyAwareAddress addr)
-         return new JGroupsTopologyAwareAddress(addr.topologyAddress());
-      throw new IllegalArgumentException("Address " + address + " is not a JGroupsTopologyAwareAddress");
-   }
 
    public static JGroupsTopologyAwareAddress random() {
       var uuid = randomUUID(null, null, null, null);
@@ -53,14 +48,18 @@ public class JGroupsTopologyAwareAddress implements TopologyAwareAddress {
    }
 
    public static ExtendedUUID randomUUID(String name, String siteId, String rackId, String machineId) {
-      ExtendedUUID uuid = ExtendedUUID.randomUUID(name);
+      return extendedUUID(UUID.randomUUID(), name, siteId, rackId, machineId);
+   }
+
+   public static ExtendedUUID extendedUUID(UUID uuid, String name, String siteId, String rackId, String machineId) {
+      var extendedUUID = new ExtendedUUID(uuid.getMostSignificantBits(), uuid.getLeastSignificantBits());
       if (name != null) {
-         NameCache.add(uuid, name);
+         NameCache.add(extendedUUID, name);
       }
-      addId(uuid, SITE_KEY, siteId);
-      addId(uuid, RACK_KEY, rackId);
-      addId(uuid, MACHINE_KEY, machineId);
-      return uuid;
+      addId(extendedUUID, SITE_KEY, siteId);
+      addId(extendedUUID, RACK_KEY, rackId);
+      addId(extendedUUID, MACHINE_KEY, machineId);
+      return extendedUUID;
    }
 
    private static void addId(ExtendedUUID uuid, byte[] key, String stringValue) {
@@ -77,7 +76,7 @@ public class JGroupsTopologyAwareAddress implements TopologyAwareAddress {
          // because the verifier needs to check the arguments of fromJGroupsTopologyAwareAddress
          // even if this method is never called.
          org.jgroups.Address address = org.jgroups.util.Util.readAddress(in);
-         return (JGroupsTopologyAwareAddress) JGroupsAddressCache.fromJGroupsTopologyAwareAddress(address);
+         return (JGroupsTopologyAwareAddress) JGroupsAddressCache.fromJGroupsAddress(address);
       } catch (ClassNotFoundException e) {
          throw new MarshallingException(e);
       }
@@ -173,7 +172,7 @@ public class JGroupsTopologyAwareAddress implements TopologyAwareAddress {
    }
 
    private ExtendedUUID topologyAddress() {
-      return (ExtendedUUID) address;
+      return address;
    }
 
    @Override
@@ -198,6 +197,14 @@ public class JGroupsTopologyAwareAddress implements TopologyAwareAddress {
 
    public org.jgroups.Address getJGroupsAddress() {
       return address;
+   }
+
+   public ExtendedUUID getExtendedUUID() {
+      return address;
+   }
+
+   public String getUUIDString() {
+      return address.toStringLong();
    }
 
    @Override

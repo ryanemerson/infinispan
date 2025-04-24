@@ -51,9 +51,6 @@ import org.infinispan.statetransfer.StateChunk;
 import org.infinispan.test.AbstractInfinispanTest;
 import org.infinispan.test.TestingUtil;
 import org.infinispan.topology.CacheTopology;
-import org.infinispan.topology.PersistentUUID;
-import org.infinispan.topology.PersistentUUIDManager;
-import org.infinispan.topology.PersistentUUIDManagerImpl;
 import org.mockito.stubbing.Answer;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeMethod;
@@ -174,12 +171,10 @@ public class StateReceiverTest extends AbstractInfinispanTest {
    }
 
    private ConsistentHash createConsistentHash(int numberOfNodes) {
-      PersistentUUIDManager persistentUUIDManager = new PersistentUUIDManagerImpl();
       List<Address> addresses = new ArrayList<>(numberOfNodes);
       for (int i = 0; i < numberOfNodes; i++) {
          Address address = JGroupsTopologyAwareAddress.random();
          addresses.add(address);
-         persistentUUIDManager.addPersistentAddressMapping(address, PersistentUUID.randomUUID());
       }
 
       DefaultConsistentHashFactory chf = DefaultConsistentHashFactory.getInstance();
@@ -188,7 +183,7 @@ public class StateReceiverTest extends AbstractInfinispanTest {
 
    private LocalizedCacheTopology createLocalizedCacheTopology(int numberOfNodes) {
       ConsistentHash hash = createConsistentHash(numberOfNodes);
-      CacheTopology topology = new CacheTopology(-1,  -1, hash, null, CacheTopology.Phase.NO_REBALANCE, hash.getMembers(), null);
+      CacheTopology topology = new CacheTopology(-1,  -1, hash, null, CacheTopology.Phase.NO_REBALANCE, hash.getMembers());
       return new LocalizedCacheTopology(CacheMode.DIST_SYNC, topology, new HashFunctionPartitioner(), hash.getMembers().get(0), true);
    }
 

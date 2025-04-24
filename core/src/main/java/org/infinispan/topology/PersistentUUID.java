@@ -15,7 +15,9 @@ import org.infinispan.remoting.transport.Address;
  *
  * @author Tristan Tarrant
  * @since 8.1
+ * @deprecated since 16.0
  */
+@Deprecated(since = "16.0", forRemoval = true)
 @ProtoTypeId(ProtoStreamTypeIds.PERSISTENCE_UUID)
 public class PersistentUUID implements Address {
 

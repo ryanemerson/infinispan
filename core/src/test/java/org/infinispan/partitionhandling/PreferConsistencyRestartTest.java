@@ -7,7 +7,6 @@ import static org.infinispan.partitionhandling.AvailabilityMode.DEGRADED_MODE;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -20,11 +19,9 @@ import org.infinispan.distribution.LocalizedCacheTopology;
 import org.infinispan.distribution.MagicKey;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.remoting.transport.Address;
-import org.infinispan.remoting.transport.jgroups.JGroupsTopologyAwareAddress;
 import org.infinispan.test.TestingUtil;
 import org.infinispan.topology.ClusterTopologyManager;
 import org.infinispan.topology.LocalTopologyManager;
-import org.infinispan.topology.PersistentUUID;
 import org.testng.annotations.Test;
 
 @Test(groups = "functional", testName = "partitionhandling.PreferConsistencyRestartTest")
@@ -40,7 +37,7 @@ public class PreferConsistencyRestartTest extends BaseStatefulPartitionHandlingT
    }
 
    public void testOnlyFreshNodeLeftDuringDegraded() throws Exception {
-      Map<JGroupsTopologyAwareAddress, PersistentUUID> addressMappings = createInitialCluster();
+      List<Address> addresses = createInitialCluster();
 
       checkData();
 
@@ -81,10 +78,8 @@ public class PreferConsistencyRestartTest extends BaseStatefulPartitionHandlingT
       assertThat(ctm.getAvailabilityMode(CACHE_NAME)).isEqualTo(AVAILABLE);
 
       // Check restart. Add new extraneous node.
-      PersistentUUID uuid = TestingUtil.extractGlobalComponent(manager(0), LocalTopologyManager.class)
-            .getPersistentUUID();
-      addressMappings.put((JGroupsTopologyAwareAddress) manager(0).getAddress(), uuid);
-      checkPersistentUUIDMatch(addressMappings);
+      addresses.set(0, localAddress(manager(0)));
+      checkAddressesMatch(addresses);
    }
 
    public void testCompletelyNewClusterWhileDegraded() {
@@ -141,7 +136,7 @@ public class PreferConsistencyRestartTest extends BaseStatefulPartitionHandlingT
    }
 
    public void testCoordinatorChangesWhileDegraded() throws Exception {
-      Map<JGroupsTopologyAwareAddress, PersistentUUID> addressMappings = createInitialCluster();
+      List<Address> addresses = createInitialCluster();
 
       // Operate directly on the default cache.
       // Since it is created by default, it could cause the node fail to start.
@@ -181,11 +176,11 @@ public class PreferConsistencyRestartTest extends BaseStatefulPartitionHandlingT
       assertThat(ctm.getAvailabilityMode(defaultCacheName)).isEqualTo(AVAILABLE);
 
       // The UUID mapping recovered successfully.
-      checkPersistentUUIDMatch(addressMappings);
+      checkAddressesMatch(addresses);
    }
 
    public void testCrashBeforeRecover() throws Exception {
-      Map<JGroupsTopologyAwareAddress, PersistentUUID> addressMappings = createInitialCluster();
+      List<Address> addresses = createInitialCluster();
 
       checkData();
 
@@ -250,7 +245,7 @@ public class PreferConsistencyRestartTest extends BaseStatefulPartitionHandlingT
       // The nodes that restart will clear the underlying store, as it could lead to inconsistency.
       // Right now, what it is possible to check is that the restart is successful and the remaining data.
       // With M owners and N nodes, we still have left around ~M/N of data.
-      checkPersistentUUIDMatch(addressMappings);
+      checkAddressesMatch(addresses);
       assertThat(cache(0, CACHE_NAME).size())
             .isBetween((int) (((float) numberOfOwners / numMembersInCluster) * DATA_SIZE), DATA_SIZE);
    }

@@ -18,26 +18,23 @@ import org.infinispan.commons.util.Version;
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.configuration.cache.EncodingConfiguration;
 import org.infinispan.configuration.cache.StoreConfiguration;
-import org.infinispan.factories.GlobalComponentRegistry;
 import org.infinispan.manager.CacheManagerInfo;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.remoting.transport.Address;
+import org.infinispan.remoting.transport.jgroups.JGroupsTopologyAwareAddress;
 import org.infinispan.security.actions.SecurityActions;
-import org.infinispan.topology.PersistentUUIDManager;
 
 public abstract class BaseServerManagement implements ServerManagement {
 
    @Override
    public Json overviewReport() {
       DefaultCacheManager cacheManager = getCacheManager();
-      GlobalComponentRegistry registry = SecurityActions.getGlobalComponentRegistry(cacheManager);
-      PersistentUUIDManager uuidManager = registry.getComponent(PersistentUUIDManager.class);
 
       Address nodeAddress = cacheManager.getAddress();
       Address coordinatorAddress = cacheManager.getCoordinator();
 
-      String nodeId = (nodeAddress == null) ? null : uuidManager.getPersistentUuid(nodeAddress).toString();
-      String coordinatorId = (coordinatorAddress == null) ? null : uuidManager.getPersistentUuid(coordinatorAddress).toString();
+      String nodeId = (nodeAddress == null) ? null : ((JGroupsTopologyAwareAddress) nodeAddress).getUUIDString();
+      String coordinatorId = (coordinatorAddress == null) ? null : ((JGroupsTopologyAwareAddress) coordinatorAddress).getUUIDString();
 
       HashSet<String> cacheStores = new HashSet<>();
       HashSet<String> encodings = new HashSet<>();

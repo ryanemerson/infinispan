@@ -9,6 +9,7 @@ import org.infinispan.marshall.protostream.impl.MarshallableObject;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
+import org.infinispan.remoting.transport.jgroups.JGroupsTopologyAwareAddress;
 
 /**
  * This class contains the information that a cache needs to supply to the coordinator when starting up.
@@ -29,28 +30,28 @@ public class CacheJoinInfo {
    private final float capacityFactor;
 
    // Per-node state info
-   private final PersistentUUID persistentUUID;
+   private final JGroupsTopologyAwareAddress address;
    private final Optional<Integer> persistentStateChecksum;
 
    public CacheJoinInfo(ConsistentHashFactory consistentHashFactory, int numSegments, int numOwners, long timeout,
                         CacheMode cacheMode, float capacityFactor,
-                        PersistentUUID persistentUUID, Optional<Integer> persistentStateChecksum) {
+                        JGroupsTopologyAwareAddress address, Optional<Integer> persistentStateChecksum) {
       this.consistentHashFactory = consistentHashFactory;
       this.numSegments = numSegments;
       this.numOwners = numOwners;
       this.timeout = timeout;
       this.cacheMode = cacheMode;
       this.capacityFactor = capacityFactor;
-      this.persistentUUID = persistentUUID;
+      this.address = address;
       this.persistentStateChecksum = persistentStateChecksum;
    }
 
    @ProtoFactory
    CacheJoinInfo(MarshallableObject<ConsistentHashFactory<?>> wrappedConsistentHashFactory, int numSegments, int numOwners,
                  long timeout, CacheMode cacheMode, float capacityFactor,
-                 PersistentUUID persistentUUID, Integer persistentStateChecksum) {
+                 JGroupsTopologyAwareAddress address, Integer persistentStateChecksum) {
       this(MarshallableObject.unwrap(wrappedConsistentHashFactory), numSegments, numOwners, timeout, cacheMode, capacityFactor,
-            persistentUUID, Optional.ofNullable(persistentStateChecksum));
+            address, Optional.ofNullable(persistentStateChecksum));
    }
 
    public ConsistentHashFactory getConsistentHashFactory() {
@@ -88,8 +89,8 @@ public class CacheJoinInfo {
    }
 
    @ProtoField(8)
-   public PersistentUUID getPersistentUUID() {
-      return persistentUUID;
+   public JGroupsTopologyAwareAddress getAddress() {
+      return address;
    }
 
    @ProtoField(9)
@@ -107,7 +108,7 @@ public class CacheJoinInfo {
       result = prime * result + numOwners;
       result = prime * result + numSegments;
       result = prime * result + (int) (timeout ^ (timeout >>> 32));
-      result = prime * result + ((persistentUUID == null) ? 0 : persistentUUID.hashCode());
+      result = prime * result + ((address == null) ? 0 : address.hashCode());
       result = prime * result + ((persistentStateChecksum == null) ? 0 : persistentStateChecksum.hashCode());
       return result;
    }
@@ -136,10 +137,10 @@ public class CacheJoinInfo {
          return false;
       if (timeout != other.timeout)
          return false;
-      if (persistentUUID == null) {
-         if (other.persistentUUID != null)
+      if (address == null) {
+         if (other.address != null)
             return false;
-      } else if (!persistentUUID.equals(other.persistentUUID))
+      } else if (!address.equals(other.address))
          return false;
       if (persistentStateChecksum == null) {
          if (other.persistentStateChecksum != null)
@@ -157,7 +158,7 @@ public class CacheJoinInfo {
             ", numOwners=" + numOwners +
             ", timeout=" + timeout +
             ", cacheMode=" + cacheMode +
-            ", persistentUUID=" + persistentUUID +
+            ", address=" + address +
             ", persistentStateChecksum=" + persistentStateChecksum +
             ", capacityFactor=" + getCapacityFactor() +
             '}';

@@ -18,6 +18,7 @@ import org.infinispan.partitionhandling.AvailabilityMode;
 import org.infinispan.partitionhandling.impl.PartitionHandlingManager;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.commons.util.concurrent.CompletableFutures;
+import org.infinispan.remoting.transport.jgroups.JGroupsTopologyAwareAddress;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 
@@ -160,7 +161,7 @@ class MockLocalTopologyManager implements LocalTopologyManager {
    }
 
    @Override
-   public PersistentUUID getPersistentUUID() {
+   public JGroupsTopologyAwareAddress getAddress() {
       return null;
    }
 

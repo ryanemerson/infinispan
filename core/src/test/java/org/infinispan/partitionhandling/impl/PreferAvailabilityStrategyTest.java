@@ -8,7 +8,6 @@ import static org.infinispan.partitionhandling.impl.PreferAvailabilityStrategyTe
 import static org.infinispan.test.TestingUtil.mapOf;
 import static org.infinispan.test.TestingUtil.setOf;
 import static org.infinispan.topology.TestClusterCacheStatus.conflictResolutionConsistentHash;
-import static org.infinispan.topology.TestClusterCacheStatus.persistentUUID;
 import static org.infinispan.topology.TestClusterCacheStatus.start;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -30,7 +29,6 @@ import org.infinispan.topology.CacheJoinInfo;
 import org.infinispan.topology.CacheStatusResponse;
 import org.infinispan.topology.CacheTopology;
 import org.infinispan.topology.ClusterTopologyManagerImpl;
-import org.infinispan.topology.PersistentUUIDManagerImpl;
 import org.infinispan.topology.TestClusterCacheStatus;
 import org.infinispan.util.logging.events.EventLogManager;
 import org.infinispan.util.logging.events.TestingEventLogManager;
@@ -74,7 +72,6 @@ public class PreferAvailabilityStrategyTest extends AbstractInfinispanTest {
    public static final String CACHE_NAME = "test";
 
    private EventLogManager eventLogManager;
-   private PersistentUUIDManagerImpl persistentUUIDManager;
    private AvailabilityStrategyContext context;
    private PreferAvailabilityStrategy strategy;
    private MockitoSession mockitoSession;
@@ -94,17 +91,9 @@ public class PreferAvailabilityStrategyTest extends AbstractInfinispanTest {
       mockitoSession = Mockito.mockitoSession()
                               .strictness(Strictness.STRICT_STUBS)
                               .startMocking();
-      persistentUUIDManager = new PersistentUUIDManagerImpl();
       eventLogManager = new TestingEventLogManager();
       context = mock(AvailabilityStrategyContext.class);
-
-      persistentUUIDManager.addPersistentAddressMapping(A, persistentUUID(A));
-      persistentUUIDManager.addPersistentAddressMapping(B, persistentUUID(B));
-      persistentUUIDManager.addPersistentAddressMapping(C, persistentUUID(C));
-      persistentUUIDManager.addPersistentAddressMapping(D, persistentUUID(D));
-
-      strategy = new PreferAvailabilityStrategy(eventLogManager, persistentUUIDManager,
-                                                ClusterTopologyManagerImpl::distLostDataCheck);
+      strategy = new PreferAvailabilityStrategy(eventLogManager, ClusterTopologyManagerImpl::distLostDataCheck);
    }
 
    @AfterMethod(alwaysRun = true)

@@ -72,9 +72,6 @@ import org.infinispan.remoting.transport.jgroups.JGroupsTopologyAwareAddress;
 import org.infinispan.test.AbstractInfinispanTest;
 import org.infinispan.test.TestingUtil;
 import org.infinispan.topology.CacheTopology;
-import org.infinispan.topology.PersistentUUID;
-import org.infinispan.topology.PersistentUUIDManager;
-import org.infinispan.topology.PersistentUUIDManagerImpl;
 import org.infinispan.transaction.impl.TransactionTable;
 import org.infinispan.util.ByteString;
 import org.infinispan.util.concurrent.CommandAckCollector;
@@ -119,11 +116,10 @@ public class StateConsumerTest extends AbstractInfinispanTest {
    }
 
    // creates 4 members
-   private static Address[] createMembers(PersistentUUIDManager persistentUUIDManager) {
+   private static Address[] createMembers() {
       Address[] addresses = new Address[4];
       for (int i = 0; i < 4; i++) {
          addresses[i] = JGroupsTopologyAwareAddress.random();
-         persistentUUIDManager.addPersistentAddressMapping(addresses[i], PersistentUUID.randomUUID());
       }
       return addresses;
    }
@@ -227,16 +223,16 @@ public class StateConsumerTest extends AbstractInfinispanTest {
       return icf;
    }
 
-   private static void noRebalance(StateConsumer stateConsumer, PersistentUUIDManager persistentUUIDManager, int topologyId, int rebalanceId, ConsistentHash ch) {
+   private static void noRebalance(StateConsumer stateConsumer, int topologyId, int rebalanceId, ConsistentHash ch) {
       stateConsumer.onTopologyUpdate(
             new CacheTopology(topologyId, rebalanceId, ch, null, CacheTopology.Phase.NO_REBALANCE,
-                  ch.getMembers(), persistentUUIDManager.mapAddresses(ch.getMembers())), false);
+                  ch.getMembers()), false);
    }
 
-   private static void rebalanceStart(StateConsumer stateConsumer, PersistentUUIDManager persistentUUIDManager, int topologyId, int rebalanceId, ConsistentHash current, ConsistentHash pending, ConsistentHash union) {
+   private static void rebalanceStart(StateConsumer stateConsumer, int topologyId, int rebalanceId, ConsistentHash current, ConsistentHash pending, ConsistentHash union) {
       stateConsumer.onTopologyUpdate(
             new CacheTopology(topologyId, rebalanceId, current, pending, union, CacheTopology.Phase.READ_OLD_WRITE_ALL,
-                  union.getMembers(), persistentUUIDManager.mapAddresses(union.getMembers())), true);
+                  union.getMembers()), true);
    }
 
    private static void assertRebalanceStart(StateConsumerImpl stateConsumer, ConsistentHash current, ConsistentHash pending, Address member, Set<Integer> flatRequestedSegments) {
@@ -306,10 +302,8 @@ public class StateConsumerTest extends AbstractInfinispanTest {
    }
 
    public void testClusterRecoverDuringStateTransfer() throws Exception {
-      PersistentUUIDManager persistentUUIDManager = new PersistentUUIDManagerImpl();
-
       // create list of 4 members
-      Address[] addresses = createMembers(persistentUUIDManager);
+      Address[] addresses = createMembers();
       List<Address> members1 = Arrays.asList(addresses[0], addresses[1], addresses[2], addresses[3]);
       List<Address> members2 = Arrays.asList(addresses[0], addresses[1], addresses[2]);
 
@@ -335,19 +329,19 @@ public class StateConsumerTest extends AbstractInfinispanTest {
       assertFalse(stateConsumer.hasActiveTransfers());
 
       // node 4 leaves
-      noRebalance(stateConsumer, persistentUUIDManager, 1, 1, ch2);
+      noRebalance(stateConsumer, 1, 1, ch2);
       assertFalse(stateConsumer.hasActiveTransfers());
 
       // start a rebalance
-      rebalanceStart(stateConsumer, persistentUUIDManager, 2, 2, ch2, ch3, ch23);
+      rebalanceStart(stateConsumer, 2, 2, ch2, ch3, ch23);
       assertRebalanceStart(stateConsumer, ch2, ch3, addresses[0], flatRequestedSegments);
 
       // simulate a cluster state recovery and return to ch2
       Future<Object> future = fork(() -> {
-         noRebalance(stateConsumer, persistentUUIDManager, 3, 2, ch2);
+         noRebalance(stateConsumer, 3, 2, ch2);
          return null;
       });
-      noRebalance(stateConsumer, persistentUUIDManager, 3, 2, ch2);
+      noRebalance(stateConsumer, 3, 2, ch2);
       future.get();
       assertFalse(stateConsumer.hasActiveTransfers());
 
@@ -355,7 +349,7 @@ public class StateConsumerTest extends AbstractInfinispanTest {
       // restart the rebalance
       requestedSegments.clear();
       flatRequestedSegments.clear();
-      rebalanceStart(stateConsumer, persistentUUIDManager, 4, 4, ch2, ch3, ch23);
+      rebalanceStart(stateConsumer, 4, 4, ch2, ch3, ch23);
       assertRebalanceStart(stateConsumer, ch2, ch3, addresses[0], flatRequestedSegments);
 
       completeAndCheckRebalance(stateConsumer, requestedSegments, 4);
@@ -364,10 +358,8 @@ public class StateConsumerTest extends AbstractInfinispanTest {
 
    // Reproducer for ISPN-14982
    public void testJoinDuringStateTransfer() throws Exception {
-      PersistentUUIDManager persistentUUIDManager = new PersistentUUIDManagerImpl();
-
       // create list of 4 members
-      Address[] addresses = createMembers(persistentUUIDManager);
+      Address[] addresses = createMembers();
       List<Address> members1 = Arrays.asList(addresses[0], addresses[1], addresses[2]);
       List<Address> members2 = Arrays.asList(addresses[1], addresses[2]);
 
@@ -397,26 +389,26 @@ public class StateConsumerTest extends AbstractInfinispanTest {
       stateConsumer.start();
 
       // initial topology
-      noRebalance(stateConsumer, persistentUUIDManager, 21, 7, ch1);
+      noRebalance(stateConsumer, 21, 7, ch1);
       assertFalse(stateConsumer.hasActiveTransfers());
 
       // start a rebalance (copied form logs)
       //CacheTopology{id=22, phase=READ_OLD_WRITE_ALL, rebalanceId=8, currentCH=DefaultConsistentHash{ns=60, owners = (2)[node-3: 29+10, node-5: 31+10]}, pendingCH=DefaultConsistentHash{ns=60, owners = (2)[node-3: 30+30, node-5: 30+30]}, unionCH=DefaultConsistentHash{ns=60, owners = (2)[node-3: 29+31, node-5: 31+29]}, actualMembers=[node-3, node-5], persistentUUIDs=...}
-      rebalanceStart(stateConsumer, persistentUUIDManager, 22, 8, ch2, ch3, ch23);
+      rebalanceStart(stateConsumer, 22, 8, ch2, ch3, ch23);
       assertRebalanceStart(stateConsumer, ch2, ch3, addresses[1], flatRequestedSegments);
 
       applyState(stateConsumer, requestedSegments, Collections.singletonList(new ImmortalCacheEntry("a", "b")));
 
       // merge view update
       //CacheTopology{id=23, phase=NO_REBALANCE, rebalanceId=9, currentCH=DefaultConsistentHash{ns=60, owners = (2)[node-3: 29+10, node-5: 31+10]}, pendingCH=null, unionCH=null, actualMembers=[node-3, node-5], persistentUUIDs=...}
-      noRebalance(stateConsumer, persistentUUIDManager, 23, 9, ch2);
+      noRebalance(stateConsumer, 23, 9, ch2);
 
       // restart the rebalance
       requestedSegments.clear();
       flatRequestedSegments.clear();
 
       // CacheTopology{id=24, phase=READ_OLD_WRITE_ALL, rebalanceId=10, currentCH=DefaultConsistentHash{ns=60, owners = (2)[node-3: 29+10, node-5: 31+10]}, pendingCH=DefaultConsistentHash{ns=60, owners = (2)[node-3: 30+30, node-5: 30+30]}, unionCH=DefaultConsistentHash{ns=60, owners = (2)[node-3: 29+31, node-5: 31+29]}, actualMembers=[node-3, node-5], persistentUUIDs=...}
-      rebalanceStart(stateConsumer, persistentUUIDManager, 24, 10, ch2, ch3, ch23);
+      rebalanceStart(stateConsumer, 24, 10, ch2, ch3, ch23);
       assertRebalanceStart(stateConsumer, ch2, ch3, addresses[1], flatRequestedSegments);
 
       // let the apply state complete

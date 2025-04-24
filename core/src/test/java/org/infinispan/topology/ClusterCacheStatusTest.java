@@ -49,16 +49,13 @@ public class ClusterCacheStatusTest extends AbstractInfinispanTest {
       mockitoSession = Mockito.mockitoSession().strictness(Strictness.STRICT_STUBS).startMocking();
 
       EventLogManager eventLogManager = new TestingEventLogManager();
-      PersistentUUIDManager persistentUUIDManager = new PersistentUUIDManagerImpl();
       EmbeddedCacheManager cacheManager = mock(EmbeddedCacheManager.class);
       topologyManager = mock(ClusterTopologyManagerImpl.class);
       transport = mock(Transport.class);
       PreferAvailabilityStrategy availabilityStrategy =
-         new PreferAvailabilityStrategy(eventLogManager, persistentUUIDManager,
-                                        ClusterTopologyManagerImpl::distLostDataCheck);
+         new PreferAvailabilityStrategy(eventLogManager, ClusterTopologyManagerImpl::distLostDataCheck);
       status = new ClusterCacheStatus(cacheManager, null, CACHE_NAME, availabilityStrategy, RebalanceType.FOUR_PHASE,
-                                      topologyManager, transport, persistentUUIDManager, eventLogManager,
-                                      Optional.empty(), false);
+                                      topologyManager, transport, eventLogManager, Optional.empty(), false);
    }
 
    @AfterMethod(alwaysRun = true)
@@ -135,9 +132,7 @@ public class ClusterCacheStatusTest extends AbstractInfinispanTest {
    }
 
    private CacheJoinInfo makeJoinInfo(Address a) {
-      PersistentUUID persistentUUID = new PersistentUUID(a.hashCode(), a.hashCode());
       return new CacheJoinInfo(JOIN_INFO.getConsistentHashFactory(), JOIN_INFO.getNumSegments(), JOIN_INFO.getNumOwners(),
-            JOIN_INFO.getTimeout(), JOIN_INFO.getCacheMode(), JOIN_INFO.getCapacityFactor(),
-            persistentUUID, Optional.empty());
+            JOIN_INFO.getTimeout(), JOIN_INFO.getCacheMode(), JOIN_INFO.getCapacityFactor(), (JGroupsTopologyAwareAddress) a, Optional.empty());
    }
 }

@@ -4,14 +4,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.infinispan.commons.test.CommonsTestingUtil.tmpDirectory;
 import static org.infinispan.test.fwk.TestCacheManagerFactory.createClusteredCacheManager;
 import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertNotNull;
 import static org.testng.AssertJUnit.assertTrue;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.assertj.core.api.SoftAssertions;
 import org.infinispan.commons.util.IntSets;
@@ -21,13 +21,13 @@ import org.infinispan.configuration.global.GlobalConfigurationBuilder;
 import org.infinispan.configuration.global.UncleanShutdownAction;
 import org.infinispan.distribution.ch.ConsistentHash;
 import org.infinispan.manager.EmbeddedCacheManager;
+import org.infinispan.remoting.transport.Address;
+import org.infinispan.remoting.transport.Transport;
 import org.infinispan.remoting.transport.jgroups.JGroupsTopologyAwareAddress;
 import org.infinispan.test.TestDataSCI;
 import org.infinispan.test.TestingUtil;
 import org.infinispan.test.fwk.TransportFlags;
 import org.infinispan.topology.LocalTopologyManager;
-import org.infinispan.topology.PersistentUUID;
-import org.infinispan.topology.PersistentUUIDManager;
 
 public class BaseStatefulPartitionHandlingTest extends BasePartitionHandlingTest {
 
@@ -75,21 +75,19 @@ public class BaseStatefulPartitionHandlingTest extends BasePartitionHandlingTest
       if (start) manager.defineConfiguration(CACHE_NAME, config.build());
    }
 
-   protected Map<JGroupsTopologyAwareAddress, PersistentUUID> createInitialCluster() {
+   protected List<Address> createInitialCluster() {
       waitForClusterToForm(CACHE_NAME);
-      Map<JGroupsTopologyAwareAddress, PersistentUUID> addressMappings = new LinkedHashMap<>();
-
-      for (int i = 0; i < numMembersInCluster; i++) {
-         LocalTopologyManager ltm = TestingUtil.extractGlobalComponent(manager(i), LocalTopologyManager.class);
-         PersistentUUID uuid = ltm.getPersistentUUID();
-         assertNotNull(uuid);
-         addressMappings.put((JGroupsTopologyAwareAddress) manager(i).getAddress(), uuid);
-      }
-
       fillData();
       checkData();
 
-      return addressMappings;
+      // Collect using an ArrayList explicitly so that we can reverse the collection later
+      return cacheManagers.stream()
+            .map(this::localAddress)
+            .collect(Collectors.toCollection(ArrayList::new));
+   }
+
+   protected Address localAddress(EmbeddedCacheManager cm) {
+      return TestingUtil.extractGlobalComponent(cm, Transport.class).getAddress();
    }
 
    private void fillData() {
@@ -107,21 +105,19 @@ public class BaseStatefulPartitionHandlingTest extends BasePartitionHandlingTest
       }
    }
 
-   protected void assertHealthyCluster(Map<JGroupsTopologyAwareAddress, PersistentUUID> addressMappings, ConsistentHash oldConsistentHash) throws Throwable {
+   protected void assertHealthyCluster(List<Address> addresses, ConsistentHash oldConsistentHash) throws Throwable {
       // Healthy cluster
       waitForClusterToForm(CACHE_NAME);
 
-      checkClusterRestartedCorrectly(addressMappings);
+      checkClusterRestartedCorrectly(addresses);
       checkData();
 
-      ConsistentHash newConsistentHash =
-            advancedCache(0, CACHE_NAME).getDistributionManager().getWriteConsistentHash();
-      PersistentUUIDManager persistentUUIDManager = TestingUtil.extractGlobalComponent(manager(0), PersistentUUIDManager.class);
-      assertEquivalent(addressMappings, oldConsistentHash, newConsistentHash, persistentUUIDManager);
+      ConsistentHash newConsistentHash = advancedCache(0, CACHE_NAME).getDistributionManager().getWriteConsistentHash();
+      assertEquivalent(oldConsistentHash, newConsistentHash);
    }
 
-   void checkClusterRestartedCorrectly(Map<JGroupsTopologyAwareAddress, PersistentUUID> addressMappings) throws Exception {
-      checkPersistentUUIDMatch(addressMappings);
+   void checkClusterRestartedCorrectly(List<Address> addresses) throws Exception {
+      checkAddressesMatch(addresses);
       checkClusterDataSize(DATA_SIZE);
    }
 
@@ -140,38 +136,32 @@ public class BaseStatefulPartitionHandlingTest extends BasePartitionHandlingTest
       sa.assertAll();
    }
 
-   void checkPersistentUUIDMatch(Map<JGroupsTopologyAwareAddress, PersistentUUID> addressMappings) throws Exception {
-      Iterator<Map.Entry<JGroupsTopologyAwareAddress, PersistentUUID>> addressIterator = addressMappings.entrySet().iterator();
-      Set<PersistentUUID> uuids = new HashSet<>();
-      for (int i = 0; i < cacheManagers.size(); i++) {
-         LocalTopologyManager ltm = TestingUtil.extractGlobalComponent(manager(i), LocalTopologyManager.class);
-         assertTrue(uuids.add(ltm.getPersistentUUID()));
-      }
+   void checkAddressesMatch(List<Address> addresses) throws Exception {
+      Iterator<Address> addressIterator = addresses.iterator();
+      Set<Address> uuids = new HashSet<>();
+      for (EmbeddedCacheManager cm : cacheManagers)
+         assertTrue(uuids.add(localAddress(cm)));
 
-      for (int i = 0; i < cacheManagers.size(); i++) {
-         LocalTopologyManager ltm = TestingUtil.extractGlobalComponent(manager(i), LocalTopologyManager.class);
-         // Ensure that nodes have the old UUID
-         Map.Entry<JGroupsTopologyAwareAddress, PersistentUUID> entry = addressIterator.next();
-         assertTrue(entry.getKey() + " is mapping to the wrong UUID: " +
-               "Expected: " + entry.getValue() + " not found in: " + uuids, uuids.contains(entry.getValue()));
+
+      for (int i = 0; i < cacheManagers.size() && addressIterator.hasNext(); i++) {
+         // Ensure that nodes have the old UUID based address
+         Address entry = addressIterator.next();
+         assertTrue("Expected Address: " + entry + " not found in: " + uuids, uuids.contains(entry));
          // Ensure that rebalancing is enabled for the cache
+         LocalTopologyManager ltm = TestingUtil.extractGlobalComponent(manager(i), LocalTopologyManager.class);
          assertTrue(ltm.isCacheRebalancingEnabled(CACHE_NAME));
       }
    }
 
-   void assertEquivalent(Map<JGroupsTopologyAwareAddress, PersistentUUID> addressMappings, ConsistentHash oldConsistentHash,
-                         ConsistentHash newConsistentHash, PersistentUUIDManager persistentUUIDManager) {
-      assertTrue(isEquivalent(addressMappings, oldConsistentHash, newConsistentHash, persistentUUIDManager));
+   void assertEquivalent(ConsistentHash oldConsistentHash, ConsistentHash newConsistentHash) {
+      assertTrue(isEquivalent(oldConsistentHash, newConsistentHash));
    }
 
-   protected final boolean isEquivalent(Map<JGroupsTopologyAwareAddress, PersistentUUID> addressMapping, ConsistentHash oldConsistentHash,
-                                ConsistentHash newConsistentHash, PersistentUUIDManager persistentUUIDManager) {
+   protected final boolean isEquivalent(ConsistentHash oldConsistentHash, ConsistentHash newConsistentHash) {
       if (oldConsistentHash.getNumSegments() != newConsistentHash.getNumSegments()) return false;
       for (int i = 0; i < oldConsistentHash.getMembers().size(); i++) {
          JGroupsTopologyAwareAddress oldAddress = (JGroupsTopologyAwareAddress) oldConsistentHash.getMembers().get(i);
-         JGroupsTopologyAwareAddress remappedOldAddress = (JGroupsTopologyAwareAddress) persistentUUIDManager.getAddress(addressMapping.get(oldAddress));
          JGroupsTopologyAwareAddress newAddress = (JGroupsTopologyAwareAddress) newConsistentHash.getMembers().get(i);
-         if (!remappedOldAddress.equals(newAddress)) return false;
          Set<Integer> oldSegmentsForOwner = oldConsistentHash.getSegmentsForOwner(oldAddress);
          Set<Integer> newSegmentsForOwner = newConsistentHash.getSegmentsForOwner(newAddress);
          assertThat(oldSegmentsForOwner)

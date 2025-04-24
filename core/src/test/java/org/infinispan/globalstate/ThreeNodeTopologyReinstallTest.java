@@ -8,7 +8,7 @@ import static org.testng.AssertJUnit.assertTrue;
 
 import java.io.File;
 import java.util.Arrays;
-import java.util.Map;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.infinispan.Cache;
@@ -20,10 +20,9 @@ import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.factories.GlobalComponentRegistry;
 import org.infinispan.manager.EmbeddedCacheManager;
-import org.infinispan.remoting.transport.jgroups.JGroupsTopologyAwareAddress;
+import org.infinispan.remoting.transport.Address;
 import org.infinispan.test.TestingUtil;
 import org.infinispan.topology.MissingMembersException;
-import org.infinispan.topology.PersistentUUID;
 import org.testng.annotations.Test;
 
 @Test(testName = "globalstate.ThreeNodeTopologyReinstallTest", groups = "functional")
@@ -64,7 +63,7 @@ public class ThreeNodeTopologyReinstallTest extends AbstractGlobalStateRestartTe
 
    private void executeTestRestart(boolean force) throws Exception {
       boolean possibleDataLoss = !cacheMode.isReplicated() && force;
-      Map<JGroupsTopologyAwareAddress, PersistentUUID> addressMappings = createInitialCluster();
+      List<Address> addresses = createInitialCluster();
 
       // Shutdown the cache cluster-wide
       cache(0, CACHE_NAME).shutdown();
@@ -143,7 +142,7 @@ public class ThreeNodeTopologyReinstallTest extends AbstractGlobalStateRestartTe
 
       // This will create the cache, and trigger the join operation for the new managers.
       waitForClusterToForm(CACHE_NAME);
-      checkClusterRestartedCorrectly(addressMappings);
+      checkClusterRestartedCorrectly(addresses);
 
       if (possibleDataLoss) {
          for (int j = 0; j < getClusterSize(); j++) {

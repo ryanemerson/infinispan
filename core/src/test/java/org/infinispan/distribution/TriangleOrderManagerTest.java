@@ -36,7 +36,7 @@ public class TriangleOrderManagerTest extends AbstractInfinispanTest {
    private static LocalizedCacheTopology mockCacheTopology(int topologyId) {
       List<Address> members = Collections.singletonList(LOCAL_ADDRESS);
       ConsistentHash ch = new ReplicatedConsistentHash(members, List.of(0));
-      CacheTopology cacheTopology = new CacheTopology(topologyId, 0, ch, null, CacheTopology.Phase.NO_REBALANCE, members, null);
+      CacheTopology cacheTopology = new CacheTopology(topologyId, 0, ch, null, CacheTopology.Phase.NO_REBALANCE, members);
       return new LocalizedCacheTopology(CacheMode.DIST_SYNC, cacheTopology, key -> 0, LOCAL_ADDRESS, true);
    }
 

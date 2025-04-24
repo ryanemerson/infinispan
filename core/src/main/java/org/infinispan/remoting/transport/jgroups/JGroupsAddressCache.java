@@ -18,19 +18,19 @@ public class JGroupsAddressCache {
    private static final ConcurrentMap<Address, JGroupsTopologyAwareAddress> addressCache =
          new ConcurrentHashMap<>();
 
-   public static org.infinispan.remoting.transport.Address fromJGroupsTopologyAwareAddress(Address JGroupsTopologyAwareAddress) {
+   public static org.infinispan.remoting.transport.Address fromJGroupsAddress(Address jgroupsAddress) {
       // New entries are rarely added after startup, but computeIfAbsent synchronizes every time
-      JGroupsTopologyAwareAddress ispnAddress = addressCache.get(JGroupsTopologyAwareAddress);
+      JGroupsTopologyAwareAddress ispnAddress = addressCache.get(jgroupsAddress);
       if (ispnAddress != null) {
          return ispnAddress;
       }
-      return addressCache.computeIfAbsent(JGroupsTopologyAwareAddress, ignore -> {
-         if (JGroupsTopologyAwareAddress instanceof ExtendedUUID) {
-            return new JGroupsTopologyAwareAddress((ExtendedUUID) JGroupsTopologyAwareAddress);
-         } else if (JGroupsTopologyAwareAddress instanceof UUID uuid) {
+      return addressCache.computeIfAbsent(jgroupsAddress, ignore -> {
+         if (jgroupsAddress instanceof ExtendedUUID) {
+            return new JGroupsTopologyAwareAddress((ExtendedUUID) jgroupsAddress);
+         } else if (jgroupsAddress instanceof UUID uuid) {
             return new JGroupsTopologyAwareAddress(new ExtendedUUID(uuid.getMostSignificantBits(), uuid.getLeastSignificantBits()));
          } else {
-            throw new IllegalStateException("Unexpected address type: " + JGroupsTopologyAwareAddress.getClass().getName());
+            throw new IllegalStateException("Unexpected address type: " + jgroupsAddress.getClass().getName());
          }
       });
    }

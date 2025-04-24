@@ -159,7 +159,7 @@ public abstract class BaseMergePolicyTest extends BasePartitionHandlingTest {
          Arrays.stream(caches).collect(Collectors.toMap(this::address, this::getCacheStatus));
 
       LostDataCheck lostDataCheck = ClusterTopologyManagerImpl::distLostDataCheck;
-      CacheTopology preferredTopology = new PreferAvailabilityStrategy(null, null, lostDataCheck)
+      CacheTopology preferredTopology = new PreferAvailabilityStrategy(null, lostDataCheck)
                                            .computePreferredTopology(statusResponses);
 
       log.tracef("getCacheFromPreferredPartition: partition=%s", preferredTopology.getMembers());
