@@ -57,12 +57,12 @@ import org.infinispan.remoting.rpc.RpcOptions;
 import org.infinispan.remoting.transport.AbstractDelegatingTransport;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.remoting.transport.ResponseCollector;
+import org.infinispan.remoting.transport.SiteAddress;
 import org.infinispan.remoting.transport.Transport;
 import org.infinispan.remoting.transport.XSiteResponse;
 import org.infinispan.remoting.transport.impl.SingleResponseCollector;
 import org.infinispan.remoting.transport.impl.SingletonMapResponseCollector;
 import org.infinispan.remoting.transport.impl.XSiteResponseImpl;
-import org.infinispan.remoting.transport.jgroups.JGroupsTopologyAwareAddress;
 import org.infinispan.test.TestException;
 import org.infinispan.test.TestingUtil;
 import org.infinispan.util.logging.Log;
@@ -253,7 +253,7 @@ public class ControlledTransport extends AbstractDelegatingTransport {
    @Override
    public <O> XSiteResponse<O> backupRemotely(XSiteBackup backup, XSiteRequest<O> rpcCommand) {
       XSiteResponseImpl<O> xSiteResponse = new XSiteResponseImpl<>(timeService, backup);
-      Address address = new JGroupsTopologyAwareAddress(JGroupsTopologyAwareAddress.randomUUID(null, backup.getSiteName(), null, null));
+      SiteAddress address = new SiteAddress(backup.getSiteName());
       CompletionStage<ValidResponse> request =
             performRequest(Collections.singletonList(address), rpcCommand, SingleResponseCollector.validOnly(), c -> {
                try {
