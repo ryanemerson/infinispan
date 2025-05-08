@@ -4,6 +4,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import org.jgroups.Address;
+import org.jgroups.protocols.relay.SiteUUID;
+import org.jgroups.util.ExtendedUUID;
 import org.jgroups.util.NameCache;
 
 /**
@@ -13,17 +15,19 @@ import org.jgroups.util.NameCache;
  * @since 7.0
  */
 public class JGroupsAddressCache {
-   private static final ConcurrentMap<Address, JGroupsAddress> addressCache =
+   private static final ConcurrentMap<Address, org.infinispan.remoting.transport.Address> addressCache =
          new ConcurrentHashMap<>();
 
    public static org.infinispan.remoting.transport.Address fromJGroupsAddress(Address jgroupsAddress) {
       // New entries are rarely added after startup, but computeIfAbsent synchronizes every time
-      JGroupsAddress ispnAddress = addressCache.get(jgroupsAddress);
+      var ispnAddress = addressCache.get(jgroupsAddress);
       if (ispnAddress != null) {
          return ispnAddress;
       }
       return addressCache.computeIfAbsent(jgroupsAddress, ignore -> {
-         if (jgroupsAddress instanceof JGroupsAddress address) {
+         if (jgroupsAddress instanceof SiteUUID siteUUID) {
+            return new JGroupsXSiteAddress(siteUUID);
+         } else if (jgroupsAddress instanceof JGroupsAddress address) {
             return address;
          } else {
             throw new IllegalStateException("Unexpected address type: " + jgroupsAddress.getClass().getName());

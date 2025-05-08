@@ -441,11 +441,7 @@ public class JGroupsTransport implements Transport {
       // NOTE: total order needs to deliver own messages. the invokeRemotely method has a total order boolean
       //       that when it is false, it discard our own messages, maintaining the property needed
       channel.setDiscardOwnMessages(false);
-
-      // if we have a TopologyAwareConsistentHash, we need to set our own address generator in JGroups
-      if (transportCfg.hasTopologyInfo()) {
-         channel.addAddressGenerator(channelCallbacks);
-      }
+      channel.addAddressGenerator(channelCallbacks);
       initRaftManager();
    }
 

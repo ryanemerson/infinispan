@@ -9,6 +9,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 import org.infinispan.commons.marshall.MarshallingException;
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
@@ -17,6 +18,7 @@ import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.remoting.transport.TopologyAwareAddress;
 import org.jgroups.Address;
+import org.jgroups.conf.ClassConfigurator;
 import org.jgroups.util.ExtendedUUID;
 import org.jgroups.util.NameCache;
 import org.jgroups.util.Util;
@@ -32,6 +34,11 @@ import org.jgroups.util.Util;
 // Write version first to allow possible migrations/changes in future
 // Do we need keys? Just write string first
 public class JGroupsAddress extends org.jgroups.util.UUID implements TopologyAwareAddress {
+
+   static {
+      // Must not conflict with value in jg-magic-map.xml
+      ClassConfigurator.add((short)1024, JGroupsAddress.class);
+   }
 
    // TODO add version
    private static final byte SITE_INDEX = 0;
@@ -92,6 +99,11 @@ public class JGroupsAddress extends org.jgroups.util.UUID implements TopologyAwa
          this.values[1] = Util.stringToBytes(rackId);
          this.values[2] = Util.stringToBytes(machineId);
       }
+   }
+
+   @Override
+   public Supplier<? extends org.jgroups.util.UUID> create() {
+      return JGroupsAddress::new;
    }
 
    @ProtoField(1)
