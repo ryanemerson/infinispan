@@ -4,9 +4,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import org.jgroups.Address;
-import org.jgroups.util.ExtendedUUID;
 import org.jgroups.util.NameCache;
-import org.jgroups.util.UUID;
 
 /**
  * Cache JGroupsAddress instances
@@ -25,10 +23,8 @@ public class JGroupsAddressCache {
          return ispnAddress;
       }
       return addressCache.computeIfAbsent(jgroupsAddress, ignore -> {
-         if (jgroupsAddress instanceof ExtendedUUID) {
-            return new JGroupsAddress((ExtendedUUID) jgroupsAddress);
-         } else if (jgroupsAddress instanceof UUID uuid) {
-            return new JGroupsAddress(new ExtendedUUID(uuid.getMostSignificantBits(), uuid.getLeastSignificantBits()));
+         if (jgroupsAddress instanceof JGroupsAddress address) {
+            return address;
          } else {
             throw new IllegalStateException("Unexpected address type: " + jgroupsAddress.getClass().getName());
          }

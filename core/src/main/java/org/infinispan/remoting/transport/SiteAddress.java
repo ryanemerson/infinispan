@@ -17,7 +17,7 @@ public class SiteAddress implements Address {
    }
 
    @Override
-   public int compareTo(@SuppressWarnings("NullableProblems") Address o) {
+   public int compareTo(@SuppressWarnings("NullableProblems") org.jgroups.Address o) {
       if (o instanceof SiteAddress) {
          return name.compareTo(((SiteAddress) o).name);
       }

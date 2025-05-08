@@ -1576,14 +1576,14 @@ public class JGroupsTransport implements Transport {
       @Override
       public org.jgroups.Address generateAddress() {
          var transportCfg = configuration.transport();
-         return JGroupsAddress.randomUUID(channel.getName(), transportCfg.siteId(), transportCfg.rackId(),
+         return JGroupsAddress.random(channel.getName(), transportCfg.siteId(), transportCfg.rackId(),
                      transportCfg.machineId());
       }
 
       @Override
       public org.jgroups.Address generateAddress(String name) {
          var transportCfg = configuration.transport();
-         return JGroupsAddress.randomUUID(name, transportCfg.siteId(), transportCfg.rackId(),
+         return JGroupsAddress.random(name, transportCfg.siteId(), transportCfg.rackId(),
                transportCfg.machineId());
       }
    }

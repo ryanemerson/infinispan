@@ -51,7 +51,7 @@ public class PersistentUUID implements Address {
    }
 
    @Override
-   public int compareTo(Address o) {
+   public int compareTo(org.jgroups.Address o) {
       PersistentUUID other = (PersistentUUID) o;
       return uuid.compareTo(other.uuid);
    }

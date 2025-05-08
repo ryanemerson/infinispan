@@ -492,9 +492,7 @@ public class TopologyAwareConsistentHashFactoryTest extends AbstractInfinispanTe
    }
 
    void addNode(String machineID, String rackId, String siteId) {
-      var uuid = JGroupsAddress.randomUUID(null, machineID, rackId, siteId);
-      Address address = new JGroupsAddress(uuid);
-      chMembers.add(address);
+      chMembers.add(JGroupsAddress.random(null, machineID, rackId, siteId));
    }
 
    protected void updateConsistentHash(int numOwners) {
