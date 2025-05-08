@@ -8,7 +8,6 @@ import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.UUID;
 import java.util.function.Supplier;
 
 import org.infinispan.commons.marshall.MarshallingException;
@@ -18,9 +17,11 @@ import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.remoting.transport.TopologyAwareAddress;
 import org.jgroups.Address;
+import org.jgroups.Constructable;
 import org.jgroups.conf.ClassConfigurator;
 import org.jgroups.util.ExtendedUUID;
 import org.jgroups.util.NameCache;
+import org.jgroups.util.UUID;
 import org.jgroups.util.Util;
 
 /**
@@ -33,7 +34,7 @@ import org.jgroups.util.Util;
 // TODO
 // Write version first to allow possible migrations/changes in future
 // Do we need keys? Just write string first
-public class JGroupsAddress extends org.jgroups.util.UUID implements TopologyAwareAddress {
+public class JGroupsAddress implements Constructable<JGroupsAddress>, TopologyAwareAddress {
 
    static {
       // Must not conflict with value in jg-magic-map.xml
@@ -47,6 +48,8 @@ public class JGroupsAddress extends org.jgroups.util.UUID implements TopologyAwa
 
    public static final JGroupsAddress LOCAL = random();
 
+   private org.jgroups.Address address;
+   private int hashCode;
    private byte[][] values;
    private volatile byte[] bytes;
 
@@ -85,12 +88,19 @@ public class JGroupsAddress extends org.jgroups.util.UUID implements TopologyAwa
     */
    @SuppressWarnings("unused")
    public JGroupsAddress() {
-      super();
+   }
+
+   public JGroupsAddress(ExtendedUUID address) {
+      if (address == null)
+         throw new IllegalArgumentException("Address shall not be null");
+      this.address = address;
+      this.hashCode = address.hashCode();
    }
 
    // TODO add version
    private JGroupsAddress(UUID uuid, String siteId, String rackId, String machineId) {
-      super(uuid);
+      this.address = uuid;
+      this.hashCode = uuid.hashCode();
       if (siteId == null && rackId == null && machineId == null) {
          this.values = null;
       } else {
@@ -102,7 +112,7 @@ public class JGroupsAddress extends org.jgroups.util.UUID implements TopologyAwa
    }
 
    @Override
-   public Supplier<? extends org.jgroups.util.UUID> create() {
+   public Supplier<? extends JGroupsAddress> create() {
       return JGroupsAddress::new;
    }
 
@@ -122,7 +132,7 @@ public class JGroupsAddress extends org.jgroups.util.UUID implements TopologyAwa
    public int serializedSize() {
       // TODO add version
       var topologySize = values == null ? 0 : values.length;
-      return super.serializedSize() + Byte.BYTES + topologySize;
+      return address.serializedSize() + Byte.BYTES + topologySize;
    }
 
    @Override
@@ -131,8 +141,8 @@ public class JGroupsAddress extends org.jgroups.util.UUID implements TopologyAwa
       // TODO
 
 
-      // UUID
-      super.writeTo(out);
+      // Address
+      Util.writeAddress(address, out);
 
       // Topology information
       int len = values == null ? 0 : values.length;
@@ -149,12 +159,12 @@ public class JGroupsAddress extends org.jgroups.util.UUID implements TopologyAwa
    }
 
    @Override
-   public void readFrom(DataInput in) throws IOException {
+   public void readFrom(DataInput in) throws ClassNotFoundException, IOException {
       // Version
       // TODO
 
-      // UUID
-      super.readFrom(in);
+      // Address
+      address = Util.readAddress(in);
 
       // Topology Information
       int len = in.readByte();
@@ -231,8 +241,18 @@ public class JGroupsAddress extends org.jgroups.util.UUID implements TopologyAwa
    }
 
    @Override
+   public int hashCode() {
+      return hashCode;
+   }
+
+   @Override
+   public String toString() {
+      return String.valueOf(address);
+   }
+
+   @Override
    public int compareTo(Address o) {
       JGroupsAddress oa = (JGroupsAddress) o;
-      return super.compareTo(oa);
+      return address.compareTo(oa.address);
    }
 }
