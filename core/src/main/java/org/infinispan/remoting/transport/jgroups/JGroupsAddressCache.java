@@ -27,10 +27,8 @@ public class JGroupsAddressCache {
       return addressCache.computeIfAbsent(jgroupsAddress, ignore -> {
          if (jgroupsAddress instanceof JGroupsAddress address) {
             return address;
-         } else if (jgroupsAddress instanceof ExtendedUUID) {
-            return new JGroupsAddress((ExtendedUUID) jgroupsAddress);
-         } else if (jgroupsAddress instanceof UUID uuid) {
-            return new JGroupsAddress(new ExtendedUUID(uuid.getMostSignificantBits(), uuid.getLeastSignificantBits()));
+         } else if (jgroupsAddress instanceof ExtendedUUID extendedUUID) {
+            return new JGroupsAddress(extendedUUID);
          } else {
             throw new IllegalStateException("Unexpected address type: " + jgroupsAddress.getClass().getName());
          }

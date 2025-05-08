@@ -152,7 +152,6 @@ public class JGroupsAddress implements Constructable<JGroupsAddress>, TopologyAw
          len = v == null ? 0 : v.length;
          out.write(len);
          if (len > 0) {
-            out.writeByte(v.length);
             out.write(v);
          }
       }
@@ -165,6 +164,7 @@ public class JGroupsAddress implements Constructable<JGroupsAddress>, TopologyAw
 
       // Address
       address = Util.readAddress(in);
+      hashCode = address.hashCode();
 
       // Topology Information
       int len = in.readByte();
@@ -241,13 +241,24 @@ public class JGroupsAddress implements Constructable<JGroupsAddress>, TopologyAw
    }
 
    @Override
+   public boolean equals(final Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+
+      JGroupsAddress that = (JGroupsAddress) o;
+
+      return hashCode == that.hashCode && address.equals(that.address);
+   }
+
+   @Override
    public int hashCode() {
       return hashCode;
    }
 
    @Override
    public String toString() {
-      return String.valueOf(address);
+      String val = NameCache.get(this);
+      return val != null ? val : String.valueOf(address);
    }
 
    @Override
