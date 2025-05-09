@@ -1094,6 +1094,9 @@ public class JGroupsTransport implements Transport {
    }
 
    private static org.jgroups.Address toJGroupsAddress(Address address) {
+      if (address instanceof JGroupsXSiteAddress xSiteAddress) {
+         return xSiteAddress.getJGroupsAddress();
+      }
       return ((JGroupsAddress) address).getJGroupsAddress();
    }
 

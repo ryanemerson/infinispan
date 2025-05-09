@@ -8,6 +8,7 @@ import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.UUID;
 import java.util.function.Supplier;
 
 import org.infinispan.commons.marshall.MarshallingException;
@@ -17,11 +18,9 @@ import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
 import org.infinispan.remoting.transport.TopologyAwareAddress;
 import org.jgroups.Address;
-import org.jgroups.Constructable;
 import org.jgroups.conf.ClassConfigurator;
 import org.jgroups.util.ExtendedUUID;
 import org.jgroups.util.NameCache;
-import org.jgroups.util.UUID;
 import org.jgroups.util.Util;
 
 /**
@@ -34,7 +33,7 @@ import org.jgroups.util.Util;
 // TODO
 // Write version first to allow possible migrations/changes in future
 // Do we need keys? Just write string first
-public class JGroupsAddress implements Constructable<JGroupsAddress>, TopologyAwareAddress {
+public class JGroupsAddress extends org.jgroups.util.UUID implements TopologyAwareAddress {
 
    static {
       // Must not conflict with value in jg-magic-map.xml
@@ -48,8 +47,6 @@ public class JGroupsAddress implements Constructable<JGroupsAddress>, TopologyAw
 
    public static final JGroupsAddress LOCAL = random();
 
-   private org.jgroups.Address address;
-   private int hashCode;
    private byte[][] values;
    private volatile byte[] bytes;
 
@@ -88,19 +85,12 @@ public class JGroupsAddress implements Constructable<JGroupsAddress>, TopologyAw
     */
    @SuppressWarnings("unused")
    public JGroupsAddress() {
-   }
-
-   public JGroupsAddress(ExtendedUUID address) {
-      if (address == null)
-         throw new IllegalArgumentException("Address shall not be null");
-      this.address = address;
-      this.hashCode = address.hashCode();
+      super();
    }
 
    // TODO add version
    private JGroupsAddress(UUID uuid, String siteId, String rackId, String machineId) {
-      this.address = uuid;
-      this.hashCode = uuid.hashCode();
+      super(uuid);
       if (siteId == null && rackId == null && machineId == null) {
          this.values = null;
       } else {
@@ -112,7 +102,7 @@ public class JGroupsAddress implements Constructable<JGroupsAddress>, TopologyAw
    }
 
    @Override
-   public Supplier<? extends JGroupsAddress> create() {
+   public Supplier<? extends org.jgroups.util.UUID> create() {
       return JGroupsAddress::new;
    }
 
@@ -132,7 +122,7 @@ public class JGroupsAddress implements Constructable<JGroupsAddress>, TopologyAw
    public int serializedSize() {
       // TODO add version
       var topologySize = values == null ? 0 : values.length;
-      return address.serializedSize() + Byte.BYTES + topologySize;
+      return super.serializedSize() + Byte.BYTES + topologySize;
    }
 
    @Override
@@ -141,8 +131,8 @@ public class JGroupsAddress implements Constructable<JGroupsAddress>, TopologyAw
       // TODO
 
 
-      // Address
-      Util.writeAddress(address, out);
+      // UUID
+      super.writeTo(out);
 
       // Topology information
       int len = values == null ? 0 : values.length;
@@ -158,13 +148,12 @@ public class JGroupsAddress implements Constructable<JGroupsAddress>, TopologyAw
    }
 
    @Override
-   public void readFrom(DataInput in) throws ClassNotFoundException, IOException {
+   public void readFrom(DataInput in) throws IOException {
       // Version
       // TODO
 
-      // Address
-      address = Util.readAddress(in);
-      hashCode = address.hashCode();
+      // UUID
+      super.readFrom(in);
 
       // Topology Information
       int len = in.readByte();
@@ -241,29 +230,11 @@ public class JGroupsAddress implements Constructable<JGroupsAddress>, TopologyAw
    }
 
    @Override
-   public boolean equals(final Object o) {
-      if (this == o) return true;
-      if (o == null || getClass() != o.getClass()) return false;
-
-      JGroupsAddress that = (JGroupsAddress) o;
-
-      return hashCode == that.hashCode && address.equals(that.address);
-   }
-
-   @Override
-   public int hashCode() {
-      return hashCode;
-   }
-
-   @Override
-   public String toString() {
-      String val = NameCache.get(this);
-      return val != null ? val : String.valueOf(address);
-   }
-
-   @Override
    public int compareTo(Address o) {
+      if (!(o instanceof JGroupsAddress)) {
+         return -1;
+      }
       JGroupsAddress oa = (JGroupsAddress) o;
-      return address.compareTo(oa.address);
+      return super.compareTo(oa);
    }
 }
