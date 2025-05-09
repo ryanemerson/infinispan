@@ -11,6 +11,11 @@ import java.io.IOException;
  * @since 4.0
  */
 public interface Address extends org.jgroups.Address {
+
+   default org.jgroups.Address getJGroupsAddress() {
+      return this;
+   }
+
    @Override
    default int serializedSize() {
       jgroupsNotSupported();

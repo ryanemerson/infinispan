@@ -88,6 +88,10 @@ public class JGroupsAddress extends org.jgroups.util.UUID implements TopologyAwa
       super();
    }
 
+   JGroupsAddress(ExtendedUUID extendedUUID) {
+      super(extendedUUID.getMostSignificantBits(), extendedUUID.getLeastSignificantBits());
+   }
+
    // TODO add version
    private JGroupsAddress(UUID uuid, String siteId, String rackId, String machineId) {
       super(uuid);
@@ -135,11 +139,11 @@ public class JGroupsAddress extends org.jgroups.util.UUID implements TopologyAwa
       super.writeTo(out);
 
       // Topology information
-      int len = values == null ? 0 : values.length;
-      out.writeByte(len);
-      for (int i = 0; i < len; i++) {
+      int numValues = values == null ? 0 : values.length;
+      out.writeByte(numValues);
+      for (int i = 0; i < numValues; i++) {
          byte[] v = values[i];
-         len = v == null ? 0 : v.length;
+         int len = v == null ? 0 : v.length;
          out.write(len);
          if (len > 0) {
             out.write(v);
@@ -156,10 +160,10 @@ public class JGroupsAddress extends org.jgroups.util.UUID implements TopologyAwa
       super.readFrom(in);
 
       // Topology Information
-      int len = in.readByte();
-      values = new byte[len][];
-      for (int i = 0; i < len; i++) {
-         len = in.readByte();
+      int numValues = in.readByte();
+      values = new byte[numValues][];
+      for (int i = 0; i < numValues; i++) {
+         int len = in.readByte();
          if (len > 0) {
             values[i] = new byte[len];
             in.readFully(values[i]);
@@ -210,7 +214,7 @@ public class JGroupsAddress extends org.jgroups.util.UUID implements TopologyAwa
 
    private boolean checkComponents(JGroupsAddress other, byte... indexes) {
       for (int i = 0; i < indexes.length; i++) {
-         if (!Arrays.equals(indexes, other.values[i])) {
+         if (!Arrays.equals(values[i], other.values[i])) {
             return false;
          }
       }
@@ -225,16 +229,10 @@ public class JGroupsAddress extends org.jgroups.util.UUID implements TopologyAwa
       return values == null ? null : Util.bytesToString(values[i]);
    }
 
-   public org.jgroups.Address getJGroupsAddress() {
-      return this;
-   }
-
    @Override
    public int compareTo(Address o) {
-      if (!(o instanceof JGroupsAddress)) {
-         return -1;
-      }
-      JGroupsAddress oa = (JGroupsAddress) o;
-      return super.compareTo(oa);
+      if (o instanceof org.jgroups.util.UUID uuid)
+         return super.compareTo(uuid);
+      return -1;
    }
 }

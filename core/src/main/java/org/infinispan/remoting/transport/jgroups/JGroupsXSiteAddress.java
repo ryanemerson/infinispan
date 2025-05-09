@@ -15,6 +15,7 @@ public class JGroupsXSiteAddress implements Address {
       return address.compareTo(o);
    }
 
+   @Override
    public org.jgroups.Address getJGroupsAddress() {
       return address;
    }

@@ -1082,7 +1082,7 @@ public class JGroupsTransport implements Transport {
       if (checkView && !clusterView.contains(target))
          return;
 
-      Message message = new BytesMessage(toJGroupsAddress(target));
+      Message message = new BytesMessage(target.getJGroupsAddress());
       marshallRequest(message, command, requestId);
       setMessageFlags(message, deliverOrder, noRelay);
 
@@ -1091,13 +1091,6 @@ public class JGroupsTransport implements Transport {
          // only record non cross-site messages
          metricsManager.recordMessageSent(target, message.size(), requestId == Request.NO_REQUEST_ID);
       }
-   }
-
-   private static org.jgroups.Address toJGroupsAddress(Address address) {
-      if (address instanceof JGroupsXSiteAddress xSiteAddress) {
-         return xSiteAddress.getJGroupsAddress();
-      }
-      return ((JGroupsAddress) address).getJGroupsAddress();
    }
 
    private void marshallRequest(Message message, Object command, long requestId) {
@@ -1316,7 +1309,7 @@ public class JGroupsTransport implements Transport {
          if (address.equals(this.address))
             continue;
 
-         copy.dest(toJGroupsAddress(address));
+         copy.dest(address.getJGroupsAddress());
          send(copy);
 
          metricsManager.recordMessageSent(address, copy.size(), requestId == Request.NO_REQUEST_ID);
