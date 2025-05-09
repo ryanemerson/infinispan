@@ -5,6 +5,8 @@ import java.util.Set;
 
 import org.infinispan.commons.util.ImmutableHopscotchHashSet;
 import org.infinispan.remoting.transport.Address;
+import org.infinispan.remoting.transport.NodeVersion;
+import org.infinispan.remoting.transport.VersionAwareAddress;
 
 /**
  * Information about the JGroups cluster.
@@ -21,6 +23,7 @@ public class ClusterView {
    private final Set<Address> membersSet;
    private final Address coordinator;
    private final boolean isCoordinator;
+   private final NodeVersion oldestMember;
 
    ClusterView(int viewId, List<Address> members, Address self) {
       this.viewId = viewId;
@@ -29,9 +32,16 @@ public class ClusterView {
       if (!members.isEmpty()) {
          this.coordinator = members.get(0);
          this.isCoordinator = coordinator.equals(self);
+         this.oldestMember = members.stream()
+               .map(VersionAwareAddress.class::cast)
+               .map(VersionAwareAddress::getVersion)
+               .sorted()
+               .findFirst()
+               .get();
       } else {
          this.coordinator = null;
          this.isCoordinator = false;
+         this.oldestMember = NodeVersion.INSTANCE;
       }
    }
 
@@ -65,6 +75,10 @@ public class ClusterView {
 
    boolean contains(Address address) {
       return getMembersSet().contains(address);
+   }
+
+   public NodeVersion getOldestMember() {
+      return oldestMember;
    }
 
    @Override

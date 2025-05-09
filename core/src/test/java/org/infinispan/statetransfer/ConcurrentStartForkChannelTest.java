@@ -21,7 +21,6 @@ import org.infinispan.test.fwk.CleanupAfterMethod;
 import org.infinispan.test.fwk.JGroupsConfigBuilder;
 import org.infinispan.test.fwk.TestCacheManagerFactory;
 import org.infinispan.test.fwk.TransportFlags;
-import org.jgroups.Address;
 import org.jgroups.BytesMessage;
 import org.jgroups.JChannel;
 import org.jgroups.Message;
@@ -30,7 +29,6 @@ import org.jgroups.conf.ClassConfigurator;
 import org.jgroups.fork.ForkChannel;
 import org.jgroups.fork.UnknownForkHandler;
 import org.jgroups.protocols.FORK;
-import org.jgroups.stack.AddressGenerator;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 

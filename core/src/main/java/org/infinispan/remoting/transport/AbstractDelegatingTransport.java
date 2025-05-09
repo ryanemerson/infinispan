@@ -200,4 +200,9 @@ public abstract class AbstractDelegatingTransport implements Transport {
    public RaftManager raftManager() {
       return actual.raftManager();
    }
+
+   @Override
+   public NodeVersion getOldestMember() {
+      return actual.getOldestMember();
+   }
 }

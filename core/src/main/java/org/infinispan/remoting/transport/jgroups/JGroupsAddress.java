@@ -16,37 +16,35 @@ import org.infinispan.commons.marshall.ProtoStreamTypeIds;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoTypeId;
+import org.infinispan.remoting.transport.NodeVersion;
 import org.infinispan.remoting.transport.TopologyAwareAddress;
+import org.infinispan.remoting.transport.VersionAwareAddress;
 import org.jgroups.Address;
 import org.jgroups.conf.ClassConfigurator;
-import org.jgroups.util.ExtendedUUID;
 import org.jgroups.util.NameCache;
 import org.jgroups.util.Util;
 
 /**
- * An encapsulation of a JGroups {@link ExtendedUUID} with a site id, a rack id, and a machine id.
+ * An extension of a JGroups {@link UUID} with a {@link NodeVersion}, site id, rack id, and a machine id.
  *
  * @author Bela Ban
  * @since 5.0
  */
 @ProtoTypeId(ProtoStreamTypeIds.JGROUPS_ADDRESS)
-// TODO
-// Write version first to allow possible migrations/changes in future
-// Do we need keys? Just write string first
-public class JGroupsAddress extends org.jgroups.util.UUID implements TopologyAwareAddress {
+public class JGroupsAddress extends org.jgroups.util.UUID implements TopologyAwareAddress, VersionAwareAddress {
 
    static {
       // Must not conflict with value in jg-magic-map.xml
       ClassConfigurator.add((short)1024, JGroupsAddress.class);
    }
 
-   // TODO add version
    private static final byte SITE_INDEX = 0;
    private static final byte RACK_INDEX = 1;
    private static final byte MACHINE_INDEX = 2;
 
    public static final JGroupsAddress LOCAL = random();
 
+   private NodeVersion version;
    private byte[][] values;
    private volatile byte[] bytes;
 
@@ -83,18 +81,13 @@ public class JGroupsAddress extends org.jgroups.util.UUID implements TopologyAwa
    /**
     * Required so that new instances can be created via {@link org.jgroups.util.Streamable}.
     */
-   @SuppressWarnings("unused")
    public JGroupsAddress() {
       super();
    }
 
-   JGroupsAddress(ExtendedUUID extendedUUID) {
-      super(extendedUUID.getMostSignificantBits(), extendedUUID.getLeastSignificantBits());
-   }
-
-   // TODO add version
    private JGroupsAddress(UUID uuid, String siteId, String rackId, String machineId) {
       super(uuid);
+      this.version = NodeVersion.INSTANCE;
       if (siteId == null && rackId == null && machineId == null) {
          this.values = null;
       } else {
@@ -123,17 +116,23 @@ public class JGroupsAddress extends org.jgroups.util.UUID implements TopologyAwa
    }
 
    @Override
+   public NodeVersion getVersion() {
+      return version;
+   }
+
+   @Override
    public int serializedSize() {
-      // TODO add version
+      var versionSize = Byte.BYTES * 3;
       var topologySize = values == null ? 0 : values.length;
-      return super.serializedSize() + Byte.BYTES + topologySize;
+      return super.serializedSize() + versionSize + Byte.BYTES + topologySize;
    }
 
    @Override
    public void writeTo(DataOutput out) throws IOException {
-      // version
-      // TODO
-
+      // Version
+      out.write(version.major());
+      out.write(version.minor());
+      out.write(version.patch());
 
       // UUID
       super.writeTo(out);
@@ -154,7 +153,7 @@ public class JGroupsAddress extends org.jgroups.util.UUID implements TopologyAwa
    @Override
    public void readFrom(DataInput in) throws IOException {
       // Version
-      // TODO
+      version = new NodeVersion(in.readByte(), in.readByte(), in.readByte());
 
       // UUID
       super.readFrom(in);

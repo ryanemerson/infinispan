@@ -386,4 +386,6 @@ public interface Transport extends Lifecycle {
     * @return The {@link RaftManager} instance,
     */
    RaftManager raftManager();
+
+   NodeVersion getOldestMember();
 }

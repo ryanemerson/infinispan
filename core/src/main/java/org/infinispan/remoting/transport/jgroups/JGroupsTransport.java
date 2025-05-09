@@ -78,6 +78,7 @@ import org.infinispan.remoting.rpc.ResponseFilter;
 import org.infinispan.remoting.rpc.ResponseMode;
 import org.infinispan.remoting.transport.AbstractRequest;
 import org.infinispan.remoting.transport.Address;
+import org.infinispan.remoting.transport.NodeVersion;
 import org.infinispan.remoting.transport.ResponseCollector;
 import org.infinispan.remoting.transport.Transport;
 import org.infinispan.remoting.transport.XSiteResponse;
@@ -361,6 +362,11 @@ public class JGroupsTransport implements Transport {
    @Override
    public List<Address> getMembers() {
       return clusterView.getMembers();
+   }
+
+   @Override
+   public NodeVersion getOldestMember() {
+      return clusterView.getOldestMember();
    }
 
    @Override
