@@ -23,18 +23,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Setup Java
+        uses: ./.github/actions/setup-java
+
       - name: Build Infinispan
-        uses: ./.github/actions/build-infinispan
-
-      - name: Server version
-        run: >
-          mvn -q -Dexec.executable=echo -Dexec.args='-n ${project.version}'
-          --non-recursive exec:exec > server-version.txt
-
-      - name: Archive server version
-        uses: actions/upload-artifact@v4
-        with:
-          name: server-version
-          path: |
-            server-version.txt
+        run: |
+          ./mvnw clean install -DskipTests -am -pl server/tests
+          ./mvnw verify -pl server/tests \
+            -Dansi.strip=true \
+            -DdefaultTestGroup=database \
+            -Dorg.infinispan.test.database.types=mssql
 
