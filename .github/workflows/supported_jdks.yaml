@@ -4,12 +4,20 @@ on:
   push:
     branches:
       - main
-      - '*.0.x'
+      - '*.*.x'
 
   pull_request:
     branches:
       - main
-      - '*.0.x'
+      - '*.*.x'
+
+concurrency:
+  # Cancel jobs same head_branch same repo, works
+  # both for pull_request and push
+  group: >
+      ${{ github.workflow }}-${{ github.repository }}-
+      ${{ github.event.pull_request.head.ref || github.event.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build:

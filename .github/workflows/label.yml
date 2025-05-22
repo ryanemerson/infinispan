@@ -15,7 +15,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           sparse-checkout: .github/scripts
-          ref: main
       - name: Add release labels on merge
         run: |
           .github/scripts/pr-label-issues.sh "${{ github.event.pull_request.number }}" "$GITHUB_REPOSITORY" "$GITHUB_BASE_REF" >> "$GITHUB_STEP_SUMMARY"
