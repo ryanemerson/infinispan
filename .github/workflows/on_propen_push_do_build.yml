@@ -28,9 +28,13 @@ jobs:
 
       - name: Build Infinispan
         run: |
-          ./mvnw clean install -DskipTests -am -pl server/tests
+          ./mvnw clean install -DskipTests -Pdistribution
+          cd /tmp
+          unzip $ISPN/infinispan/distribution/target/distribution/infinispan-server-15.0.16-SNAPSHOT.zip
+          cd ${GITHUB_WORKSPACE}
           ./mvnw verify -pl server/tests \
             -Dansi.strip=true \
             -DdefaultTestGroup=database \
-            -Dorg.infinispan.test.database.types=mssql
+            -Dorg.infinispan.test.database.types=mssql \
+            -Dorg.infinispan.test.server.dir=/tmp/infinispan-server-15.0.16-SNAPSHOT
 
