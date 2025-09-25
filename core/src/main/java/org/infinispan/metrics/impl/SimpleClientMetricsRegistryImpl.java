@@ -3,17 +3,17 @@ package org.infinispan.metrics.impl;
 import org.infinispan.metrics.config.MicrometerMeterRegistryConfiguration;
 
 import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.prometheusmetrics.PrometheusConfig;
-import io.micrometer.prometheusmetrics.PrometheusMeterRegistry;
+import io.micrometer.prometheus.PrometheusConfig;
+import io.micrometer.prometheus.PrometheusMeterRegistry;
 
 /**
- * Concrete implementation of {@link MetricsRegistry}.
+ * Concrete implementation of {@link AbstractMetricsRegistry}.
  * <p>
  * It uses {@link MeterRegistry} from micrometer. It can use the instance configured from
  * {@link MicrometerMeterRegistryConfiguration#meterRegistry()} or, if not configured, it instantiates
  * {@link PrometheusMeterRegistry}.
  */
-public class MetricsRegistryImpl extends AbstractMetricsRegistry {
+public class SimpleClientMetricsRegistryImpl extends AbstractMetricsRegistry {
 
    ScrapeRegistry createScrapeRegistry(MeterRegistry registry) {
       boolean externalManaged = true;
