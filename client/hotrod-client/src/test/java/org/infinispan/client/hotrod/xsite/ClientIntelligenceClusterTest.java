@@ -1,6 +1,7 @@
 package org.infinispan.client.hotrod.xsite;
 
 import static org.infinispan.client.hotrod.test.HotRodClientTestingUtil.newRemoteConfigurationBuilder;
+import static org.testng.AssertJUnit.assertTrue;
 
 import java.util.HashMap;
 import java.util.List;
@@ -45,6 +46,23 @@ public class ClientIntelligenceClusterTest extends AbstractMultipleSitesTest {
       siteServers.values().forEach(hotRodServers -> hotRodServers.forEach(HotRodClientTestingUtil::killServers));
       siteServers.clear();
       super.killSites();
+   }
+
+   public void testReplaceWithVersion() {
+      String key = "someKey";
+
+      int lifespan = 1000;
+      int maxIdle = 100;
+
+      try (RemoteCacheManager irc = createClient(ClientIntelligence.BASIC, null)) {
+         RemoteCache<String, String> remoteCache0 = irc.getCache();
+         remoteCache0.put(key, "v1");
+         var meta = remoteCache0.getWithMetadata(key);
+         irc.switchToCluster("backup");
+         assertTrue(
+            remoteCache0.replaceWithVersion(key, "v2", meta.getVersion(), lifespan, maxIdle)
+         );
+      }
    }
 
    public void testClusterInheritsIntelligence() {

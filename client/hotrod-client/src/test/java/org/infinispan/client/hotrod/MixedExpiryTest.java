@@ -3,6 +3,7 @@ package org.infinispan.client.hotrod;
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertNotNull;
 import static org.testng.AssertJUnit.assertNull;
+import static org.testng.AssertJUnit.assertTrue;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -10,12 +11,13 @@ import java.util.concurrent.TimeUnit;
 
 import org.infinispan.Cache;
 import org.infinispan.client.hotrod.test.MultiHotRodServersTest;
+import org.infinispan.commons.time.ControlledTimeService;
+import org.infinispan.commons.time.TimeService;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.container.DataContainer;
+import org.infinispan.server.hotrod.HotRodServer;
 import org.infinispan.test.TestingUtil;
-import org.infinispan.commons.time.ControlledTimeService;
-import org.infinispan.commons.time.TimeService;
 import org.testng.annotations.Test;
 
 /**
@@ -29,7 +31,7 @@ import org.testng.annotations.Test;
 public class MixedExpiryTest extends MultiHotRodServersTest {
    @Override
    protected void createCacheManagers() throws Throwable {
-      ConfigurationBuilder builder = getDefaultClusteredCacheConfig(CacheMode.REPL_SYNC, false);
+      ConfigurationBuilder builder = getDefaultClusteredCacheConfig(CacheMode.DIST_SYNC, true);
       configure(builder);
       createHotRodServers(3, builder);
 
@@ -47,6 +49,42 @@ public class MixedExpiryTest extends MultiHotRodServersTest {
 
    protected void configure(ConfigurationBuilder configurationBuilder) {
 
+   }
+
+   protected org.infinispan.client.hotrod.configuration.ConfigurationBuilder createHotRodClientConfigurationBuilder(HotRodServer server) {
+      return createHotRodClientConfigurationBuilder(server.getHost(), server.getPort()).connectionTimeout(1000 * 60 * 60);
+   }
+
+   public void testReplaceWithVersion() {
+      RemoteCache<String, String> remoteCache0 = client(0).getCache();
+      RemoteCache<String, String> remoteCache1 = client(1).getCache();
+
+      String key = "someKey";
+
+      int lifespan = 1000;
+      int maxIdle = 100;
+
+      remoteCache0.put(key, "v1");
+      var meta = remoteCache1.getWithMetadata(key);
+      assertMetadataAndValue(meta, "v1", -1, -1);
+
+      assertReplaceWithVersion(remoteCache0, meta, key, "v2", lifespan, -1);
+      meta = remoteCache1.getWithMetadata(key);
+      assertMetadataAndValue(meta, "v2", lifespan, -1);
+
+      assertReplaceWithVersion(remoteCache0, meta, key, "v3", -1, maxIdle);
+      meta = remoteCache1.getWithMetadata(key);
+      assertMetadataAndValue(meta, "v3", -1, maxIdle);
+
+      assertReplaceWithVersion(remoteCache0, meta, key,"v4", lifespan, maxIdle);
+      meta = remoteCache1.getWithMetadata(key);
+      assertMetadataAndValue(meta, "v4", lifespan, maxIdle);
+   }
+
+   private void assertReplaceWithVersion(RemoteCache<String, String> remoteCache, MetadataValue<String> meta, String key, String value, int lifespan, int maxIdle) {
+      assertTrue(
+            remoteCache.replaceWithVersion(key, value, meta.getVersion(), lifespan, maxIdle)
+      );
    }
 
    public void testMixedExpiryLifespan() {
